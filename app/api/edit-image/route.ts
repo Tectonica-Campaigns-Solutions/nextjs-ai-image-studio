@@ -1,0 +1,239 @@
+import { NextRequest, NextResponse } from "next/server"
+import { fal } from "@fal-ai/client"
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const image = formData.get("image") as File
+    const prompt = formData.get("prompt") as string
+    const useRAG = formData.get("useRAG") === "true"
+
+    if (!image || !prompt) {
+      return NextResponse.json({ error: "Image and prompt are required" }, { status: 400 })
+    }
+
+    // Check if Fal.ai API key is available
+    const falApiKey = process.env.FAL_API_KEY
+    
+    if (!falApiKey) {
+      return NextResponse.json({ error: "FAL_API_KEY not configured" }, { status: 500 })
+    }
+
+    console.log("[v0] Fal API Key exists:", !!falApiKey)
+    console.log("[v0] Processing image, name:", image.name, "size:", image.size)
+    console.log("[v0] Original prompt:", prompt)
+    console.log("[v0] Use RAG:", useRAG)
+
+    // Enhance prompt with RAG if requested
+    let finalPrompt = prompt
+    let ragMetadata = null
+
+    if (useRAG) {
+      try {
+        console.log("[v0] Enhancing prompt with RAG...")
+        
+        // Dynamic import for Vercel compatibility
+        let enhanceFunction = null
+        if (process.env.VERCEL) {
+          // In Vercel environment, use simple hardcoded RAG
+          try {
+            const { enhanceWithACLUBranding } = await import("../simple-rag/route")
+            enhanceFunction = enhanceWithACLUBranding
+          } catch (error) {
+            console.warn("Simple RAG not available:", error)
+          }
+        } else {
+          // In local development, try to use the full RAG system
+          try {
+            const { enhancePromptWithBranding } = await import("@/lib/rag-system")
+            enhanceFunction = enhancePromptWithBranding
+          } catch (error) {
+            console.warn("Full RAG not available, falling back to simple RAG:", error)
+            try {
+              const { enhanceWithACLUBranding } = await import("../simple-rag/route")
+              enhanceFunction = enhanceWithACLUBranding
+            } catch (fallbackError) {
+              console.warn("Simple RAG fallback failed:", fallbackError)
+            }
+          }
+        }
+
+        if (enhanceFunction) {
+          const enhancement = await enhanceFunction(prompt)
+          finalPrompt = enhancement.enhancedPrompt || enhancement
+          ragMetadata = {
+            originalPrompt: prompt,
+            enhancedPrompt: finalPrompt,
+            suggestedColors: enhancement.suggestedColors || [],
+            brandingElements: enhancement.brandingElements?.length || 0
+          }
+          console.log("[v0] RAG enhanced prompt:", finalPrompt)
+        } else {
+          console.warn("[v0] No RAG enhancement function available")
+          ragMetadata = { error: "No RAG enhancement function available" }
+        }
+      } catch (error) {
+        console.warn("[v0] RAG enhancement failed, using original prompt:", error)
+        ragMetadata = { error: "RAG enhancement failed" }
+      }
+    }
+
+    const imageBuffer = await image.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString("base64");
+    console.log("[v0] Base64 image length:", base64Image.length)
+
+    // Use Fal.ai for image editing
+    console.log("[v0] Using Fal.ai for image editing...");
+    
+    try {
+      // Configure Fal.ai client
+      fal.config({
+        credentials: falApiKey,
+      });
+
+      const result = await fal.subscribe("fal-ai/qwen-image-edit", {
+        input: {
+          prompt: finalPrompt,
+          image_url: `data:image/jpeg;base64,${base64Image}`
+        },
+        logs: true,
+        onQueueUpdate: (update) => {
+          if (update.status === "IN_PROGRESS") {
+            update.logs.map((log) => log.message).forEach(console.log);
+          }
+        },
+      });
+
+      console.log("[v0] Fal.ai output:", result);
+      
+      if (result.data && result.data.images && result.data.images.length > 0) {
+        const imageUrl = result.data.images[0].url;
+        console.log("[v0] Got image URL from Fal.ai:", imageUrl);
+        
+        // Download the image and convert to base64
+        const imageResponse = await fetch(imageUrl);
+        const imageBlob = await imageResponse.blob();
+        const arrayBuffer = await imageBlob.arrayBuffer();
+        const base64Result = Buffer.from(arrayBuffer).toString('base64');
+
+        console.log("[v0] Successfully got edited image from Fal.ai");
+        return NextResponse.json({ 
+          image: `data:image/jpeg;base64,${base64Result}`,
+          ragMetadata: ragMetadata
+        });
+      } else {
+        console.log("[v0] Unexpected Fal.ai output format:", result);
+        return NextResponse.json({ error: "Unexpected output format from Fal.ai" }, { status: 500 });
+      }
+    } catch (error) {
+      console.error("[v0] Fal.ai failed:", error);
+      return NextResponse.json({ error: `Fal.ai processing failed: ${error}` }, { status: 500 });
+    }
+
+    /* 
+    // Commented out fallback models - focus on Fal.ai only
+    
+    // Fallback to HF models if Fal.ai fails or isn't available
+    // Try image-to-image models that are actually available on HF
+    if (hfApiKey) {
+      const img2imgModels = [
+        "runwayml/stable-diffusion-v1-5",
+        "stabilityai/stable-diffusion-2-1",
+        "CompVis/stable-diffusion-v1-4"
+      ];
+
+      for (const model of img2imgModels) {
+        console.log(`[v0] Trying img2img with model: ${model}`);
+        
+        try {
+          // Use the img2img pipeline format that HF API supports
+          const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${hfApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              inputs: prompt,
+              parameters: {
+                init_image: `data:image/jpeg;base64,${base64Image}`,
+                strength: 0.6,
+                guidance_scale: 7.5,
+                num_inference_steps: 25,
+                width: 512,
+                height: 512,
+              }
+            }),
+          });
+
+          console.log(`[v0] ${model} response:`, response.status);
+          
+          if (response.ok) {
+            const contentType = response.headers.get("content-type");
+            
+            if (contentType?.includes("image")) {
+              const imageBlob = await response.blob();
+              const arrayBuffer = await imageBlob.arrayBuffer();
+              const base64Result = Buffer.from(arrayBuffer).toString('base64');
+              
+              console.log(`[v0] Got img2img result from ${model}`);
+              return NextResponse.json({ 
+                image: `data:image/jpeg;base64,${base64Result}`,
+                finalPrompt: finalPrompt // Include the final prompt used
+              });
+            } else {
+              // Try to parse as JSON in case it returns different format
+              const textResult = await response.text();
+              console.log(`[v0] ${model} returned:`, textResult.substring(0, 200));
+            }
+          } else {
+            const errorText = await response.text();
+            console.log(`[v0] ${model} error:`, errorText);
+            
+            // If the API doesn't support img2img parameters, try basic approach
+            if (errorText.includes("unexpected") || errorText.includes("parameter")) {
+              console.log(`[v0] Trying ${model} with basic text-to-image approach...`);
+              
+              const basicResponse = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${hfApiKey}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  inputs: `${prompt}, photorealistic, high quality`,
+                  parameters: {
+                    guidance_scale: 7.5,
+                    num_inference_steps: 20,
+                  }
+                }),
+              });
+              
+              if (basicResponse.ok) {
+                const imageBlob = await basicResponse.blob();
+                const arrayBuffer = await imageBlob.arrayBuffer();
+                const base64Result = Buffer.from(arrayBuffer).toString('base64');
+                
+                console.log(`[v0] Got basic result from ${model} (note: not true img2img)`);
+                return NextResponse.json({ 
+                  image: `data:image/jpeg;base64,${base64Result}`,
+                  finalPrompt: finalPrompt // Include the final prompt used
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.log(`[v0] ${model} failed:`, error);
+        }
+      }
+    }
+
+    // If no HF models worked, return error
+    return NextResponse.json({ error: "No suitable image editing model available" }, { status: 500 });
+    */
+  } catch (error) {
+    console.error("[v0] Error processing image edit:", error)
+    console.error("[v0] Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}

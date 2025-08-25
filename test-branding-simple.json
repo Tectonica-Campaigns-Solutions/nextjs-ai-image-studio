@@ -1,0 +1,28 @@
+{
+  "color_palette": {
+    "principal_colors": {
+      "brand_red": {
+        "name": "Brand Red",
+        "description": "Primary brand color",
+        "hex": "#ff0000"
+      },
+      "brand_blue": {
+        "name": "Brand Blue",
+        "description": "Secondary brand color", 
+        "hex": "#0000ff"
+      }
+    },
+    "light_colors": {
+      "light_gray": {
+        "name": "Light Gray",
+        "hex": "#f0f0f0"
+      }
+    },
+    "dark_colors": {
+      "dark_gray": {
+        "name": "Dark Gray",
+        "hex": "#333333"
+      }
+    }
+  }
+}

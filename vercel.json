@@ -1,0 +1,20 @@
+{
+  "buildCommand": "pnpm run build",
+  "functions": {
+    "app/api/*/route.js": {
+      "maxDuration": 60
+    },
+    "app/api/qwen-train-lora/route.js": {
+      "maxDuration": 60
+    }
+  },
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PRIVATE_STANDALONE": "true"
+  },
+  "build": {
+    "env": {
+      "SHARP": "0"
+    }
+  }
+}

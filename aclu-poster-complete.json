@@ -1,0 +1,188 @@
+{
+  "project_name": "ACLU Together We Are Stronger Poster",
+  "brand": "American Civil Liberties Union (ACLU)",
+  "output_type": "printed_poster",
+  
+  "ai_generation_instructions": {
+    "description": "Instructions optimized for AI comprehension based on training data",
+    "base_prompt": "documentary photograph of diverse group of people marching together at a protest, professional photojournalism style, crowd of activists walking forward, determined expressions, outdoor daylight, wide shot showing many people, civil rights march atmosphere",
+    "use_privileged_positions": [
+      "people",
+      "crowd", 
+      "outdoor",
+      "daylight",
+      "documentary photography",
+      "wide shot"
+    ],
+    "stylization_hints": {
+      "treatment": "high contrast",
+      "lighting": "natural daylight",
+      "mood": "determined and unified",
+      "composition": "group moving forward together"
+    },
+    "negative_prompts": [
+      "no text",
+      "no words",
+      "no signs with text",
+      "no letters",
+      "no logos"
+    ]
+  },
+  
+  "brand_specifications": {
+    "tone_of_voice": {
+      "principles": [
+        "We're in this together",
+        "We bring heart",
+        "We empower action"
+      ],
+      "mood": "resolute, patriotic, together",
+      "message": "collective strength through unity"
+    },
+    
+    "color_palette": {
+      "implementation_note": "AI will approximate these as color categories, exact values applied in post-processing",
+      "primary_colors": {
+        "red": {
+          "hex": "#ef404e",
+          "rgb": [239, 64, 78],
+          "cmyk": [0, 90, 67, 0],
+          "ai_instruction": "red accents"
+        },
+        "blue": {
+          "hex": "#0055aa",
+          "rgb": [0, 85, 170],
+          "cmyk": [100, 70, 0, 0],
+          "ai_instruction": "blue accents"
+        }
+      },
+      "secondary_color": {
+        "dark_navy": {
+          "hex": "#130f54",
+          "rgb": [19, 15, 84],
+          "cmyk": [100, 100, 29, 38],
+          "ai_instruction": "dark blue background elements"
+        }
+      },
+      "neutral": {
+        "white": {
+          "hex": "#ffffff",
+          "use": "text and highlights"
+        }
+      },
+      "application": "red, dark blue, and white - patriotic but bold"
+    },
+    
+    "visual_style": {
+      "foundation": "documentary photography",
+      "treatment": "modern engraving or high contrast duotone",
+      "characteristics": [
+        "photojournalistic authenticity",
+        "high contrast for impact",
+        "clear editorial/artistic treatment to prevent deepfake appearance",
+        "bold and dynamic composition"
+      ],
+      "avoid": [
+        "overly posed or stock photo appearance",
+        "generic or cliché imagery",
+        "pure photorealistic without stylization"
+      ]
+    },
+    
+    "typography": {
+      "headline_text": "TOGETHER WE ARE STRONGER",
+      "typeface": "GT America Bold or Compressed Bold",
+      "case": "ALL CAPS",
+      "color": "white on dark background or red/blue on light",
+      "placement": "top quarter of layout (applied in post-processing)",
+      "characteristics": [
+        "bold and defiant",
+        "clear and assured",
+        "resolute voice"
+      ]
+    }
+  },
+  
+  "technical_specifications": {
+    "dimensions": {
+      "format": "vertical poster",
+      "size": "24x36 inches",
+      "resolution": "300 dpi",
+      "pixels": "7200x10800px",
+      "orientation": "portrait"
+    },
+    
+    "composition_layout": {
+      "image_zone": {
+        "description": "Bottom three-quarters for main visual",
+        "coordinates": "y=2700-10800px (bottom 75%)",
+        "content": "diverse group marching"
+      },
+      "text_zone": {
+        "description": "Top quarter reserved for headline",
+        "coordinates": "y=0-2700px (top 25%)",
+        "content": "TOGETHER WE ARE STRONGER text overlay",
+        "note": "Keep empty in AI generation, add text in post-processing"
+      },
+      "logo_placement": {
+        "position": "bottom right corner",
+        "size": "appropriately scaled",
+        "version": "ACLU red or blue logo depending on background"
+      }
+    }
+  },
+  
+  "post_processing_requirements": {
+    "description": "Elements that MUST be applied programmatically after AI generation",
+    "mandatory_steps": [
+      {
+        "step": 1,
+        "action": "Apply exact brand colors",
+        "details": "Convert to duotone or tritone using #ef404e (red) and #130f54 (dark navy)"
+      },
+      {
+        "step": 2,
+        "action": "Crop and position",
+        "details": "Ensure image occupies bottom 75%, leave top 25% for text overlay"
+      },
+      {
+        "step": 3,
+        "action": "Add typography",
+        "details": "Place 'TOGETHER WE ARE STRONGER' in GT America Bold, all caps, in top section"
+      },
+      {
+        "step": 4,
+        "action": "Apply stylization",
+        "details": "High contrast treatment or modern engraving effect for artistic/editorial appearance"
+      },
+      {
+        "step": 5,
+        "action": "Add ACLU logo",
+        "details": "Place logo in bottom right corner with appropriate padding"
+      }
+    ],
+    "quality_checks": [
+      "Verify no deepfake appearance - must look clearly artistic/editorial",
+      "Ensure exact brand colors are applied",
+      "Confirm typography is legible and properly positioned",
+      "Check composition follows rule: image in bottom 3/4, text in top 1/4"
+    ]
+  },
+  
+  "implementation_notes": {
+    "ai_limitations": [
+      "AI will NOT produce exact hex colors - only approximations",
+      "AI will NOT leave exact top 25% empty - requires post-crop",
+      "AI will NOT add text - must be added in post-processing",
+      "AI will NOT apply exact brand treatments - requires post-processing"
+    ],
+    "success_factors": [
+      "Use 'documentary photography' as base - aligns with AI training",
+      "Request 'diverse group' and 'crowd' - Tier 1 concepts AI understands",
+      "Apply stylization in post for brand consistency",
+      "Keep negative prompts minimal and binary"
+    ],
+    "expected_ai_output": "Photojournalistic image of diverse people marching, some red and blue color elements, high contrast, no text",
+    "final_result_after_post": "Stylized poster with exact brand colors, proper typography, and ACLU visual identity"
+  }
+}

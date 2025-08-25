@@ -1,0 +1,188 @@
+{
+  "color_palette": {
+    "principal_colors": {
+      "aclu_red": {
+        "name": "ACLU Red",
+        "description": "Primary brand color representing justice and action",
+        "hex": "#ef404e",
+        "usage": "Primary buttons, headers, call-to-action elements"
+      },
+      "aclu_blue": {
+        "name": "ACLU Blue", 
+        "description": "Secondary brand color representing trust and law",
+        "hex": "#0055aa",
+        "usage": "Secondary elements, text links, backgrounds"
+      }
+    },
+    "light_colors": {
+      "light_gray": {
+        "hex": "#f5f5f5",
+        "usage": "Background sections, card backgrounds"
+      },
+      "light_blue": {
+        "hex": "#e6f2ff",
+        "usage": "Information highlights, secondary backgrounds"
+      },
+      "white": {
+        "hex": "#ffffff",
+        "usage": "Main background, text on dark colors"
+      }
+    },
+    "dark_colors": {
+      "dark_gray": {
+        "hex": "#333333",
+        "usage": "Body text, dark mode backgrounds"
+      },
+      "charcoal": {
+        "hex": "#2c2c2c",
+        "usage": "Headers, emphasis text"
+      },
+      "black": {
+        "hex": "#000000",
+        "usage": "High contrast text, borders"
+      }
+    }
+  },
+  "illustration": {
+    "photography_style": {
+      "preferred": [
+        "documentary style photography",
+        "authentic human moments",
+        "diverse representation",
+        "professional portraits",
+        "community gatherings",
+        "civil rights activism",
+        "legal proceedings",
+        "protest and demonstration scenes",
+        "natural lighting",
+        "candid expressions"
+      ],
+      "avoid": [
+        "overly staged poses",
+        "artificial lighting",
+        "generic stock photography",
+        "non-diverse representation",
+        "luxury or materialistic themes"
+      ]
+    },
+    "layout_rules": {
+      "placement": "balanced composition with focus on human subjects",
+      "position": "centered or rule-of-thirds positioning",
+      "text_prohibition": "avoid text overlays on faces",
+      "spacing": "adequate white space around key elements"
+    },
+    "format_rules": {
+      "supported_formats": {
+        "square_1_1": {
+          "name": "Square",
+          "dimensions": "1:1",
+          "aspect_ratio": 1.0,
+          "usage": "Social media posts, profile images"
+        },
+        "landscape_16_9": {
+          "name": "Landscape Wide",
+          "dimensions": "16:9", 
+          "aspect_ratio": 1.78,
+          "usage": "Website banners, presentation slides"
+        },
+        "portrait_9_16": {
+          "name": "Portrait",
+          "dimensions": "9:16",
+          "aspect_ratio": 0.56,
+          "usage": "Mobile stories, vertical displays"
+        },
+        "standard_4_3": {
+          "name": "Standard",
+          "dimensions": "4:3",
+          "aspect_ratio": 1.33,
+          "usage": "Traditional media, print materials"
+        }
+      }
+    },
+    "generation_constraints": {
+      "negative_prompts": [
+        "low quality",
+        "blurry",
+        "distorted faces",
+        "extra limbs",
+        "cartoon",
+        "anime",
+        "watermark",
+        "text overlay",
+        "logo",
+        "commercial branding",
+        "luxury items",
+        "violence",
+        "weapons",
+        "inappropriate content"
+      ],
+      "quality_requirements": [
+        "high resolution",
+        "sharp focus",
+        "professional quality",
+        "good lighting",
+        "natural skin tones",
+        "accurate proportions"
+      ]
+    },
+    "brand_elements": {
+      "themes": [
+        "civil rights",
+        "social justice",
+        "legal advocacy",
+        "community organizing",
+        "democratic participation",
+        "constitutional rights",
+        "human dignity",
+        "equality and fairness"
+      ],
+      "visual_concepts": [
+        "people standing together",
+        "hands holding signs",
+        "courthouse steps",
+        "community meetings",
+        "voting and civic participation",
+        "legal documents and scales of justice",
+        "diverse groups of people",
+        "peaceful demonstrations"
+      ]
+    }
+  },
+  "layout": {
+    "composition_rules": [
+      "Focus on human subjects and their stories",
+      "Use rule of thirds for dynamic composition", 
+      "Ensure diverse representation in group shots",
+      "Maintain professional yet approachable tone",
+      "Balance formal legal imagery with human warmth"
+    ],
+    "color_application": [
+      "Use ACLU red sparingly for emphasis",
+      "ACLU blue for professional, trustworthy elements",
+      "Maintain high contrast for accessibility",
+      "Use neutral backgrounds to highlight subjects"
+    ]
+  },
+  "format_specifications": {
+    "image_quality": {
+      "min_resolution": "1024x1024",
+      "preferred_resolution": "2048x2048",
+      "file_format": "PNG or high-quality JPEG",
+      "compression": "minimal for print materials"
+    },
+    "accessibility": [
+      "High contrast ratios",
+      "Clear, readable composition",
+      "Avoid relying solely on color for information",
+      "Consider visual impairments in design"
+    ],
+    "usage_contexts": [
+      "Website headers and banners",
+      "Social media posts",
+      "Print materials and brochures", 
+      "Presentation slides",
+      "Email newsletters",
+      "Report covers"
+    ]
+  }
+}
