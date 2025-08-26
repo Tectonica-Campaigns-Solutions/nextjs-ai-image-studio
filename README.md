@@ -12,16 +12,16 @@ A React webapp that allows users to edit images using Hugging Face's Qwen-Image-
 
 ## Setup
 
-1. Get a Hugging Face API key from [huggingface.co](https://huggingface.co/settings/tokens)
+1. Get a FAL AI Face API key 
 
 2. Add your API key to `.env.local`:
    \`\`\`
-   HUGGINGFACE_API_KEY=your_api_key_here
+   FAL_API_KEY=your_api_key_here
    \`\`\`
 
 3. The app will automatically handle:
    - File uploads (multipart/form-data)
-   - API calls to Hugging Face
+   - API calls 
    - Image preview and result display
 
 ## Usage
