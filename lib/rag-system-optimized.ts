@@ -17,6 +17,7 @@ function shouldUseFullRAG() {
 
 // Conditional import for transformers - only in non-Vercel environments
 let pipeline: any = null;
+let isTransformersAvailable = false;
 
 // Initialize pipeline conditionally
 async function initPipeline() {
@@ -28,10 +29,12 @@ async function initPipeline() {
   try {
     const transformers = await import('@xenova/transformers');
     pipeline = transformers.pipeline;
+    isTransformersAvailable = true;
     console.log(`[RAG] Transformers loaded successfully in ${isRailwayEnvironment() ? 'Railway' : 'local'} environment`);
     return pipeline;
   } catch (error) {
     console.warn('[RAG] Failed to load transformers:', error);
+    isTransformersAvailable = false;
     return null;
   }
 }
@@ -111,9 +114,17 @@ async function calculateEmbeddings() {
       const pipelineFactory = await initPipeline();
       if (!pipelineFactory) {
         console.warn('[RAG] No embedding pipeline available');
+        isTransformersAvailable = false;
         return false;
       }
-      embeddingPipeline = await pipelineFactory('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
+      
+      try {
+        embeddingPipeline = await pipelineFactory('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
+      } catch (modelError) {
+        console.warn('[RAG] Failed to load embedding model, will use keyword fallback:', modelError);
+        isTransformersAvailable = false;
+        return false;
+      }
     }
 
     const ragData = await loadRAGData();
@@ -165,7 +176,7 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 
 // Find similar embeddings for a given prompt
 async function findSimilarEmbeddings(prompt: string, threshold: number = 0.65) {
-  if (!shouldUseFullRAG()) {
+  if (!shouldUseFullRAG() || !isTransformersAvailable) {
     console.log('[RAG] Using simple keyword matching instead of embeddings');
     return findKeywordMatches(prompt);
   }
@@ -177,9 +188,16 @@ async function findSimilarEmbeddings(prompt: string, threshold: number = 0.65) {
     if (!embeddingPipeline) {
       const pipelineFactory = await initPipeline();
       if (!pipelineFactory) {
-        return [];
+        console.log('[RAG] Pipeline not available, falling back to keyword matching');
+        return findKeywordMatches(prompt);
       }
-      embeddingPipeline = await pipelineFactory('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
+      
+      try {
+        embeddingPipeline = await pipelineFactory('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
+      } catch (modelError) {
+        console.warn('[RAG] Failed to load embedding model in findSimilarEmbeddings, using keyword fallback:', modelError);
+        return findKeywordMatches(prompt);
+      }
     }
 
     const ragData = await loadRAGData();
@@ -226,7 +244,8 @@ async function findSimilarEmbeddings(prompt: string, threshold: number = 0.65) {
 
   } catch (error) {
     console.error('[RAG] Error finding similar embeddings:', error);
-    return [];
+    console.log('[RAG] Falling back to keyword matching due to error');
+    return findKeywordMatches(prompt);
   }
 }
 
