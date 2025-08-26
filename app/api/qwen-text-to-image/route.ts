@@ -3,11 +3,11 @@ import { fal } from "@fal-ai/client"
 
 // Dynamic import for platform compatibility
 async function getRAGSystem() {
-  // Check if we should use full RAG (Render, local) or simple RAG (Vercel)
+  // Check if we should use full RAG (Railway, local) or simple RAG (Vercel)
   const useFullRAG = !process.env.VERCEL
   
   if (useFullRAG) {
-    // In Render/local environment, use full RAG system
+    // In Railway/local environment, use full RAG system
     try {
       const { enhancePromptWithBranding } = await import("@/lib/rag-system")
       console.log('[RAG] Using full RAG system')

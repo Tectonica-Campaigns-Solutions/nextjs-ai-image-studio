@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const useFullRAG = !process.env.VERCEL
 
     if (useFullRAG) {
-      // In Render/local environment, use full RAG system
+      // In Railway/local environment, use full RAG system
       try {
         const { enhancePromptWithBranding } = await import("@/lib/rag-system")
         enhancement = await enhancePromptWithBranding(prompt)

@@ -6,12 +6,12 @@ function isVercelEnvironment() {
   return !!(process.env.VERCEL || process.env.VERCEL_ENV)
 }
 
-function isRenderEnvironment() {
-  return !!(process.env.RENDER || process.env.RENDER_SERVICE_ID)
+function isRailwayEnvironment() {
+  return !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_ENVIRONMENT_NAME)
 }
 
 function shouldUseFullRAG() {
-  // Use full RAG on Render and local development, simple RAG only on Vercel
+  // Use full RAG on Railway and local development, simple RAG only on Vercel
   return !isVercelEnvironment()
 }
 
@@ -28,7 +28,7 @@ async function initPipeline() {
   try {
     const transformers = await import('@xenova/transformers');
     pipeline = transformers.pipeline;
-    console.log(`[RAG] Transformers loaded successfully in ${isRenderEnvironment() ? 'Render' : 'local'} environment`);
+    console.log(`[RAG] Transformers loaded successfully in ${isRailwayEnvironment() ? 'Railway' : 'local'} environment`);
     return pipeline;
   } catch (error) {
     console.warn('[RAG] Failed to load transformers:', error);

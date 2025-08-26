@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       try {
         console.log("[v0] Enhancing prompt with RAG...")
         
-        // Dynamic import for Vercel compatibility
+        // Dynamic import for platform compatibility
         let enhanceFunction = null
         if (process.env.VERCEL) {
           // In Vercel environment, use simple hardcoded RAG
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
             console.warn("Simple RAG not available:", error)
           }
         } else {
-          // In local development, try to use the full RAG system
+          // In Railway/local development, use full RAG system
           try {
             const { enhancePromptWithBranding } = await import("@/lib/rag-system")
             enhanceFunction = enhancePromptWithBranding
