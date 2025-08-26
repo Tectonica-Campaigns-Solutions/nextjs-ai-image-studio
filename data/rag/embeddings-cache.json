@@ -1,0 +1,64 @@
+{
+  "version": "2.0",
+  "created_at": "2025-08-26T12:00:00Z",
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "source": "ACLU Brand Guidelines Edition 1.5",
+  "embeddings": {
+    "aclu_visual_language_core": {
+      "text": "bold colorful dynamic, firm convictions bold defiant statements, resolute patriotic historic serious layered together",
+      "embedding": null,
+      "category": "brand_essence",
+      "weight": 1.3,
+      "keywords": ["resolute", "patriotic", "historic", "serious", "layered", "together", "bold", "defiant"]
+    },
+    "aclu_photography_style": {
+      "text": "documentary-style photography, portraits of real people, candid photos everyday citizens, on-the-ground documentation, natural settings lighting, frank unposed expressions",
+      "embedding": null,
+      "category": "photography_style",
+      "weight": 1.2,
+      "keywords": ["documentary", "portraits", "candid", "natural", "unposed", "real people"]
+    },
+    "aclu_modern_engraving": {
+      "text": "modern engraving treatment, distinctive stylization, two colors with contrast, visual treatment variety",
+      "embedding": null,
+      "category": "visual_treatment",
+      "weight": 1.0,
+      "keywords": ["engraving", "stylization", "two colors", "contrast", "distinctive"]
+    },
+    "aclu_color_primary": {
+      "text": "ACLU red ef404e, ACLU blue 0055aa, red something else and blue, principal colors strength urgency trust stability",
+      "embedding": null,
+      "category": "color_primary",
+      "weight": 1.1,
+      "keywords": ["red", "blue", "ef404e", "0055aa", "strength", "urgency", "trust", "ACLU red", "ACLU blue"]
+    },
+    "aclu_color_light_palette": {
+      "text": "light yellow ffe06a, light pink fabeaf, light orange fcaa17, light azure a3dbe3, light green a7d7b5",
+      "embedding": null,
+      "category": "color_secondary",
+      "weight": 0.8,
+      "keywords": ["light yellow", "light pink", "light orange", "light azure", "light green"]
+    },
+    "aclu_color_dark_palette": {
+      "text": "black 000000, dark gray 3c3532, dark green 00343a, dark navy 130f54, dark burgundy 691b40, dark purple 552564",
+      "embedding": null,
+      "category": "color_dark",
+      "weight": 0.8,
+      "keywords": ["black", "dark gray", "dark green", "dark navy", "dark burgundy", "dark purple"]
+    },
+    "aclu_composition_rules": {
+      "text": "one central visual element, bottom three-quarters layout, asymmetrical arrangements contemporary, layering richness depth, angled elements energy",
+      "embedding": null,
+      "category": "composition",
+      "weight": 1.0,
+      "keywords": ["central element", "bottom three-quarters", "asymmetrical", "layering", "angled", "contemporary"]
+    },
+    "aclu_format_constraints": {
+      "text": "square 1080x1080, vertical 1080x1620, horizontal 1620x1080, artwork zone bottom, header zone empty for text",
+      "embedding": null,
+      "category": "format_technical",
+      "weight": 0.9,
+      "keywords": ["square", "vertical", "horizontal", "artwork zone", "header empty", "1080x1080", "1080x1620", "1620x1080"]
+    }
+  }
+}

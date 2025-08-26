@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: qwen-image-editor
+    env: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: "production"
+      - key: RENDER
+        value: "true"
+      - key: FAL_API_KEY
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true
+    rootDir: .
+    scaling:
+      minInstances: 1
+      maxInstances: 3

@@ -7,13 +7,13 @@ async function getRAGSystem() {
   const useFullRAG = !process.env.VERCEL
   
   if (useFullRAG) {
-    // In Railway/local environment, use full RAG system
+    // In Railway/local environment, use optimized RAG system
     try {
-      const { enhancePromptWithBranding } = await import("@/lib/rag-system")
-      console.log('[RAG] Using full RAG system')
+      const { enhancePromptWithBranding } = await import("@/lib/rag-system-optimized")
+      console.log('[RAG] Using optimized RAG system')
       return enhancePromptWithBranding
     } catch (error) {
-      console.warn("Full RAG not available, falling back to simple RAG:", error)
+      console.warn("Optimized RAG not available, falling back to simple RAG:", error)
       const { enhanceWithACLUBranding } = await import("../simple-rag/route")
       return enhanceWithACLUBranding
     }
