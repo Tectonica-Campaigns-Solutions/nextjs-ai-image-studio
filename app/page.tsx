@@ -38,6 +38,12 @@ export default function ImageEditor() {
   const [qwenError, setQwenError] = useState<string>("")
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [useRag, setUseRag] = useState(true) // RAG enabled by default
+  
+  // LoRA States for Qwen Text-to-Image
+  const [useCustomLoRA, setUseCustomLoRA] = useState(false)
+  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/tiger/sbpnvWxI8gDpTBP0mkFtx_adapter.safetensors")
+  const [triggerPhrase, setTriggerPhrase] = useState("your trained style")
+  const [loraScale, setLoraScale] = useState(1.0)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
 
   // Edit Image States
@@ -85,6 +91,9 @@ export default function ImageEditor() {
   const [showQwenImageToImageAdvanced, setShowQwenImageToImageAdvanced] = useState(false)
   const [useRagImageToImage, setUseRagImageToImage] = useState(true) // RAG for image-to-image
   const [qwenImageToImageGeneratedPrompt, setQwenImageToImageGeneratedPrompt] = useState<string>("") // Store generated prompt
+
+  // LoRA States for Qwen Image-to-Image
+  const [useCustomLoRAImageToImage, setUseCustomLoRAImageToImage] = useState(false)
 
   // Qwen LoRA Training States
   const [trainingFile, setTrainingFile] = useState<File | null>(null)
@@ -175,11 +184,26 @@ export default function ImageEditor() {
 
     try {
       const formData = new FormData()
-      formData.append("prompt", qwenPrompt)
+      
+      // Enhance prompt with trigger phrase if using custom LoRA
+      let finalPrompt = qwenPrompt
+      if (useCustomLoRA && triggerPhrase.trim()) {
+        finalPrompt = `${qwenPrompt}, ${triggerPhrase}`
+      }
+      
+      formData.append("prompt", finalPrompt)
       formData.append("useRag", useRag.toString())
       
       // Prepare settings object, converting types as needed
       const settings: any = { ...qwenSettings }
+      
+      // Add LoRA configuration if enabled
+      if (useCustomLoRA && loraUrl.trim()) {
+        settings.loras = [{
+          path: loraUrl.trim(),
+          scale: loraScale
+        }]
+      }
       
       // Remove empty string values
       Object.keys(settings).forEach(key => {
@@ -375,11 +399,26 @@ export default function ImageEditor() {
     try {
       const formData = new FormData()
       formData.append("image", qwenImageToImageImage)
-      formData.append("prompt", qwenImageToImagePrompt)
+      
+      // Enhance prompt with trigger phrase if using custom LoRA
+      let finalPrompt = qwenImageToImagePrompt
+      if (useCustomLoRAImageToImage && triggerPhrase.trim()) {
+        finalPrompt = `${qwenImageToImagePrompt}, ${triggerPhrase}`
+      }
+      
+      formData.append("prompt", finalPrompt)
       formData.append("useRAG", useRagImageToImage.toString())
 
       // Create a clean settings object with proper types
       const cleanSettings: any = {}
+      
+      // Add LoRA configuration if enabled
+      if (useCustomLoRAImageToImage && loraUrl.trim()) {
+        cleanSettings.loras = [{
+          path: loraUrl.trim(),
+          scale: loraScale
+        }]
+      }
       
       if (qwenImageToImageSettings.image_size && qwenImageToImageSettings.image_size !== "") {
         cleanSettings.image_size = qwenImageToImageSettings.image_size
@@ -638,6 +677,67 @@ export default function ImageEditor() {
                     <p className="text-xs text-muted-foreground">
                       When enabled, your prompt will be automatically enhanced with ACLU brand colors, styles, and layout guidelines.
                     </p>
+
+                    <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="useCustomLoRA"
+                          checked={useCustomLoRA}
+                          onCheckedChange={(checked) => setUseCustomLoRA(checked as boolean)}
+                        />
+                        <Label htmlFor="useCustomLoRA" className="text-sm font-medium">
+                          Use Custom LoRA Style
+                        </Label>
+                      </div>
+                      
+                      {useCustomLoRA && (
+                        <div className="space-y-3 ml-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="loraUrl" className="text-sm">LoRA Model URL</Label>
+                            <Input
+                              id="loraUrl"
+                              value={loraUrl}
+                              onChange={(e) => setLoraUrl(e.target.value)}
+                              placeholder="https://v3.fal.media/files/..."
+                              className="text-sm"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="triggerPhrase" className="text-sm">Trigger Phrase</Label>
+                            <Input
+                              id="triggerPhrase"
+                              value={triggerPhrase}
+                              onChange={(e) => setTriggerPhrase(e.target.value)}
+                              placeholder="your trained style"
+                              className="text-sm"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="loraScale" className="text-sm">LoRA Strength: {loraScale}</Label>
+                            <input
+                              id="loraScale"
+                              type="range"
+                              min="0.1"
+                              max="2.0"
+                              step="0.1"
+                              value={loraScale}
+                              onChange={(e) => setLoraScale(parseFloat(e.target.value))}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Subtle (0.1)</span>
+                              <span>Strong (2.0)</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Custom LoRA allows you to use your trained style. The trigger phrase will be automatically added to your prompt.
+                      </p>
+                    </div>
 
                     <div className="space-y-2">
                       <Button
@@ -1028,6 +1128,68 @@ export default function ImageEditor() {
                             }))}
                           />
                           <Label htmlFor="qwen-i2i-safety">Enable Safety Checker</Label>
+                        </div>
+
+                        {/* LoRA Configuration */}
+                        <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="useCustomLoRAImageToImage"
+                              checked={useCustomLoRA}
+                              onCheckedChange={(checked) => setUseCustomLoRA(checked as boolean)}
+                            />
+                            <Label htmlFor="useCustomLoRAImageToImage" className="text-sm font-medium">
+                              Use Custom LoRA Style
+                            </Label>
+                          </div>
+                          
+                          {useCustomLoRA && (
+                            <div className="space-y-3 ml-6">
+                              <div className="space-y-2">
+                                <Label htmlFor="loraUrlImageToImage" className="text-sm">LoRA Model URL</Label>
+                                <Input
+                                  id="loraUrlImageToImage"
+                                  value={loraUrl}
+                                  onChange={(e) => setLoraUrl(e.target.value)}
+                                  placeholder="https://v3.fal.media/files/..."
+                                  className="text-sm"
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="triggerPhraseImageToImage" className="text-sm">Trigger Phrase</Label>
+                                <Input
+                                  id="triggerPhraseImageToImage"
+                                  value={triggerPhrase}
+                                  onChange={(e) => setTriggerPhrase(e.target.value)}
+                                  placeholder="your trained style"
+                                  className="text-sm"
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label htmlFor="loraScaleImageToImage" className="text-sm">LoRA Strength: {loraScale}</Label>
+                                <input
+                                  id="loraScaleImageToImage"
+                                  type="range"
+                                  min="0.1"
+                                  max="2.0"
+                                  step="0.1"
+                                  value={loraScale}
+                                  onChange={(e) => setLoraScale(parseFloat(e.target.value))}
+                                  className="w-full"
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>Subtle (0.1)</span>
+                                  <span>Strong (2.0)</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <p className="text-xs text-muted-foreground">
+                            Custom LoRA allows you to use your trained style. The trigger phrase will be automatically added to your prompt.
+                          </p>
                         </div>
                       </div>
 
