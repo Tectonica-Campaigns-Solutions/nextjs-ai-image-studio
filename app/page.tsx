@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText } from "lucide-react"
+import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
@@ -119,6 +119,46 @@ export default function ImageEditor() {
           </div>
         </CardContent>
       </Card>
+    )
+  }
+
+  // Helper component for open in new tab button
+  const OpenInNewTabButton = ({ imageUrl, buttonText = "Open in New Tab" }: { imageUrl: string; buttonText?: string }) => {
+    if (!imageUrl) return null
+
+    const handleOpenInNewTab = () => {
+      if (imageUrl.startsWith('data:')) {
+        // Convert data URL to blob URL for opening in new tab
+        fetch(imageUrl)
+          .then(res => res.blob())
+          .then(blob => {
+            const blobUrl = URL.createObjectURL(blob)
+            window.open(blobUrl, '_blank', 'noopener,noreferrer')
+            // Clean up the blob URL after a delay to free memory
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+          })
+          .catch(err => {
+            console.error('Error opening image:', err)
+            // Fallback: try to open the data URL directly
+            window.open(imageUrl, '_blank', 'noopener,noreferrer')
+          })
+      } else {
+        // Regular URL - open directly
+        window.open(imageUrl, '_blank', 'noopener,noreferrer')
+      }
+    }
+
+    return (
+      <Button 
+        type="button"
+        variant="outline" 
+        size="sm" 
+        onClick={handleOpenInNewTab}
+        className="mt-3 w-full"
+      >
+        <ExternalLink className="h-4 w-4 mr-2" />
+        {buttonText}
+      </Button>
     )
   }
 
@@ -773,12 +813,15 @@ export default function ImageEditor() {
                       </div>
                     </div>
                   ) : qwenImageUrl ? (
-                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                      <img
-                        src={qwenImageUrl || "/placeholder.svg"}
-                        alt="Qwen generated image"
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="space-y-3">
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={qwenImageUrl || "/placeholder.svg"}
+                          alt="Qwen generated image"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <OpenInNewTabButton imageUrl={qwenImageUrl} />
                     </div>
                   ) : (
                     <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
@@ -1036,6 +1079,7 @@ export default function ImageEditor() {
                               >
                                 Download Image {index + 1}
                               </Button>
+                              <OpenInNewTabButton imageUrl={url} />
                             </div>
                           ))}
                         </div>
@@ -1373,12 +1417,15 @@ export default function ImageEditor() {
                       </div>
                     </div>
                   ) : editedImageUrl ? (
-                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                      <img
-                        src={editedImageUrl || "/placeholder.svg"}
-                        alt="Edited image result"
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="space-y-3">
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={editedImageUrl || "/placeholder.svg"}
+                          alt="Edited image result"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <OpenInNewTabButton imageUrl={editedImageUrl} />
                     </div>
                   ) : null}
                 </CardContent>
@@ -1508,12 +1555,15 @@ export default function ImageEditor() {
                       </div>
                     </div>
                   ) : generatedImageUrl ? (
-                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                      <img
-                        src={generatedImageUrl || "/placeholder.svg"}
-                        alt="Generated image result"
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="space-y-3">
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={generatedImageUrl || "/placeholder.svg"}
+                          alt="Generated image result"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <OpenInNewTabButton imageUrl={generatedImageUrl} />
                     </div>
                   ) : null}
                 </CardContent>

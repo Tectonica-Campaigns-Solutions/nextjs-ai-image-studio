@@ -108,12 +108,12 @@ async function calculateEmbeddings() {
     console.log('[RAG] Calculating embeddings...');
     
     if (!embeddingPipeline) {
-      embeddingPipeline = await initPipeline();
-      if (!embeddingPipeline) {
+      const pipelineFactory = await initPipeline();
+      if (!pipelineFactory) {
         console.warn('[RAG] No embedding pipeline available');
         return false;
       }
-      embeddingPipeline = await embeddingPipeline('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
+      embeddingPipeline = await pipelineFactory('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
     }
 
     const ragData = await loadRAGData();
@@ -175,11 +175,11 @@ async function findSimilarEmbeddings(prompt: string, threshold: number = 0.65) {
     await calculateEmbeddings();
 
     if (!embeddingPipeline) {
-      embeddingPipeline = await initPipeline();
-      if (!embeddingPipeline) {
+      const pipelineFactory = await initPipeline();
+      if (!pipelineFactory) {
         return [];
       }
-      embeddingPipeline = await embeddingPipeline('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
+      embeddingPipeline = await pipelineFactory('feature-extraction', 'sentence-transformers/all-MiniLM-L6-v2');
     }
 
     const ragData = await loadRAGData();
@@ -187,9 +187,15 @@ async function findSimilarEmbeddings(prompt: string, threshold: number = 0.65) {
       return [];
     }
 
+    // Verify pipeline is available before using it
+    if (!embeddingPipeline) {
+      console.warn('[RAG] Embedding pipeline not available for similarity calculation');
+      return [];
+    }
+
     // Calculate embedding for the input prompt
     const promptEmbedding = await embeddingPipeline(prompt);
-    const promptVector = Array.from(promptEmbedding.data);
+    const promptVector = Array.from(promptEmbedding.data) as number[];
 
     const similarities: Array<{
       key: string;
@@ -336,7 +342,7 @@ export async function enhancePromptWithBranding(originalPrompt: string) {
 
           // Extract colors if it's a color category
           if (category.includes('color')) {
-            const colorKeywords = relevantKeywords.filter(k => k.includes('#') || k.includes('red') || k.includes('blue'));
+            const colorKeywords = relevantKeywords.filter((k: string) => k.includes('#') || k.includes('red') || k.includes('blue'));
             suggestedColors.push(...colorKeywords);
           }
         }
