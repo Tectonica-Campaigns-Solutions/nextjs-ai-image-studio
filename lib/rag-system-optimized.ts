@@ -1,6 +1,5 @@
 import { readFile, writeFile, access } from 'fs/promises';
 import { join } from 'path';
-import { getOpenAIEmbedding, calculateCosineSimilarity, generateACLUCategoryEmbeddings } from './openai-embeddings';
 
 // Platform environment detection
 function isVercelEnvironment() {
@@ -202,6 +201,9 @@ async function findSimilarEmbeddings(prompt: string, threshold: number = 0.75) {
 async function findSimilarEmbeddingsWithOpenAI(prompt: string, threshold: number = 0.75) {
   try {
     console.log('[RAG] Using OpenAI embeddings for maximum precision');
+    
+    // Dynamic import to avoid build-time issues
+    const { getOpenAIEmbedding, calculateCosineSimilarity, generateACLUCategoryEmbeddings } = await import('./openai-embeddings');
     
     // Generate embedding for the input prompt
     const promptEmbedding = await getOpenAIEmbedding(prompt);

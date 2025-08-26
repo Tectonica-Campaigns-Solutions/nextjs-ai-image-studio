@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateACLUCategoryEmbeddings } from '@/lib/openai-embeddings';
+
+// Dynamic import to avoid build-time issues
+async function initializeEmbeddings() {
+  try {
+    // Check if OpenAI API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
+    }
+
+    const { generateACLUCategoryEmbeddings } = await import('@/lib/openai-embeddings');
+    return await generateACLUCategoryEmbeddings();
+  } catch (error) {
+    console.error('[RAG Init] Error during dynamic import or initialization:', error);
+    throw error;
+  }
+}
 
 export async function GET() {
   try {
     console.log('[RAG Init] Starting OpenAI embeddings initialization...');
     
     // Generate embeddings for all ACLU categories
-    const categoryEmbeddings = await generateACLUCategoryEmbeddings();
+    const categoryEmbeddings = await initializeEmbeddings();
     
     const categories = Object.keys(categoryEmbeddings);
     const totalDimensions = categories.length > 0 ? categoryEmbeddings[categories[0]]?.length || 0 : 0;

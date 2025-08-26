@@ -3,10 +3,22 @@ import { createHash } from 'crypto';
 import { readFile, writeFile, access } from 'fs/promises';
 import { join } from 'path';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client with error handling
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      console.warn('[OpenAI Embeddings] Failed to initialize OpenAI client:', error);
+      return null;
+    }
+  }
+  return openai;
+}
 
 // Cache configuration
 const EMBEDDINGS_CACHE_DIR = join(process.cwd(), 'data', 'rag');
@@ -67,6 +79,13 @@ export async function getOpenAIEmbedding(text: string): Promise<number[] | null>
   const promptHash = createPromptHash(text);
   
   try {
+    // Check if OpenAI is available
+    const client = getOpenAIClient();
+    if (!client) {
+      console.warn('[OpenAI Embeddings] OpenAI client not available - API key missing or invalid');
+      return null;
+    }
+
     // Check cache first
     const cache = await loadEmbeddingsCache();
     
@@ -77,7 +96,7 @@ export async function getOpenAIEmbedding(text: string): Promise<number[] | null>
 
     // Call OpenAI API
     console.log('[OpenAI Embeddings] Generating new embedding via API');
-    const response = await openai.embeddings.create({
+    const response = await client.embeddings.create({
       model: 'text-embedding-3-small',
       input: text,
       encoding_format: 'float',
