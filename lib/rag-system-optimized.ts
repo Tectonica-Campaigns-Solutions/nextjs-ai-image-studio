@@ -1,5 +1,6 @@
 import { readFile, writeFile, access } from 'fs/promises';
 import { join } from 'path';
+import { getOpenAIEmbedding, calculateCosineSimilarity, generateACLUCategoryEmbeddings } from './openai-embeddings';
 
 // Platform environment detection
 function isVercelEnvironment() {
@@ -13,6 +14,11 @@ function isRailwayEnvironment() {
 function shouldUseFullRAG() {
   // Use full RAG on Railway and local development, simple RAG only on Vercel
   return !isVercelEnvironment()
+}
+
+function shouldUseOpenAIEmbeddings() {
+  // Use OpenAI embeddings when API key is available and not in Vercel
+  return !!(process.env.OPENAI_API_KEY && shouldUseFullRAG())
 }
 
 // Conditional import for transformers - only in non-Vercel environments
@@ -175,12 +181,105 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 }
 
 // Find similar embeddings for a given prompt
-async function findSimilarEmbeddings(prompt: string, threshold: number = 0.65) {
-  if (!shouldUseFullRAG() || !isTransformersAvailable) {
-    console.log('[RAG] Using simple keyword matching instead of embeddings');
+async function findSimilarEmbeddings(prompt: string, threshold: number = 0.75) {
+  // Priority 1: Use OpenAI embeddings for maximum precision
+  if (shouldUseOpenAIEmbeddings()) {
+    return await findSimilarEmbeddingsWithOpenAI(prompt, threshold);
+  }
+  
+  // Priority 2: Use transformers if available (legacy support)
+  if (shouldUseFullRAG() && isTransformersAvailable) {
+    console.log('[RAG] Using transformers embeddings (fallback)');
+    return await findSimilarEmbeddingsWithTransformers(prompt, threshold);
+  }
+  
+  // Priority 3: Use keyword matching as final fallback
+  console.log('[RAG] Using simple keyword matching (final fallback)');
+  return findKeywordMatches(prompt);
+}
+
+// OpenAI embeddings implementation (primary method)
+async function findSimilarEmbeddingsWithOpenAI(prompt: string, threshold: number = 0.75) {
+  try {
+    console.log('[RAG] Using OpenAI embeddings for maximum precision');
+    
+    // Generate embedding for the input prompt
+    const promptEmbedding = await getOpenAIEmbedding(prompt);
+    if (!promptEmbedding) {
+      console.warn('[RAG] Failed to generate OpenAI embedding, falling back');
+      return findKeywordMatches(prompt);
+    }
+
+    // Generate or load ACLU category embeddings
+    const categoryEmbeddings = await generateACLUCategoryEmbeddings();
+    
+    const similarities: Array<{
+      key: string;
+      entry: any;
+      similarity: number;
+    }> = [];
+
+    // Compare with each category
+    for (const [category, categoryEmbedding] of Object.entries(categoryEmbeddings)) {
+      const similarity = calculateCosineSimilarity(promptEmbedding, categoryEmbedding);
+      
+      if (similarity >= threshold) {
+        similarities.push({
+          key: category,
+          entry: {
+            keywords: getCategoryKeywords(category),
+            weight: getCategoryWeight(category)
+          },
+          similarity
+        });
+      }
+    }
+
+    // Sort by similarity (highest first)
+    similarities.sort((a, b) => b.similarity - a.similarity);
+    
+    console.log(`[RAG] Found ${similarities.length} similar categories using OpenAI embeddings`);
+    return similarities;
+
+  } catch (error) {
+    console.error('[RAG] Error with OpenAI embeddings:', error);
     return findKeywordMatches(prompt);
   }
+}
 
+// Helper functions for ACLU categories
+function getCategoryKeywords(category: string): string[] {
+  const categoryKeywords: { [key: string]: string[] } = {
+    brand_essence: ["civil rights", "social justice", "equality", "freedom", "democracy", "human rights", "advocacy", "protection"],
+    photography_style: ["documentary", "photojournalism", "candid", "authentic", "natural lighting", "professional", "portrait"],
+    color_primary: ["ACLU red", "deep blue", "black", "white", "high contrast", "bold colors", "patriotic"],
+    color_secondary: ["warm tones", "natural", "diverse", "authentic", "skin tones"],
+    composition: ["centered", "rule of thirds", "protest", "rally", "portrait composition", "demonstration"],
+    lighting: ["natural lighting", "dramatic", "high contrast", "documentary style", "authentic"],
+    mood_emotion: ["empowerment", "determination", "hope", "justice", "dignity", "strength", "solidarity", "community"],
+    visual_elements: ["text overlay", "ACLU logo", "banners", "signs", "demonstrations", "diverse people", "activism"]
+  };
+  
+  return categoryKeywords[category] || [];
+}
+
+function getCategoryWeight(category: string): number {
+  const categoryWeights: { [key: string]: number } = {
+    brand_essence: 1.3,
+    photography_style: 1.2,
+    color_primary: 1.1,
+    color_secondary: 1.0,
+    composition: 1.0,
+    lighting: 0.9,
+    mood_emotion: 1.1,
+    visual_elements: 1.0
+  };
+  
+  return categoryWeights[category] || 1.0;
+}
+
+// Legacy transformers implementation (fallback)
+async function findSimilarEmbeddingsWithTransformers(prompt: string, threshold: number = 0.65) {
   try {
     // Ensure embeddings are calculated
     await calculateEmbeddings();
