@@ -103,6 +103,13 @@ export async function getOpenAIEmbedding(text: string): Promise<number[] | null>
 
   } catch (error) {
     console.error('[OpenAI Embeddings] Error generating embedding:', error);
+    
+    // Check if it's a quota/billing error
+    if (error instanceof Error && error.message.includes('429')) {
+      console.warn('[OpenAI Embeddings] Quota exceeded - API credits may be exhausted');
+      console.log('[OpenAI Embeddings] Please check your OpenAI billing at: https://platform.openai.com/account/billing');
+    }
+    
     return null;
   }
 }
