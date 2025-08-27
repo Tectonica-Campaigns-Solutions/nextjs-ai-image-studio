@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
+import { ContentModerationService } from "@/lib/content-moderation"
 
 // Dynamic import for platform compatibility
 async function getRAGSystem() {
@@ -36,9 +37,30 @@ export async function POST(request: NextRequest) {
     const prompt = formData.get("prompt") as string
     const settingsJson = formData.get("settings") as string
     const useRag = formData.get("useRag") === "true"
+    const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
+    }
+
+    // Content moderation check
+    try {
+      console.log("[MODERATION] Checking content for prompt:", prompt.substring(0, 50) + "...")
+      const moderationService = new ContentModerationService(orgType)
+      const moderationResult = await moderationService.moderateContent({ prompt })
+      
+      if (!moderationResult.safe) {
+        console.log("[MODERATION] Content blocked:", moderationResult.reason)
+        return NextResponse.json({ 
+          error: moderationResult.reason,
+          category: moderationResult.category,
+          blocked: true
+        }, { status: 400 })
+      }
+      console.log("[MODERATION] Content approved")
+    } catch (moderationError) {
+      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+      // Continue with generation if moderation fails to avoid blocking users
     }
 
     // Check if Fal.ai API key is available
@@ -75,9 +97,9 @@ export async function POST(request: NextRequest) {
         } else {
           console.warn("[v0] RAG system not available")
         }
-      } catch (ragError) {
+      } catch (ragError: any) {
         console.warn("[v0] RAG enhancement failed, using original prompt:", ragError)
-        console.warn("[v0] RAG error details:", ragError.message || ragError)
+        console.warn("[v0] RAG error details:", ragError?.message || ragError)
       }
     }
 
@@ -102,8 +124,8 @@ export async function POST(request: NextRequest) {
 
       // Apply RAG format suggestion if available and no custom format specified
       if (ragSuggestedFormat && !settings.image_size && !settings.width && !settings.height) {
-        if (ragSuggestedFormat.dimensions) {
-          const [width, height] = ragSuggestedFormat.dimensions.split('x').map((s: string) => parseInt(s.replace('px', '')));
+        if ((ragSuggestedFormat as any).dimensions) {
+          const [width, height] = (ragSuggestedFormat as any).dimensions.split('x').map((s: string) => parseInt(s.replace('px', '')));
           settings.width = width;
           settings.height = height;
         }

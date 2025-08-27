@@ -171,6 +171,41 @@ export default function ImageEditor() {
     )
   }
 
+  // Helper function to handle moderation errors with user-friendly messages
+  const handleModerationError = (errorData: any): string => {
+    if (!errorData?.error) return "Could not generate image. Please try with different content."
+    
+    const errorMessage = errorData.error.toLowerCase()
+    
+    // Check for specific moderation reasons
+    if (errorMessage.includes('explicit') || errorMessage.includes('sexual') || errorMessage.includes('nude')) {
+      return "This content contains explicit material that is not permitted. Try descriptions like 'professionals in meeting' or 'natural landscape'."
+    }
+    
+    if (errorMessage.includes('violence') || errorMessage.includes('weapon') || errorMessage.includes('violent')) {
+      return "This content includes violent elements that are not permitted. Try descriptions like 'peaceful demonstration' or 'community event'."
+    }
+    
+    if (errorMessage.includes('public figure') || errorMessage.includes('celebrity') || errorMessage.includes('politician')) {
+      return "We cannot generate images of public figures or celebrities. Describe generic people like 'community leader' or 'organizational spokesperson'."
+    }
+    
+    if (errorMessage.includes('fake news') || errorMessage.includes('misinformation') || errorMessage.includes('false')) {
+      return "This content could include misinformation. Make sure to describe accurate and truthful information for your organization."
+    }
+    
+    if (errorMessage.includes('inappropriate language') || errorMessage.includes('offensive')) {
+      return "The language used is not appropriate. Rephrase your description in a more professional and constructive manner."
+    }
+    
+    if (errorMessage.includes('blocked by content moderation')) {
+      return "This content does not comply with our usage policies. Try descriptions appropriate like 'educational campaign' or 'informational material'."
+    }
+    
+    // Generic moderation message
+    return "This content is not permitted according to our policies. Try descriptions appropriate for professional organizational use."
+  }
+
   const handleQwenSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
@@ -218,6 +253,7 @@ export default function ImageEditor() {
       if (settings.seed) settings.seed = parseInt(settings.seed as string)
       
       formData.append("settings", JSON.stringify(settings))
+      formData.append("orgType", "general") // TODO: Make this configurable per organization
 
       const response = await fetch("/api/qwen-text-to-image", {
         method: "POST",
@@ -225,7 +261,13 @@ export default function ImageEditor() {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          // Use user-friendly error handling for moderation
+          const friendlyMessage = handleModerationError(errorData)
+          throw new Error(friendlyMessage)
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
       }
 
       const result = await response.json()
@@ -461,6 +503,7 @@ export default function ImageEditor() {
       }
       
       formData.append("settings", JSON.stringify(cleanSettings))
+      formData.append("orgType", "general") // TODO: Make this configurable per organization
 
       const response = await fetch("/api/qwen-image-to-image", {
         method: "POST",
@@ -468,8 +511,13 @@ export default function ImageEditor() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          // Use user-friendly error handling for moderation
+          const friendlyMessage = handleModerationError(errorData)
+          throw new Error(friendlyMessage)
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
       }
 
       const result = await response.json()
@@ -894,7 +942,26 @@ export default function ImageEditor() {
                     title="Generated Prompt Used"
                   />
 
-                  {qwenError && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{qwenError}</div>}
+                  {qwenError && (
+                    <div className="p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
+                      <div className="flex items-start space-x-3">
+                        <div className="text-2xl">🚫</div>
+                        <div className="flex-1">
+                          <div className="font-medium mb-2">Content Not Allowed</div>
+                          <div className="text-sm mb-3">{qwenError}</div>
+                          <div className="text-xs bg-amber-100 p-2 rounded border border-amber-200">
+                            <div className="font-medium mb-1">💡 Examples of appropriate content:</div>
+                            <ul className="list-disc list-inside space-y-1">
+                              <li>Peaceful environmental demonstration</li>
+                              <li>People working as a team</li>
+                              <li>Educational informational material</li>
+                              <li>Community events</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1211,9 +1278,24 @@ export default function ImageEditor() {
                       />
 
                       {qwenImageToImageError && (
-                        <Alert variant="destructive">
-                          <AlertDescription>{qwenImageToImageError}</AlertDescription>
-                        </Alert>
+                        <div className="p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
+                          <div className="flex items-start space-x-3">
+                            <div className="text-2xl">🚫</div>
+                            <div className="flex-1">
+                              <div className="font-medium mb-2">Content Not Allowed</div>
+                              <div className="text-sm mb-3">{qwenImageToImageError}</div>
+                              <div className="text-xs bg-amber-100 p-2 rounded border border-amber-200">
+                                <div className="font-medium mb-1">💡 Examples of appropriate prompts:</div>
+                                <ul className="list-disc list-inside space-y-1">
+                                  <li>Transform to professional style</li>
+                                  <li>Add educational elements</li>
+                                  <li>Adapt for organizational use</li>
+                                  <li>Enhance for informational campaign</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
 

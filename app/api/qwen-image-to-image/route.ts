@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
+import { ContentModerationService } from "@/lib/content-moderation"
 
 // Dynamic import for Vercel compatibility
 async function getRAGSystem() {
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
     const prompt = formData.get("prompt") as string
     const useRAG = formData.get("useRAG") === "true"
     const settingsString = formData.get("settings") as string
+    const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
 
     console.log("[v0] Qwen Image-to-Image endpoint called")
     console.log("[v0] Image provided:", !!image)
@@ -43,6 +45,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Image and prompt are required" }, { status: 400 })
     }
 
+    // Content moderation check
+    try {
+      console.log("[MODERATION] Checking content for image-to-image prompt:", prompt.substring(0, 50) + "...")
+      const moderationService = new ContentModerationService(orgType)
+      const moderationResult = await moderationService.moderateContent({ prompt })
+      
+      if (!moderationResult.safe) {
+        console.log("[MODERATION] Content blocked:", moderationResult.reason)
+        return NextResponse.json({ 
+          error: moderationResult.reason,
+          category: moderationResult.category,
+          blocked: true
+        }, { status: 400 })
+      }
+      console.log("[MODERATION] Content approved")
+    } catch (moderationError) {
+      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+      // Continue with generation if moderation fails to avoid blocking users
+    }
+
     // Check if Fal.ai API key is available
     const falApiKey = process.env.FAL_API_KEY
     if (!falApiKey) {
@@ -50,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse settings
-    let settings = {}
+    let settings: any = {}
     if (settingsString) {
       try {
         settings = JSON.parse(settingsString)

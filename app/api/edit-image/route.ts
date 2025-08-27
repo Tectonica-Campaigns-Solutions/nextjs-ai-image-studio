@@ -60,12 +60,12 @@ export async function POST(request: NextRequest) {
 
         if (enhanceFunction) {
           const enhancement = await enhanceFunction(prompt)
-          finalPrompt = enhancement.enhancedPrompt || enhancement
+          finalPrompt = (enhancement as any).enhancedPrompt || (typeof enhancement === 'string' ? enhancement : prompt)
           ragMetadata = {
             originalPrompt: prompt,
             enhancedPrompt: finalPrompt,
-            suggestedColors: enhancement.suggestedColors || [],
-            brandingElements: enhancement.brandingElements?.length || 0
+            suggestedColors: (enhancement as any).suggestedColors || [],
+            brandingElements: (enhancement as any).brandingElements?.length || 0
           }
           console.log("[v0] RAG enhanced prompt:", finalPrompt)
         } else {
