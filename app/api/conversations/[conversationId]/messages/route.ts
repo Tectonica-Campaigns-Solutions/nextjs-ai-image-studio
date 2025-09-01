@@ -1,6 +1,10 @@
-import { openai } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY_CHATBOT,
+});
 
 export async function POST(
   request: NextRequest,
