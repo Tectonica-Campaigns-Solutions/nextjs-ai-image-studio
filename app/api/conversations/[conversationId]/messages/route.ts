@@ -2,15 +2,31 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY_CHATBOT,
-});
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!openai && process.env.OPENAI_API_KEY_CHATBOT) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY_CHATBOT,
+      });
+    } catch (error) {
+      console.warn(
+        "[OPENAI_API_KEY_CHATBOT] Failed to initialize OpenAI client:",
+        error
+      );
+      return null;
+    }
+  }
+  return openai;
+}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { conversationId: string } }
 ) {
   try {
+    const client = getOpenAIClient();
     const { conversationId } = await params;
 
     const body = await request.json();
@@ -58,7 +74,7 @@ export async function POST(
       .eq("id", conversationId);
 
     // @ts-ignore
-    const response = await openai.responses.create({
+    const response = await client?.responses.create({
       prompt: {
         id: promptId,
       },
@@ -94,9 +110,9 @@ export async function POST(
     });
 
     // Check if we need to generate a image
-    let finalMessage = response.output_text || "";
+    let finalMessage = response?.output_text || "";
 
-    const imageGenerationTool = response.output?.find(
+    const imageGenerationTool = response?.output?.find(
       (item) =>
         item.type === "function_call" &&
         item.name === "generate_image_post_request" &&
@@ -130,13 +146,13 @@ export async function POST(
         if (imageData?.images && imageData.images.length > 0) {
           const imageUrl = imageData.images[0].url;
 
-          if (response.output_text) {
+          if (response?.output_text) {
             finalMessage = `${response.output_text}\n\n${imageUrl}`;
           } else {
             finalMessage = imageUrl;
           }
         } else {
-          finalMessage = response.output_text || "Image generation failed";
+          finalMessage = response?.output_text || "Image generation failed";
         }
       } catch (error) {
         console.error("Error generating image:", error);
