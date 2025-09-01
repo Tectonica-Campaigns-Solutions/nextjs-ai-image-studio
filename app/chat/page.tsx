@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Building2, ArrowRight, Users, Sparkles } from "lucide-react";
+import { Building2, ArrowRight, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { clients } from "@/lib/clients";

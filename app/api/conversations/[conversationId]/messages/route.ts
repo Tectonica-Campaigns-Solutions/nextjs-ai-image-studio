@@ -89,64 +89,55 @@ export async function POST(
       ],
     });
 
-    // TESTING
-    let finalMessage = response.output_text;
+    // Check if we need to generate a image
+    let finalMessage = response.output_text || "";
 
-    const imageGenerationTool = response.tools.find(
-      (tool) =>
-        tool.type === "function" && tool.name === "generate_image_post_request"
+    const imageGenerationTool = response.output?.find(
+      (item) =>
+        item.type === "function_call" &&
+        item.name === "generate_image_post_request" &&
+        item.status === "completed"
     );
 
-    console.log({ response: JSON.stringify(response, null, 2) });
-
-    // Check if this is a simple greeting or generic message
-    const isSimpleMessage =
-      /^(hi|hello|hey|greetings|howdy|hola|hi there|good morning|good afternoon|good evening)$/i.test(
-        content.trim()
-      );
-
     // Only proceed with image generation if it's not a simple greeting and the tool was called
-    if (imageGenerationTool && !isSimpleMessage) {
+    if (imageGenerationTool) {
       // const parameters = imageGenerationTool.parameters;
 
       const conversationText = conversationHistory
         .map((msg) => msg.content.map((c) => c.text).join(" "))
         .join(" ");
-
       const prompt = `"${conversationText}" "${content}"`;
 
-      console.log(prompt);
-
       try {
+        const formData = new FormData();
+        formData.append("prompt", prompt);
+
         const imageResp = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/generate-image`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt }),
-          }
+          { method: "POST", body: formData }
         );
+
+        if (!imageResp.ok) {
+          throw new Error(`Image generation failed: ${imageResp.status}`);
+        }
+
         const imageData = await imageResp.json();
+        if (imageData?.imageUrl) {
+          finalMessage = response.output_text || imageData.imageUrl;
 
-        // const imageBase64 = imageData[0]?.output;
-
-        // // Upload to supabase
-        // const { data: uploadData, error: uploadError } = await supabase.storage
-        //   .from("images")
-        //   .upload(`/${conversationId}/${Date.now()}.png`, imageBase64);
-
-        // const imageUrl = uploadData?.fullPath;
-        // console.log({ imageUrl });
-
-        finalMessage =
-          imageData[0].output[0].url || "No se pudo generar la imagen";
+          if (response.output_text) {
+            finalMessage = `${response.output_text}\n\n${imageData.imageUrl}`;
+          } else {
+            finalMessage = imageData.imageUrl;
+          }
+        } else {
+          finalMessage = response.output_text || "Image generation failed";
+        }
       } catch (error) {
-        console.error("Error generando imagen:", error);
-        finalMessage = "Ocurrió un error generando la imagen.";
+        console.error("Error generating image:", error);
+        finalMessage = "Error generating image.";
       }
     }
-
-    // console.log({ finalMessage });
 
     // Save assistant message
     await supabase.from("messages").insert({
