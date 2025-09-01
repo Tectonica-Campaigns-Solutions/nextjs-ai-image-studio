@@ -111,7 +111,7 @@ export async function POST(
       try {
         const formData = new FormData();
         formData.append("prompt", prompt);
-        formData.append("useRAG", "true");
+        formData.append("useRag", "true");
 
         const imageResp = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/qwen-text-to-image`,
