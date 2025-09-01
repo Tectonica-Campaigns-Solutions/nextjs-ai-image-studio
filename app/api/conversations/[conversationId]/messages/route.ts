@@ -111,9 +111,10 @@ export async function POST(
       try {
         const formData = new FormData();
         formData.append("prompt", prompt);
+        formData.append("useRAG", "true");
 
         const imageResp = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/generate-image`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/qwen-text-to-image`,
           { method: "POST", body: formData }
         );
 
@@ -122,13 +123,13 @@ export async function POST(
         }
 
         const imageData = await imageResp.json();
-        if (imageData?.imageUrl) {
-          finalMessage = response.output_text || imageData.imageUrl;
+        if (imageData?.images && imageData.images.length > 0) {
+          const imageUrl = imageData.images[0].url;
 
           if (response.output_text) {
-            finalMessage = `${response.output_text}\n\n${imageData.imageUrl}`;
+            finalMessage = `${response.output_text}\n\n${imageUrl}`;
           } else {
-            finalMessage = imageData.imageUrl;
+            finalMessage = imageUrl;
           }
         } else {
           finalMessage = response.output_text || "Image generation failed";
