@@ -31,6 +31,8 @@ import { bots } from "@/lib/bot";
 import { clients } from "@/lib/clients";
 import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
 
+const THRESHOLD = 20 * 1024 * 1024;
+
 function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -59,6 +61,9 @@ function DashboardContent() {
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ file: File; fileId?: string; uploading: boolean; error?: string }>
   >([]);
+
+  const selectedBotData = bots.find((bot) => bot.id === selectedBot);
+  const promptSuggestions = selectedBotData?.suggestions || [];
 
   useEffect(() => {
     initialize();
@@ -256,10 +261,10 @@ function DashboardContent() {
     const files = Array.from(e.target.files || []);
 
     for (const file of files) {
-      if (file.size > 20 * 1024 * 1024) {
+      if (file.size > THRESHOLD) {
         toast({
-          title: "Archivo muy grande",
-          description: `${file.name} excede el límite de 20MB`,
+          title: "File too large",
+          description: `${file.name} exceeds the 20MB limit`,
           variant: "destructive",
         });
         continue;
@@ -307,15 +312,14 @@ function DashboardContent() {
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
-              ? { ...f, uploading: false, error: "Error al subir archivo" }
+              ? { ...f, uploading: false, error: "Error uploading file" }
               : f
           )
         );
 
         toast({
-          title: "Error al subir archivo",
-          description:
-            error instanceof Error ? error.message : "Error desconocido",
+          title: "Error uploading file",
+          description: error instanceof Error ? error.message : "Unknown error",
           variant: "destructive",
         });
       }
@@ -407,7 +411,9 @@ function DashboardContent() {
 
       const fileIds = attachedFiles
         .filter((f) => f.fileId && !f.error)
-        .map((f) => f.fileId!);
+        .map((f) => {
+          return { name: f.file.name, fileId: f.fileId! };
+        });
 
       setPrompt("");
       setAttachedFiles([]);
@@ -474,7 +480,7 @@ function DashboardContent() {
     setAttachedFiles([]);
   };
 
-  const selectedBotData = bots.find((bot) => bot.id === selectedBot);
+  console.log({ messages });
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -738,6 +744,28 @@ function DashboardContent() {
                         {selectedBotData?.description}
                       </p>
                     </div>
+                    {promptSuggestions.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-semibold mb-2">
+                          Prompt Suggestions
+                        </h4>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {promptSuggestions.map(
+                            (suggestion: string, idx: number) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPrompt(suggestion)}
+                                className="text-xs"
+                              >
+                                {suggestion}
+                              </Button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

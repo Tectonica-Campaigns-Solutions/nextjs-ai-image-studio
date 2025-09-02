@@ -12,6 +12,7 @@ export type SidebarBotType = {
   color: string;
   bgColor: string;
   hoverColor: string;
+  suggestions: string[];
 };
 
 export type ClientType = {
