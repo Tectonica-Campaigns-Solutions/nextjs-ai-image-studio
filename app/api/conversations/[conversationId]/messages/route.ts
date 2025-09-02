@@ -49,6 +49,12 @@ export async function POST(
       .order("created_at", { ascending: true })
       .limit(10);
 
+    // Get file references
+    const { data: fileReferences } = await supabase
+      .from("files")
+      .select("id, name")
+      .eq("conversation_id", conversationId);
+
     const conversationHistory = (previousMessages ?? []).map((msg) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
       content: [
@@ -73,6 +79,15 @@ export async function POST(
       .update({ updated_at: new Date().toISOString() })
       .eq("id", conversationId);
 
+    // Upload files
+    for (const fileId of fileIds || []) {
+      await supabase.from("files").insert({
+        id: fileId,
+        conversation_id: conversationId,
+        created_at: new Date().toISOString(),
+      });
+    }
+
     // @ts-ignore
     const response = await client?.responses.create({
       prompt: {
@@ -83,7 +98,13 @@ export async function POST(
         ...conversationHistory,
         {
           role: "user",
-          content: [{ type: "input_text", text: content }],
+          content: [
+            { type: "input_text", text: content },
+            ...(fileIds || []).map((fileId: string) => ({
+              type: "input_file",
+              file_id: fileId,
+            })),
+          ],
         },
       ],
       tools: [

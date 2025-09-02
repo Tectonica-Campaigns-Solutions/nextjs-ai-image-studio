@@ -138,9 +138,17 @@ function DashboardContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.messages || []);
+
+        const processedMessages = data.messages.map((msg: any) => ({
+          ...msg,
+          attachedFiles: msg.attachedFiles || [],
+        }));
+
+        setMessages(processedMessages || []);
         setCurrentConversationId(conversationId);
         currentConversationIdRef.current = conversationId;
+
+        setAttachedFiles([]);
       }
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -248,7 +256,6 @@ function DashboardContent() {
     const files = Array.from(e.target.files || []);
 
     for (const file of files) {
-      // Validar tamaño
       if (file.size > 20 * 1024 * 1024) {
         toast({
           title: "Archivo muy grande",
@@ -258,36 +265,31 @@ function DashboardContent() {
         continue;
       }
 
-      // Añadir a la lista con estado de carga
       const fileEntry = {
         file,
         uploading: true,
         error: undefined,
+        fileId: undefined,
       };
 
       setAttachedFiles((prev) => [...prev, fileEntry]);
 
-      // Subir archivo a OpenAI
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("purpose", "assistants");
-        if (currentConversationId) {
-          formData.append("conversationId", currentConversationId);
-        }
 
-        const response = await fetch("/api/files/upload", {
+        const response = await fetch("/api/files", {
           method: "POST",
           body: formData,
         });
 
         if (!response.ok) {
-          throw new Error("Failed to upload file");
+          const error = await response.json();
+          throw new Error(error.details || "Failed to upload file");
         }
 
         const data = await response.json();
 
-        // Actualizar con el fileId
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
@@ -296,7 +298,9 @@ function DashboardContent() {
           )
         );
 
-        console.log(`✅ File uploaded: ${file.name} with ID: ${data.fileId}`);
+        console.log(
+          `✅ File uploaded to OpenAI: ${file.name} with ID: ${data.fileId}`
+        );
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
 
@@ -307,6 +311,13 @@ function DashboardContent() {
               : f
           )
         );
+
+        toast({
+          title: "Error al subir archivo",
+          description:
+            error instanceof Error ? error.message : "Error desconocido",
+          variant: "destructive",
+        });
       }
     }
 
@@ -320,11 +331,12 @@ function DashboardContent() {
 
     if (fileEntry.fileId) {
       try {
-        await fetch(`/api/files/${fileEntry.fileId}`, {
+        await fetch(`/api/openai/files/${fileEntry.fileId}`, {
           method: "DELETE",
         });
+        console.log(`Deleted file from OpenAI: ${fileEntry.fileId}`);
       } catch (error) {
-        console.error("Error deleting file:", error);
+        console.error("Error deleting file from OpenAI:", error);
       }
     }
 
@@ -384,13 +396,18 @@ function DashboardContent() {
         role: "user" as const,
         text: prompt,
         timestamp: new Date(),
+        attachedFiles: attachedFiles
+          .filter((f) => f.fileId)
+          .map((f) => ({
+            name: f.file.name,
+            fileId: f.fileId!,
+          })),
       };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Get file IDs from attached files
-      // const fileIds = attachedFiles
-      //   .filter((f) => f.fileId && !f.error)
-      //   .map((f) => f.fileId!);
+      const fileIds = attachedFiles
+        .filter((f) => f.fileId && !f.error)
+        .map((f) => f.fileId!);
 
       setPrompt("");
       setAttachedFiles([]);
@@ -407,7 +424,7 @@ function DashboardContent() {
             content: userMessage.text,
             promptId: promptConfigId,
             botType: selectedBot,
-            // fileIds: fileIds.length > 0 ? fileIds : undefined,
+            fileIds: fileIds.length > 0 ? fileIds : undefined,
           }),
         }
       );
@@ -777,6 +794,25 @@ function DashboardContent() {
                             <Markdown>{message.text}</Markdown>
                           )}
                         </div>
+
+                        {message.attachedFiles &&
+                          message.attachedFiles.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <div className="flex flex-wrap gap-1">
+                                {message.attachedFiles.map((file, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-background/50"
+                                  >
+                                    <Paperclip className="h-3 w-3" />
+                                    <span className="max-w-[150px] truncate">
+                                      {file.name}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         {message.timestamp && (
                           <div className="mt-2 text-xs opacity-70">
                             {new Date(message.timestamp).toLocaleTimeString()}
@@ -879,7 +915,7 @@ function DashboardContent() {
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,.xlsx"
+                  accept=".pdf,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.html,.xml,.rtf,image/*"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -920,6 +956,13 @@ function DashboardContent() {
                   )}
                 </Button>
               </div>
+
+              {attachedFiles.some((f) => f.uploading) && (
+                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Subiendo archivos a OpenAI...
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
