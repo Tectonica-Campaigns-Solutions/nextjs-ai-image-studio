@@ -1,305 +1,348 @@
 {
-  "project_name": "ACLU Together We Are Stronger Poster",
   "brand": "American Civil Liberties Union (ACLU)",
-  "output_type": "printed_poster",
-  "ai_generation_instructions": {
-    "description": "Instructions optimized for AI comprehension based on training data",
-    "base_prompt": "documentary photograph of diverse group of people marching together at a protest, professional photojournalism style, crowd of activists walking forward, determined expressions, outdoor daylight, wide shot showing many people, civil rights march atmosphere",
-    "use_privileged_positions": [
-      "people",
-      "crowd",
-      "outdoor",
-      "daylight",
-      "documentary photography",
-      "wide shot"
-    ],
-    "stylization_hints": {
-      "treatment": "high contrast",
-      "lighting": "natural daylight",
-      "mood": "determined and unified",
-      "composition": "group moving forward together"
-    },
-    "negative_prompts": [
-      "no text",
-      "no words",
-      "no signs with text",
-      "no letters",
-      "no logos"
-    ]
-  },
-  "brand_specifications": {
-    "tone_of_voice": {
-      "principles": [
-        "We're in this together",
-        "We bring heart",
-        "We empower action"
-      ],
-      "mood": "resolute, patriotic, together",
-      "message": "collective strength through unity"
-    },
-    "color_palette": {
-      "implementation_note": "AI will approximate these as color categories, exact values applied in post-processing",
-      "primary_colors": {
-        "red": {
-          "hex": "#ef404e",
-          "rgb": [
-            239,
-            64,
-            78
-          ],
-          "cmyk": [
-            0,
-            90,
-            67,
-            0
-          ],
-          "ai_instruction": "red accents"
-        },
-        "blue": {
-          "hex": "#0055aa",
-          "rgb": [
-            0,
-            85,
-            170
-          ],
-          "cmyk": [
-            100,
-            70,
-            0,
-            0
-          ],
-          "ai_instruction": "blue accents"
-        }
-      },
-      "secondary_color": {
-        "dark_navy": {
-          "hex": "#130f54",
-          "rgb": [
-            19,
-            15,
-            84
-          ],
-          "cmyk": [
-            100,
-            100,
-            29,
-            38
-          ],
-          "ai_instruction": "dark blue background elements"
-        }
-      },
-      "neutral": {
-        "white": {
-          "hex": "#ffffff",
-          "use": "text and highlights"
-        }
-      },
-      "application": "red, dark blue, and white - patriotic but bold"
-    },
-    "visual_style": {
-      "foundation": "documentary photography",
-      "treatment": "modern engraving or high contrast duotone",
-      "characteristics": [
-        "photojournalistic authenticity",
-        "high contrast for impact",
-        "clear editorial/artistic treatment to prevent deepfake appearance",
-        "bold and dynamic composition"
-      ],
-      "avoid": [
-        "overly posed or stock photo appearance",
-        "generic or cliché imagery",
-        "pure photorealistic without stylization"
-      ]
-    },
-    "typography": {
-      "headline_text": "TOGETHER WE ARE STRONGER",
-      "typeface": "GT America Bold or Compressed Bold",
-      "case": "ALL CAPS",
-      "color": "white on dark background or red/blue on light",
-      "placement": "top quarter of layout (applied in post-processing)",
-      "characteristics": [
-        "bold and defiant",
-        "clear and assured",
-        "resolute voice"
-      ]
+  "version": "Edition 1.5, April 2019",
+  "visual_language": {
+    "core_concept": "We the people dare to create a more perfect union",
+    "visual_expression": "Bold, colorful, and dynamic",
+    "brand_ideas": {
+      "resolute": "Firm in convictions, bold and defiant statements",
+      "patriotic": "Not just red, white and blue - we are red, everything, and blue",
+      "historic": "Modern engraving treatment pays tribute to our past",
+      "serious": "Authoritative and informational tone",
+      "layered": "Many voices, inclusive, built on differences but grounded in shared values",
+      "together": "Out of many, we are one"
     }
   },
-  "technical_specifications": {
-    "dimensions": {
-      "format": "vertical poster",
-      "size": "24x36 inches",
-      "resolution": "300 dpi",
-      "pixels": "7200x10800px",
-      "orientation": "portrait"
-    },
-    "composition_layout": {
-      "image_zone": {
-        "description": "Bottom three-quarters for main visual",
-        "coordinates": "y=2700-10800px (bottom 75%)",
-        "content": "diverse group marching"
-      },
-      "text_zone": {
-        "description": "Top quarter reserved for headline",
-        "coordinates": "y=0-2700px (top 25%)",
-        "content": "TOGETHER WE ARE STRONGER text overlay",
-        "note": "Keep empty in AI generation, add text in post-processing"
-      },
-      "logo_placement": {
-        "position": "bottom right corner",
-        "size": "appropriately scaled",
-        "version": "ACLU red or blue logo depending on background"
-      }
-    }
-  },
-  "post_processing_requirements": {
-    "description": "Elements that MUST be applied programmatically after AI generation",
-    "mandatory_steps": [
-      {
-        "step": 1,
-        "action": "Apply exact brand colors",
-        "details": "Convert to duotone or tritone using #ef404e (red) and #130f54 (dark navy)"
-      },
-      {
-        "step": 2,
-        "action": "Crop and position",
-        "details": "Ensure image occupies bottom 75%, leave top 25% for text overlay"
-      },
-      {
-        "step": 3,
-        "action": "Add typography",
-        "details": "Place 'TOGETHER WE ARE STRONGER' in GT America Bold, all caps, in top section"
-      },
-      {
-        "step": 4,
-        "action": "Apply stylization",
-        "details": "High contrast treatment or modern engraving effect for artistic/editorial appearance"
-      },
-      {
-        "step": 5,
-        "action": "Add ACLU logo",
-        "details": "Place logo in bottom right corner with appropriate padding"
-      }
-    ],
-    "quality_checks": [
-      "Verify no deepfake appearance - must look clearly artistic/editorial",
-      "Ensure exact brand colors are applied",
-      "Confirm typography is legible and properly positioned",
-      "Check composition follows rule: image in bottom 3/4, text in top 1/4"
+  "brand_voice": {
+    "quest": "We the people dare to create a more perfect union",
+    "tagline": "We the People",
+    "guiding_principles": [
+      "We're in this together",
+      "We bring heart",
+      "We empower action",
+      "We see the forest for the trees",
+      "We teach, not preach",
+      "We're 'We the People'"
     ]
-  },
-  "implementation_notes": {
-    "ai_limitations": [
-      "AI will NOT produce exact hex colors - only approximations",
-      "AI will NOT leave exact top 25% empty - requires post-crop",
-      "AI will NOT add text - must be added in post-processing",
-      "AI will NOT apply exact brand treatments - requires post-processing"
-    ],
-    "success_factors": [
-      "Use 'documentary photography' as base - aligns with AI training",
-      "Request 'diverse group' and 'crowd' - Tier 1 concepts AI understands",
-      "Apply stylization in post for brand consistency",
-      "Keep negative prompts minimal and binary"
-    ],
-    "expected_ai_output": "Photojournalistic image of diverse people marching, some red and blue color elements, high contrast, no text",
-    "final_result_after_post": "Stylized poster with exact brand colors, proper typography, and ACLU visual identity"
   },
   "color_palette": {
-    "implementation_note": "AI will approximate these as color categories, exact values applied in post-processing",
-    "primary_colors": {
+    "principal_colors": {
       "red": {
-        "hex": "#ef404e",
         "rgb": [
           239,
           64,
           78
         ],
+        "hex": "#ef404e",
         "cmyk": [
           0,
           90,
           67,
           0
         ],
-        "ai_instruction": "red accents"
+        "pantone": "199 C / 199 U",
+        "name": "ACLU Red",
+        "description": "Principal color representing strength and urgency"
       },
       "blue": {
-        "hex": "#0055aa",
         "rgb": [
           0,
           85,
           170
         ],
+        "hex": "#0055aa",
         "cmyk": [
           100,
           70,
           0,
           0
         ],
-        "ai_instruction": "blue accents"
+        "pantone": "2175 C / 2175 U",
+        "name": "ACLU Blue",
+        "description": "Principal color representing trust and stability"
       }
     },
-    "secondary_color": {
+    "light_colors": {
+      "light_yellow": {
+        "rgb": [
+          255,
+          224,
+          106
+        ],
+        "hex": "#ffe06a",
+        "cmyk": [
+          0,
+          10,
+          70,
+          0
+        ],
+        "pantone": "1205 C / 1205 U"
+      },
+      "light_pink": {
+        "rgb": [
+          250,
+          190,
+          175
+        ],
+        "hex": "#fabeaf",
+        "cmyk": [
+          0,
+          30,
+          25,
+          0
+        ],
+        "pantone": "489 C / 489 U"
+      },
+      "light_orange": {
+        "rgb": [
+          252,
+          170,
+          23
+        ],
+        "hex": "#fcaa17",
+        "cmyk": [
+          0,
+          35,
+          100,
+          0
+        ],
+        "pantone": "7549 C / 7549 U"
+      },
+      "light_azure": {
+        "rgb": [
+          163,
+          219,
+          227
+        ],
+        "hex": "#a3dbe3",
+        "cmyk": [
+          34,
+          0,
+          10,
+          0
+        ],
+        "pantone": "635 C / 635 U"
+      },
+      "light_green": {
+        "rgb": [
+          167,
+          215,
+          181
+        ],
+        "hex": "#a7d7b5",
+        "cmyk": [
+          35,
+          0,
+          36,
+          0
+        ],
+        "pantone": "2253 C / 2253 U"
+      }
+    },
+    "dark_colors": {
+      "black": {
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "hex": "#000000",
+        "cmyk": [
+          0,
+          0,
+          0,
+          100
+        ],
+        "pantone": "Black C / Black U"
+      },
+      "dark_gray": {
+        "rgb": [
+          60,
+          53,
+          50
+        ],
+        "hex": "#3c3532",
+        "cmyk": [
+          70,
+          70,
+          70,
+          50
+        ],
+        "pantone": "Warm Gray 11 C / Warm Gray 11 U"
+      },
+      "dark_green": {
+        "rgb": [
+          0,
+          52,
+          58
+        ],
+        "hex": "#00343a",
+        "cmyk": [
+          100,
+          60,
+          60,
+          55
+        ],
+        "pantone": "7722 C / 7722 U"
+      },
       "dark_navy": {
-        "hex": "#130f54",
         "rgb": [
           19,
           15,
           84
         ],
+        "hex": "#130f54",
         "cmyk": [
           100,
           100,
           29,
           38
         ],
-        "ai_instruction": "dark blue background elements"
+        "pantone": "2758 C / 2758 U"
+      },
+      "dark_burgundy": {
+        "rgb": [
+          105,
+          27,
+          64
+        ],
+        "hex": "#691b40",
+        "cmyk": [
+          55,
+          100,
+          60,
+          30
+        ],
+        "pantone": "7435 C / 7435 U"
+      },
+      "dark_purple": {
+        "rgb": [
+          85,
+          37,
+          100
+        ],
+        "hex": "#552564",
+        "cmyk": [
+          77,
+          100,
+          28,
+          17
+        ],
+        "pantone": "2623 C / 2623 U"
       }
     },
-    "neutral": {
-      "white": {
-        "hex": "#ffffff",
-        "use": "text and highlights"
-      }
-    },
-    "application": "red, dark blue, and white - patriotic but bold"
-  },
-  "visual_style": {
-    "foundation": "documentary photography",
-    "treatment": "modern engraving or high contrast duotone",
-    "characteristics": [
-      "photojournalistic authenticity",
-      "high contrast for impact",
-      "clear editorial/artistic treatment to prevent deepfake appearance",
-      "bold and dynamic composition"
-    ],
-    "avoid": [
-      "overly posed or stock photo appearance",
-      "generic or cliché imagery",
-      "pure photorealistic without stylization"
-    ]
-  },
-  "typography": {
-    "headline_text": "TOGETHER WE ARE STRONGER",
-    "typeface": "GT America Bold or Compressed Bold",
-    "case": "ALL CAPS",
-    "color": "white on dark background or red/blue on light",
-    "placement": "top quarter of layout (applied in post-processing)",
-    "characteristics": [
-      "bold and defiant",
-      "clear and assured",
-      "resolute voice"
-    ]
+    "usage_guidelines": {
+      "core_principle": "Use red, something else, and blue",
+      "accessibility": "Combine light colors with dark for readability",
+      "special_cases": "Blue text needs 18pt+ on light backgrounds, Red text needs 18pt+ on dark backgrounds or white"
+    }
   },
   "illustration": {
+    "purpose": "Deliver information and add visual interest with ONE central element occupying the bottom three-quarters of layout",
     "photography_style": {
-      "preferred": [],
-      "avoid": []
+      "allowed": "Photorealistic imagery and documentary-style photography",
+      "preferred": [
+        "Portraits of real people",
+        "Candid photos of everyday citizens",
+        "On-the-ground documentation of events",
+        "Natural settings and lighting",
+        "Frank, unposed expressions"
+      ],
+      "avoid": [
+        "Overly posed or synthetic-looking photos",
+        "Excessive filters or effects",
+        "Stock photos that look too generic"
+      ]
     },
-    "layout_rules": {},
+    "modern_engraving": {
+      "purpose": "Optional distinctive treatment for certain images",
+      "best_for": [
+        "Stock photos or dull images",
+        "Low-resolution photos",
+        "Portraits when stylization is desired",
+        "Creating variety in visual treatment"
+      ],
+      "color_rule": "Choose two colors per image with enough contrast"
+    },
     "format_rules": {
-      "supported_formats": {}
+      "prompt_requirement": "Always ask user: 'What format would you like? Square (1:1), Vertical (2:3), or Horizontal (3:2)?'",
+      "supported_formats": {
+        "square_1_1": {
+          "name": "Square (1:1)",
+          "dimensions": "1080x1080px",
+          "artwork_zone": "x=0-1080, y=270-1080",
+          "header_zone": "x=0-1080, y=0-270 (leave empty for text)"
+        },
+        "vertical_2_3": {
+          "name": "Vertical (2:3)",
+          "dimensions": "1080x1620px",
+          "artwork_zone": "x=0-1080, y=405-1620",
+          "header_zone": "x=0-1080, y=0-405 (leave empty for text)"
+        },
+        "horizontal_3_2": {
+          "name": "Horizontal (3:2)",
+          "dimensions": "1620x1080px",
+          "artwork_zone": "x=0-1620, y=270-1080",
+          "header_zone": "x=0-1620, y=0-270 (leave empty for text)"
+        }
+      }
     },
     "generation_constraints": {
-      "negative_prompts": []
+      "hard_rules": [
+        "MUST: Keep all visual content within the artwork_zone coordinates",
+        "MUST: Top quarter remains empty for text overlay",
+        "DO NOT: Render any text, letters, numbers, words, or writing in the image",
+        "DO NOT: Include any typography, slogans, or alphanumeric characters",
+        "MUST: Use consistent visual style throughout",
+        "ALLOWED: Both photorealistic and stylized imagery"
+      ],
+      "negative_prompts": [
+        "no lettering",
+        "no typography",
+        "no text",
+        "no words",
+        "no writing",
+        "no signs",
+        "no captions"
+      ],
+      "style_options": "Can use photorealistic imagery, documentary photography, stylized illustrations, or abstract visual elements"
+    },
+    "layout_rules": {
+      "placement": "ONE central visual element only",
+      "position": "Bottom three-quarters of layout",
+      "restrictions": "Top quarter must remain free for text overlay",
+      "text_prohibition": "NO text, signs, letters, or writing allowed within generated images",
+      "style_options": "Both photorealistic and stylized imagery allowed",
+      "photography_allowed": "Yes - documentary style, portraits, real people and events",
+      "enforcement_note": "Header zone must be completely empty - no visual elements",
+      "style_consistency": {
+        "single_style": "Maintain consistent visual approach throughout a series",
+        "mixing_allowed": "Can mix photography with modern engraving treatment for variety",
+        "unified_approach": "Choose appropriate style based on content and message"
+      },
+      "composition_rules": {
+        "asymmetry": "Use asymmetrical arrangements for contemporary feel",
+        "layering": "Build in layers for richness and depth",
+        "angles": "Angled elements add energy (limit to 1-2 per piece)",
+        "edge_safety": "Keep important elements away from edges",
+        "complete_elements": "Never cut off or partially show any visual element",
+        "context": "Show environmental context in photos when possible"
+      }
+    }
+  },
+  "digital_design": {
+    "principles": {
+      "user_experience": "Design for screen must make it easy to absorb story in seconds",
+      "engagement": "Creative use of video, audio and interaction - but don't overdo it",
+      "contrast": "Ensure sufficient contrast between elements"
+    }
+  },
+  "campaigns": {
+    "guidelines": {
+      "no_custom_logos": "Campaigns should not have their own logos",
+      "use_core_brand": "Always include national or affiliate ACLU logo",
+      "consistency": "Choose subset of colors and typefaces for campaign cohesion",
+      "image_style": "Use consistent image style and theme throughout series"
     }
   },
   "layout": {},

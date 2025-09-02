@@ -15,6 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BrandingUploader } from "@/components/branding-uploader"
+import RAGSelector from "@/components/rag-selector"
+import { useRAGStore } from "@/lib/rag-store"
 
 export default function ImageEditor() {
   // Qwen Text-to-Image States
@@ -38,6 +40,9 @@ export default function ImageEditor() {
   const [qwenError, setQwenError] = useState<string>("")
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [useRag, setUseRag] = useState(true) // RAG enabled by default
+  
+  // RAG Store
+  const { getActiveRAG } = useRAGStore()
   
   // LoRA States for Qwen Text-to-Image
   const [useCustomLoRA, setUseCustomLoRA] = useState(false)
@@ -229,6 +234,13 @@ export default function ImageEditor() {
       formData.append("prompt", finalPrompt)
       formData.append("useRag", useRag.toString())
       
+      // Add active RAG information
+      const activeRAG = getActiveRAG()
+      if (useRag && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
+      
       // Prepare settings object, converting types as needed
       const settings: any = { ...qwenSettings }
       
@@ -334,6 +346,13 @@ export default function ImageEditor() {
       formData.append("image", selectedImage)
       formData.append("prompt", prompt)
       formData.append("useRAG", useRagEdit.toString())
+      
+      // Add active RAG information for edit
+      const activeRAG = getActiveRAG()
+      if (useRagEdit && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
 
       const response = await fetch("/api/edit-image", {
         method: "POST",
@@ -382,6 +401,14 @@ export default function ImageEditor() {
       const formData = new FormData()
       formData.append("prompt", generatePrompt)
       formData.append("useRAG", useRagGenerate.toString())
+      
+      // Add active RAG information for generation
+      const activeRAG = getActiveRAG()
+      if (useRagGenerate && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
+      
       if (referenceImage) {
         formData.append("referenceImage", referenceImage)
       }
@@ -450,6 +477,13 @@ export default function ImageEditor() {
       
       formData.append("prompt", finalPrompt)
       formData.append("useRAG", useRagImageToImage.toString())
+      
+      // Add active RAG information for image-to-image
+      const activeRAG = getActiveRAG()
+      if (useRagImageToImage && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
 
       // Create a clean settings object with proper types
       const cleanSettings: any = {}
@@ -670,11 +704,25 @@ export default function ImageEditor() {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">AI Image Studio</h1>
-          <p className="text-muted-foreground">
-            Generate, edit, and transform images using advanced Qwen and FLUX AI models
-          </p>
+        {/* Header with RAG Selector */}
+        <div className="flex items-center justify-between">
+          <div className="text-center space-y-2 flex-1">
+            <h1 className="text-3xl font-bold">AI Image Studio</h1>
+            <p className="text-muted-foreground">
+              Generate, edit, and transform images using advanced Qwen and FLUX AI models
+            </p>
+          </div>
+          
+          {/* RAG Selector - aligned to the right */}
+          <div className="flex-shrink-0">
+            <RAGSelector 
+              onUploadClick={() => {
+                // Switch to Upload Branding tab when upload is clicked
+                const tabsTrigger = document.querySelector('[value="upload-branding"]') as HTMLElement
+                tabsTrigger?.click()
+              }}
+            />
+          </div>
         </div>
 
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
@@ -719,7 +767,7 @@ export default function ImageEditor() {
                         onCheckedChange={(checked) => setUseRag(checked as boolean)}
                       />
                       <Label htmlFor="useRag" className="text-sm font-medium">
-                        Use ACLU Branding Guidelines (RAG)
+                        Use Branding Guidelines (RAG)
                       </Label>
                     </div>
                     <p className="text-xs text-muted-foreground">
