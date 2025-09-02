@@ -86,27 +86,31 @@ export async function POST(
           content: [{ type: "input_text", text: content }],
         },
       ],
-      // tools: [
-      //   {
-      //     type: "function",
-      //     name: "generate_image_post_request",
-      //     description:
-      //       "ONLY use this function when the user EXPLICITLY asks for an image generation. DO NOT use for greetings, general questions, or casual conversation. The user must specifically request an image, picture, drawing, or visual creation.",
-      //     strict: true,
-      //     parameters: {
-      //       type: "object",
-      //       properties: {
-      //         prompt: {
-      //           type: "string",
-      //           description:
-      //             "Description or instructions for the desired image",
-      //         },
-      //       },
-      //       required: ["prompt"],
-      //       additionalProperties: false,
-      //     },
-      //   },
-      // ],
+      tools: [
+        {
+          type: "file_search",
+          vector_store_ids: ["vs_68af2b3491e08191b2701410fed7e56f"],
+        },
+        {
+          type: "function",
+          name: "generate_image_post_request",
+          description:
+            "ONLY use this function when the user EXPLICITLY asks for an image generation. DO NOT use for greetings, general questions, or casual conversation. The user must specifically request an image, picture, drawing, or visual creation.",
+          strict: true,
+          parameters: {
+            type: "object",
+            properties: {
+              prompt: {
+                type: "string",
+                description:
+                  "Description or instructions for the desired image",
+              },
+            },
+            required: ["prompt"],
+            additionalProperties: false,
+          },
+        },
+      ],
     });
 
     // Check if we need to generate a image
