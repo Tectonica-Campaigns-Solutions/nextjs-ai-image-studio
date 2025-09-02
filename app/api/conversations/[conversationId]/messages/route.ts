@@ -109,6 +109,10 @@ export async function POST(
       ],
       tools: [
         {
+          type: "file_search",
+          vector_store_ids: ["vs_68af2b3491e08191b2701410fed7e56f"],
+        },
+        {
           type: "function",
           name: "generate_image_post_request",
           description:
