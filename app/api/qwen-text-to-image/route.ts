@@ -37,6 +37,8 @@ export async function POST(request: NextRequest) {
     const prompt = formData.get("prompt") as string
     const settingsJson = formData.get("settings") as string
     const useRag = formData.get("useRag") === "true"
+    const activeRAGId = formData.get("activeRAGId") as string
+    const activeRAGName = formData.get("activeRAGName") as string
     const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
 
     if (!prompt) {
@@ -73,6 +75,8 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Fal API Key exists:", !!falApiKey)
     console.log("[v0] Original prompt:", prompt)
     console.log("[v0] Use RAG:", useRag)
+    console.log("[v0] Active RAG ID:", activeRAGId)
+    console.log("[v0] Active RAG Name:", activeRAGName)
     console.log("[v0] Settings JSON:", settingsJson)
 
     // Enhance prompt with RAG if enabled
@@ -83,16 +87,25 @@ export async function POST(request: NextRequest) {
     if (useRag) {
       try {
         console.log("[v0] Enhancing prompt with RAG...")
+        console.log("[v0] Using RAG:", activeRAGName || "Default RAG")
         console.log("[v0] Environment check:", process.env.VERCEL ? 'Vercel' : 'Local');
         const enhancePromptWithBranding = await getRAGSystem()
         if (enhancePromptWithBranding) {
           console.log("[v0] RAG system loaded, processing prompt:", prompt);
-          const enhancement = await enhancePromptWithBranding(prompt)
+          
+          // For now, pass just the prompt to maintain compatibility
+          // TODO: Update RAG functions to accept context
+          const enhancementContext = {
+            activeRAGId,
+            activeRAGName
+          }
+          const enhancement = await enhancePromptWithBranding(prompt, enhancementContext)
           finalPrompt = enhancement.enhancedPrompt
           ragNegativePrompt = enhancement.negativePrompt
           ragSuggestedFormat = enhancement.suggestedFormat
           
           console.log("[v0] Enhanced prompt:", finalPrompt)
+          console.log("[v0] Used RAG:", activeRAGName)
           console.log("[v0] RAG negative prompt:", ragNegativePrompt)
         } else {
           console.warn("[v0] RAG system not available")

@@ -4,7 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Upload, CheckCircle, AlertCircle, FileText, Download } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Upload, CheckCircle, AlertCircle, FileText, Download, Database } from "lucide-react"
+import { useRAGStore, ragUtils } from "@/lib/rag-store"
+import { RAGModel } from "@/lib/rag-types"
 
 interface BrandingUploaderProps {
   onUploadSuccess?: () => void;
@@ -17,9 +20,17 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
     type: 'success' | 'error' | null;
     message: string;
   }>({ type: null, message: '' })
-  const [currentFileInfo, setCurrentFileInfo] = useState<any>(null)
+  
+  // RAG-specific fields
+  const [ragName, setRAGName] = useState("")
+  const [ragDescription, setRAGDescription] = useState("")
+  
+  // Store integration
+  const { addRAG, getAllRAGs, getActiveRAG } = useRAGStore()
+  const allRAGs = getAllRAGs()
+  const activeRAG = getActiveRAG()
 
-  // Load current file info on component mount
+  // Legacy support - load current file info on component mount
   useEffect(() => {
     loadCurrentFileInfo()
   }, [])
@@ -29,7 +40,8 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
       const response = await fetch('/api/upload-branding')
       if (response.ok) {
         const data = await response.json()
-        setCurrentFileInfo(data.currentFile)
+        // Note: This is for backward compatibility with existing single-file system
+        console.log('Legacy file info loaded:', data.currentFile)
       }
     } catch (error) {
       console.error('Error loading current file info:', error)
@@ -48,51 +60,91 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
       }
       setFile(selectedFile)
       setUploadStatus({ type: null, message: '' })
+      
+      // Auto-fill name from filename if not set
+      if (!ragName && selectedFile.name) {
+        const nameWithoutExt = selectedFile.name.replace('.json', '')
+        setRAGName(nameWithoutExt.charAt(0).toUpperCase() + nameWithoutExt.slice(1))
+      }
     }
   }
 
   const handleUpload = async () => {
     if (!file) return
 
+    // Validate RAG fields
+    const errors = ragUtils.validateRAGModel({
+      name: ragName,
+      content: 'placeholder' // We'll validate actual content after reading
+    })
+    
+    if (errors.length > 0) {
+      setUploadStatus({
+        type: 'error',
+        message: errors.join(', ')
+      })
+      return
+    }
+
     setUploading(true)
     setUploadStatus({ type: null, message: '' })
 
     try {
+      // Read file content
+      const fileContent = await file.text()
+      let parsedContent
+      
+      try {
+        parsedContent = JSON.parse(fileContent)
+      } catch (parseError) {
+        throw new Error('Invalid JSON file')
+      }
+
+      // Create RAG model
+      const ragModel: RAGModel = {
+        id: ragUtils.generateRAGId(ragName),
+        name: ragName.trim(),
+        content: JSON.stringify(parsedContent, null, 2),
+        description: ragDescription.trim() || undefined,
+        uploadedAt: new Date(),
+        size: file.size,
+        fileType: 'application/json',
+        version: '1.0'
+      }
+
+      // Add to store
+      addRAG(ragModel)
+
+      // Also upload to legacy API for backward compatibility
       const formData = new FormData()
       formData.append('brandingFile', file)
 
-      const response = await fetch('/api/upload-branding', {
+      await fetch('/api/upload-branding', {
         method: 'POST',
         body: formData
       })
 
-      const result = await response.json()
+      setUploadStatus({
+        type: 'success',
+        message: `RAG "${ragName}" uploaded successfully and set as active!`
+      })
 
-      if (response.ok) {
-        setUploadStatus({
-          type: 'success',
-          message: `Branding file uploaded successfully! File size: ${result.fileSize} characters`
-        })
-        setFile(null)
-        // Reset file input
-        const fileInput = document.getElementById('branding-file') as HTMLInputElement
-        if (fileInput) fileInput.value = ''
-        
-        // Reload current file info
-        await loadCurrentFileInfo()
-        
-        // Notify parent component
-        onUploadSuccess?.()
-      } else {
-        setUploadStatus({
-          type: 'error',
-          message: result.error || 'Upload failed'
-        })
-      }
-    } catch (error) {
+      // Reset form
+      setFile(null)
+      setRAGName("")
+      setRAGDescription("")
+      
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+      if (fileInput) fileInput.value = ''
+
+      onUploadSuccess?.()
+
+    } catch (error: any) {
+      console.error('Upload error:', error)
       setUploadStatus({
         type: 'error',
-        message: 'Network error occurred during upload'
+        message: error.message || 'An error occurred during upload'
       })
     } finally {
       setUploading(false)
@@ -203,20 +255,56 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Current File Info */}
-        {currentFileInfo && (
+        {/* Active RAG Info */}
+        {activeRAG && (
           <Alert>
-            <CheckCircle className="h-4 w-4" />
+            <Database className="h-4 w-4" />
             <AlertDescription>
-              <strong>Current file loaded:</strong> {currentFileInfo.size} characters, 
-              {currentFileInfo.principalColors} principal colors configured
+              <strong>Active RAG:</strong> {activeRAG.name} ({ragUtils.formatFileSize(activeRAG.size)})
+              {activeRAG.description && (
+                <span className="block text-sm text-muted-foreground mt-1">
+                  {activeRAG.description}
+                </span>
+              )}
             </AlertDescription>
           </Alert>
         )}
 
+        {/* RAG Summary */}
+        {allRAGs.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {allRAGs.length} RAG{allRAGs.length !== 1 ? 's' : ''} available. 
+            {!activeRAG && ' Select one from the dropdown above.'}
+          </div>
+        )}
+
+        {/* RAG Details Form */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="rag-name">RAG Name *</Label>
+            <Input
+              id="rag-name"
+              value={ragName}
+              onChange={(e) => setRAGName(e.target.value)}
+              placeholder="e.g., ACLU Brand Guidelines"
+              disabled={uploading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="rag-description">Description (Optional)</Label>
+            <Input
+              id="rag-description"
+              value={ragDescription}
+              onChange={(e) => setRAGDescription(e.target.value)}
+              placeholder="Brief description of this RAG"
+              disabled={uploading}
+            />
+          </div>
+        </div>
+
         {/* File Upload */}
         <div className="space-y-2">
-          <Label htmlFor="branding-file">Select JSON Branding File</Label>
+          <Label htmlFor="branding-file">Select JSON Branding File *</Label>
           <Input
             id="branding-file"
             type="file"
@@ -224,6 +312,9 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
             onChange={handleFileChange}
             disabled={uploading}
           />
+          <div className="text-xs text-muted-foreground">
+            Upload a JSON file containing branding guidelines and configurations
+          </div>
         </div>
 
         {/* Selected File Display */}
@@ -249,11 +340,11 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
         <div className="flex gap-2">
           <Button 
             onClick={handleUpload} 
-            disabled={!file || uploading}
+            disabled={!file || !ragName.trim() || uploading}
             className="flex items-center gap-2"
           >
             <Upload className="w-4 h-4" />
-            {uploading ? 'Uploading...' : 'Upload Branding File'}
+            {uploading ? 'Uploading RAG...' : 'Upload RAG'}
           </Button>
           
           <Button 

@@ -50,6 +50,8 @@ let ragCache: {
   embeddings: any;
   metadata: any;
   lastLoaded: number;
+  ragId?: string;
+  ragName?: string;
 } | null = null;
 
 // File paths for persistent storage
@@ -68,35 +70,66 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 // Load RAG data from persistent storage
-async function loadRAGData() {
+async function loadRAGData(ragId?: string) {
   try {
     // Check if we have cached data that's still fresh (less than 1 hour old)
-    if (ragCache && (Date.now() - ragCache.lastLoaded) < 3600000) {
-      console.log('[RAG] Using cached RAG data');
+    if (ragCache && ragCache.ragId === ragId && (Date.now() - ragCache.lastLoaded) < 3600000) {
+      console.log(`[RAG] Using cached RAG data for: ${ragId || 'default'}`);
       return ragCache;
     }
 
-    console.log('[RAG] Loading RAG data from persistent storage...');
+    console.log(`[RAG] Loading RAG data for: ${ragId || 'default'}`);
     
-    // Load embeddings cache
-    const embeddingsExist = await fileExists(EMBEDDINGS_CACHE_PATH);
-    const metadataExist = await fileExists(METADATA_PATH);
+    // Try to load specific RAG content first
+    let ragContent = null;
+    if (ragId) {
+      // Try to load specific RAG file from the store
+      try {
+        // First check if we have a specific file for this RAG
+        const ragSpecificPath = join(RAG_DATA_PATH, `${ragId}.json`);
+        if (await fileExists(ragSpecificPath)) {
+          ragContent = JSON.parse(await readFile(ragSpecificPath, 'utf-8'));
+          console.log(`[RAG] Loaded specific RAG content from: ${ragSpecificPath}`);
+        }
+      } catch (error) {
+        console.log(`[RAG] No specific file found for RAG ${ragId}, trying alternative paths`);
+      }
+    }
     
-    if (!embeddingsExist || !metadataExist) {
-      console.warn('[RAG] RAG data files not found in persistent storage');
-      return null;
+    // If no specific RAG content found, load default embeddings
+    if (!ragContent) {
+      console.log('[RAG] Loading default RAG data from persistent storage...');
+      
+      // Load embeddings cache
+      const embeddingsExist = await fileExists(EMBEDDINGS_CACHE_PATH);
+      const metadataExist = await fileExists(METADATA_PATH);
+      
+      if (!embeddingsExist || !metadataExist) {
+        console.warn('[RAG] RAG data files not found in persistent storage');
+        return null;
+      }
+
+      const embeddingsData = JSON.parse(await readFile(EMBEDDINGS_CACHE_PATH, 'utf-8'));
+      const metadataData = JSON.parse(await readFile(METADATA_PATH, 'utf-8'));
+
+      ragCache = {
+        embeddings: embeddingsData,
+        metadata: metadataData,
+        ragId: ragId || 'default',
+        lastLoaded: Date.now()
+      };
+    } else {
+      // Use specific RAG content
+      ragCache = {
+        embeddings: ragContent.embeddings || {},
+        metadata: ragContent.metadata || ragContent,
+        ragId: ragId || 'default',
+        ragName: ragContent.name,
+        lastLoaded: Date.now()
+      };
     }
 
-    const embeddingsData = JSON.parse(await readFile(EMBEDDINGS_CACHE_PATH, 'utf-8'));
-    const metadataData = JSON.parse(await readFile(METADATA_PATH, 'utf-8'));
-
-    ragCache = {
-      embeddings: embeddingsData,
-      metadata: metadataData,
-      lastLoaded: Date.now()
-    };
-
-    console.log(`[RAG] Loaded ${Object.keys(embeddingsData.embeddings).length} embeddings from cache`);
+    console.log(`[RAG] Loaded ${Object.keys(ragCache.embeddings?.embeddings || ragCache.embeddings || {}).length} embeddings from cache`);
     return ragCache;
 
   } catch (error) {
@@ -392,18 +425,19 @@ function findKeywordMatches(prompt: string) {
 }
 
 // Enhanced prompt with ACLU branding
-export async function enhancePromptWithBranding(originalPrompt: string) {
+export async function enhancePromptWithBranding(originalPrompt: string, context?: { activeRAGId?: string; activeRAGName?: string }) {
   try {
-    console.log('[RAG] Enhancing prompt with ACLU branding:', originalPrompt);
+    const ragName = context?.activeRAGName || 'ACLU';
+    console.log(`[RAG] Enhancing prompt with ${ragName} branding:`, originalPrompt);
 
-    // Load RAG data if not already loaded
-    if (!ragCache) {
-      await loadRAGData();
+    // Load RAG data if not already loaded or if we need a different RAG
+    if (!ragCache || ragCache.ragId !== context?.activeRAGId) {
+      await loadRAGData(context?.activeRAGId);
     }
 
     if (!ragCache) {
       console.warn('[RAG] No RAG data available, using simple enhancement');
-      return getSimpleACLUEnhancement(originalPrompt);
+      return getSimpleEnhancement(originalPrompt, ragName);
     }
 
     // Find similar embeddings
@@ -411,7 +445,7 @@ export async function enhancePromptWithBranding(originalPrompt: string) {
     
     if (similarities.length === 0) {
       console.log('[RAG] No similar embeddings found, using simple enhancement');
-      return getSimpleACLUEnhancement(originalPrompt);
+      return getSimpleEnhancement(originalPrompt, ragName);
     }
 
     // Build enhanced prompt
@@ -497,24 +531,51 @@ export async function enhancePromptWithBranding(originalPrompt: string) {
 
   } catch (error) {
     console.error('[RAG] Error enhancing prompt:', error);
-    return getSimpleACLUEnhancement(originalPrompt);
+    const ragName = context?.activeRAGName || 'ACLU';
+    return getSimpleEnhancement(originalPrompt, ragName);
   }
 }
 
 // Simple ACLU enhancement fallback
+function getSimpleEnhancement(prompt: string, ragName?: string) {
+  // Different enhancements based on RAG name
+  switch (ragName?.toLowerCase()) {
+    case 'egp':
+      return {
+        enhancedPrompt: `${prompt}, professional corporate photography, clean modern aesthetic, EGP brand colors, business professional`,
+        suggestedColors: ['#2563eb', '#1e40af'], // Blue theme for EGP
+        suggestedFormat: "professional EGP corporate style",
+        negativePrompt: "no text, no words, no letters, amateur, cluttered, unprofessional",
+        brandingElements: [
+          { category: 'corporate', text: 'professional corporate photography', weight: 1.0 }
+        ],
+        metadata: {
+          ragMethod: 'simple-fallback',
+          ragName: ragName || 'EGP'
+        }
+      };
+    
+    case 'aclu':
+    default:
+      return {
+        enhancedPrompt: `${prompt}, documentary photography style, high contrast, ACLU red and blue colors, professional photojournalism`,
+        suggestedColors: ['#ef404e', '#0055aa'],
+        suggestedFormat: "professional ACLU style",
+        negativePrompt: "no text, no words, no letters, no signs, overly posed, synthetic-looking",
+        brandingElements: [
+          { category: 'documentary', text: 'documentary photography style', weight: 1.0 }
+        ],
+        metadata: {
+          ragMethod: 'simple-fallback',
+          ragName: ragName || 'ACLU'
+        }
+      };
+  }
+}
+
+// Legacy function for backwards compatibility
 function getSimpleACLUEnhancement(prompt: string) {
-  return {
-    enhancedPrompt: `${prompt}, documentary photography style, high contrast, ACLU red and blue colors, professional photojournalism`,
-    suggestedColors: ['#ef404e', '#0055aa'],
-    suggestedFormat: "professional ACLU style",
-    negativePrompt: "no text, no words, no letters, no signs, overly posed, synthetic-looking",
-    brandingElements: [
-      { category: 'fallback', text: 'documentary photography style', weight: 1.0 }
-    ],
-    metadata: {
-      ragMethod: 'simple-fallback'
-    }
-  };
+  return getSimpleEnhancement(prompt, 'ACLU');
 }
 
 // Initialize RAG system (call this once on startup)

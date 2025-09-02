@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
     const image = formData.get("image") as File
     const prompt = formData.get("prompt") as string
     const useRAG = formData.get("useRAG") === "true"
+    const activeRAGId = formData.get("activeRAGId") as string
+    const activeRAGName = formData.get("activeRAGName") as string
 
     if (!image || !prompt) {
       return NextResponse.json({ error: "Image and prompt are required" }, { status: 400 })
@@ -23,6 +25,8 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Processing image, name:", image.name, "size:", image.size)
     console.log("[v0] Original prompt:", prompt)
     console.log("[v0] Use RAG:", useRAG)
+    console.log("[v0] Active RAG ID:", activeRAGId)
+    console.log("[v0] Active RAG Name:", activeRAGName)
 
     // Enhance prompt with RAG if requested
     let finalPrompt = prompt
@@ -31,6 +35,40 @@ export async function POST(request: NextRequest) {
     if (useRAG) {
       try {
         console.log("[v0] Enhancing prompt with RAG...")
+        console.log("[v0] Using RAG:", activeRAGName || "Default RAG")
+        
+        // Load specific RAG content based on activeRAGId
+        let ragContent = null
+        if (activeRAGId && activeRAGName) {
+          // For now, we'll use a simple mapping. In production, this would load from a database
+          console.log(`[v0] Loading specific RAG: ${activeRAGName} (ID: ${activeRAGId})`)
+          
+          // Try to load the specific RAG file or use default mapping
+          try {
+            const fs = await import("fs/promises")
+            const path = await import("path")
+            
+            // Try common RAG file locations
+            const possiblePaths = [
+              path.join(process.cwd(), "lib", `${activeRAGName.toLowerCase().replace(/\s+/g, "-")}.json`),
+              path.join(process.cwd(), "lib", "aclu-branding.json"), // fallback
+              path.join(process.cwd(), "data", "rag", `${activeRAGId}.json`)
+            ]
+            
+            for (const ragPath of possiblePaths) {
+              try {
+                const content = await fs.readFile(ragPath, "utf-8")
+                ragContent = JSON.parse(content)
+                console.log(`[v0] Loaded RAG from: ${ragPath}`)
+                break
+              } catch (err) {
+                // Try next path
+              }
+            }
+          } catch (error) {
+            console.warn("[v0] Could not load specific RAG file:", error)
+          }
+        }
         
         // Dynamic import for platform compatibility
         let enhanceFunction = null
@@ -59,22 +97,40 @@ export async function POST(request: NextRequest) {
         }
 
         if (enhanceFunction) {
-          const enhancement = await enhanceFunction(prompt)
+          // Pass RAG content and metadata to enhancement function
+          const enhancementContext = {
+            ragContent,
+            activeRAGId,
+            activeRAGName
+          }
+          
+          const enhancement = await enhanceFunction(prompt, enhancementContext)
           finalPrompt = (enhancement as any).enhancedPrompt || (typeof enhancement === 'string' ? enhancement : prompt)
           ragMetadata = {
             originalPrompt: prompt,
             enhancedPrompt: finalPrompt,
+            activeRAGId,
+            activeRAGName,
             suggestedColors: (enhancement as any).suggestedColors || [],
             brandingElements: (enhancement as any).brandingElements?.length || 0
           }
           console.log("[v0] RAG enhanced prompt:", finalPrompt)
+          console.log("[v0] Used RAG:", activeRAGName)
         } else {
           console.warn("[v0] No RAG enhancement function available")
-          ragMetadata = { error: "No RAG enhancement function available" }
+          ragMetadata = { 
+            error: "No RAG enhancement function available",
+            activeRAGId,
+            activeRAGName
+          }
         }
       } catch (error) {
         console.warn("[v0] RAG enhancement failed, using original prompt:", error)
-        ragMetadata = { error: "RAG enhancement failed" }
+        ragMetadata = { 
+          error: "RAG enhancement failed",
+          activeRAGId,
+          activeRAGName 
+        }
       }
     }
 
