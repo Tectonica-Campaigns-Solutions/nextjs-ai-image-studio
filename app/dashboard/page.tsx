@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import Modal from '@/components/ui/modal'
+import Modal from "@/components/ui/modal";
 import {
   Building2,
   Menu,
@@ -37,24 +37,22 @@ function DashboardContent() {
   // ...existing code...
   // Show input controls again when 'Continue conversation' is clicked
   const [forceShowInput, setForceShowInput] = useState(false);
-  const [showInputConversation, setShowInputConversation] = useState(true)
-  const [showModal, setShowModal] = useState(false)
+  const [showInputConversation, setShowInputConversation] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [imageModal, setImageModal] = useState<string | null>(null);
-  
+
   const closeEditor = () => {
-    setShowModal(false)
-  }
+    setShowModal(false);
+  };
 
   const handleEditor = async (imageUrl: string) => {
     setImageModal(imageUrl);
     setShowModal(true);
-  }
-
+  };
 
   const handleContinueConversation = async () => {
     setShowInputConversation(true);
     scrollToBottom();
-
   };
 
   // Download image utility
@@ -79,6 +77,7 @@ function DashboardContent() {
       });
     }
   };
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -122,25 +121,28 @@ function DashboardContent() {
   }, [selectedBot, client]);
 
   useEffect(() => {
-  if (showInputConversation) {
-    scrollToBottom();
-  }
-}, [showInputConversation]);
+    if (showInputConversation) {
+      scrollToBottom();
+    }
+  }, [showInputConversation]);
 
   useEffect(() => {
-  if (messages.length > 0) {
-    const lastAssistantMsg = [...messages].reverse().find(m => m.role === "assistant");
-    if (
-      lastAssistantMsg &&
-      (
-        lastAssistantMsg.text.startsWith("data:image/") ||
-        (lastAssistantMsg.text.startsWith("http") && /\.(png|jpg|jpeg|gif|webp)$/i.test(lastAssistantMsg.text))
-      )
-    ) {
-      setShowInputConversation(false);
+    if (messages.length > 0) {
+      const lastAssistantMsg = [...messages]
+        .reverse()
+        .find((m) => m.role === "assistant");
+      if (
+        lastAssistantMsg &&
+        (lastAssistantMsg.text.startsWith("data:image/") ||
+          (lastAssistantMsg.text.startsWith("http") &&
+            /\.(png|jpg|jpeg|gif|webp)$/i.test(lastAssistantMsg.text)))
+      ) {
+        setShowInputConversation(false);
+      }
+    } else {
+      setShowInputConversation(true);
     }
-  }
-}, [messages]);
+  }, [messages]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -420,8 +422,10 @@ function DashboardContent() {
     return File;
   };
 
-  const handleSubmit = async () => {
-    if (!prompt.trim()) {
+  const handleSubmit = async (defaultPrompt: string | undefined) => {
+    const promptToUse = defaultPrompt !== undefined ? defaultPrompt : prompt;
+
+    if (!promptToUse.trim()) {
       toast({
         title: "Empty message",
         description: "Please enter a message to continue",
@@ -465,7 +469,7 @@ function DashboardContent() {
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
         role: "user" as const,
-        text: prompt,
+        text: promptToUse,
         timestamp: new Date(),
         attachedFiles: attachedFiles
           .filter((f) => f.fileId)
@@ -551,9 +555,10 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {imageModal &&
+      {imageModal && (
         <Modal isOpen={showModal} onClose={closeEditor} imageUrl={imageModal} />
-      }
+      )}
+
       {/* Sidebar */}
       <div
         className={cn(
@@ -561,7 +566,6 @@ function DashboardContent() {
           sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
-        
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="p-6 border-b border-border">
@@ -649,8 +653,6 @@ function DashboardContent() {
                 );
               })}
             </div>
-
-            
 
             {/* Conversation History */}
             <div className="space-y-2 mb-4">
@@ -829,7 +831,9 @@ function DashboardContent() {
                                 key={idx}
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setPrompt(suggestion)}
+                                onClick={async () => {
+                                  await handleSubmit(suggestion);
+                                }}
                                 className="text-xs"
                               >
                                 {suggestion}
@@ -885,39 +889,42 @@ function DashboardContent() {
                               className="max-w-full rounded-lg shadow"
                             />
                           ) : message.text.startsWith("http") &&
-                              /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
-                                <div>
-                                  <img
-                                    src={message.text}
-                                    alt="Generated image"
-                                    className="max-w-full rounded-lg shadow"
-                                  />
-                                  <div className="flex gap-2 mt-2">
-                                    <button
-                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
-                                      onClick={() => handleDownloadImage(message.text)}
-                                    >
-                                      Save
-                                    </button>
-                                    <button className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
-                                      onClick={() => handleEditor(message.text)}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
-                                      onClick={() => handleContinueConversation()}
-                                    >
-                                      Continue conversation
-                                    </button>
-                                     {/* <button
+                            /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
+                            <div>
+                              <img
+                                src={message.text}
+                                alt="Generated image"
+                                className="max-w-full rounded-lg shadow"
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                  onClick={() =>
+                                    handleDownloadImage(message.text)
+                                  }
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                  onClick={() => handleEditor(message.text)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                  onClick={() => handleContinueConversation()}
+                                >
+                                  Continue conversation
+                                </button>
+                                {/* <button
                                       className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
                                      
                                     >
                                       Share
                                     </button> */}
-                                  </div>
-                                </div>
+                              </div>
+                            </div>
                           ) : (
                             <Markdown>{message.text}</Markdown>
                           )}
@@ -949,7 +956,6 @@ function DashboardContent() {
                       </div>
                     </div>
                   ))}
-                    
 
                   {isTyping && (
                     <div className="flex gap-3 justify-start">
@@ -967,13 +973,13 @@ function DashboardContent() {
                       </div>
                       <div className="bg-muted rounded-lg p-4">
                         <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                          <div className="w-2 h-2 rounded-full animate-bounce bg-black" />
                           <div
-                            className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                            className="w-2 h-2 rounded-full animate-bounce bg-black"
                             style={{ animationDelay: "0.1s" }}
                           />
                           <div
-                            className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                            className="w-2 h-2 rounded-full animate-bounce bg-black"
                             style={{ animationDelay: "0.2s" }}
                           />
                         </div>
@@ -998,108 +1004,104 @@ function DashboardContent() {
           </div>
 
           {/* Input Area */}
-          {showInputConversation && 
-            (
-           
-              <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
-                <CardContent className="p-4 space-y-4">
-                  {/* Attached Files */}
-                  {attachedFiles.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {attachedFiles.map((fileEntry, index) => {
-                        const Icon = getFileIcon(fileEntry.file.type);
-                        return (
-                          <div
-                            key={index}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-2 rounded-lg border",
-                              fileEntry.error
-                                ? "border-destructive bg-destructive/10"
-                                : fileEntry.uploading
-                                ? "border-muted bg-muted/50"
-                                : "border-primary bg-primary/10"
-                            )}
-                          >
-                            <Icon className="h-4 w-4" />
-                            <span className="text-xs max-w-[100px] truncate">
-                              {fileEntry.file.name}
-                            </span>
-                            {fileEntry.uploading && (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            )}
-                            {!fileEntry.uploading && (
-                              <button
-                                onClick={() => removeAttachedFile(index)}
-                                className="text-muted-foreground hover:text-foreground"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Input Controls */}
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept=".pdf,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.html,.xml,.rtf,image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={inputDisabled}
-                      className="flex-shrink-0"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-
-                    <Textarea
-                      placeholder={`Ask something to ${selectedBotData?.name}...`}
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      disabled={inputDisabled}
-                      className="flex-1 min-h-[60px] max-h-[150px] resize-none"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSubmit();
-                        }
-                      }}
-                    />
-
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={isLoading || !prompt.trim() || inputDisabled}
-                      className="self-end"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
+          {showInputConversation && (
+            <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
+              <CardContent className="p-4 space-y-4">
+                {/* Attached Files */}
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachedFiles.map((fileEntry, index) => {
+                      const Icon = getFileIcon(fileEntry.file.type);
+                      return (
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg border",
+                            fileEntry.error
+                              ? "border-destructive bg-destructive/10"
+                              : fileEntry.uploading
+                              ? "border-muted bg-muted/50"
+                              : "border-primary bg-primary/10"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="text-xs max-w-[100px] truncate">
+                            {fileEntry.file.name}
+                          </span>
+                          {fileEntry.uploading && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          {!fileEntry.uploading && (
+                            <button
+                              onClick={() => removeAttachedFile(index)}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+                )}
 
-                  {attachedFiles.some((f) => f.uploading) && (
-                    <div className="text-xs text-muted-foreground flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Subiendo archivos a OpenAI...
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          }
-   
+                {/* Input Controls */}
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.html,.xml,.rtf,image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={inputDisabled}
+                    className="flex-shrink-0"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+
+                  <Textarea
+                    placeholder={`Ask something to ${selectedBotData?.name}...`}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    disabled={inputDisabled}
+                    className="flex-1 min-h-[60px] max-h-[150px] resize-none"
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        await handleSubmit();
+                      }
+                    }}
+                  />
+
+                  <Button
+                    onClick={async () => await handleSubmit()}
+                    disabled={isLoading || !prompt.trim() || inputDisabled}
+                    className="self-end"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {attachedFiles.some((f) => f.uploading) && (
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Uploading files...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
