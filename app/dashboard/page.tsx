@@ -23,6 +23,7 @@ import {
   Paperclip,
   FileText,
   Image,
+  File,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -85,7 +86,6 @@ function DashboardContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentConversationIdRef = useRef<string | null>(null);
-  const assistantMessageRef = useRef<string>("");
 
   const [selectedBot, setSelectedBot] = useState("copy_assistant");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -422,7 +422,7 @@ function DashboardContent() {
     return File;
   };
 
-  const handleSubmit = async (defaultPrompt: string | undefined) => {
+  const handleSubmit = async (defaultPrompt?: string | undefined) => {
     const promptToUse = defaultPrompt !== undefined ? defaultPrompt : prompt;
 
     if (!promptToUse.trim()) {
@@ -454,7 +454,9 @@ function DashboardContent() {
       if (!conversationId) {
         console.log("🆕 Creating new conversation");
         const title =
-          prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt;
+          promptToUse.length > 50
+            ? promptToUse.substring(0, 50) + "..."
+            : promptToUse;
 
         conversationId = await createNewConversation(title);
 
@@ -489,7 +491,6 @@ function DashboardContent() {
       setPrompt("");
       setAttachedFiles([]);
       setIsTyping(true);
-      assistantMessageRef.current = "";
 
       // Send message to API
       const response = await fetch(
