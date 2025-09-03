@@ -47,7 +47,7 @@ export default function ImageEditor() {
   // LoRA States for Qwen Text-to-Image
   const [useCustomLoRA, setUseCustomLoRA] = useState(false)
   const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/tiger/sbpnvWxI8gDpTBP0mkFtx_adapter.safetensors")
-  const [triggerPhrase, setTriggerPhrase] = useState("your trained style")
+  const [triggerPhrase, setTriggerPhrase] = useState("")
   const [loraScale, setLoraScale] = useState(1.0)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
 
