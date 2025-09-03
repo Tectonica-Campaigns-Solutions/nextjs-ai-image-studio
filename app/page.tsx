@@ -114,6 +114,7 @@ export default function ImageEditor() {
   const [isTraining, setIsTraining] = useState(false)
   const [trainingError, setTrainingError] = useState<string>("")
   const [showTrainingAdvanced, setShowTrainingAdvanced] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string>("")
 
   // Helper component to display generated prompt
   const GeneratedPromptDisplay = ({ prompt, title }: { prompt: string; title: string }) => {
@@ -605,28 +606,53 @@ export default function ImageEditor() {
     setIsTraining(true)
     setTrainingError("")
     setTrainingLogs([])
+    setUploadProgress("Preparing file upload...")
 
     try {
       // Upload file to Fal storage via our proxy endpoint
       console.log("[Training] Uploading file:", trainingFile.name)
+      setUploadProgress(`Uploading ${trainingFile.name} (${(trainingFile.size / 1024 / 1024).toFixed(1)}MB)...`)
       
       const uploadFormData = new FormData()
       uploadFormData.append("file", trainingFile)
 
-      const uploadResponse = await fetch("/api/upload-file", {
-        method: "POST",
-        body: uploadFormData,
-      })
+      // Create AbortController for timeout handling
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+      }, 300000) // 5 minutes timeout
 
-      if (!uploadResponse.ok) {
-        const uploadError = await uploadResponse.json()
-        throw new Error(uploadError.error || "Failed to upload training file")
+      let uploadResult: any
+
+      try {
+        const uploadResponse = await fetch("/api/upload-file", {
+          method: "POST",
+          body: uploadFormData,
+          signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+        setUploadProgress("Upload completed! Preparing training job...")
+
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json()
+          throw new Error(uploadError.error || "Failed to upload training file")
+        }
+
+        uploadResult = await uploadResponse.json()
+        console.log("[Training] File uploaded to:", uploadResult.url)
+
+      } catch (uploadError) {
+        clearTimeout(timeoutId)
+        setUploadProgress("")
+        if (uploadError instanceof Error && uploadError.name === 'AbortError') {
+          throw new Error("Upload timeout - file too large or connection too slow. Try with a smaller file.")
+        }
+        throw uploadError
       }
 
-      const uploadResult = await uploadResponse.json()
-      console.log("[Training] File uploaded to:", uploadResult.url)
-
       // Submit training job
+      setUploadProgress("Submitting training job...")
       const formData = new FormData()
       formData.append("image_data_url", uploadResult.url)
       formData.append("steps", trainingSettings.steps.toString())
@@ -649,6 +675,7 @@ export default function ImageEditor() {
       if (result.success && result.request_id) {
         setTrainingRequestId(result.request_id)
         setTrainingStatus("submitted")
+        setUploadProgress("")
         console.log("[Training] Job submitted with ID:", result.request_id)
         
         // Start polling for status
@@ -660,6 +687,7 @@ export default function ImageEditor() {
       console.error("[Training] Error:", err)
       setTrainingError(err instanceof Error ? err.message : "Failed to start training")
       setIsTraining(false)
+      setUploadProgress("")
     }
   }
 
@@ -1490,6 +1518,13 @@ export default function ImageEditor() {
                           "Start Training"
                         )}
                       </Button>
+
+                      {uploadProgress && (
+                        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="text-sm text-blue-800">{uploadProgress}</span>
+                        </div>
+                      )}
 
                       {trainingError && (
                         <Alert variant="destructive">

@@ -6,6 +6,10 @@ fal.config({
   credentials: process.env.FAL_API_KEY!,
 })
 
+// Configure runtime and timeout for large file uploads
+export const runtime = 'nodejs'
+export const maxDuration = 300 // 5 minutes for large file uploads
+
 export async function POST(request: NextRequest) {
   try {
     console.log("[API] File upload request received")
@@ -20,10 +24,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check file size (limit to 100MB)
+    const maxSize = 100 * 1024 * 1024 // 100MB
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB` },
+        { status: 413 }
+      )
+    }
+
     console.log("[API] Uploading file:", file.name, "Size:", file.size)
 
-    // Upload file to Fal storage
-    const url = await fal.storage.upload(file)
+    // Upload file to Fal storage with timeout handling
+    const uploadPromise = fal.storage.upload(file)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Upload timeout after 4 minutes')), 240000)
+    })
+
+    const url = await Promise.race([uploadPromise, timeoutPromise]) as string
 
     console.log("[API] File uploaded successfully to:", url)
 
@@ -38,6 +56,17 @@ export async function POST(request: NextRequest) {
     console.error("[API] Error uploading file:", error)
     
     if (error instanceof Error) {
+      // Handle specific timeout errors
+      if (error.message.includes('timeout') || error.message.includes('408')) {
+        return NextResponse.json(
+          { 
+            error: "Upload timeout - file too large or connection too slow",
+            details: "Try with a smaller file or check your internet connection"
+          },
+          { status: 408 }
+        )
+      }
+
       return NextResponse.json(
         { 
           error: error.message,
