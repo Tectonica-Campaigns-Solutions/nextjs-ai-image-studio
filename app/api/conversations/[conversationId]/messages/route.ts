@@ -124,9 +124,9 @@ export async function POST(
           role: "user",
           content: [
             { type: "input_text", text: content },
-            ...(fileIds || []).map((fileId: string) => ({
+            ...(fileIds || []).map((file: any) => ({
               type: "input_file",
-              file_id: fileId,
+              file_id: file.fileId,
             })),
           ],
         },

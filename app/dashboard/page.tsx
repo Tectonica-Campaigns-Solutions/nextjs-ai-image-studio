@@ -236,17 +236,12 @@ function DashboardContent() {
     }
   };
 
-  const createNewConversation = async (title?: string) => {
+  const createNewConversation = async (firstMessage: string) => {
     try {
       setIsCreatingConversation(true);
 
-      setMessages([]);
-      setPrompt("");
-      setCurrentConversationId(null);
-      currentConversationIdRef.current = null;
-      setAttachedFiles([]);
+      const title = generateSmartTitle(firstMessage);
 
-      // Get prompt ID for selected bot
       // @ts-ignore
       const promptConfigId = client?.bots[`${selectedBot}_id`];
       if (!promptConfigId) {
@@ -257,36 +252,73 @@ function DashboardContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title || "New conversation",
+          title,
           clientId: client?.id,
           promptId: promptConfigId,
           botType: selectedBot,
+          firstMessage,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentConversationId(data.id);
-        currentConversationIdRef.current = data.id;
-
-        console.log("✅ New conversation created with ID:", data.id);
-
-        // Reload conversation history
-        await loadConversationHistory(client!);
-
-        return data.id;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "Failed to create conversation");
       }
+
+      const data = await response.json();
+
+      setCurrentConversationId(data.id);
+      currentConversationIdRef.current = data.id;
+
+      await loadConversationHistory(client!);
+
+      return data.id;
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast({
         title: "Error",
-        description: "Failed to create conversation",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create conversation",
         variant: "destructive",
       });
       return null;
     } finally {
       setIsCreatingConversation(false);
     }
+  };
+
+  const generateSmartTitle = (message: string): string => {
+    const cleaned = message.trim().replace(/\s+/g, " ");
+
+    if (cleaned.length <= 60) {
+      return cleaned;
+    }
+
+    const maxLength = 50;
+    const truncated = cleaned.substring(0, maxLength);
+
+    const punctuationMarks = [". ", "? ", "! ", ", "];
+    let bestCutIndex = -1;
+
+    for (const mark of punctuationMarks) {
+      const index = truncated.lastIndexOf(mark);
+      if (index > bestCutIndex && index > 20) {
+        bestCutIndex = index + mark.length - 1;
+      }
+    }
+
+    if (bestCutIndex > 0) {
+      return cleaned.substring(0, bestCutIndex).trim();
+    }
+
+    const lastSpace = truncated.lastIndexOf(" ");
+    if (lastSpace > 20) {
+      return truncated.substring(0, lastSpace) + "...";
+    }
+
+    return truncated + "...";
   };
 
   const deleteConversation = async (
@@ -422,13 +454,13 @@ function DashboardContent() {
     return File;
   };
 
-  const handleSubmit = async (defaultPrompt?: string | undefined) => {
-    const promptToUse = defaultPrompt !== undefined ? defaultPrompt : prompt;
+  const handleSubmit = async (defaultPrompt?: string) => {
+    const promptToUse = defaultPrompt || prompt;
 
     if (!promptToUse.trim()) {
       toast({
         title: "Empty message",
-        description: "Please enter a message to continue",
+        description: "Please enter a message",
         variant: "destructive",
       });
       return;
@@ -449,57 +481,44 @@ function DashboardContent() {
     setIsLoading(true);
 
     try {
-      // Create conversation if it doesn't exist
       let conversationId = currentConversationId;
-      if (!conversationId) {
-        console.log("🆕 Creating new conversation");
-        const title =
-          promptToUse.length > 50
-            ? promptToUse.substring(0, 50) + "..."
-            : promptToUse;
 
-        conversationId = await createNewConversation(title);
+      if (!conversationId) {
+        conversationId = await createNewConversation(promptToUse);
 
         if (!conversationId) {
           throw new Error("Could not create conversation");
         }
-
-        currentConversationIdRef.current = conversationId;
       }
-
-      // Add user message to UI
-      const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
-        role: "user" as const,
-        text: promptToUse,
-        timestamp: new Date(),
-        attachedFiles: attachedFiles
-          .filter((f) => f.fileId)
-          .map((f) => ({
-            name: f.file.name,
-            fileId: f.fileId!,
-          })),
-      };
-      setMessages((prev) => [...prev, userMessage]);
 
       const fileIds = attachedFiles
         .filter((f) => f.fileId && !f.error)
-        .map((f) => {
-          return { name: f.file.name, fileId: f.fileId! };
-        });
+        .map((f) => ({
+          name: f.file.name,
+          fileId: f.fileId!,
+        }));
 
+      const tempUserMessageId = `user-${Date.now()}`;
+      const userMessage: ChatMessage = {
+        id: tempUserMessageId,
+        role: "user" as const,
+        text: promptToUse,
+        timestamp: new Date(),
+        attachedFiles: fileIds,
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
       setPrompt("");
       setAttachedFiles([]);
       setIsTyping(true);
 
-      // Send message to API
       const response = await fetch(
         `/api/conversations/${conversationId}/messages`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            content: userMessage.text,
+            content: promptToUse,
             promptId: promptConfigId,
             botType: selectedBot,
             fileIds: fileIds.length > 0 ? fileIds : undefined,
@@ -508,7 +527,11 @@ function DashboardContent() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const error = await response.json().catch(() => ({}));
+        setMessages((prev) =>
+          prev.filter((msg) => msg.id !== tempUserMessageId)
+        );
+        throw new Error(error.error || "Failed to send message");
       }
 
       const data = await response.json();
@@ -516,19 +539,19 @@ function DashboardContent() {
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        text: data.message ?? "",
+        text: data.message || "",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
-
       await loadConversationHistory(client!);
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description:
+          error instanceof Error ? error.message : "Failed to send message",
         variant: "destructive",
       });
     } finally {
@@ -536,6 +559,20 @@ function DashboardContent() {
       setIsLoading(false);
       setIsTyping(false);
     }
+  };
+
+  const handleNewConversation = () => {
+    setMessages([]);
+    setPrompt("");
+    setCurrentConversationId(null);
+    currentConversationIdRef.current = null;
+    setAttachedFiles([]);
+    setSidebarOpen(false);
+
+    toast({
+      title: "Ready for new conversation",
+      description: "Send a message to start",
+    });
   };
 
   const handleBackToClientSelection = () => {
@@ -662,7 +699,7 @@ function DashboardContent() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => createNewConversation()}
+                  onClick={handleNewConversation}
                   disabled={isCreatingConversation}
                 >
                   {isCreatingConversation ? (
@@ -673,7 +710,6 @@ function DashboardContent() {
                 </Button>
               </div>
             </div>
-
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {isLoadingConversations ? (
                 <div className="flex items-center justify-center py-4">
@@ -690,10 +726,10 @@ function DashboardContent() {
                   <div
                     key={conv.id}
                     className={cn(
-                      "group relative p-3 rounded-lg border cursor-pointer",
+                      "group relative p-3 rounded-lg border cursor-pointer transition-all duration-200",
                       currentConversationId === conv.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-accent/50"
+                        ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20 bg-red-100"
+                        : "border-border hover:bg-accent/50 hover:border-muted-foreground/30"
                     )}
                     onClick={() => loadConversationMessages(conv.id)}
                   >
@@ -729,7 +765,7 @@ function DashboardContent() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => createNewConversation()}
+                onClick={handleNewConversation}
                 disabled={isCreatingConversation}
                 className="w-full justify-start"
               >
