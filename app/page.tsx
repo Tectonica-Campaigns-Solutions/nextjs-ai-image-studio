@@ -510,10 +510,10 @@ export default function ImageEditor() {
 
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="qwen-text-to-image">Qwen Text-to-Image</TabsTrigger>
-          <TabsTrigger value="qwen-train-lora">Train LoRA</TabsTrigger>
+          <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="upload-branding">Upload Branding</TabsTrigger>
+          <TabsTrigger value="qwen-train-lora">Train LoRA</TabsTrigger>
         </TabsList>
 
           {/* Qwen Text-to-Image Tab */}
@@ -832,6 +832,149 @@ export default function ImageEditor() {
             </div>
           </TabsContent>
 
+          {/* Edit Image Tab */}
+          <TabsContent value="edit-image" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Upload and Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    Upload & Edit
+                  </CardTitle>
+                  <CardDescription>Select an image and describe your desired edits</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="image">Select Image</Label>
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt">Edit Prompt</Label>
+                      <Textarea
+                        id="prompt"
+                        placeholder="Describe how you want to edit the image (e.g., 'change the sky to sunset', 'add a cat in the corner', 'make it black and white')"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="use-rag-edit" 
+                        checked={useRagEdit}
+                        onCheckedChange={(checked) => setUseRagEdit(checked as boolean)}
+                      />
+                      <Label htmlFor="use-rag-edit" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Use brand guidelines (RAG)
+                      </Label>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={!selectedImage || !prompt.trim() || isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Editing Image...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="mr-2 h-4 w-4" />
+                          Edit Image
+                        </>
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* Display generated prompt */}
+                  <GeneratedPromptDisplay 
+                    prompt={editGeneratedPrompt} 
+                    title="Generated Prompt Used"
+                  />
+
+                  {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
+                </CardContent>
+              </Card>
+
+              {/* Preview Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Original Image</CardTitle>
+                  <CardDescription>Preview of your uploaded image</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {previewUrl ? (
+                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                      <img
+                        src={previewUrl || "/placeholder.svg"}
+                        alt="Original image preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <Upload className="h-12 w-12 mx-auto mb-2" />
+                        <p>No image selected</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Result Section */}
+            {(editedImageUrl || isLoading) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Edited Result</CardTitle>
+                  <CardDescription>Your AI-edited image</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-12 w-12 mx-auto mb-2 animate-spin" />
+                        <p className="text-muted-foreground">Processing your image...</p>
+                      </div>
+                    </div>
+                  ) : editedImageUrl ? (
+                    <div className="space-y-3">
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={editedImageUrl || "/placeholder.svg"}
+                          alt="Edited image result"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <OpenInNewTabButton imageUrl={editedImageUrl} />
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Branding Configuration Tab */}
+          <TabsContent value="upload-branding" className="space-y-6">
+            <div className="flex justify-center">
+              <BrandingUploader 
+                onUploadSuccess={() => {
+                  // Optional: Add any refresh logic here
+                  console.log('Branding file uploaded successfully!')
+                }}
+              />
+            </div>
+          </TabsContent>
+
           {/* Train LoRA Tab */}
           <TabsContent value="qwen-train-lora" className="space-y-6">
             <Card>
@@ -1044,149 +1187,6 @@ export default function ImageEditor() {
                 </form>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Edit Image Tab */}
-          <TabsContent value="edit-image" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Upload and Form Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
-                    Upload & Edit
-                  </CardTitle>
-                  <CardDescription>Select an image and describe your desired edits</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="image">Select Image</Label>
-                      <Input
-                        id="image"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="cursor-pointer"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="prompt">Edit Prompt</Label>
-                      <Textarea
-                        id="prompt"
-                        placeholder="Describe how you want to edit the image (e.g., 'change the sky to sunset', 'add a cat in the corner', 'make it black and white')"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="use-rag-edit" 
-                        checked={useRagEdit}
-                        onCheckedChange={(checked) => setUseRagEdit(checked as boolean)}
-                      />
-                      <Label htmlFor="use-rag-edit" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Use brand guidelines (RAG)
-                      </Label>
-                    </div>
-
-                    <Button type="submit" className="w-full" disabled={!selectedImage || !prompt.trim() || isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Editing Image...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="mr-2 h-4 w-4" />
-                          Edit Image
-                        </>
-                      )}
-                    </Button>
-                  </form>
-
-                  {/* Display generated prompt */}
-                  <GeneratedPromptDisplay 
-                    prompt={editGeneratedPrompt} 
-                    title="Generated Prompt Used"
-                  />
-
-                  {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
-                </CardContent>
-              </Card>
-
-              {/* Preview Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Original Image</CardTitle>
-                  <CardDescription>Preview of your uploaded image</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {previewUrl ? (
-                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                      <img
-                        src={previewUrl || "/placeholder.svg"}
-                        alt="Original image preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center text-muted-foreground">
-                        <Upload className="h-12 w-12 mx-auto mb-2" />
-                        <p>No image selected</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Result Section */}
-            {(editedImageUrl || isLoading) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Edited Result</CardTitle>
-                  <CardDescription>Your AI-edited image</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <Loader2 className="h-12 w-12 mx-auto mb-2 animate-spin" />
-                        <p className="text-muted-foreground">Processing your image...</p>
-                      </div>
-                    </div>
-                  ) : editedImageUrl ? (
-                    <div className="space-y-3">
-                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                        <img
-                          src={editedImageUrl || "/placeholder.svg"}
-                          alt="Edited image result"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <OpenInNewTabButton imageUrl={editedImageUrl} />
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Branding Configuration Tab */}
-          <TabsContent value="upload-branding" className="space-y-6">
-            <div className="flex justify-center">
-              <BrandingUploader 
-                onUploadSuccess={() => {
-                  // Optional: Add any refresh logic here
-                  console.log('Branding file uploaded successfully!')
-                }}
-              />
-            </div>
           </TabsContent>
         </Tabs>
       </div>
