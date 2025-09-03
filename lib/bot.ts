@@ -10,6 +10,11 @@ export const bots: SidebarBotType[] = [
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     hoverColor: "hover:bg-blue-500/20",
+    suggestions: [
+      "Summarize this document",
+      "Extract key points",
+      "Generate a report",
+    ],
   },
   {
     id: "strategy_assistant",
@@ -19,6 +24,11 @@ export const bots: SidebarBotType[] = [
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
     hoverColor: "hover:bg-purple-500/20",
+    suggestions: [
+      "Define a business strategy",
+      "Analyze market trends",
+      "Identify growth opportunities",
+    ],
   },
   {
     id: "visual_assistant",
@@ -28,6 +38,11 @@ export const bots: SidebarBotType[] = [
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
     hoverColor: "hover:bg-amber-500/20",
+    suggestions: [
+      "Generate a visual report",
+      "Create a presentation",
+      "Design a marketing campaign",
+    ],
   },
   {
     id: "image_testing_assistant",
@@ -37,5 +52,10 @@ export const bots: SidebarBotType[] = [
     color: "text-rose-500",
     bgColor: "bg-rose-500/10",
     hoverColor: "hover:bg-rose-500/20",
+    suggestions: [
+      "Generate a test image",
+      "Analyze image quality",
+      "Suggest improvements",
+    ],
   },
 ];

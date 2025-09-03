@@ -31,6 +31,8 @@ import { bots } from "@/lib/bot";
 import { clients } from "@/lib/clients";
 import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
 
+const THRESHOLD = 20 * 1024 * 1024;
+
 function DashboardContent() {
   // ...existing code...
   // Show input controls again when 'Continue conversation' is clicked
@@ -105,6 +107,9 @@ function DashboardContent() {
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ file: File; fileId?: string; uploading: boolean; error?: string }>
   >([]);
+
+  const selectedBotData = bots.find((bot) => bot.id === selectedBot);
+  const promptSuggestions = selectedBotData?.suggestions || [];
 
   useEffect(() => {
     initialize();
@@ -205,9 +210,17 @@ function DashboardContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.messages || []);
+
+        const processedMessages = data.messages.map((msg: any) => ({
+          ...msg,
+          attachedFiles: msg.attachedFiles || [],
+        }));
+
+        setMessages(processedMessages || []);
         setCurrentConversationId(conversationId);
         currentConversationIdRef.current = conversationId;
+
+        setAttachedFiles([]);
       }
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -315,46 +328,40 @@ function DashboardContent() {
     const files = Array.from(e.target.files || []);
 
     for (const file of files) {
-      // Validar tamaño
-      if (file.size > 20 * 1024 * 1024) {
+      if (file.size > THRESHOLD) {
         toast({
-          title: "Archivo muy grande",
-          description: `${file.name} excede el límite de 20MB`,
+          title: "File too large",
+          description: `${file.name} exceeds the 20MB limit`,
           variant: "destructive",
         });
         continue;
       }
 
-      // Añadir a la lista con estado de carga
       const fileEntry = {
         file,
         uploading: true,
         error: undefined,
+        fileId: undefined,
       };
 
       setAttachedFiles((prev) => [...prev, fileEntry]);
 
-      // Subir archivo a OpenAI
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("purpose", "assistants");
-        if (currentConversationId) {
-          formData.append("conversationId", currentConversationId);
-        }
 
-        const response = await fetch("/api/files/upload", {
+        const response = await fetch("/api/files", {
           method: "POST",
           body: formData,
         });
 
         if (!response.ok) {
-          throw new Error("Failed to upload file");
+          const error = await response.json();
+          throw new Error(error.details || "Failed to upload file");
         }
 
         const data = await response.json();
 
-        // Actualizar con el fileId
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
@@ -363,17 +370,25 @@ function DashboardContent() {
           )
         );
 
-        console.log(`✅ File uploaded: ${file.name} with ID: ${data.fileId}`);
+        console.log(
+          `✅ File uploaded to OpenAI: ${file.name} with ID: ${data.fileId}`
+        );
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
 
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
-              ? { ...f, uploading: false, error: "Error al subir archivo" }
+              ? { ...f, uploading: false, error: "Error uploading file" }
               : f
           )
         );
+
+        toast({
+          title: "Error uploading file",
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "destructive",
+        });
       }
     }
 
@@ -387,11 +402,12 @@ function DashboardContent() {
 
     if (fileEntry.fileId) {
       try {
-        await fetch(`/api/files/${fileEntry.fileId}`, {
+        await fetch(`/api/openai/files/${fileEntry.fileId}`, {
           method: "DELETE",
         });
+        console.log(`Deleted file from OpenAI: ${fileEntry.fileId}`);
       } catch (error) {
-        console.error("Error deleting file:", error);
+        console.error("Error deleting file from OpenAI:", error);
       }
     }
 
@@ -451,13 +467,20 @@ function DashboardContent() {
         role: "user" as const,
         text: prompt,
         timestamp: new Date(),
+        attachedFiles: attachedFiles
+          .filter((f) => f.fileId)
+          .map((f) => ({
+            name: f.file.name,
+            fileId: f.fileId!,
+          })),
       };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Get file IDs from attached files
-      // const fileIds = attachedFiles
-      //   .filter((f) => f.fileId && !f.error)
-      //   .map((f) => f.fileId!);
+      const fileIds = attachedFiles
+        .filter((f) => f.fileId && !f.error)
+        .map((f) => {
+          return { name: f.file.name, fileId: f.fileId! };
+        });
 
       setPrompt("");
       setAttachedFiles([]);
@@ -474,7 +497,7 @@ function DashboardContent() {
             content: userMessage.text,
             promptId: promptConfigId,
             botType: selectedBot,
-            // fileIds: fileIds.length > 0 ? fileIds : undefined,
+            fileIds: fileIds.length > 0 ? fileIds : undefined,
           }),
         }
       );
@@ -524,7 +547,7 @@ function DashboardContent() {
     setAttachedFiles([]);
   };
 
-  const selectedBotData = bots.find((bot) => bot.id === selectedBot);
+  console.log({ messages });
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -794,6 +817,28 @@ function DashboardContent() {
                         {selectedBotData?.description}
                       </p>
                     </div>
+                    {promptSuggestions.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-semibold mb-2">
+                          Prompt Suggestions
+                        </h4>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {promptSuggestions.map(
+                            (suggestion: string, idx: number) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPrompt(suggestion)}
+                                className="text-xs"
+                              >
+                                {suggestion}
+                              </Button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -877,6 +922,25 @@ function DashboardContent() {
                             <Markdown>{message.text}</Markdown>
                           )}
                         </div>
+
+                        {message.attachedFiles &&
+                          message.attachedFiles.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <div className="flex flex-wrap gap-1">
+                                {message.attachedFiles.map((file, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-background/50"
+                                  >
+                                    <Paperclip className="h-3 w-3" />
+                                    <span className="max-w-[150px] truncate">
+                                      {file.name}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         {message.timestamp && (
                           <div className="mt-2 text-xs opacity-70">
                             {new Date(message.timestamp).toLocaleTimeString()}
@@ -934,100 +998,108 @@ function DashboardContent() {
           </div>
 
           {/* Input Area */}
-          {showInputConversation && (
-            <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
-              <CardContent className="p-4 space-y-4">
-                {/* Attached Files */}
-                {attachedFiles.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {attachedFiles.map((fileEntry, index) => {
-                      const Icon = getFileIcon(fileEntry.file.type);
-                      return (
-                        <div
-                          key={index}
-                          className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-lg border",
-                            fileEntry.error
-                              ? "border-destructive bg-destructive/10"
-                              : fileEntry.uploading
+          {showInputConversation && 
+            (
+           
+              <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
+                <CardContent className="p-4 space-y-4">
+                  {/* Attached Files */}
+                  {attachedFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {attachedFiles.map((fileEntry, index) => {
+                        const Icon = getFileIcon(fileEntry.file.type);
+                        return (
+                          <div
+                            key={index}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded-lg border",
+                              fileEntry.error
+                                ? "border-destructive bg-destructive/10"
+                                : fileEntry.uploading
                                 ? "border-muted bg-muted/50"
                                 : "border-primary bg-primary/10"
-                          )}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="text-xs max-w-[100px] truncate">
-                            {fileEntry.file.name}
-                          </span>
-                          {fileEntry.uploading && (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          )}
-                          {!fileEntry.uploading && (
-                            <button
-                              onClick={() => removeAttachedFile(index)}
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                            <span className="text-xs max-w-[100px] truncate">
+                              {fileEntry.file.name}
+                            </span>
+                            {fileEntry.uploading && (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            )}
+                            {!fileEntry.uploading && (
+                              <button
+                                onClick={() => removeAttachedFile(index)}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Input Controls */}
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.html,.xml,.rtf,image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={inputDisabled}
+                      className="flex-shrink-0"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+
+                    <Textarea
+                      placeholder={`Ask something to ${selectedBotData?.name}...`}
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      disabled={inputDisabled}
+                      className="flex-1 min-h-[60px] max-h-[150px] resize-none"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmit();
+                        }
+                      }}
+                    />
+
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={isLoading || !prompt.trim() || inputDisabled}
+                      className="self-end"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
-                )}
 
-                {/* Input Controls */}
-              
-                <div className="flex gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,.xlsx"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={inputDisabled}
-                    className="flex-shrink-0"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-
-                
-                  <Textarea
-                    placeholder={`Ask something to ${selectedBotData?.name}...`}
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    disabled={inputDisabled}
-                    className="flex-1 min-h-[60px] max-h-[150px] resize-none"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit();
-                      }
-                    }}
-                  />
-
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isLoading || !prompt.trim() || inputDisabled}
-                    className="self-end"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-            
-              </CardContent>
-            </Card>
-          )}
+                  {attachedFiles.some((f) => f.uploading) && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Subiendo archivos a OpenAI...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          }
+   
         </div>
       </div>
 
