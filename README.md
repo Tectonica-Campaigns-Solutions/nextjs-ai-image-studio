@@ -16,6 +16,12 @@ A comprehensive React/Next.js webapp for advanced AI image generation, editing, 
 - **RAG System**: Intelligent prompt enhancement using ACLU branding guidelines
 - **Multi-Model Support**: Seamless switching between different AI models
 
+### External API Integration
+- **External API Endpoints**: RESTful API for external applications
+- **No Authentication Required**: Direct access for trusted applications
+- **Content Moderation**: Built-in guardrails for all external requests
+- **Automatic Configuration**: RAG and LoRA settings read from main app state
+
 ### User Experience
 - **Prompt Display**: Visual feedback showing generated/enhanced prompts
 - **Image Viewer**: Open generated images in new browser tabs
@@ -201,7 +207,42 @@ CMD ["npm", "start"]
 - **Training Time**: 1-2 hours for typical LoRA models
 - **Generation Speed**: 30-60 seconds per image
 
-## 🔐 Security Considerations
+## � External API
+
+The application provides external REST API endpoints for integration with other applications:
+
+### Available Endpoints
+- **GET /api/external/config** - Get current configuration and capabilities
+- **POST /api/external/text-to-image** - Generate images from text prompts
+- **POST /api/external/edit-image** - Edit existing images with AI
+
+### Features
+- **No Authentication Required**: Direct access for trusted applications
+- **Automatic Configuration**: Reads RAG and LoRA settings from main app
+- **Content Moderation**: Built-in guardrails for all requests
+- **CORS Support**: Cross-origin requests enabled
+- **Comprehensive Error Handling**: User-friendly error messages
+
+### Quick Example
+```javascript
+// Generate an image
+const response = await fetch('/api/external/text-to-image', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    prompt: 'A professional team meeting',
+    useRAG: true,
+    settings: { image_size: 'landscape_16_9' }
+  })
+});
+
+const result = await response.json();
+console.log('Generated image:', result.image);
+```
+
+📚 **Full API Documentation**: See [EXTERNAL_API.md](./EXTERNAL_API.md) for complete documentation and examples.
+
+## �🔐 Security Considerations
 
 - **API Key Protection**: Server-side API calls only
 - **File Validation**: Strict upload restrictions
