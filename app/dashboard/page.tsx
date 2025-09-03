@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import Modal from '@/components/ui/modal'
 import {
   Building2,
   Menu,
@@ -20,7 +21,6 @@ import {
   Trash2,
   ArrowDown,
   Paperclip,
-  File,
   FileText,
   Image,
 } from "lucide-react";
@@ -32,6 +32,51 @@ import { clients } from "@/lib/clients";
 import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
 
 function DashboardContent() {
+  // ...existing code...
+  // Show input controls again when 'Continue conversation' is clicked
+  const [forceShowInput, setForceShowInput] = useState(false);
+  const [showInputConversation, setShowInputConversation] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [imageModal, setImageModal] = useState<string | null>(null);
+  
+  const closeEditor = () => {
+    setShowModal(false)
+  }
+
+  const handleEditor = async (imageUrl: string) => {
+    setImageModal(imageUrl);
+    setShowModal(true);
+  }
+
+
+  const handleContinueConversation = async () => {
+    setShowInputConversation(true);
+    scrollToBottom();
+
+  };
+
+  // Download image utility
+  const handleDownloadImage = async (imageUrl: string) => {
+    // For external URLs, fetch and convert to blob
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "image";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download image",
+        variant: "destructive",
+      });
+    }
+  };
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -46,6 +91,7 @@ function DashboardContent() {
   const [client, setClient] = useState<ClientType | null>(null);
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [inputDisabled, setInputDisabled] = useState(false);
@@ -69,6 +115,27 @@ function DashboardContent() {
       loadConversationHistory(client);
     }
   }, [selectedBot, client]);
+
+  useEffect(() => {
+  if (showInputConversation) {
+    scrollToBottom();
+  }
+}, [showInputConversation]);
+
+  useEffect(() => {
+  if (messages.length > 0) {
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === "assistant");
+    if (
+      lastAssistantMsg &&
+      (
+        lastAssistantMsg.text.startsWith("data:image/") ||
+        (lastAssistantMsg.text.startsWith("http") && /\.(png|jpg|jpeg|gif|webp)$/i.test(lastAssistantMsg.text))
+      )
+    ) {
+      setShowInputConversation(false);
+    }
+  }
+}, [messages]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -461,13 +528,17 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {imageModal &&
+        <Modal isOpen={showModal} onClose={closeEditor} imageUrl={imageModal} />
+      }
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card/95 backdrop-blur-sm border-r border-border transform transition-all duration-300 ease-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 bg-card/95 backdrop-blur-sm border-r border-border transform transition-all duration-300 ease-out lg:translate-x-0",
           sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
+        
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="p-6 border-b border-border">
@@ -555,6 +626,8 @@ function DashboardContent() {
                 );
               })}
             </div>
+
+            
 
             {/* Conversation History */}
             <div className="space-y-2 mb-4">
@@ -767,12 +840,39 @@ function DashboardContent() {
                               className="max-w-full rounded-lg shadow"
                             />
                           ) : message.text.startsWith("http") &&
-                            /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
-                            <img
-                              src={message.text}
-                              alt="Generated image"
-                              className="max-w-full rounded-lg shadow"
-                            />
+                              /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
+                                <div>
+                                  <img
+                                    src={message.text}
+                                    alt="Generated image"
+                                    className="max-w-full rounded-lg shadow"
+                                  />
+                                  <div className="flex gap-2 mt-2">
+                                    <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() => handleDownloadImage(message.text)}
+                                    >
+                                      Save
+                                    </button>
+                                    <button className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() => handleEditor(message.text)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() => handleContinueConversation()}
+                                    >
+                                      Continue conversation
+                                    </button>
+                                     {/* <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                     
+                                    >
+                                      Share
+                                    </button> */}
+                                  </div>
+                                </div>
                           ) : (
                             <Markdown>{message.text}</Markdown>
                           )}
@@ -785,6 +885,7 @@ function DashboardContent() {
                       </div>
                     </div>
                   ))}
+                    
 
                   {isTyping && (
                     <div className="flex gap-3 justify-start">
@@ -833,95 +934,100 @@ function DashboardContent() {
           </div>
 
           {/* Input Area */}
-          <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
-            <CardContent className="p-4 space-y-4">
-              {/* Attached Files */}
-              {attachedFiles.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {attachedFiles.map((fileEntry, index) => {
-                    const Icon = getFileIcon(fileEntry.file.type);
-                    return (
-                      <div
-                        key={index}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-lg border",
-                          fileEntry.error
-                            ? "border-destructive bg-destructive/10"
-                            : fileEntry.uploading
-                            ? "border-muted bg-muted/50"
-                            : "border-primary bg-primary/10"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="text-xs max-w-[100px] truncate">
-                          {fileEntry.file.name}
-                        </span>
-                        {fileEntry.uploading && (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        )}
-                        {!fileEntry.uploading && (
-                          <button
-                            onClick={() => removeAttachedFile(index)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+          {showInputConversation && (
+            <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
+              <CardContent className="p-4 space-y-4">
+                {/* Attached Files */}
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachedFiles.map((fileEntry, index) => {
+                      const Icon = getFileIcon(fileEntry.file.type);
+                      return (
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg border",
+                            fileEntry.error
+                              ? "border-destructive bg-destructive/10"
+                              : fileEntry.uploading
+                                ? "border-muted bg-muted/50"
+                                : "border-primary bg-primary/10"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="text-xs max-w-[100px] truncate">
+                            {fileEntry.file.name}
+                          </span>
+                          {fileEntry.uploading && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          {!fileEntry.uploading && (
+                            <button
+                              onClick={() => removeAttachedFile(index)}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Input Controls */}
+              
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,.xlsx"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={inputDisabled}
+                    className="flex-shrink-0"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+
+                
+                  <Textarea
+                    placeholder={`Ask something to ${selectedBotData?.name}...`}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    disabled={inputDisabled}
+                    className="flex-1 min-h-[60px] max-h-[150px] resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                  />
+
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isLoading || !prompt.trim() || inputDisabled}
+                    className="self-end"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
-              )}
-
-              {/* Input Controls */}
-              <div className="flex gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,.xlsx"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={inputDisabled}
-                  className="flex-shrink-0"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-
-                <Textarea
-                  placeholder={`Ask something to ${selectedBotData?.name}...`}
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={inputDisabled}
-                  className="flex-1 min-h-[60px] max-h-[150px] resize-none"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                />
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !prompt.trim() || inputDisabled}
-                  className="self-end"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { describe } from "node:test";
 import OpenAI from "openai";
 
 let openai: OpenAI | null = null;
@@ -104,7 +105,7 @@ export async function POST(
                 type: "string",
                 description:
                   "Description or instructions for the desired image",
-              },
+              }
             },
             required: ["prompt"],
             additionalProperties: false,
@@ -123,6 +124,8 @@ export async function POST(
         item.status === "completed"
     );
 
+    console.log(imageGenerationTool)
+
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
       // const parameters = imageGenerationTool.parameters;
@@ -130,12 +133,13 @@ export async function POST(
       const conversationText = conversationHistory
         .map((msg) => msg.content.map((c) => c.text).join(" "))
         .join(" ");
-      const prompt = `"${conversationText}" "${content}"`;
+      const prompt = `${content}`;
 
       try {
         const formData = new FormData();
-        formData.append("prompt", prompt);
+        formData.append("prompt", `${conversationText} ${content}, your trained style`);
         formData.append("useRag", "true");
+        formData.append('settings', '{"image_size":"landscape_4_3","num_inference_steps":30,"guidance_scale":2.5,"num_images":1,"output_format":"png","acceleration":"none","enable_safety_checker":true,"sync_mode":false,"loras":[{"path":"https://v3.fal.media/files/tiger/sbpnvWxI8gDpTBP0mkFtx_adapter.safetensors","scale":1}]}')
 
         const imageResp = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/qwen-text-to-image`,
@@ -145,6 +149,8 @@ export async function POST(
         if (!imageResp.ok) {
           throw new Error(`Image generation failed: ${imageResp.status}`);
         }
+
+        console.log('generating image');
 
         const imageData = await imageResp.json();
         if (imageData?.images && imageData.images.length > 0) {
