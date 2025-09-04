@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import Modal from "@/components/ui/modal";
 import {
   Building2,
   Menu,
@@ -20,9 +21,9 @@ import {
   Trash2,
   ArrowDown,
   Paperclip,
-  File,
   FileText,
   Image,
+  File,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +32,95 @@ import { bots } from "@/lib/bot";
 import { clients } from "@/lib/clients";
 import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
 
+const THRESHOLD = 20 * 1024 * 1024;
+
 function DashboardContent() {
+  const [showInputConversation, setShowInputConversation] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [imageModal, setImageModal] = useState<string | null>(null);
+
+  const closeEditor = () => {
+    setShowModal(false);
+  };
+
+  const handleEditor = async (imageUrl: string) => {
+    setImageModal(imageUrl);
+    setShowModal(true);
+  };
+
+  const handleContinueConversation = async () => {
+    setShowInputConversation(true);
+    scrollToBottom();
+  };
+
+  const handleAddImageToConversation = async (imageUrl: string) => {
+    if (!currentConversationId) return;
+
+    setShowModal(false);
+    const tempUserMessageId = `assistant-${Date.now()}`;
+    const newMessage: ChatMessage = {
+      role: "assistant",
+      text: imageUrl,
+      timestamp: new Date(),
+      id: tempUserMessageId,
+      attachedFiles: [],
+    };
+
+    // @ts-ignore
+    const promptId = client?.bots[`${selectedBot}_id`];
+    if (!promptId) {
+      toast({
+        title: "Bot not configured",
+        description: "This bot is not available for this client",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Save to Supabase via your API
+    const response = await fetch(
+      `/api/conversations/${currentConversationId}/messages`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: imageUrl,
+          role: "assistant",
+          promptId,
+          botType: selectedBot,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      setMessages((prev) => [...prev, newMessage]);
+      scrollToBottom();
+    }
+  };
+
+  // Download image utility
+  const handleDownloadImage = async (imageUrl: string) => {
+    // For external URLs, fetch and convert to blob
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "image";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download image",
+        variant: "destructive",
+      });
+    }
+  };
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -39,13 +128,13 @@ function DashboardContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentConversationIdRef = useRef<string | null>(null);
-  const assistantMessageRef = useRef<string>("");
 
   const [selectedBot, setSelectedBot] = useState("copy_assistant");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [client, setClient] = useState<ClientType | null>(null);
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [inputDisabled, setInputDisabled] = useState(false);
@@ -60,6 +149,9 @@ function DashboardContent() {
     Array<{ file: File; fileId?: string; uploading: boolean; error?: string }>
   >([]);
 
+  const selectedBotData = bots.find((bot) => bot.id === selectedBot);
+  const promptSuggestions = selectedBotData?.suggestions || [];
+
   useEffect(() => {
     initialize();
   }, [searchParams]);
@@ -69,6 +161,30 @@ function DashboardContent() {
       loadConversationHistory(client);
     }
   }, [selectedBot, client]);
+
+  useEffect(() => {
+    if (showInputConversation) {
+      scrollToBottom();
+    }
+  }, [showInputConversation]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastAssistantMsg = [...messages]
+        .reverse()
+        .find((m) => m.role === "assistant");
+      if (
+        lastAssistantMsg &&
+        (lastAssistantMsg.text.startsWith("data:image/") ||
+          (lastAssistantMsg.text.startsWith("http") &&
+            /\.(png|jpg|jpeg|gif|webp)$/i.test(lastAssistantMsg.text)))
+      ) {
+        setShowInputConversation(false);
+      }
+    } else {
+      setShowInputConversation(true);
+    }
+  }, [messages]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -138,9 +254,17 @@ function DashboardContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.messages || []);
+
+        const processedMessages = data.messages.map((msg: any) => ({
+          ...msg,
+          attachedFiles: msg.attachedFiles || [],
+        }));
+
+        setMessages(processedMessages || []);
         setCurrentConversationId(conversationId);
         currentConversationIdRef.current = conversationId;
+
+        setAttachedFiles([]);
       }
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -154,17 +278,12 @@ function DashboardContent() {
     }
   };
 
-  const createNewConversation = async (title?: string) => {
+  const createNewConversation = async (firstMessage: string) => {
     try {
       setIsCreatingConversation(true);
 
-      setMessages([]);
-      setPrompt("");
-      setCurrentConversationId(null);
-      currentConversationIdRef.current = null;
-      setAttachedFiles([]);
+      const title = generateSmartTitle(firstMessage);
 
-      // Get prompt ID for selected bot
       // @ts-ignore
       const promptConfigId = client?.bots[`${selectedBot}_id`];
       if (!promptConfigId) {
@@ -175,36 +294,72 @@ function DashboardContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title || "New conversation",
+          title,
           clientId: client?.id,
           promptId: promptConfigId,
           botType: selectedBot,
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentConversationId(data.id);
-        currentConversationIdRef.current = data.id;
-
-        console.log("✅ New conversation created with ID:", data.id);
-
-        // Reload conversation history
-        await loadConversationHistory(client!);
-
-        return data.id;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || "Failed to create conversation");
       }
+
+      const data = await response.json();
+
+      setCurrentConversationId(data.id);
+      currentConversationIdRef.current = data.id;
+
+      await loadConversationHistory(client!);
+
+      return data.id;
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast({
         title: "Error",
-        description: "Failed to create conversation",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create conversation",
         variant: "destructive",
       });
       return null;
     } finally {
       setIsCreatingConversation(false);
     }
+  };
+
+  const generateSmartTitle = (message: string): string => {
+    const cleaned = message.trim().replace(/\s+/g, " ");
+
+    if (cleaned.length <= 60) {
+      return cleaned;
+    }
+
+    const maxLength = 50;
+    const truncated = cleaned.substring(0, maxLength);
+
+    const punctuationMarks = [". ", "? ", "! ", ", "];
+    let bestCutIndex = -1;
+
+    for (const mark of punctuationMarks) {
+      const index = truncated.lastIndexOf(mark);
+      if (index > bestCutIndex && index > 20) {
+        bestCutIndex = index + mark.length - 1;
+      }
+    }
+
+    if (bestCutIndex > 0) {
+      return cleaned.substring(0, bestCutIndex).trim();
+    }
+
+    const lastSpace = truncated.lastIndexOf(" ");
+    if (lastSpace > 20) {
+      return truncated.substring(0, lastSpace) + "...";
+    }
+
+    return truncated + "...";
   };
 
   const deleteConversation = async (
@@ -248,46 +403,40 @@ function DashboardContent() {
     const files = Array.from(e.target.files || []);
 
     for (const file of files) {
-      // Validar tamaño
-      if (file.size > 20 * 1024 * 1024) {
+      if (file.size > THRESHOLD) {
         toast({
-          title: "Archivo muy grande",
-          description: `${file.name} excede el límite de 20MB`,
+          title: "File too large",
+          description: `${file.name} exceeds the 20MB limit`,
           variant: "destructive",
         });
         continue;
       }
 
-      // Añadir a la lista con estado de carga
       const fileEntry = {
         file,
         uploading: true,
         error: undefined,
+        fileId: undefined,
       };
 
       setAttachedFiles((prev) => [...prev, fileEntry]);
 
-      // Subir archivo a OpenAI
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("purpose", "assistants");
-        if (currentConversationId) {
-          formData.append("conversationId", currentConversationId);
-        }
 
-        const response = await fetch("/api/files/upload", {
+        const response = await fetch("/api/files", {
           method: "POST",
           body: formData,
         });
 
         if (!response.ok) {
-          throw new Error("Failed to upload file");
+          const error = await response.json();
+          throw new Error(error.details || "Failed to upload file");
         }
 
         const data = await response.json();
 
-        // Actualizar con el fileId
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
@@ -296,17 +445,25 @@ function DashboardContent() {
           )
         );
 
-        console.log(`✅ File uploaded: ${file.name} with ID: ${data.fileId}`);
+        console.log(
+          `✅ File uploaded to OpenAI: ${file.name} with ID: ${data.fileId}`
+        );
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
 
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
-              ? { ...f, uploading: false, error: "Error al subir archivo" }
+              ? { ...f, uploading: false, error: "Error uploading file" }
               : f
           )
         );
+
+        toast({
+          title: "Error uploading file",
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "destructive",
+        });
       }
     }
 
@@ -320,11 +477,12 @@ function DashboardContent() {
 
     if (fileEntry.fileId) {
       try {
-        await fetch(`/api/files/${fileEntry.fileId}`, {
+        await fetch(`/api/openai/files/${fileEntry.fileId}`, {
           method: "DELETE",
         });
+        console.log(`Deleted file from OpenAI: ${fileEntry.fileId}`);
       } catch (error) {
-        console.error("Error deleting file:", error);
+        console.error("Error deleting file from OpenAI:", error);
       }
     }
 
@@ -337,11 +495,13 @@ function DashboardContent() {
     return File;
   };
 
-  const handleSubmit = async () => {
-    if (!prompt.trim()) {
+  const handleSubmit = async (defaultPrompt?: string) => {
+    const promptToUse = defaultPrompt || prompt;
+
+    if (!promptToUse.trim()) {
       toast({
         title: "Empty message",
-        description: "Please enter a message to continue",
+        description: "Please enter a message",
         variant: "destructive",
       });
       return;
@@ -362,58 +522,57 @@ function DashboardContent() {
     setIsLoading(true);
 
     try {
-      // Create conversation if it doesn't exist
       let conversationId = currentConversationId;
-      if (!conversationId) {
-        console.log("🆕 Creating new conversation");
-        const title =
-          prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt;
 
-        conversationId = await createNewConversation(title);
+      if (!conversationId) {
+        conversationId = await createNewConversation(promptToUse);
 
         if (!conversationId) {
           throw new Error("Could not create conversation");
         }
-
-        currentConversationIdRef.current = conversationId;
       }
 
-      // Add user message to UI
+      const fileIds = attachedFiles
+        .filter((f) => f.fileId && !f.error)
+        .map((f) => ({
+          name: f.file.name,
+          fileId: f.fileId!,
+        }));
+
+      const tempUserMessageId = `user-${Date.now()}`;
       const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
+        id: tempUserMessageId,
         role: "user" as const,
-        text: prompt,
+        text: promptToUse,
         timestamp: new Date(),
+        attachedFiles: fileIds,
       };
+
       setMessages((prev) => [...prev, userMessage]);
-
-      // Get file IDs from attached files
-      // const fileIds = attachedFiles
-      //   .filter((f) => f.fileId && !f.error)
-      //   .map((f) => f.fileId!);
-
       setPrompt("");
       setAttachedFiles([]);
       setIsTyping(true);
-      assistantMessageRef.current = "";
 
-      // Send message to API
       const response = await fetch(
         `/api/conversations/${conversationId}/messages`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            content: userMessage.text,
+            content: promptToUse,
             promptId: promptConfigId,
             botType: selectedBot,
-            // fileIds: fileIds.length > 0 ? fileIds : undefined,
+            fileIds: fileIds.length > 0 ? fileIds : undefined,
           }),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const error = await response.json().catch(() => ({}));
+        setMessages((prev) =>
+          prev.filter((msg) => msg.id !== tempUserMessageId)
+        );
+        throw new Error(error.error || "Failed to send message");
       }
 
       const data = await response.json();
@@ -421,19 +580,19 @@ function DashboardContent() {
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        text: data.message ?? "",
+        text: data.message || "",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
-
       await loadConversationHistory(client!);
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description:
+          error instanceof Error ? error.message : "Failed to send message",
         variant: "destructive",
       });
     } finally {
@@ -441,6 +600,20 @@ function DashboardContent() {
       setIsLoading(false);
       setIsTyping(false);
     }
+  };
+
+  const handleNewConversation = () => {
+    setMessages([]);
+    setPrompt("");
+    setCurrentConversationId(null);
+    currentConversationIdRef.current = null;
+    setAttachedFiles([]);
+    setSidebarOpen(false);
+
+    toast({
+      title: "Ready for new conversation",
+      description: "Send a message to start",
+    });
   };
 
   const handleBackToClientSelection = () => {
@@ -457,14 +630,24 @@ function DashboardContent() {
     setAttachedFiles([]);
   };
 
-  const selectedBotData = bots.find((bot) => bot.id === selectedBot);
+  console.log({ messages });
 
   return (
     <div className="min-h-screen bg-background flex">
+      {imageModal && (
+        <Modal
+          isOpen={showModal}
+          onClose={closeEditor}
+          imageUrl={imageModal}
+          handleDownloadImage={handleDownloadImage}
+          handleAddImageToConversation={handleAddImageToConversation}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card/95 backdrop-blur-sm border-r border-border transform transition-all duration-300 ease-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 bg-card/95 backdrop-blur-sm border-r border-border transform transition-all duration-300 ease-out lg:translate-x-0",
           sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
@@ -563,7 +746,7 @@ function DashboardContent() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => createNewConversation()}
+                  onClick={handleNewConversation}
                   disabled={isCreatingConversation}
                 >
                   {isCreatingConversation ? (
@@ -574,7 +757,6 @@ function DashboardContent() {
                 </Button>
               </div>
             </div>
-
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {isLoadingConversations ? (
                 <div className="flex items-center justify-center py-4">
@@ -591,10 +773,10 @@ function DashboardContent() {
                   <div
                     key={conv.id}
                     className={cn(
-                      "group relative p-3 rounded-lg border cursor-pointer",
+                      "group relative p-3 rounded-lg border cursor-pointer transition-all duration-200",
                       currentConversationId === conv.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-accent/50"
+                        ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20 bg-red-100"
+                        : "border-border hover:bg-accent/50 hover:border-muted-foreground/30"
                     )}
                     onClick={() => loadConversationMessages(conv.id)}
                   >
@@ -630,7 +812,7 @@ function DashboardContent() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => createNewConversation()}
+                onClick={handleNewConversation}
                 disabled={isCreatingConversation}
                 className="w-full justify-start"
               >
@@ -721,6 +903,30 @@ function DashboardContent() {
                         {selectedBotData?.description}
                       </p>
                     </div>
+                    {promptSuggestions.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-semibold mb-2">
+                          Prompt Suggestions
+                        </h4>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {promptSuggestions.map(
+                            (suggestion: string, idx: number) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  await handleSubmit(suggestion);
+                                }}
+                                className="text-xs"
+                              >
+                                {suggestion}
+                              </Button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -768,15 +974,58 @@ function DashboardContent() {
                             />
                           ) : message.text.startsWith("http") &&
                             /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
-                            <img
-                              src={message.text}
-                              alt="Generated image"
-                              className="max-w-full rounded-lg shadow"
-                            />
+                            <div>
+                              <img
+                                src={message.text}
+                                alt="Generated image"
+                                className="max-w-full rounded-lg shadow"
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                  onClick={() =>
+                                    handleDownloadImage(message.text)
+                                  }
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                  onClick={() => handleEditor(message.text)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                  onClick={() => handleContinueConversation()}
+                                >
+                                  Continue conversation
+                                </button>
+                              </div>
+                            </div>
                           ) : (
                             <Markdown>{message.text}</Markdown>
                           )}
                         </div>
+
+                        {message.attachedFiles &&
+                          message.attachedFiles.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <div className="flex flex-wrap gap-1">
+                                {message.attachedFiles.map((file, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-background/50"
+                                  >
+                                    <Paperclip className="h-3 w-3" />
+                                    <span className="max-w-[150px] truncate">
+                                      {file.name}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         {message.timestamp && (
                           <div className="mt-2 text-xs opacity-70">
                             {new Date(message.timestamp).toLocaleTimeString()}
@@ -802,13 +1051,13 @@ function DashboardContent() {
                       </div>
                       <div className="bg-muted rounded-lg p-4">
                         <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                          <div className="w-2 h-2 rounded-full animate-bounce bg-black" />
                           <div
-                            className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                            className="w-2 h-2 rounded-full animate-bounce bg-black"
                             style={{ animationDelay: "0.1s" }}
                           />
                           <div
-                            className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                            className="w-2 h-2 rounded-full animate-bounce bg-black"
                             style={{ animationDelay: "0.2s" }}
                           />
                         </div>
@@ -833,95 +1082,104 @@ function DashboardContent() {
           </div>
 
           {/* Input Area */}
-          <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
-            <CardContent className="p-4 space-y-4">
-              {/* Attached Files */}
-              {attachedFiles.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {attachedFiles.map((fileEntry, index) => {
-                    const Icon = getFileIcon(fileEntry.file.type);
-                    return (
-                      <div
-                        key={index}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-lg border",
-                          fileEntry.error
-                            ? "border-destructive bg-destructive/10"
-                            : fileEntry.uploading
-                            ? "border-muted bg-muted/50"
-                            : "border-primary bg-primary/10"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="text-xs max-w-[100px] truncate">
-                          {fileEntry.file.name}
-                        </span>
-                        {fileEntry.uploading && (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        )}
-                        {!fileEntry.uploading && (
-                          <button
-                            onClick={() => removeAttachedFile(index)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+          {showInputConversation && (
+            <Card className="bg-card/80 border-border shadow-lg flex-shrink-0">
+              <CardContent className="p-4 space-y-4">
+                {/* Attached Files */}
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachedFiles.map((fileEntry, index) => {
+                      const Icon = getFileIcon(fileEntry.file.type);
+                      return (
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg border",
+                            fileEntry.error
+                              ? "border-destructive bg-destructive/10"
+                              : fileEntry.uploading
+                              ? "border-muted bg-muted/50"
+                              : "border-primary bg-primary/10"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="text-xs max-w-[100px] truncate">
+                            {fileEntry.file.name}
+                          </span>
+                          {fileEntry.uploading && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          {!fileEntry.uploading && (
+                            <button
+                              onClick={() => removeAttachedFile(index)}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Input Controls */}
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.html,.xml,.rtf,image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={inputDisabled}
+                    className="flex-shrink-0"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+
+                  <Textarea
+                    placeholder={`Ask something to ${selectedBotData?.name}...`}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    disabled={inputDisabled}
+                    className="flex-1 min-h-[60px] max-h-[150px] resize-none"
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        await handleSubmit();
+                      }
+                    }}
+                  />
+
+                  <Button
+                    onClick={async () => await handleSubmit()}
+                    disabled={isLoading || !prompt.trim() || inputDisabled}
+                    className="self-end"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
-              )}
 
-              {/* Input Controls */}
-              <div className="flex gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,.pdf,.txt,.md,.csv,.json,.docx,.xlsx"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={inputDisabled}
-                  className="flex-shrink-0"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-
-                <Textarea
-                  placeholder={`Ask something to ${selectedBotData?.name}...`}
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={inputDisabled}
-                  className="flex-1 min-h-[60px] max-h-[150px] resize-none"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                />
-
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !prompt.trim() || inputDisabled}
-                  className="self-end"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                {attachedFiles.some((f) => f.uploading) && (
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Uploading files...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 

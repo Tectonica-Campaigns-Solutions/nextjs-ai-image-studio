@@ -2,19 +2,8 @@ import { ClientType } from "./types";
 
 export const clients: ClientType[] = [
   {
-    id: "general",
-    name: "General RAG",
-    description: "",
-    bots: {
-      copy_assistant_id: "",
-      strategy_assistant_id: "",
-      visual_assistant_id: "",
-      image_testing_assistant_id: "",
-    },
-  },
-  {
-    id: "new-pluralists",
-    name: "New Pluralists RAG",
+    id: "client-example",
+    name: "Client RAG",
     description: "",
     bots: {
       copy_assistant_id:

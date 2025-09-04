@@ -49,6 +49,12 @@ export async function POST(
       .order("created_at", { ascending: true })
       .limit(10);
 
+    // Get file references
+    const { data: fileReferences } = await supabase
+      .from("files")
+      .select("id, file_id")
+      .eq("conversation_id", conversationId);
+
     const conversationHistory = (previousMessages ?? []).map((msg) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
       content: [
@@ -60,18 +66,51 @@ export async function POST(
     }));
 
     // Save new user message
-    await supabase.from("messages").insert({
-      conversation_id: conversationId,
-      role: "user",
-      content: content,
-      created_at: new Date().toISOString(),
-    });
+    const { data: insertedMessage, error: messageError } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        role: "user",
+        content: content,
+        created_at: new Date().toISOString(),
+      })
+      .select();
+
+    if (messageError) {
+      return NextResponse.json(
+        { error: "Failed to save message" },
+        { status: 500 }
+      );
+    }
+
+    const messageId = insertedMessage?.[0]?.id;
 
     // Update conversation timestamp
     await supabase
       .from("conversations")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", conversationId);
+
+    // Save file associations in message_files
+    if (messageId && fileIds && fileIds.length > 0) {
+      for (const file of fileIds) {
+        const { data: uploadedFile } = await supabase
+          .from("files")
+          .insert({
+            file_id: file.fileId,
+            file_name: file.name,
+            conversation_id: conversationId,
+          })
+          .select()
+          .single();
+
+        const result = await supabase.from("message_files").insert({
+          message_id: messageId,
+          file_id: file.fileId,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
 
     // @ts-ignore
     const response = await client?.responses.create({
@@ -83,7 +122,13 @@ export async function POST(
         ...conversationHistory,
         {
           role: "user",
-          content: [{ type: "input_text", text: content }],
+          content: [
+            { type: "input_text", text: content },
+            ...(fileIds || []).map((file: any) => ({
+              type: "input_file",
+              file_id: file.fileId,
+            })),
+          ],
         },
       ],
       tools: [
@@ -123,6 +168,8 @@ export async function POST(
         item.status === "completed"
     );
 
+    console.log(imageGenerationTool);
+
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
       // const parameters = imageGenerationTool.parameters;
@@ -130,25 +177,39 @@ export async function POST(
       const conversationText = conversationHistory
         .map((msg) => msg.content.map((c) => c.text).join(" "))
         .join(" ");
-      const prompt = `"${conversationText}" "${content}"`;
+      const prompt = `${content}`;
 
       try {
-        const formData = new FormData();
-        formData.append("prompt", prompt);
-        formData.append("useRag", "true");
-
         const imageResp = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/qwen-text-to-image`,
-          { method: "POST", body: formData }
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/text-to-image`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              prompt: `${conversationText} ${content}, your trained style`,
+              useRAG: "true",
+              settings: {
+                image_size: "landscape_4_3",
+                num_inference_steps: 30,
+                guidance_scale: 2.5,
+                num_images: 1,
+                output_format: "png",
+                negative_prompt: "",
+                acceleration: "none",
+                seed: 12345,
+              },
+            }),
+          }
         );
 
         if (!imageResp.ok) {
           throw new Error(`Image generation failed: ${imageResp.status}`);
         }
 
+        console.log("generating image");
+
         const imageData = await imageResp.json();
-        if (imageData?.images && imageData.images.length > 0) {
-          const imageUrl = imageData.images[0].url;
+        if (imageData?.images) {
+          const imageUrl = imageData.images[0]?.url || imageData.image;
 
           if (response?.output_text) {
             finalMessage = `${response.output_text}\n\n${imageUrl}`;
@@ -199,13 +260,37 @@ export async function GET(
 
     if (error) throw error;
 
+    // Fetch associated files for each message
+    const messageIds = messages?.map((msg) => msg.id) || [];
+    let filesByMessage: Record<string, any[]> = {};
+    if (messageIds.length > 0) {
+      const { data: messageFiles } = await supabase
+        .from("message_files")
+        .select(
+          `
+            message_id,
+            file_id,
+            files ( id, file_name )
+          `
+        )
+        .in("message_id", messageIds);
+
+      messageFiles?.forEach((mf) => {
+        if (!filesByMessage[mf.message_id]) filesByMessage[mf.message_id] = [];
+        filesByMessage[mf.message_id].push({
+          fileId: mf.file_id, // @ts-ignore
+          name: mf.files.file_name,
+        });
+      });
+    }
+
     const formattedMessages =
       messages?.map((msg) => ({
         id: msg.id,
         role: msg.role,
         text: msg.content,
         timestamp: new Date(msg.created_at),
-        fileIds: msg.file_ids,
+        attachedFiles: filesByMessage[msg.id] || [],
       })) || [];
 
     return NextResponse.json({ messages: formattedMessages });
