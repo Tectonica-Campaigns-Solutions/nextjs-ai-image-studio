@@ -27,19 +27,19 @@ export async function POST(
 ) {
   try {
     const client = getOpenAIClient();
+    const supabase = await createClient();
+
     const { conversationId } = await params;
 
     const body = await request.json();
     const { content, promptId, fileIds } = body;
 
-    if (!content) {
+    if (!content && fileIds.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // Get previous messages
     const { data: previousMessages } = await supabase
@@ -50,10 +50,10 @@ export async function POST(
       .limit(10);
 
     // Get file references
-    const { data: fileReferences } = await supabase
-      .from("files")
-      .select("id, file_id")
-      .eq("conversation_id", conversationId);
+    // const { data: fileReferences } = await supabase
+    //   .from("files")
+    //   .select("id, file_id")
+    //   .eq("conversation_id", conversationId);
 
     const conversationHistory = (previousMessages ?? []).map((msg) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
@@ -98,6 +98,7 @@ export async function POST(
           .from("files")
           .insert({
             file_id: file.fileId,
+            file_url: file.fileUrl,
             file_name: file.name,
             conversation_id: conversationId,
           })
@@ -124,10 +125,14 @@ export async function POST(
           role: "user",
           content: [
             { type: "input_text", text: content },
-            ...(fileIds || []).map((file: any) => ({
-              type: "input_file",
-              file_id: file.fileId,
-            })),
+            ...(fileIds || []).map((file: any) => {
+              const ext = file.name?.split(".").pop()?.toLowerCase();
+
+              return {
+                type: ext === "pdf" ? "input_file" : "input_image",
+                file_id: file.fileId,
+              };
+            }),
           ],
         },
       ],
@@ -155,20 +160,49 @@ export async function POST(
             additionalProperties: false,
           },
         },
+        {
+          type: "function",
+          name: "on_image_edit_request",
+          description:
+            "Handles user image upload with edit/modification request and prompts to open a modal for edit instructions.",
+          strict: true,
+          parameters: {
+            type: "object",
+            properties: {
+              image_url: {
+                type: "string",
+                description: "URL or reference to the uploaded image.",
+              },
+            },
+            required: ["image_url"],
+            additionalProperties: false,
+          },
+        },
       ],
     });
 
-    // Check if we need to generate a image
-    let finalMessage = response?.output_text || "";
+    // Flags
+    let activateEditImage = null;
 
+    // Check if we need to generate a image
+    let finalMessage =
+      fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
+      response?.output_text ||
+      "";
+
+    // Tools
     const imageGenerationTool = response?.output?.find(
       (item) =>
         item.type === "function_call" &&
         item.name === "generate_image_post_request" &&
         item.status === "completed"
     );
-
-    console.log(imageGenerationTool);
+    const imageEditTool = response?.output?.find(
+      (item) =>
+        item.type === "function_call" &&
+        item.name === "on_image_edit_request" &&
+        item.status === "completed"
+    );
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
@@ -233,7 +267,7 @@ export async function POST(
       created_at: new Date().toISOString(),
     });
 
-    return Response.json({ message: finalMessage });
+    return Response.json({ message: finalMessage, activateEditImage });
   } catch (error) {
     console.error("Error sending message:", error);
     return NextResponse.json(
