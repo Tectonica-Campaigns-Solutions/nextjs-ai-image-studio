@@ -164,7 +164,7 @@ export async function POST(
           type: "function",
           name: "on_image_edit_request",
           description:
-            "Handles user image upload with edit/modification request and prompts to open a modal for edit instructions.",
+            "Always call this function immediately whenever the user says they want to edit, modify, or change an image. Do not ask questions and do not respond with text.",
           strict: true,
           parameters: {
             type: "object",
@@ -185,10 +185,7 @@ export async function POST(
     let activateEditImage = null;
 
     // Check if we need to generate a image
-    let finalMessage =
-      fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
-      response?.output_text ||
-      "";
+    let finalMessage = response?.output_text || "";
 
     // Tools
     const imageGenerationTool = response?.output?.find(
@@ -203,6 +200,8 @@ export async function POST(
         item.name === "on_image_edit_request" &&
         item.status === "completed"
     );
+
+    console.log({ imageEditTool });
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
@@ -257,6 +256,13 @@ export async function POST(
         console.error("Error generating image:", error);
         finalMessage = "Error generating image.";
       }
+    } else if (imageEditTool) {
+      finalMessage =
+        fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
+        response?.output_text ||
+        "";
+
+      activateEditImage = true;
     }
 
     // Save assistant message
