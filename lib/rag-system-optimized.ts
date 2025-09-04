@@ -540,23 +540,7 @@ export async function enhancePromptWithBranding(originalPrompt: string, context?
 function getSimpleEnhancement(prompt: string, ragName?: string) {
   // Different enhancements based on RAG name
   switch (ragName?.toLowerCase()) {
-    case 'egp':
-      return {
-        enhancedPrompt: `${prompt}, professional corporate photography, clean modern aesthetic, EGP brand colors, business professional`,
-        suggestedColors: ['#2563eb', '#1e40af'], // Blue theme for EGP
-        suggestedFormat: "professional EGP corporate style",
-        negativePrompt: "no text, no words, no letters, amateur, cluttered, unprofessional",
-        brandingElements: [
-          { category: 'corporate', text: 'professional corporate photography', weight: 1.0 }
-        ],
-        metadata: {
-          ragMethod: 'simple-fallback',
-          ragName: ragName || 'EGP'
-        }
-      };
-    
     case 'aclu':
-    default:
       return {
         enhancedPrompt: `${prompt}, documentary photography style, high contrast, ACLU red and blue colors, professional photojournalism`,
         suggestedColors: ['#ef404e', '#0055aa'],
@@ -570,12 +554,29 @@ function getSimpleEnhancement(prompt: string, ragName?: string) {
           ragName: ragName || 'ACLU'
         }
       };
+    
+    case 'egp':
+    default:
+      return {
+        enhancedPrompt: `${prompt}, lifestyle photography, authentic poses, diverse representation, EGP green colors, inspiring and empowering, sustainable and democratic`,
+        suggestedColors: ['#57B45F', '#FFDC2E', '#FF70BD'], // EGP green, yellow, pink
+        suggestedFormat: "professional EGP lifestyle style",
+        negativePrompt: "no stock photo look, no neon colors, avoid red, no clichés, no single race groups, overly posed, synthetic-looking",
+        brandingElements: [
+          { category: 'lifestyle', text: 'lifestyle photography with diverse representation', weight: 1.0 },
+          { category: 'environmental', text: 'sustainable and democratic values', weight: 1.1 }
+        ],
+        metadata: {
+          ragMethod: 'simple-fallback',
+          ragName: ragName || 'EGP'
+        }
+      };
   }
 }
 
-// Legacy function for backwards compatibility
+// Legacy function for backwards compatibility - now defaults to EGP
 function getSimpleACLUEnhancement(prompt: string) {
-  return getSimpleEnhancement(prompt, 'ACLU');
+  return getSimpleEnhancement(prompt, 'EGP');
 }
 
 // Initialize RAG system (call this once on startup)
