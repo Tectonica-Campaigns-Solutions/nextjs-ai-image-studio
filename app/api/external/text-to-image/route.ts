@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     
     // Read LoRA configuration from app state (hardcoded for now, will be dynamic)
     const loraConfig = {
-      url: "https://v3.fal.media/files/kangaroo/KYy3SvydiFZB5yKYWTSUP_adapter.safetensors",
+      url: "https://v3.fal.media/files/lion/N3PI0xMjYwEwuxJh5JE3Q_adapter.safetensors",
       triggerPhrase: "", // Will be read from app state
       scale: 1.0
     }
