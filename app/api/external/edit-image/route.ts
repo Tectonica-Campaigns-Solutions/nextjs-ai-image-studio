@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { fal } from "@fal-ai/client"
 
 /**
  * POST /api/external/edit-image
@@ -92,6 +93,20 @@ export async function POST(request: NextRequest) {
     internalFormData.append("prompt", prompt.trim())
     internalFormData.append("useRAG", useRAG.toString())
     
+    // Enhance prompt with RAG if enabled
+    let finalPrompt = prompt.trim()
+    if (useRAG) {
+      try {
+        // Use simple RAG enhancement for external API
+        const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+        const enhancement = enhanceWithEGPBranding(prompt.trim())
+        finalPrompt = enhancement.enhancedPrompt
+        console.log("[External Edit-Image] Enhanced prompt:", finalPrompt)
+      } catch (ragError) {
+        console.warn("[External Edit-Image] RAG enhancement failed:", ragError)
+      }
+    }
+    
     // Add RAG information (will be dynamic when app state is accessible)
     if (useRAG) {
       // TODO: Read from actual app state
@@ -102,7 +117,72 @@ export async function POST(request: NextRequest) {
       // }
     }
 
-    // Make internal API call
+    // For external API, we want to get the URL directly from Fal.ai instead of base64
+    // Make the Fal.ai call directly to get the URL
+    try {
+      // Configure Fal.ai client
+      const falApiKey = process.env.FAL_API_KEY
+      if (!falApiKey) {
+        throw new Error("FAL_API_KEY not configured")
+      }
+
+      fal.config({
+        credentials: falApiKey,
+      })
+
+      // Convert image to buffer for Fal.ai
+      const imageBuffer = await image.arrayBuffer()
+
+      const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
+        input: {
+          image: imageBuffer,
+          prompt: finalPrompt
+        },
+        logs: true,
+        onQueueUpdate: (update) => {
+          if (update.status === "IN_PROGRESS") {
+            update.logs.map((log) => log.message).forEach(console.log)
+          }
+        },
+      })
+
+      console.log("[External Edit-Image] Fal.ai result:", result)
+
+      if (result.data && result.data.images && result.data.images.length > 0) {
+        const imageUrl = result.data.images[0].url
+
+        // Format response for external API with URL
+        const externalResponse = {
+          success: true,
+          image: imageUrl,
+          originalImage: {
+            name: image.name,
+            size: image.size,
+            type: image.type
+          },
+          prompt: {
+            original: prompt,
+            final: finalPrompt,
+            enhanced: useRAG
+          },
+          processing: {
+            model: "flux",
+            timestamp: new Date().toISOString()
+          }
+        }
+
+        return NextResponse.json(externalResponse)
+      } else {
+        throw new Error("No images returned from Fal.ai")
+      }
+    } catch (falError) {
+      console.error("[External Edit-Image] Direct Fal.ai call failed:", falError)
+      
+      // Fallback to internal API call
+      console.log("[External Edit-Image] Falling back to internal API...")
+    }
+
+    // Fallback: Make internal API call
     const response = await fetch(`${getBaseUrl()}/api/edit-image`, {
       method: "POST",
       body: internalFormData,
@@ -136,10 +216,26 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json()
     
+    // Extract the URL from the result - we need to get the original URL from the internal API
+    // Since the internal API converts to base64, we need to make our own call to Fal.ai
+    let imageUrl = null;
+    
+    if (result.image) {
+      if (result.image.startsWith('data:')) {
+        // The internal API converted to base64, but we want the URL
+        // We'll need to handle this differently - for now, pass through the base64
+        // TODO: Modify to get URL directly from Fal.ai response
+        imageUrl = result.image;
+      } else {
+        // Direct URL
+        imageUrl = result.image;
+      }
+    }
+    
     // Format response for external API
     const externalResponse = {
       success: true,
-      image: result.image,
+      image: imageUrl,
       originalImage: {
         name: image.name,
         size: image.size,

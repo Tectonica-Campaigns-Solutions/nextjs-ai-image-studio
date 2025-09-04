@@ -99,10 +99,13 @@ Generate images from text descriptions using the Qwen model.
 ```json
 {
   "success": true,
-  "image": "https://v3.fal.media/files/...",
+  "image": "https://v3.fal.media/files/rabbit/...",
   "images": [
     {
-      "url": "https://v3.fal.media/files/..."
+      "url": "https://v3.fal.media/files/rabbit/...",
+      "width": 1024,
+      "height": 768,
+      "content_type": "image/png"
     }
   ],
   "prompt": {
@@ -145,7 +148,7 @@ curl -X POST "https://your-domain.com/api/external/edit-image" \
 ```json
 {
   "success": true,
-  "image": "https://v3.fal.media/files/...",
+  "image": "https://v3.fal.media/files/rabbit/...",
   "originalImage": {
     "name": "image.jpg",
     "size": 1024768,
