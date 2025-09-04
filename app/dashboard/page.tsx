@@ -502,7 +502,7 @@ function DashboardContent() {
         setMessages((prev) =>
           prev.filter((msg) => msg.id !== tempUserMessageId)
         );
-        throw new Error(error.error || "Failed to send message");
+        throw new Error(error.code || error.error || "Failed to send message");
       }
 
       const data = await response.json();
@@ -526,12 +526,22 @@ function DashboardContent() {
       setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to send message",
-        variant: "destructive",
-      });
+
+      if (error.message === "insufficient_quota") {
+        toast({
+          title: "Error",
+          description:
+            "No credits available, please check your billing settings.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error ? error.message : "Failed to send message",
+          variant: "destructive",
+        });
+      }
     } finally {
       setInputDisabled(false);
       setIsLoading(false);
