@@ -146,22 +146,22 @@ export function calculateCosineSimilarity(embedding1: number[], embedding2: numb
   return dotProduct / (magnitude1 * magnitude2);
 }
 
-// Batch process embeddings for ACLU categories
-export async function generateACLUCategoryEmbeddings(): Promise<{ [category: string]: number[] }> {
-  const aclucategories = {
-    brand_essence: "civil rights, social justice, equality, freedom, democracy, human rights, advocacy, protection of liberties",
-    photography_style: "documentary photography, photojournalism, candid shots, authentic moments, natural lighting, professional portraits",
-    color_primary: "ACLU red, deep blue, black and white, high contrast, bold colors, patriotic colors",
-    color_secondary: "warm tones, natural skin tones, diverse representation, authentic colors",
-    composition: "centered subjects, rule of thirds, protest photography, rally documentation, portrait composition",
-    lighting: "natural lighting, dramatic lighting, high contrast, documentary style lighting, authentic illumination",
-    mood_emotion: "empowerment, determination, hope, justice, dignity, strength, solidarity, community",
-    visual_elements: "text overlays, ACLU logo, banners, signs, demonstrations, diverse people, activism"
+// Batch process embeddings for EGP categories
+export async function generateEGPCategoryEmbeddings(): Promise<{ [category: string]: number[] }> {
+  const egpCategories = {
+    brand_essence: "sustainability, green politics, environmental protection, social justice, democracy, European values, community, collaboration",
+    photography_style: "lifestyle photography, authentic moments, natural environments, community gatherings, sustainable living, positive energy",
+    color_primary: "EGP green, vibrant yellow, bold pink, nature-inspired colors, sustainable palette, organic tones",
+    color_secondary: "earth tones, natural colors, warm lighting, sustainable materials, eco-friendly aesthetics",
+    composition: "community-focused, environmental settings, group activities, collaborative scenes, sustainable lifestyle",
+    lighting: "natural lighting, warm tones, golden hour, soft illumination, eco-friendly environments",
+    mood_emotion: "optimism, hope, collaboration, sustainability, community spirit, positive change, environmental awareness",
+    visual_elements: "green elements, community gatherings, sustainability themes, diverse representation, collaborative activities"
   };
 
   const categoryEmbeddings: { [category: string]: number[] } = {};
 
-  for (const [category, description] of Object.entries(aclucategories)) {
+  for (const [category, description] of Object.entries(egpCategories)) {
     console.log(`[OpenAI Embeddings] Generating embedding for category: ${category}`);
     const embedding = await getOpenAIEmbedding(description);
     if (embedding) {

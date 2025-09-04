@@ -7,8 +7,8 @@ async function getRAGSystem() {
   if (process.env.VERCEL) {
     // In Vercel environment, use simple hardcoded RAG
     try {
-      const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-      return enhanceWithACLUBranding
+      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+      return enhanceWithEGPBranding
     } catch (error) {
       console.warn("Simple RAG not available:", error)
       return null
@@ -20,8 +20,8 @@ async function getRAGSystem() {
       return enhancePromptWithBranding
     } catch (error) {
       console.warn("Full RAG not available, falling back to simple RAG:", error)
-      const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-      return enhanceWithACLUBranding
+      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+      return enhanceWithEGPBranding
     }
   }
 }

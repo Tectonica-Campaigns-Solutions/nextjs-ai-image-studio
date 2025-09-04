@@ -46,7 +46,7 @@ export default function ImageEditor() {
   
   // LoRA States for Qwen Text-to-Image
   const [useCustomLoRA, setUseCustomLoRA] = useState(false)
-  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/kangaroo/KYy3SvydiFZB5yKYWTSUP_adapter.safetensors")
+  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors")
   const [triggerPhrase, setTriggerPhrase] = useState("")
   const [loraScale, setLoraScale] = useState(1.0)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
@@ -552,7 +552,7 @@ export default function ImageEditor() {
                       </Label>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      When enabled, your prompt will be automatically enhanced with ACLU brand colors, styles, and layout guidelines.
+                      When enabled, your prompt will be automatically enhanced with EGP brand colors, styles, and layout guidelines.
                     </p>
 
                     <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
@@ -1055,7 +1055,7 @@ export default function ImageEditor() {
                           <Label htmlFor="trigger-phrase">Trigger Phrase (Optional)</Label>
                           <Input
                             id="trigger-phrase"
-                            placeholder="e.g., 'aclu style', 'my brand style'"
+                            placeholder="e.g., 'egp style', 'my trained style'"
                             value={trainingSettings.trigger_phrase}
                             onChange={(e) => setTrainingSettings(prev => ({ 
                               ...prev, 

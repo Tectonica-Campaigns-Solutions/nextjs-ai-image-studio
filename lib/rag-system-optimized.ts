@@ -236,7 +236,7 @@ async function findSimilarEmbeddingsWithOpenAI(prompt: string, threshold: number
     console.log('[RAG] Using OpenAI embeddings for maximum precision');
     
     // Dynamic import to avoid build-time issues
-    const { getOpenAIEmbedding, calculateCosineSimilarity, generateACLUCategoryEmbeddings } = await import('./openai-embeddings');
+    const { getOpenAIEmbedding, calculateCosineSimilarity, generateEGPCategoryEmbeddings } = await import('./openai-embeddings');
     
     // Generate embedding for the input prompt
     const promptEmbedding = await getOpenAIEmbedding(prompt);
@@ -245,8 +245,8 @@ async function findSimilarEmbeddingsWithOpenAI(prompt: string, threshold: number
       return findKeywordMatches(prompt);
     }
 
-    // Generate or load ACLU category embeddings
-    const categoryEmbeddings = await generateACLUCategoryEmbeddings();
+    // Generate or load EGP category embeddings
+    const categoryEmbeddings = await generateEGPCategoryEmbeddings();
     
     const similarities: Array<{
       key: string;
@@ -282,17 +282,17 @@ async function findSimilarEmbeddingsWithOpenAI(prompt: string, threshold: number
   }
 }
 
-// Helper functions for ACLU categories
+// Helper functions for EGP categories
 function getCategoryKeywords(category: string): string[] {
   const categoryKeywords: { [key: string]: string[] } = {
     brand_essence: ["civil rights", "social justice", "equality", "freedom", "democracy", "human rights", "advocacy", "protection"],
     photography_style: ["documentary", "photojournalism", "candid", "authentic", "natural lighting", "professional", "portrait"],
-    color_primary: ["ACLU red", "deep blue", "black", "white", "high contrast", "bold colors", "patriotic"],
+    color_primary: ["EGP green", "yellow", "pink", "vibrant colors", "sustainable colors", "nature-inspired"],
     color_secondary: ["warm tones", "natural", "diverse", "authentic", "skin tones"],
     composition: ["centered", "rule of thirds", "protest", "rally", "portrait composition", "demonstration"],
     lighting: ["natural lighting", "dramatic", "high contrast", "documentary style", "authentic"],
     mood_emotion: ["empowerment", "determination", "hope", "justice", "dignity", "strength", "solidarity", "community"],
-    visual_elements: ["text overlay", "ACLU logo", "banners", "signs", "demonstrations", "diverse people", "activism"]
+    visual_elements: ["community", "EGP branding", "green elements", "sustainability", "diverse people", "collaboration"]
   };
   
   return categoryKeywords[category] || [];
@@ -424,10 +424,10 @@ function findKeywordMatches(prompt: string) {
   return matches;
 }
 
-// Enhanced prompt with ACLU branding
+// Enhanced prompt with EGP branding
 export async function enhancePromptWithBranding(originalPrompt: string, context?: { activeRAGId?: string; activeRAGName?: string }) {
   try {
-    const ragName = context?.activeRAGName || 'ACLU';
+    const ragName = context?.activeRAGName || 'EGP';
     console.log(`[RAG] Enhancing prompt with ${ragName} branding:`, originalPrompt);
 
     // Load RAG data if not already loaded or if we need a different RAG
@@ -514,7 +514,7 @@ export async function enhancePromptWithBranding(originalPrompt: string, context?
     const result = {
       enhancedPrompt,
       suggestedColors: [...new Set(suggestedColors)], // Remove duplicates
-      suggestedFormat: "high-quality, professional ACLU branding",
+      suggestedFormat: "high-quality, professional EGP branding",
       negativePrompt: negativePrompts,
       brandingElements,
       metadata: {
@@ -531,51 +531,33 @@ export async function enhancePromptWithBranding(originalPrompt: string, context?
 
   } catch (error) {
     console.error('[RAG] Error enhancing prompt:', error);
-    const ragName = context?.activeRAGName || 'ACLU';
+    const ragName = context?.activeRAGName || 'EGP';
     return getSimpleEnhancement(originalPrompt, ragName);
   }
 }
 
-// Simple ACLU enhancement fallback
+// Simple EGP enhancement fallback
 function getSimpleEnhancement(prompt: string, ragName?: string) {
-  // Different enhancements based on RAG name
-  switch (ragName?.toLowerCase()) {
-    case 'egp':
-      return {
-        enhancedPrompt: `${prompt}, professional corporate photography, clean modern aesthetic, EGP brand colors, business professional`,
-        suggestedColors: ['#2563eb', '#1e40af'], // Blue theme for EGP
-        suggestedFormat: "professional EGP corporate style",
-        negativePrompt: "no text, no words, no letters, amateur, cluttered, unprofessional",
-        brandingElements: [
-          { category: 'corporate', text: 'professional corporate photography', weight: 1.0 }
-        ],
-        metadata: {
-          ragMethod: 'simple-fallback',
-          ragName: ragName || 'EGP'
-        }
-      };
-    
-    case 'aclu':
-    default:
-      return {
-        enhancedPrompt: `${prompt}, documentary photography style, high contrast, ACLU red and blue colors, professional photojournalism`,
-        suggestedColors: ['#ef404e', '#0055aa'],
-        suggestedFormat: "professional ACLU style",
-        negativePrompt: "no text, no words, no letters, no signs, overly posed, synthetic-looking",
-        brandingElements: [
-          { category: 'documentary', text: 'documentary photography style', weight: 1.0 }
-        ],
-        metadata: {
-          ragMethod: 'simple-fallback',
-          ragName: ragName || 'ACLU'
-        }
-      };
-  }
+  // EGP enhancement - now the only default option
+  return {
+    enhancedPrompt: `${prompt}, lifestyle photography, authentic poses, diverse representation, EGP green colors, inspiring and empowering, sustainable and democratic`,
+    suggestedColors: ['#57B45F', '#FFDC2E', '#FF70BD'], // EGP green, yellow, pink
+    suggestedFormat: "professional EGP lifestyle style",
+    negativePrompt: "no stock photo look, no neon colors, avoid red, no clichés, no single race groups, overly posed, synthetic-looking",
+    brandingElements: [
+      { category: 'lifestyle', text: 'lifestyle photography with diverse representation', weight: 1.0 },
+      { category: 'environmental', text: 'sustainable and democratic values', weight: 1.1 }
+    ],
+    metadata: {
+      ragMethod: 'simple-fallback',
+      ragName: ragName || 'EGP'
+    }
+  };
 }
 
-// Legacy function for backwards compatibility
-function getSimpleACLUEnhancement(prompt: string) {
-  return getSimpleEnhancement(prompt, 'ACLU');
+// Legacy function renamed to reflect EGP default
+function getSimpleEGPEnhancement(prompt: string) {
+  return getSimpleEnhancement(prompt, 'EGP');
 }
 
 // Initialize RAG system (call this once on startup)

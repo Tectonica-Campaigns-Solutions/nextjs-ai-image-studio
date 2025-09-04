@@ -4,7 +4,7 @@ export { enhancePromptWithBranding, initializeRAGSystem } from './rag-system-opt
 // Fallback exports for compatibility
 export async function enhancePromptSimple(prompt: string) {
   return {
-    enhancedPrompt: `${prompt}, documentary photography style, high contrast, ACLU colors`,
+    enhancedPrompt: `${prompt}, lifestyle photography style, warm colors, EGP branding`,
     suggestedColors: ['#ef404e', '#0055aa'],
     brandingElements: []
   }

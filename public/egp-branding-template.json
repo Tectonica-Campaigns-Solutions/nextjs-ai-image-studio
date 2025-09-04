@@ -1,17 +1,23 @@
 {
   "color_palette": {
     "principal_colors": {
-      "aclu_red": {
-        "name": "ACLU Red",
-        "description": "Primary brand color representing justice and action",
-        "hex": "#ef404e",
+      "egp_green": {
+        "name": "EGP Green",
+        "description": "Primary brand color representing sustainability and growth",
+        "hex": "#57B45F",
         "usage": "Primary buttons, headers, call-to-action elements"
       },
-      "aclu_blue": {
-        "name": "ACLU Blue", 
-        "description": "Secondary brand color representing trust and law",
-        "hex": "#0055aa",
-        "usage": "Secondary elements, text links, backgrounds"
+      "egp_yellow": {
+        "name": "EGP Yellow", 
+        "description": "Secondary brand color representing optimism and energy",
+        "hex": "#FFDC2E",
+        "usage": "Secondary elements, highlights, backgrounds"
+      },
+      "egp_pink": {
+        "name": "EGP Pink", 
+        "description": "Accent color representing diversity and creativity",
+        "hex": "#FF70BD",
+        "usage": "Accent elements, creative highlights"
       }
     },
     "light_colors": {
@@ -157,10 +163,11 @@
       "Balance formal legal imagery with human warmth"
     ],
     "color_application": [
-      "Use ACLU red sparingly for emphasis",
-      "ACLU blue for professional, trustworthy elements",
-      "Maintain high contrast for accessibility",
-      "Use neutral backgrounds to highlight subjects"
+      "Use EGP green as primary accent color",
+      "EGP yellow for highlighting positive elements",
+      "EGP pink for creative and diverse representation",
+      "Maintain warm, welcoming tone for accessibility",
+      "Use natural, sustainable backgrounds"
     ]
   },
   "format_specifications": {

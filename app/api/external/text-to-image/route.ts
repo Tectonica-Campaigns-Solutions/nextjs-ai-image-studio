@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { fal } from "@fal-ai/client"
 
 /**
  * POST /api/external/text-to-image
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     
     // Read LoRA configuration from app state (hardcoded for now, will be dynamic)
     const loraConfig = {
-      url: "https://v3.fal.media/files/kangaroo/KYy3SvydiFZB5yKYWTSUP_adapter.safetensors",
+      url: "https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors",
       triggerPhrase: "", // Will be read from app state
       scale: 1.0
     }
@@ -121,7 +122,89 @@ export async function POST(request: NextRequest) {
     formData.append("settings", JSON.stringify(mergedSettings))
     formData.append("orgType", "general")
 
-    // Make internal API call
+    // For external API, make direct call to Fal.ai to get URLs instead of base64
+    try {
+      // Configure Fal.ai client
+      const falApiKey = process.env.FAL_API_KEY
+      if (!falApiKey) {
+        throw new Error("FAL_API_KEY not configured")
+      }
+
+      fal.config({
+        credentials: falApiKey,
+      })
+
+      // Prepare input for Qwen-Image
+      const input: any = {
+        prompt: finalPrompt,
+        image_size: mergedSettings.image_size || "landscape_4_3",
+        num_inference_steps: mergedSettings.num_inference_steps || 30,
+        seed: mergedSettings.seed || undefined,
+        guidance_scale: mergedSettings.guidance_scale || 2.5,
+        sync_mode: mergedSettings.sync_mode || false,
+        num_images: mergedSettings.num_images || 1,
+        enable_safety_checker: mergedSettings.enable_safety_checker !== false,
+        output_format: mergedSettings.output_format || "png",
+        negative_prompt: mergedSettings.negative_prompt || "",
+        acceleration: mergedSettings.acceleration || "none",
+        loras: mergedSettings.loras || []
+      }
+
+      // Handle custom image size
+      if (mergedSettings.width && mergedSettings.height) {
+        input.image_size = {
+          width: mergedSettings.width,
+          height: mergedSettings.height
+        }
+      }
+
+      const result = await fal.subscribe("fal-ai/qwen-image", {
+        input,
+        logs: true,
+        onQueueUpdate: (update: any) => {
+          if (update.status === "IN_PROGRESS") {
+            update.logs.map((log: any) => log.message).forEach(console.log)
+          }
+        },
+      })
+
+      console.log("[External Text-to-Image] Fal.ai result:", result)
+
+      if (result.data && result.data.images && result.data.images.length > 0) {
+        const images = result.data.images.map((img: any) => ({
+          url: img.url,
+          width: img.width,
+          height: img.height,
+          content_type: img.content_type
+        }))
+
+        // Format response for external API with URLs
+        const externalResponse = {
+          success: true,
+          image: images[0].url,
+          images: images,
+          prompt: {
+            original: prompt,
+            final: finalPrompt,
+            enhanced: useRAG,
+            lora_applied: useLoRA
+          },
+          settings: mergedSettings,
+          timestamp: new Date().toISOString()
+        }
+
+        return NextResponse.json(externalResponse)
+      } else {
+        throw new Error("No images returned from Fal.ai")
+      }
+    } catch (falError) {
+      console.error("[External Text-to-Image] Direct Fal.ai call failed:", falError)
+      
+      // Fallback to internal API call
+      console.log("[External Text-to-Image] Falling back to internal API...")
+    }
+
+    // Fallback: Make internal API call
     const response = await fetch(`${getBaseUrl()}/api/qwen-text-to-image`, {
       method: "POST",
       body: formData,
@@ -154,11 +237,38 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json()
     
+    // Extract the URL from the result - handle both single image and multiple images formats
+    let imageUrl = null;
+    let images = [];
+    
+    if (result.images && result.images.length > 0) {
+      // Multiple images format - use the first image URL
+      imageUrl = result.images[0].url;
+      images = result.images;
+    } else if (result.image) {
+      // Single image format - extract URL from base64 or use direct URL
+      if (result.image.startsWith('data:')) {
+        // If it's base64, we need to get the original URL from images array
+        if (result.images && result.images.length > 0) {
+          imageUrl = result.images[0].url;
+          images = result.images;
+        } else {
+          // Fallback - keep the base64 data
+          imageUrl = result.image;
+          images = [{ url: result.image }];
+        }
+      } else {
+        // Direct URL
+        imageUrl = result.image;
+        images = [{ url: result.image }];
+      }
+    }
+    
     // Format response for external API
     const externalResponse = {
       success: true,
-      image: result.image || (result.images && result.images.length > 0 ? result.images[0].url : null),
-      images: result.images || (result.image ? [{ url: result.image }] : []),
+      image: imageUrl,
+      images: images,
       prompt: {
         original: prompt,
         final: result.finalPrompt || result.prompt || finalPrompt,
