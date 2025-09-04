@@ -35,92 +35,6 @@ import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
 const THRESHOLD = 20 * 1024 * 1024;
 
 function DashboardContent() {
-  const [showInputConversation, setShowInputConversation] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [imageModal, setImageModal] = useState<string | null>(null);
-
-  const closeEditor = () => {
-    setShowModal(false);
-  };
-
-  const handleEditor = async (imageUrl: string) => {
-    setImageModal(imageUrl);
-    setShowModal(true);
-  };
-
-  const handleContinueConversation = async () => {
-    setShowInputConversation(true);
-    scrollToBottom();
-  };
-
-  const handleAddImageToConversation = async (imageUrl: string) => {
-    if (!currentConversationId) return;
-
-    setShowModal(false);
-    const tempUserMessageId = `assistant-${Date.now()}`;
-    const newMessage: ChatMessage = {
-      role: "assistant",
-      text: imageUrl,
-      timestamp: new Date(),
-      id: tempUserMessageId,
-      attachedFiles: [],
-    };
-
-    // @ts-ignore
-    const promptId = client?.bots[`${selectedBot}_id`];
-    if (!promptId) {
-      toast({
-        title: "Bot not configured",
-        description: "This bot is not available for this client",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Save to Supabase via your API
-    const response = await fetch(
-      `/api/conversations/${currentConversationId}/messages`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: imageUrl,
-          role: "assistant",
-          promptId,
-          botType: selectedBot,
-        }),
-      }
-    );
-
-    if (response.ok) {
-      setMessages((prev) => [...prev, newMessage]);
-      scrollToBottom();
-    }
-  };
-
-  // Download image utility
-  const handleDownloadImage = async (imageUrl: string) => {
-    // For external URLs, fetch and convert to blob
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "image";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to download image",
-        variant: "destructive",
-      });
-    }
-  };
-
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -148,6 +62,12 @@ function DashboardContent() {
   const [attachedFiles, setAttachedFiles] = useState<
     Array<{ file: File; fileId?: string; uploading: boolean; error?: string }>
   >([]);
+  const [showInputConversation, setShowInputConversation] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [imageModal, setImageModal] = useState<string | null>(null);
+  const [uploadedImagesMap, setUploadedImagesMap] = useState<
+    Record<string, string>
+  >({});
 
   const selectedBotData = bots.find((bot) => bot.id === selectedBot);
   const promptSuggestions = selectedBotData?.suggestions || [];
@@ -576,11 +496,16 @@ function DashboardContent() {
       }
 
       const data = await response.json();
+      const { message, activateEditImage } = data;
+
+      if (activateEditImage) {
+        console.log("Edit image requested, looking for uploaded images...");
+      }
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        text: data.message || "",
+        text: message || "",
         timestamp: new Date(),
       };
 
@@ -630,7 +555,92 @@ function DashboardContent() {
     setAttachedFiles([]);
   };
 
-  console.log({ messages });
+  const closeEditor = () => {
+    setShowModal(false);
+  };
+
+  const handleEditor = async (imageUrl: string) => {
+    setImageModal(imageUrl);
+    setShowModal(true);
+  };
+
+  const handleContinueConversation = async () => {
+    setShowInputConversation(true);
+    scrollToBottom();
+  };
+
+  const handleAddImageToConversation = async (imageUrl: string) => {
+    if (!currentConversationId) return;
+
+    setShowModal(false);
+    const tempUserMessageId = `assistant-${Date.now()}`;
+    const newMessage: ChatMessage = {
+      role: "assistant",
+      text: imageUrl,
+      timestamp: new Date(),
+      id: tempUserMessageId,
+      attachedFiles: [],
+    };
+
+    // @ts-ignore
+    const promptId = client?.bots[`${selectedBot}_id`];
+    if (!promptId) {
+      toast({
+        title: "Bot not configured",
+        description: "This bot is not available for this client",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Save to Supabase via your API
+    const response = await fetch(
+      `/api/conversations/${currentConversationId}/messages`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: imageUrl,
+          role: "assistant",
+          promptId,
+          botType: selectedBot,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      setMessages((prev) => [...prev, newMessage]);
+      scrollToBottom();
+    }
+  };
+
+  const handleDownloadImage = async (imageUrl: string) => {
+    // For external URLs, fetch and convert to blob
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "image";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Image downloaded successfully",
+        description: "Check your downloads folder to see the image.",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download image",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">

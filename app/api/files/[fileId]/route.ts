@@ -25,12 +25,14 @@ export async function DELETE(
   { params }: { params: { fileId: string } }
 ) {
   try {
+    const { fileId } = await params;
+
     const client = getOpenAIClient();
     if (!client) {
       throw new Error("Failed to initialize OpenAI client");
     }
 
-    await client.files.delete(params.fileId);
+    await client.files.delete(fileId);
 
     return NextResponse.json({
       success: true,

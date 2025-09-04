@@ -124,10 +124,14 @@ export async function POST(
           role: "user",
           content: [
             { type: "input_text", text: content },
-            ...(fileIds || []).map((file: any) => ({
-              type: "input_file",
-              file_id: file.fileId,
-            })),
+            ...(fileIds || []).map((file: any) => {
+              const ext = file.name?.split(".").pop()?.toLowerCase();
+
+              return {
+                type: ext === "pdf" ? "input_file" : "input_image",
+                file_id: file.fileId,
+              };
+            }),
           ],
         },
       ],
@@ -155,20 +159,48 @@ export async function POST(
             additionalProperties: false,
           },
         },
+        {
+          type: "function",
+          name: "on_image_edit_request",
+          description:
+            "Handles user image upload with edit/modification request and prompts to open a modal for edit instructions.",
+          strict: true,
+          parameters: {
+            type: "object",
+            properties: {
+              image_url: {
+                type: "string",
+                description: "URL or reference to the uploaded image.",
+              },
+            },
+            required: ["image_url"],
+            additionalProperties: false,
+          },
+        },
       ],
     });
+
+    // Flags
+    let activateEditImage = null;
 
     // Check if we need to generate a image
     let finalMessage = response?.output_text || "";
 
+    // Tools
     const imageGenerationTool = response?.output?.find(
       (item) =>
         item.type === "function_call" &&
         item.name === "generate_image_post_request" &&
         item.status === "completed"
     );
+    const imageEditTool = response?.output?.find(
+      (item) =>
+        item.type === "function_call" &&
+        item.name === "on_image_edit_request" &&
+        item.status === "completed"
+    );
 
-    console.log(imageGenerationTool);
+    console.log({ imageEditTool });
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
@@ -223,6 +255,37 @@ export async function POST(
         console.error("Error generating image:", error);
         finalMessage = "Error generating image.";
       }
+    } else if (imageEditTool) {
+      let uploadedImageUrl = null;
+
+      if (fileIds && fileIds.length > 0) {
+        const imageFile = fileIds.find((file: any) => {
+          const ext = file.name?.split(".").pop()?.toLowerCase();
+          return ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+        });
+
+        if (imageFile && client) {
+          try {
+            const fileContent = await client.files.content(imageFile.fileId);
+
+            console.log({ fileContent });
+
+            const arrayBuffer = await fileContent.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const base64 = buffer.toString("base64");
+            const mimeType = `image/${imageFile.name.split(".").pop()}`;
+            uploadedImageUrl = `data:${mimeType};base64,${base64}`;
+
+            // Opción 2: Si prefieres guardar temporalmente y devolver una URL
+            // uploadedImageUrl = await saveToStorage(fileContent, imageFile.name);
+          } catch (error) {
+            console.error("Error retrieving image from OpenAI:", error);
+          }
+        }
+      }
+
+      finalMessage = "You can then edit the image.";
+      activateEditImage = uploadedImageUrl || true;
     }
 
     // Save assistant message
@@ -233,7 +296,7 @@ export async function POST(
       created_at: new Date().toISOString(),
     });
 
-    return Response.json({ message: finalMessage });
+    return Response.json({ message: finalMessage, activateEditImage });
   } catch (error) {
     console.error("Error sending message:", error);
     return NextResponse.json(
