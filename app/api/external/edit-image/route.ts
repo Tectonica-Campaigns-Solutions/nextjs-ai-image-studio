@@ -48,8 +48,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file type
+    // Validate file type (prioritize Fal.ai compatible formats)
     const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp']
+    const falaiOptimalTypes = ['image/png', 'image/jpeg', 'image/jpg']
+    
     if (!allowedTypes.includes(image.type)) {
       return NextResponse.json(
         {
@@ -61,14 +63,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file size (10MB limit)
-    const maxSizeBytes = 10 * 1024 * 1024 // 10MB
+    // Warn if not optimal for Fal.ai
+    if (!falaiOptimalTypes.includes(image.type)) {
+      console.warn(`[External Edit-Image] Image type ${image.type} may cause issues with Fal.ai. Optimal: PNG, JPG, JPEG`)
+    }
+
+    // Validate file size (stricter for AI processing)
+    const maxSizeBytes = 5 * 1024 * 1024 // 5MB for better AI compatibility
     if (image.size > maxSizeBytes) {
       return NextResponse.json(
         {
           success: false,
-          error: "File too large",
-          details: `Maximum file size is 10MB. Received: ${(image.size / 1024 / 1024).toFixed(2)}MB`
+          error: "File too large for AI processing",
+          details: `Maximum file size is 5MB for optimal AI processing. Received: ${(image.size / 1024 / 1024).toFixed(2)}MB. Try compressing the image.`
         },
         { status: 400 }
       )
@@ -93,17 +100,39 @@ export async function POST(request: NextRequest) {
     internalFormData.append("prompt", prompt.trim())
     internalFormData.append("useRAG", useRAG.toString())
     
-    // Enhance prompt with RAG if enabled
+    // Enhance prompt with Advanced RAG if enabled
     let finalPrompt = prompt.trim()
+    let ragMetadata = null
     if (useRAG) {
       try {
-        // Use simple RAG enhancement for external API
-        const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-        const enhancement = enhanceWithEGPBranding(prompt.trim())
-        finalPrompt = enhancement.enhancedPrompt
-        console.log("[External Edit-Image] Enhanced prompt:", finalPrompt)
+        // Use the new advanced RAG system for better enhancement
+        const { enhancePromptWithBranding } = await import("../../../../lib/rag-system")
+        const enhancement = await enhancePromptWithBranding(prompt.trim())
+        finalPrompt = enhancement.enhancedPrompt || enhancement
+        ragMetadata = {
+          originalPrompt: prompt.trim(),
+          enhancedPrompt: finalPrompt,
+          ragMethod: 'advanced-rag',
+          enhancementsApplied: enhancement.brandingElements?.length || 0
+        }
+        console.log("[External Edit-Image] Advanced RAG enhanced prompt:", finalPrompt)
       } catch (ragError) {
-        console.warn("[External Edit-Image] RAG enhancement failed:", ragError)
+        console.warn("[External Edit-Image] Advanced RAG enhancement failed, trying fallback:", ragError)
+        try {
+          // Fallback to simple RAG if advanced fails
+          const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+          const enhancement = enhanceWithEGPBranding(prompt.trim())
+          finalPrompt = enhancement.enhancedPrompt
+          ragMetadata = {
+            originalPrompt: prompt.trim(),
+            enhancedPrompt: finalPrompt,
+            ragMethod: 'simple-rag-fallback',
+            enhancementsApplied: 1
+          }
+          console.log("[External Edit-Image] Fallback RAG enhanced prompt:", finalPrompt)
+        } catch (fallbackError) {
+          console.warn("[External Edit-Image] All RAG enhancement failed:", fallbackError)
+        }
       }
     }
     
@@ -117,29 +146,95 @@ export async function POST(request: NextRequest) {
       // }
     }
 
-    // For external API, we want to get the URL directly from Fal.ai instead of base64
-    // Make the Fal.ai call directly to get the URL
-    try {
-      // Configure Fal.ai client
-      const falApiKey = process.env.FAL_API_KEY
-      if (!falApiKey) {
-        throw new Error("FAL_API_KEY not configured")
-      }
+    // For external API, we MUST get the URL directly from Fal.ai (no base64)
+    // Make the Fal.ai call directly to ensure URL response
+    const falApiKey = process.env.FAL_API_KEY
+    if (!falApiKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Service configuration error",
+          details: "FAL_API_KEY not configured for external API"
+        },
+        { status: 500 }
+      )
+    }
 
+    try {
+      console.log("[External Edit-Image] Making direct Fal.ai call to ensure URL response...")
+      console.log("[External Edit-Image] Image details:", {
+        name: image.name,
+        size: image.size,
+        type: image.type
+      })
+      console.log("[External Edit-Image] Final prompt:", finalPrompt)
+      
       fal.config({
         credentials: falApiKey,
       })
 
-      // Convert image to buffer for Fal.ai
+      // Process image exactly like the working internal API
+      console.log("[External Edit-Image] Processing image - Name:", image.name, "Size:", image.size, "Type:", image.type)
+      
       const imageBuffer = await image.arrayBuffer()
+      const base64Image = Buffer.from(imageBuffer).toString("base64")
+      console.log("[External Edit-Image] Base64 image length:", base64Image.length)
 
-      const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
+      // Validate image buffer
+      if (imageBuffer.byteLength === 0) {
+        throw new Error("Image buffer is empty")
+      }
+
+      // Check if image is too large (similar to size limits in many APIs)
+      const maxSizeBytes = 5 * 1024 * 1024 // 5MB limit
+      if (imageBuffer.byteLength > maxSizeBytes) {
+        console.warn("[External Edit-Image] Image is large:", imageBuffer.byteLength, "bytes")
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Image too large",
+            details: `Image size (${Math.round(imageBuffer.byteLength / 1024)}KB) exceeds maximum allowed (${Math.round(maxSizeBytes / 1024)}KB). Please upload a smaller image.`
+          },
+          { status: 413 }
+        )
+      }
+
+      // Use exactly same format as internal API (always jpeg regardless of input type)
+      const imageDataUrl = `data:image/jpeg;base64,${base64Image}`
+      console.log("[External Edit-Image] Image data URL prefix:", imageDataUrl.substring(0, 50) + "...")
+
+      // Validate and clean prompt
+      let cleanPrompt = finalPrompt.trim()
+      if (cleanPrompt.length > 500) {
+        console.warn("[External Edit-Image] Prompt is long, truncating to 500 chars...")
+        cleanPrompt = cleanPrompt.substring(0, 500)
+      }
+      console.log("[External Edit-Image] Clean prompt length:", cleanPrompt.length)
+
+      console.log("[External Edit-Image] Making Fal.ai call with qwen-image-edit...")
+      
+      // Log detailed request info for debugging
+      const requestData = {
+        model: "fal-ai/qwen-image-edit",
         input: {
-          image: imageBuffer,
-          prompt: finalPrompt
+          prompt: cleanPrompt,
+          image_url: imageDataUrl.substring(0, 50) + "... (" + imageDataUrl.length + " chars total)"
+        }
+      }
+      console.log("[External Edit-Image] Request data:", JSON.stringify(requestData, null, 2))
+
+      const result = await fal.subscribe("fal-ai/qwen-image-edit", {
+        input: {
+          prompt: cleanPrompt,
+          image_url: imageDataUrl,
+          // Add some common parameters that might help with compatibility
+          guidance_scale: 7.5,
+          num_inference_steps: 50,
+          strength: 0.8
         },
         logs: true,
         onQueueUpdate: (update) => {
+          console.log("[External Edit-Image] Fal.ai status:", update.status)
           if (update.status === "IN_PROGRESS") {
             update.logs.map((log) => log.message).forEach(console.log)
           }
@@ -151,10 +246,10 @@ export async function POST(request: NextRequest) {
       if (result.data && result.data.images && result.data.images.length > 0) {
         const imageUrl = result.data.images[0].url
 
-        // Format response for external API with URL
+        // Format response for external API with URL and RAG metadata
         const externalResponse = {
           success: true,
-          image: imageUrl,
+          image: imageUrl, // Always return URL from Fal.ai
           originalImage: {
             name: image.name,
             size: image.size,
@@ -163,99 +258,67 @@ export async function POST(request: NextRequest) {
           prompt: {
             original: prompt,
             final: finalPrompt,
-            enhanced: useRAG
+            enhanced: useRAG,
+            ragMetadata: ragMetadata
           },
           processing: {
-            model: "flux",
-            timestamp: new Date().toISOString()
+            model: "qwen-image-edit",
+            timestamp: new Date().toISOString(),
+            ragSystem: ragMetadata?.ragMethod || 'none',
+            enhancementsApplied: ragMetadata?.enhancementsApplied || 0
           }
         }
 
         return NextResponse.json(externalResponse)
       } else {
-        throw new Error("No images returned from Fal.ai")
-      }
-    } catch (falError) {
-      console.error("[External Edit-Image] Direct Fal.ai call failed:", falError)
-      
-      // Fallback to internal API call
-      console.log("[External Edit-Image] Falling back to internal API...")
-    }
-
-    // Fallback: Make internal API call
-    const response = await fetch(`${getBaseUrl()}/api/edit-image`, {
-      method: "POST",
-      body: internalFormData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null)
-      
-      if (response.status === 400 && errorData?.error) {
-        // Use the same moderation error handling as the main app
-        const friendlyMessage = handleModerationError(errorData)
+        console.error("[External Edit-Image] No images returned from Fal.ai")
         return NextResponse.json(
           {
             success: false,
-            error: friendlyMessage,
-            moderation: true
+            error: "Image generation failed",
+            details: "No images were generated by the AI model"
           },
-          { status: 400 }
+          { status: 500 }
         )
+      }
+    } catch (falError) {
+      console.error("[External Edit-Image] Fal.ai call failed:", falError)
+      
+      // More specific error handling
+      let errorMessage = "AI model processing error"
+      let errorDetails = falError instanceof Error ? falError.message : "Unknown error"
+      
+      if (errorDetails.includes("Unprocessable Entity") || errorDetails.includes("422")) {
+        errorMessage = "Image or prompt not processable"
+        errorDetails = "The image format or prompt content cannot be processed by the AI model. Try with a different image (JPG/PNG) or simpler prompt."
+      } else if (errorDetails.includes("401") || errorDetails.includes("Unauthorized")) {
+        errorMessage = "Authentication failed"
+        errorDetails = "API key is invalid or expired"
+      } else if (errorDetails.includes("429") || errorDetails.includes("Too Many Requests")) {
+        errorMessage = "Rate limit exceeded"
+        errorDetails = "Too many requests. Please try again in a few minutes."
+      } else if (errorDetails.includes("timeout") || errorDetails.includes("TIMEOUT")) {
+        errorMessage = "Processing timeout"
+        errorDetails = "Image processing took too long. Try with a smaller image."
       }
       
       return NextResponse.json(
         {
           success: false,
-          error: `Edit failed (${response.status})`,
-          details: errorData?.error || "Server error"
+          error: errorMessage,
+          details: errorDetails,
+          debug: {
+            originalError: falError instanceof Error ? falError.message : String(falError),
+            imageSize: image.size,
+            imageType: image.type,
+            promptLength: finalPrompt.length
+          }
         },
-        { status: response.status }
+        { status: 500 }
       )
     }
-
-    const result = await response.json()
-    
-    // Extract the URL from the result - we need to get the original URL from the internal API
-    // Since the internal API converts to base64, we need to make our own call to Fal.ai
-    let imageUrl = null;
-    
-    if (result.image) {
-      if (result.image.startsWith('data:')) {
-        // The internal API converted to base64, but we want the URL
-        // We'll need to handle this differently - for now, pass through the base64
-        // TODO: Modify to get URL directly from Fal.ai response
-        imageUrl = result.image;
-      } else {
-        // Direct URL
-        imageUrl = result.image;
-      }
-    }
-    
-    // Format response for external API
-    const externalResponse = {
-      success: true,
-      image: imageUrl,
-      originalImage: {
-        name: image.name,
-        size: image.size,
-        type: image.type
-      },
-      prompt: {
-        original: prompt,
-        final: result.finalPrompt || result.prompt || prompt,
-        enhanced: useRAG
-      },
-      processing: {
-        model: "flux",
-        timestamp: new Date().toISOString()
-      }
-    }
-
-    return NextResponse.json(externalResponse)
-
   } catch (error) {
-    console.error('[External Edit-Image API] Error:', error)
+    console.error('[External Edit-Image API] Unexpected error:', error)
     
     return NextResponse.json(
       {
