@@ -4,7 +4,7 @@ import { fal } from "@fal-ai/client"
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const image = formData.get("image") as File
+    const image = formData.get("image") as any // as File
     const prompt = formData.get("prompt") as string
     const useRAG = formData.get("useRAG") === "true"
     const activeRAGId = formData.get("activeRAGId") as string
