@@ -93,17 +93,39 @@ export async function POST(request: NextRequest) {
     internalFormData.append("prompt", prompt.trim())
     internalFormData.append("useRAG", useRAG.toString())
     
-    // Enhance prompt with RAG if enabled
+    // Enhance prompt with Advanced RAG if enabled
     let finalPrompt = prompt.trim()
+    let ragMetadata = null
     if (useRAG) {
       try {
-        // Use simple RAG enhancement for external API
-        const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-        const enhancement = enhanceWithEGPBranding(prompt.trim())
-        finalPrompt = enhancement.enhancedPrompt
-        console.log("[External Edit-Image] Enhanced prompt:", finalPrompt)
+        // Use the new advanced RAG system for better enhancement
+        const { enhancePromptWithBranding } = await import("../../../../lib/rag-system")
+        const enhancement = await enhancePromptWithBranding(prompt.trim())
+        finalPrompt = enhancement.enhancedPrompt || enhancement
+        ragMetadata = {
+          originalPrompt: prompt.trim(),
+          enhancedPrompt: finalPrompt,
+          ragMethod: 'advanced-rag',
+          enhancementsApplied: enhancement.brandingElements?.length || 0
+        }
+        console.log("[External Edit-Image] Advanced RAG enhanced prompt:", finalPrompt)
       } catch (ragError) {
-        console.warn("[External Edit-Image] RAG enhancement failed:", ragError)
+        console.warn("[External Edit-Image] Advanced RAG enhancement failed, trying fallback:", ragError)
+        try {
+          // Fallback to simple RAG if advanced fails
+          const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+          const enhancement = enhanceWithEGPBranding(prompt.trim())
+          finalPrompt = enhancement.enhancedPrompt
+          ragMetadata = {
+            originalPrompt: prompt.trim(),
+            enhancedPrompt: finalPrompt,
+            ragMethod: 'simple-rag-fallback',
+            enhancementsApplied: 1
+          }
+          console.log("[External Edit-Image] Fallback RAG enhanced prompt:", finalPrompt)
+        } catch (fallbackError) {
+          console.warn("[External Edit-Image] All RAG enhancement failed:", fallbackError)
+        }
       }
     }
     
@@ -151,10 +173,10 @@ export async function POST(request: NextRequest) {
       if (result.data && result.data.images && result.data.images.length > 0) {
         const imageUrl = result.data.images[0].url
 
-        // Format response for external API with URL
+        // Format response for external API with URL and RAG metadata
         const externalResponse = {
           success: true,
-          image: imageUrl,
+          image: imageUrl, // Always return URL from Fal.ai
           originalImage: {
             name: image.name,
             size: image.size,
@@ -163,11 +185,14 @@ export async function POST(request: NextRequest) {
           prompt: {
             original: prompt,
             final: finalPrompt,
-            enhanced: useRAG
+            enhanced: useRAG,
+            ragMetadata: ragMetadata
           },
           processing: {
-            model: "flux",
-            timestamp: new Date().toISOString()
+            model: "flux/dev/image-to-image",
+            timestamp: new Date().toISOString(),
+            ragSystem: ragMetadata?.ragMethod || 'none',
+            enhancementsApplied: ragMetadata?.enhancementsApplied || 0
           }
         }
 
@@ -216,23 +241,52 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json()
     
-    // Extract the URL from the result - we need to get the original URL from the internal API
-    // Since the internal API converts to base64, we need to make our own call to Fal.ai
+    // For external API, we should NOT return base64 data - only URLs
+    // If the internal API returned base64, we need to handle this differently
     let imageUrl = null;
     
     if (result.image) {
       if (result.image.startsWith('data:')) {
-        // The internal API converted to base64, but we want the URL
-        // We'll need to handle this differently - for now, pass through the base64
-        // TODO: Modify to get URL directly from Fal.ai response
-        imageUrl = result.image;
+        // The internal API returned base64, but external API should return URL
+        // We need to make another Fal.ai call to get the URL properly
+        console.warn("[External Edit-Image] Internal API returned base64, attempting to get URL from Fal.ai...")
+        
+        try {
+          // Re-process with Fal.ai to get URL
+          const falApiKey = process.env.FAL_API_KEY
+          if (falApiKey) {
+            fal.config({ credentials: falApiKey })
+            const imageBuffer = await image.arrayBuffer()
+            
+            const falResult = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
+              input: {
+                image: imageBuffer,
+                prompt: finalPrompt
+              }
+            })
+            
+            if (falResult.data?.images?.[0]?.url) {
+              imageUrl = falResult.data.images[0].url
+              console.log("[External Edit-Image] Successfully got URL from Fal.ai:", imageUrl)
+            } else {
+              console.warn("[External Edit-Image] Failed to get URL from Fal.ai, using base64")
+              imageUrl = result.image
+            }
+          } else {
+            console.warn("[External Edit-Image] No FAL_API_KEY, using base64")
+            imageUrl = result.image
+          }
+        } catch (falError) {
+          console.error("[External Edit-Image] Failed to get URL from Fal.ai:", falError)
+          imageUrl = result.image
+        }
       } else {
-        // Direct URL
-        imageUrl = result.image;
+        // Direct URL from internal API
+        imageUrl = result.image
       }
     }
     
-    // Format response for external API
+    // Format response for external API with enhanced RAG metadata
     const externalResponse = {
       success: true,
       image: imageUrl,
@@ -243,12 +297,16 @@ export async function POST(request: NextRequest) {
       },
       prompt: {
         original: prompt,
-        final: result.finalPrompt || result.prompt || prompt,
-        enhanced: useRAG
+        final: finalPrompt,
+        enhanced: useRAG,
+        ragMetadata: ragMetadata
       },
       processing: {
-        model: "flux",
-        timestamp: new Date().toISOString()
+        model: "flux/dev/image-to-image",
+        timestamp: new Date().toISOString(),
+        ragSystem: ragMetadata?.ragMethod || 'none',
+        enhancementsApplied: ragMetadata?.enhancementsApplied || 0,
+        source: imageUrl?.startsWith('data:') ? 'internal-api-base64' : 'fal-ai-url'
       }
     }
 

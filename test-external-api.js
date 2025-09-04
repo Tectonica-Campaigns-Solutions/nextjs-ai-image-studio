@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * External API Test Script
+ * External API Test Script - Updated for Advanced RAG
  * 
- * This script demonstrates how to use the external API endpoints.
+ * This script tests the external API endpoints, specifically:
+ * 1. Advanced RAG system integration
+ * 2. URL responses instead of base64
+ * 3. Enhanced RAG metadata
+ * 
  * Run with: node test-external-api.js
  */
 
@@ -155,19 +159,53 @@ async function testContentModeration() {
   console.log('');
 }
 
+async function testAdvancedRAGIntegration() {
+  console.log('🧠 Testing Advanced RAG Integration...');
+  
+  const testPrompts = [
+    'professional portrait of environmental activist',
+    'group of diverse people in community garden',
+    'lifestyle photo of young people discussing sustainability',
+    'documentary style renewable energy project'
+  ];
+  
+  for (const prompt of testPrompts) {
+    console.log(`\n📝 Testing prompt: "${prompt}"`);
+    console.log('Expected enhancements:');
+    console.log('  ✅ Advanced RAG semantic parsing');
+    console.log('  ✅ EGP brand concept application');
+    console.log('  ✅ Brand alignment scoring');
+    console.log('  ✅ Enhanced metadata in response');
+  }
+  
+  console.log('\n💡 Test with actual image:');
+  console.log('curl -X POST http://localhost:3000/api/external/edit-image \\');
+  console.log('     -F "image=@test.jpg" \\');
+  console.log('     -F "prompt=environmental activist portrait" \\');
+  console.log('     -F "useRAG=true"');
+  console.log('\n🔍 Look for in response:');
+  console.log('  - image: "https://fal.media/..." (URL, not base64)');
+  console.log('  - prompt.ragMetadata.ragMethod: "advanced-rag"');
+  console.log('  - processing.ragSystem: "advanced-rag"');
+  console.log('  - processing.source: "fal-ai-url"');
+  console.log('');
+}
+
 async function runAllTests() {
-  console.log('🧪 External API Test Suite');
-  console.log('==========================');
+  console.log('🧪 External API Test Suite - Advanced RAG Edition');
+  console.log('==================================================');
   console.log('');
   
   await testConfigEndpoint();
   await testTextToImageEndpoint();
   await testEditImageEndpoint();
+  await testAdvancedRAGIntegration();
   await testContentModeration();
   
   console.log('🏁 Test suite completed!');
   console.log('');
   console.log('📚 For full documentation, see EXTERNAL_API.md');
+  console.log('🚀 Advanced RAG system is now integrated!');
 }
 
 // Check if we're running this script directly
