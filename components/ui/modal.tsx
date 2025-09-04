@@ -19,7 +19,7 @@ export default function Modal({
 }: ModalProps) {
   if (!isOpen) return null;
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [responseImage, setResponseImage] = useState("");
   const [promptValue, setPromptValue] = useState("");
 
