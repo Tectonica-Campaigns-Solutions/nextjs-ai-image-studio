@@ -424,6 +424,7 @@ function DashboardContent() {
     return File;
   };
 
+  //
   const handleSubmit = async (defaultPrompt?: string) => {
     const promptToUse = defaultPrompt || prompt;
 
