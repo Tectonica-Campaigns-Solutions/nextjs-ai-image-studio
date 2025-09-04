@@ -108,12 +108,22 @@ export async function POST(request: NextRequest) {
         // Use the new advanced RAG system for better enhancement
         const { enhancePromptWithBranding } = await import("../../../../lib/rag-system")
         const enhancement = await enhancePromptWithBranding(prompt.trim())
-        finalPrompt = enhancement.enhancedPrompt || enhancement
+        
+        // Ensure we get a string from the enhancement
+        if (typeof enhancement === 'string') {
+          finalPrompt = enhancement
+        } else if (enhancement && typeof enhancement.enhancedPrompt === 'string') {
+          finalPrompt = enhancement.enhancedPrompt
+        } else {
+          console.warn("[External Edit-Image] Enhancement returned unexpected format:", typeof enhancement)
+          finalPrompt = prompt.trim() // fallback to original
+        }
+        
         ragMetadata = {
           originalPrompt: prompt.trim(),
           enhancedPrompt: finalPrompt,
           ragMethod: 'advanced-rag',
-          enhancementsApplied: enhancement.brandingElements?.length || 0
+          enhancementsApplied: enhancement?.brandingElements?.length || 0
         }
         console.log("[External Edit-Image] Advanced RAG enhanced prompt:", finalPrompt)
       } catch (ragError) {
@@ -122,7 +132,17 @@ export async function POST(request: NextRequest) {
           // Fallback to simple RAG if advanced fails
           const { enhanceWithEGPBranding } = await import("../simple-rag/route")
           const enhancement = enhanceWithEGPBranding(prompt.trim())
-          finalPrompt = enhancement.enhancedPrompt
+          
+          // Ensure we get a string from the fallback enhancement
+          if (typeof enhancement === 'string') {
+            finalPrompt = enhancement
+          } else if (enhancement && typeof enhancement.enhancedPrompt === 'string') {
+            finalPrompt = enhancement.enhancedPrompt
+          } else {
+            console.warn("[External Edit-Image] Fallback enhancement returned unexpected format:", typeof enhancement)
+            finalPrompt = prompt.trim() // fallback to original
+          }
+          
           ragMetadata = {
             originalPrompt: prompt.trim(),
             enhancedPrompt: finalPrompt,
@@ -132,6 +152,7 @@ export async function POST(request: NextRequest) {
           console.log("[External Edit-Image] Fallback RAG enhanced prompt:", finalPrompt)
         } catch (fallbackError) {
           console.warn("[External Edit-Image] All RAG enhancement failed:", fallbackError)
+          finalPrompt = prompt.trim() // ensure we have a string fallback
         }
       }
     }
@@ -203,12 +224,12 @@ export async function POST(request: NextRequest) {
       const imageDataUrl = `data:image/jpeg;base64,${base64Image}`
       console.log("[External Edit-Image] Image data URL prefix:", imageDataUrl.substring(0, 50) + "...")
 
-      // Validate and clean prompt
-      let cleanPrompt = finalPrompt.trim()
-      if (cleanPrompt.length > 500) {
-        console.warn("[External Edit-Image] Prompt is long, truncating to 500 chars...")
-        cleanPrompt = cleanPrompt.substring(0, 500)
+      // Ensure finalPrompt is a string and validate
+      let cleanPrompt = String(finalPrompt || prompt || "").trim()
+      if (!cleanPrompt) {
+        throw new Error("Prompt cannot be empty")
       }
+      console.log("[External Edit-Image] Clean prompt:", cleanPrompt)
       console.log("[External Edit-Image] Clean prompt length:", cleanPrompt.length)
 
       console.log("[External Edit-Image] Making Fal.ai call with qwen-image-edit...")

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       },
       lora: {
         available: true,
-        defaultUrl: "https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors",
+        defaultUrl: "https://v3.fal.media/files/rabbit/lCT7NODa-PnA4uefrwoWt_adapter.safetensors",
         defaultScale: 1.0,
         description: "LoRA models allow custom style training and application"
       },
