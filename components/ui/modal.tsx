@@ -18,7 +18,8 @@ export default function Modal({
   handleAddImageToConversation,
 }: ModalProps) {
   if (!isOpen) return null;
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [responseImage, setResponseImage] = useState("");
   const [promptValue, setPromptValue] = useState("");
 
@@ -38,7 +39,8 @@ export default function Modal({
       formData.append("useRag", "true");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/edit-image`,
+        // ${process.env.NEXT_PUBLIC_BASE_URL}
+        `https://qwen-image-editor-production-49d4.up.railway.app/api/external/edit-image`,
         {
           method: "POST",
           body: formData,
@@ -127,6 +129,9 @@ export default function Modal({
               {responseImage === "" && (
                 <div className="w-full h-full bg-grey min-h-[300px] flex flex-col items-center justify-center">
                   <div>No image generated yet</div>
+                  {isLoading ? (
+                    <Loader2 className="h-10 mt-10 w-10 animate-spin" />
+                  ) : null}
                 </div>
               )}
             </div>
