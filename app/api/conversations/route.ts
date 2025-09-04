@@ -4,11 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, clientId, promptId, botType } = body;
+    const { title, clientId, promptId, botType, firstMessage } = body;
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data: conversation, error: convError } = await supabase
       .from("conversations")
       .insert({
         title,
@@ -21,9 +21,23 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (convError) throw convError;
 
-    return NextResponse.json(data);
+    if (firstMessage && conversation) {
+      const { error: msgError } = await supabase.from("messages").insert({
+        conversation_id: conversation.id,
+        role: "user",
+        content: firstMessage,
+        created_at: new Date().toISOString(),
+      });
+
+      if (msgError) {
+        await supabase.from("conversations").delete().eq("id", conversation.id);
+        throw msgError;
+      }
+    }
+
+    return NextResponse.json(conversation);
   } catch (error) {
     console.error("Error creating conversation:", error);
     return NextResponse.json(

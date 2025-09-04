@@ -12,6 +12,7 @@ export type SidebarBotType = {
   color: string;
   bgColor: string;
   hoverColor: string;
+  suggestions: string[];
 };
 
 export type ClientType = {
@@ -31,6 +32,10 @@ export type ChatMessage = {
   role: "user" | "assistant" | "code";
   text: string;
   timestamp: Date;
+  attachedFiles?: Array<{
+    name: string;
+    fileId: string;
+  }>;
 };
 
 export type Conversation = {
