@@ -5,24 +5,28 @@ A comprehensive React/Next.js webapp for advanced AI image generation, editing, 
 ## 🚀 Features
 
 ### Core Image Generation
+
 - **Qwen Text-to-Image**: Advanced text-to-image generation with extensive customization
 - **Qwen Image-to-Image**: Transform existing images with AI-guided modifications
 - **DALL-E 3 Integration**: High-quality image generation via OpenAI
 - **Style Transfer**: Generate images with reference image styling
 
 ### Advanced AI Capabilities
+
 - **Custom LoRA Training**: Train personalized style models using your own image datasets
 - **LoRA Integration**: Apply trained custom styles to compatible models (Qwen)
 - **RAG System**: Intelligent prompt enhancement using EGP branding guidelines
 - **Multi-Model Support**: Seamless switching between different AI models
 
 ### External API Integration
+
 - **External API Endpoints**: RESTful API for external applications
 - **No Authentication Required**: Direct access for trusted applications
 - **Content Moderation**: Built-in guardrails for all external requests
 - **Automatic Configuration**: RAG and LoRA settings read from main app state
 
 ### User Experience
+
 - **Prompt Display**: Visual feedback showing generated/enhanced prompts
 - **Image Viewer**: Open generated images in new browser tabs
 - **Advanced Settings**: Granular control over generation parameters
@@ -31,6 +35,7 @@ A comprehensive React/Next.js webapp for advanced AI image generation, editing, 
 ## 🛠️ Technical Architecture
 
 ### Frontend Stack
+
 - **Next.js 15.2.4**: React framework with App Router
 - **TypeScript**: Type-safe development
 - **Tailwind CSS**: Utility-first styling
@@ -38,6 +43,7 @@ A comprehensive React/Next.js webapp for advanced AI image generation, editing, 
 - **Lucide React**: Icon library
 
 ### AI Integration
+
 - **FAL AI**: Primary AI service provider
   - `fal-ai/qwen-vl-72b`: Text-to-image generation
   - `fal-ai/qwen-vl-72b/image-to-image`: Image transformation
@@ -46,31 +52,39 @@ A comprehensive React/Next.js webapp for advanced AI image generation, editing, 
 - **Hugging Face**: Transformers for local embeddings (fallback)
 
 ### RAG System Architecture
+
 The app implements a sophisticated 3-tier RAG (Retrieval-Augmented Generation) system:
 
 #### Tier 1: OpenAI Embeddings (Primary)
+
 ```typescript
 // High-precision semantic search using OpenAI text-embedding-3-small
 const embedding = await openai.embeddings.create({
   model: "text-embedding-3-small",
   input: query,
-  encoding_format: "float"
+  encoding_format: "float",
 });
 ```
 
 #### Tier 2: Local Transformers (Fallback)
+
 ```typescript
 // Local sentence-transformers for offline capability
-const pipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+const pipeline = await pipeline(
+  "feature-extraction",
+  "Xenova/all-MiniLM-L6-v2"
+);
 ```
 
 #### Tier 3: Keyword Matching (Last Resort)
+
 ```typescript
 // Simple keyword search as final fallback
-const keywords = query.toLowerCase().split(' ');
+const keywords = query.toLowerCase().split(" ");
 ```
 
 ### Data Structure
+
 ```
 data/
 ├── rag/
@@ -84,6 +98,7 @@ data/
 ## 🔧 Environment Setup
 
 ### Required Environment Variables
+
 ```bash
 # .env.local
 FAL_API_KEY=your_fal_api_key_here
@@ -91,12 +106,14 @@ OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ### Installation
+
 ```bash
 npm install
 npm run dev
 ```
 
 ### Dependencies
+
 ```json
 {
   "@fal-ai/client": "Latest FAL AI SDK",
@@ -111,29 +128,34 @@ npm run dev
 ## 📡 API Endpoints
 
 ### Image Generation
+
 - `POST /api/qwen-text-to-image` - Generate images from text prompts
 - `POST /api/qwen-image-to-image` - Transform existing images
 - `POST /api/generate-image` - DALL-E 3 and style transfer
 - `POST /api/edit-image` - Image editing capabilities
 
 ### LoRA Training
+
 - `POST /api/qwen-train-lora` - Submit training job
 - `GET /api/qwen-train-lora?request_id=xxx` - Check training status
 - `POST /api/upload-file` - Upload training datasets
 
 ### Utilities
+
 - `POST /api/enhance-prompt` - RAG prompt enhancement
 - `POST /api/branding-upload` - Brand asset management
 
 ## 🧠 RAG System Implementation
 
 ### Prompt Enhancement Flow
+
 1. **Input Processing**: User prompt is analyzed for brand-related content
 2. **Semantic Search**: Query embeddings match against brand guidelines
 3. **Context Injection**: Relevant brand information is seamlessly integrated
 4. **Fallback Chain**: Ensures reliability through multiple search strategies
 
 ### Brand Guidelines Categories
+
 - Visual Identity (logos, colors, typography)
 - Photography Standards
 - Content Guidelines
@@ -144,6 +166,7 @@ npm run dev
 - Technical Specifications
 
 ### Performance Optimizations
+
 - **Embedding Caching**: Persistent storage for computed embeddings
 - **Dynamic Loading**: Lazy-loaded AI models for faster builds
 - **Railway Compatibility**: Optimized for cloud deployment
@@ -151,34 +174,40 @@ npm run dev
 ## 🎨 LoRA Training System
 
 ### Training Workflow
+
 1. **Dataset Upload**: ZIP files containing images + captions
 2. **Job Submission**: Queueing system for long-running training
 3. **Status Monitoring**: Real-time progress tracking
 4. **Model Integration**: Automatic integration with generation endpoints
 
 ### Training Configuration
+
 ```typescript
 interface LoRASettings {
-  steps: number;           // Training iterations (1000 default)
-  learning_rate: number;   // Learning rate (0.0005 default)
-  trigger_phrase: string;  // Style activation phrase
+  steps: number; // Training iterations (1000 default)
+  learning_rate: number; // Learning rate (0.0005 default)
+  trigger_phrase: string; // Style activation phrase
 }
 ```
 
 ### Model Integration
+
 ```typescript
 // Automatic LoRA application
 const settings = {
-  loras: [{
-    path: "https://v3.fal.media/files/...",
-    scale: 1.0  // Strength (0.1-2.0)
-  }]
+  loras: [
+    {
+      path: "https://v3.fal.media/files/...",
+      scale: 1.0, // Strength (0.1-2.0)
+    },
+  ],
 };
 ```
 
 ## 🔄 Deployment
 
 ### Railway Configuration
+
 - **Build Command**: `npm run build`
 - **Start Command**: `npm start`
 - **Environment**: Node.js 18+
@@ -186,6 +215,7 @@ const settings = {
 - **Timeout**: Extended for LoRA training operations
 
 ### Docker Support
+
 ```dockerfile
 FROM node:18-alpine
 COPY . .
@@ -197,11 +227,13 @@ CMD ["npm", "start"]
 ## 📊 Monitoring & Debugging
 
 ### Logging System
+
 - **Client-side**: Console logging for user actions
 - **Server-side**: Comprehensive API request logging
 - **Training**: Real-time status updates and error tracking
 
 ### Performance Metrics
+
 - **RAG Relevance**: 90-95% with OpenAI embeddings
 - **Fallback Success**: 60-70% with keyword matching
 - **Training Time**: 1-2 hours for typical LoRA models
@@ -212,11 +244,13 @@ CMD ["npm", "start"]
 The application provides external REST API endpoints for integration with other applications:
 
 ### Available Endpoints
+
 - **GET /api/external/config** - Get current configuration and capabilities
 - **POST /api/external/text-to-image** - Generate images from text prompts
 - **POST /api/external/edit-image** - Edit existing images with AI
 
 ### Features
+
 - **No Authentication Required**: Direct access for trusted applications
 - **Automatic Configuration**: Reads RAG and LoRA settings from main app
 - **Content Moderation**: Built-in guardrails for all requests
@@ -224,20 +258,21 @@ The application provides external REST API endpoints for integration with other 
 - **Comprehensive Error Handling**: User-friendly error messages
 
 ### Quick Example
+
 ```javascript
 // Generate an image
-const response = await fetch('/api/external/text-to-image', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/external/text-to-image", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    prompt: 'A professional team meeting',
+    prompt: "A professional team meeting",
     useRAG: true,
-    settings: { image_size: 'landscape_16_9' }
-  })
+    settings: { image_size: "landscape_16_9" },
+  }),
 });
 
 const result = await response.json();
-console.log('Generated image:', result.image);
+console.log("Generated image:", result.image);
 ```
 
 📚 **Full API Documentation**: See [EXTERNAL_API.md](./EXTERNAL_API.md) for complete documentation and examples.
@@ -261,6 +296,7 @@ console.log('Generated image:', result.image);
 ## 👥 Development
 
 ### Code Structure
+
 ```
 app/
 ├── page.tsx              # Main UI components
@@ -278,6 +314,7 @@ lib/
 ```
 
 ### Contributing
+
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
 3. Commit changes: `git commit -m 'Add amazing feature'`
