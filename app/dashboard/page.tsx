@@ -424,7 +424,6 @@ function DashboardContent() {
     return File;
   };
 
-  //
   const handleSubmit = async (defaultPrompt?: string) => {
     const promptToUse = defaultPrompt || prompt;
 
@@ -510,9 +509,9 @@ function DashboardContent() {
       const { message, activateEditImage } = data;
 
       if (activateEditImage) {
-        console.log({ messages, message });
-
         console.log("Edit image requested, looking for uploaded images...");
+        setShowModal(true);
+        setImageModal(message);
       }
 
       const assistantMessage: ChatMessage = {
@@ -654,12 +653,6 @@ function DashboardContent() {
       });
     }
   };
-
-  console.log({
-    isLoading,
-    t: !prompt.trim() && attachedFiles.length === 0,
-    inputDisabled,
-  });
 
   return (
     <div className="min-h-screen bg-background flex">
