@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.warn("[RAG API] Full RAG failed, trying simple RAG:", error)
         try {
-          const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-          enhancement = await enhanceWithACLUBranding(prompt)
+          const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+          enhancement = await enhanceWithEGPBranding(prompt)
           ragMethod = "simple-rag-fallback"
         } catch (fallbackError) {
           console.warn("[RAG API] All RAG methods failed:", fallbackError)
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
     } else {
       // In Vercel environment, use simple hardcoded RAG
       try {
-        const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-        enhancement = await enhanceWithACLUBranding(prompt)
+        const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+        enhancement = await enhanceWithEGPBranding(prompt)
         ragMethod = "simple-rag"
         console.log("[RAG API] Using simple RAG in Vercel")
       } catch (error) {

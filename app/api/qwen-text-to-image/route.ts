@@ -15,15 +15,15 @@ async function getRAGSystem() {
       return enhancePromptWithBranding
     } catch (error) {
       console.warn("Optimized RAG not available, falling back to simple RAG:", error)
-      const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-      return enhanceWithACLUBranding
+      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+      return enhanceWithEGPBranding
     }
   } else {
     // In Vercel environment, use simple hardcoded RAG
     try {
-      const { enhanceWithACLUBranding } = await import("../simple-rag/route")
+      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
       console.log('[RAG] Using simple RAG system (Vercel)')
-      return enhanceWithACLUBranding
+      return enhanceWithEGPBranding
     } catch (error) {
       console.warn("Simple RAG not available:", error)
       return null

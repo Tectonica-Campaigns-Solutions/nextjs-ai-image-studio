@@ -107,7 +107,7 @@ Generate images from text descriptions using the Qwen model.
   ],
   "prompt": {
     "original": "A peaceful landscape with mountains and a lake",
-    "final": "A peaceful landscape with mountains and a lake, following ACLU brand guidelines...",
+    "final": "A peaceful landscape with mountains and a lake, following EGP brand guidelines...",
     "enhanced": true,
     "lora_applied": false
   },
@@ -153,7 +153,7 @@ curl -X POST "https://your-domain.com/api/external/edit-image" \
   },
   "prompt": {
     "original": "change the sky to sunset colors",
-    "final": "change the sky to sunset colors, following ACLU brand guidelines...",
+    "final": "change the sky to sunset colors, following EGP brand guidelines...",
     "enhanced": true
   },
   "processing": {

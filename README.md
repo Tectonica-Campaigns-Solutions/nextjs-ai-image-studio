@@ -13,7 +13,7 @@ A comprehensive React/Next.js webapp for advanced AI image generation, editing, 
 ### Advanced AI Capabilities
 - **Custom LoRA Training**: Train personalized style models using your own image datasets
 - **LoRA Integration**: Apply trained custom styles to compatible models (Qwen)
-- **RAG System**: Intelligent prompt enhancement using ACLU branding guidelines
+- **RAG System**: Intelligent prompt enhancement using EGP branding guidelines
 - **Multi-Model Support**: Seamless switching between different AI models
 
 ### External API Integration
@@ -74,7 +74,7 @@ const keywords = query.toLowerCase().split(' ');
 ```
 data/
 ├── rag/
-│   ├── aclu-guidelines.json          # Brand guidelines content
+│   ├── egp-guidelines.json           # Brand guidelines content
 │   ├── openai-embeddings-cache.json  # Cached OpenAI embeddings
 │   └── embeddings-cache.json         # Local transformer embeddings
 ├── branding/                         # User-uploaded brand assets

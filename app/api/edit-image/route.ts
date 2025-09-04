@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
             // Try common RAG file locations
             const possiblePaths = [
               path.join(process.cwd(), "lib", `${activeRAGName.toLowerCase().replace(/\s+/g, "-")}.json`),
-              path.join(process.cwd(), "lib", "aclu-branding.json"), // fallback
+              path.join(process.cwd(), "lib", "egp-branding.json"), // fallback
               path.join(process.cwd(), "data", "rag", `${activeRAGId}.json`)
             ]
             
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
         if (process.env.VERCEL) {
           // In Vercel environment, use simple hardcoded RAG
           try {
-            const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-            enhanceFunction = enhanceWithACLUBranding
+            const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+            enhanceFunction = enhanceWithEGPBranding
           } catch (error) {
             console.warn("Simple RAG not available:", error)
           }
@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             console.warn("Full RAG not available, falling back to simple RAG:", error)
             try {
-              const { enhanceWithACLUBranding } = await import("../simple-rag/route")
-              enhanceFunction = enhanceWithACLUBranding
+              const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+              enhanceFunction = enhanceWithEGPBranding
             } catch (fallbackError) {
               console.warn("Simple RAG fallback failed:", fallbackError)
             }

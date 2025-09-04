@@ -154,7 +154,7 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
   const downloadSampleFile = async () => {
     try {
       // Try to fetch the template from public folder first
-      const response = await fetch('/aclu-branding-template.json')
+      const response = await fetch('/egp-branding-template.json')
       if (response.ok) {
         const templateData = await response.json()
         const blob = new Blob([JSON.stringify(templateData, null, 2)], { 
@@ -163,7 +163,7 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'aclu-branding-template.json'
+        a.download = 'egp-branding-template.json'
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -286,7 +286,7 @@ export function BrandingUploader({ onUploadSuccess }: BrandingUploaderProps) {
               id="rag-name"
               value={ragName}
               onChange={(e) => setRAGName(e.target.value)}
-              placeholder="e.g., ACLU Brand Guidelines"
+              placeholder="e.g., EGP Brand Guidelines"
               disabled={uploading}
             />
           </div>

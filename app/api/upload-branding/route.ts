@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { writeFile, readFile, access } from "fs/promises"
 import { join } from "path"
 
-const BRANDING_FILE_PATH = join(process.cwd(), "lib", "aclu-branding.json")
-const BACKUP_FILE_PATH = join(process.cwd(), "lib", "aclu-branding-backup.json")
+const BRANDING_FILE_PATH = join(process.cwd(), "lib", "egp-branding.json")
+const BACKUP_FILE_PATH = join(process.cwd(), "lib", "egp-branding-backup.json")
 
 // Global variable for Vercel compatibility (in-memory storage)
 let brandingDataCache: any = null

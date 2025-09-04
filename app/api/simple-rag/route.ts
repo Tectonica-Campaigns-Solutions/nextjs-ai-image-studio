@@ -1,39 +1,40 @@
 import { NextRequest, NextResponse } from "next/server"
 
-// Hardcoded ACLU branding enhancement - guaranteed to work in Vercel
-export function enhanceWithACLUBranding(userPrompt: string) {
+    // Try enhanced generation with EGP brand context first
+export function enhanceWithEGPBranding(userPrompt: string) {
   console.log('[SIMPLE-RAG] Processing prompt:', userPrompt);
   
   let enhancedPrompt = userPrompt;
   
-  // Add ACLU photographic style if not present
-  const documentaryKeywords = ['documentary', 'photojournalism', 'protest', 'march', 'civil rights'];
-  const hasDocumentaryStyle = documentaryKeywords.some(keyword => 
+  // Add EGP photographic style if not present
+  const lifestyleKeywords = ['lifestyle', 'photography', 'green', 'sustainable', 'nature'];
+  const hasLifestyleStyle = lifestyleKeywords.some(keyword => 
     userPrompt.toLowerCase().includes(keyword.toLowerCase())
   );
   
-  if (!hasDocumentaryStyle) {
-    enhancedPrompt += ', documentary photography style, photojournalism, high contrast, natural daylight, authentic and real';
+  if (!hasLifestyleStyle) {
+    enhancedPrompt += ', lifestyle photography style, sustainable, green living, natural colors, warm and welcoming';
   }
   
-  // Add specific ACLU elements for people/protest scenes
+  // Add specific EGP elements for people/lifestyle scenes
   if (userPrompt.toLowerCase().includes('people') || 
       userPrompt.toLowerCase().includes('person') ||
       userPrompt.toLowerCase().includes('group') ||
       userPrompt.toLowerCase().includes('crowd')) {
-    enhancedPrompt += ', diverse group of people, determined expressions, unity and solidarity';
+    enhancedPrompt += ', diverse group of people, optimistic expressions, community and collaboration';
   }
   
   const result = {
     enhancedPrompt,
     brandingElements: [
-      { category: 'style', text: 'documentary photography style' },
-      { category: 'lighting', text: 'natural daylight' },
-      { category: 'treatment', text: 'high contrast' }
+      { category: 'style', text: 'lifestyle photography style' },
+      { category: 'lighting', text: 'natural colors' },
+      { category: 'treatment', text: 'warm and welcoming' }
     ],
     suggestedColors: [
-      'ACLU Red: #ef404e',
-      'ACLU Blue: #002f6c'
+      'EGP Green: #57B45F',
+      'EGP Yellow: #FFDC2E',
+      'EGP Pink: #FF70BD'
     ],
     suggestedFormat: {},
     negativePrompt: 'no text, no words, no signs with text, no letters, no logos, no branded content'
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('[SIMPLE-RAG] Input prompt:', prompt);
-    const enhancement = enhanceWithACLUBranding(prompt);
+    const enhancement = enhanceWithEGPBranding(prompt);
     
     return NextResponse.json({
       success: true,

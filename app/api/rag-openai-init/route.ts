@@ -8,8 +8,8 @@ async function initializeEmbeddings() {
       throw new Error('OPENAI_API_KEY environment variable is not set');
     }
 
-    const { generateACLUCategoryEmbeddings } = await import('@/lib/openai-embeddings');
-    return await generateACLUCategoryEmbeddings();
+    const { generateEGPCategoryEmbeddings } = await import('@/lib/openai-embeddings');
+    return await generateEGPCategoryEmbeddings();
   } catch (error) {
     console.error('[RAG Init] Error during dynamic import or initialization:', error);
     throw error;
@@ -20,7 +20,7 @@ export async function GET() {
   try {
     console.log('[RAG Init] Starting OpenAI embeddings initialization...');
     
-    // Generate embeddings for all ACLU categories
+    // Generate embeddings for all EGP categories
     const categoryEmbeddings = await initializeEmbeddings();
     
     const categories = Object.keys(categoryEmbeddings);
