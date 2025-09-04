@@ -44,26 +44,46 @@ export async function POST(
     // Get previous messages
     const { data: previousMessages } = await supabase
       .from("messages")
-      .select("role, content")
+      .select(
+        `
+          id,
+          role,
+          content,
+          message_files (
+            file_id,
+            files (
+              file_name,
+              file_url
+            )
+          )
+        `
+      )
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true })
       .limit(10);
 
-    // Get file references
-    // const { data: fileReferences } = await supabase
-    //   .from("files")
-    //   .select("id, file_id")
-    //   .eq("conversation_id", conversationId);
-
-    const conversationHistory = (previousMessages ?? []).map((msg) => ({
-      role: msg.role === "assistant" ? "assistant" : "user",
-      content: [
+    const conversationHistory = (previousMessages ?? []).map((msg) => {
+      const baseContent = [
         {
           type: msg.role === "assistant" ? "output_text" : "input_text",
           text: msg.content,
         },
-      ],
-    }));
+      ];
+
+      const fileContent =
+        msg.message_files?.map((mf: any) => {
+          const ext = mf.files?.file_name?.split(".").pop()?.toLowerCase();
+          return {
+            type: ext === "pdf" ? "input_file" : "input_image",
+            file_id: mf.file_id,
+          };
+        }) || [];
+
+      return {
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: [...baseContent, ...fileContent],
+      };
+    });
 
     // Save new user message
     const { data: insertedMessage, error: messageError } = await supabase
@@ -201,7 +221,7 @@ export async function POST(
         item.status === "completed"
     );
 
-    console.log({ imageEditTool });
+    // console.log({ imageEditTool });
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
@@ -210,7 +230,8 @@ export async function POST(
       const conversationText = conversationHistory
         .map((msg) => msg.content.map((c) => c.text).join(" "))
         .join(" ");
-      const prompt = `${content}`;
+
+      console.log({ conversationHistory, conversationText });
 
       try {
         const imageResp = await fetch(
