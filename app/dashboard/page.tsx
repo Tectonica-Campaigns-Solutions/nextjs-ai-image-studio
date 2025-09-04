@@ -60,14 +60,17 @@ function DashboardContent() {
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<
-    Array<{ file: File; fileId?: string; uploading: boolean; error?: string }>
+    Array<{
+      file: File;
+      fileId?: string;
+      fileUrl?: string;
+      uploading: boolean;
+      error?: string;
+    }>
   >([]);
   const [showInputConversation, setShowInputConversation] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [imageModal, setImageModal] = useState<string | null>(null);
-  const [uploadedImagesMap, setUploadedImagesMap] = useState<
-    Record<string, string>
-  >({});
 
   const selectedBotData = bots.find((bot) => bot.id === selectedBot);
   const promptSuggestions = selectedBotData?.suggestions || [];
@@ -337,6 +340,7 @@ function DashboardContent() {
         uploading: true,
         error: undefined,
         fileId: undefined,
+        fileUrl: undefined,
       };
 
       setAttachedFiles((prev) => [...prev, fileEntry]);
@@ -360,7 +364,12 @@ function DashboardContent() {
         setAttachedFiles((prev) =>
           prev.map((f) =>
             f.file === file
-              ? { ...f, fileId: data.fileId, uploading: false }
+              ? {
+                  ...f,
+                  fileId: data.fileId,
+                  uploading: false,
+                  fileUrl: data.supabaseUrl,
+                }
               : f
           )
         );
@@ -418,7 +427,7 @@ function DashboardContent() {
   const handleSubmit = async (defaultPrompt?: string) => {
     const promptToUse = defaultPrompt || prompt;
 
-    if (!promptToUse.trim()) {
+    if (!promptToUse.trim() && attachedFiles.length === 0) {
       toast({
         title: "Empty message",
         description: "Please enter a message",
@@ -457,6 +466,7 @@ function DashboardContent() {
         .map((f) => ({
           name: f.file.name,
           fileId: f.fileId!,
+          fileUrl: f.fileUrl,
         }));
 
       const tempUserMessageId = `user-${Date.now()}`;
@@ -499,6 +509,8 @@ function DashboardContent() {
       const { message, activateEditImage } = data;
 
       if (activateEditImage) {
+        console.log({ messages, message });
+
         console.log("Edit image requested, looking for uploaded images...");
       }
 
@@ -641,6 +653,12 @@ function DashboardContent() {
       });
     }
   };
+
+  console.log({
+    isLoading,
+    t: !prompt.trim() && attachedFiles.length === 0,
+    inputDisabled,
+  });
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -1170,7 +1188,11 @@ function DashboardContent() {
 
                   <Button
                     onClick={async () => await handleSubmit()}
-                    disabled={isLoading || !prompt.trim() || inputDisabled}
+                    disabled={
+                      isLoading ||
+                      (!prompt.trim() && attachedFiles.length === 0) ||
+                      inputDisabled
+                    }
                     className="self-end"
                   >
                     {isLoading ? (

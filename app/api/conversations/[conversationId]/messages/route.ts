@@ -27,19 +27,19 @@ export async function POST(
 ) {
   try {
     const client = getOpenAIClient();
+    const supabase = await createClient();
+
     const { conversationId } = await params;
 
     const body = await request.json();
     const { content, promptId, fileIds } = body;
 
-    if (!content) {
+    if (!content && fileIds.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // Get previous messages
     const { data: previousMessages } = await supabase
@@ -50,10 +50,10 @@ export async function POST(
       .limit(10);
 
     // Get file references
-    const { data: fileReferences } = await supabase
-      .from("files")
-      .select("id, file_id")
-      .eq("conversation_id", conversationId);
+    // const { data: fileReferences } = await supabase
+    //   .from("files")
+    //   .select("id, file_id")
+    //   .eq("conversation_id", conversationId);
 
     const conversationHistory = (previousMessages ?? []).map((msg) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
@@ -98,6 +98,7 @@ export async function POST(
           .from("files")
           .insert({
             file_id: file.fileId,
+            file_url: file.fileUrl,
             file_name: file.name,
             conversation_id: conversationId,
           })
@@ -184,7 +185,10 @@ export async function POST(
     let activateEditImage = null;
 
     // Check if we need to generate a image
-    let finalMessage = response?.output_text || "";
+    let finalMessage =
+      fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
+      response?.output_text ||
+      "";
 
     // Tools
     const imageGenerationTool = response?.output?.find(
@@ -199,8 +203,6 @@ export async function POST(
         item.name === "on_image_edit_request" &&
         item.status === "completed"
     );
-
-    console.log({ imageEditTool });
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
@@ -255,37 +257,6 @@ export async function POST(
         console.error("Error generating image:", error);
         finalMessage = "Error generating image.";
       }
-    } else if (imageEditTool) {
-      let uploadedImageUrl = null;
-
-      if (fileIds && fileIds.length > 0) {
-        const imageFile = fileIds.find((file: any) => {
-          const ext = file.name?.split(".").pop()?.toLowerCase();
-          return ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
-        });
-
-        if (imageFile && client) {
-          try {
-            const fileContent = await client.files.content(imageFile.fileId);
-
-            console.log({ fileContent });
-
-            const arrayBuffer = await fileContent.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const base64 = buffer.toString("base64");
-            const mimeType = `image/${imageFile.name.split(".").pop()}`;
-            uploadedImageUrl = `data:${mimeType};base64,${base64}`;
-
-            // Opción 2: Si prefieres guardar temporalmente y devolver una URL
-            // uploadedImageUrl = await saveToStorage(fileContent, imageFile.name);
-          } catch (error) {
-            console.error("Error retrieving image from OpenAI:", error);
-          }
-        }
-      }
-
-      finalMessage = "You can then edit the image.";
-      activateEditImage = uploadedImageUrl || true;
     }
 
     // Save assistant message
