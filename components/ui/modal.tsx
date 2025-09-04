@@ -31,21 +31,23 @@ export default function Modal({
       const blob = await imageResponse.blob();
 
       // @ts-ignore
-      const file = new File([blob], "image.png", { type: blob.type });
+      // const file = new File([blob], "image.png", { type: blob.type });
 
       const formData = new FormData();
-      formData.append("image", file);
+      // formData.append("image", file);
+      formData.append("image", blob, "image.png");
       formData.append("prompt", promptValue);
       formData.append("useRag", "true");
 
-      const response = await fetch(
-        // ${process.env.NEXT_PUBLIC_BASE_URL}
-        `https://qwen-image-editor-production-49d4.up.railway.app/api/external/edit-image`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const url =
+        process.env.NODE_ENV === "development"
+          ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/edit-image`
+          : `https://qwen-image-editor-production-49d4.up.railway.app//api/external/edit-image`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
       const responseValues = await response.json();
 
       setResponseImage(responseValues.image);
