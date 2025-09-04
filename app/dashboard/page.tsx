@@ -35,9 +35,6 @@ import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
 const THRESHOLD = 20 * 1024 * 1024;
 
 function DashboardContent() {
-  // ...existing code...
-  // Show input controls again when 'Continue conversation' is clicked
-  const [forceShowInput, setForceShowInput] = useState(false);
   const [showInputConversation, setShowInputConversation] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [imageModal, setImageModal] = useState<string | null>(null);
@@ -301,7 +298,6 @@ function DashboardContent() {
           clientId: client?.id,
           promptId: promptConfigId,
           botType: selectedBot,
-          firstMessage,
         }),
       });
 
