@@ -43,8 +43,12 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const fileName = (file as File).name;
-    const fileType = file.type;
+    // Obtener propiedades del archivo de forma segura
+    const fileName =
+      "name" in file && typeof file.name === "string"
+        ? file.name
+        : "uploaded_file";
+    const fileType = file.type || "application/octet-stream";
     const fileExt = fileName.split(".").pop()?.toLowerCase();
 
     const timestamp = Date.now();
@@ -60,7 +64,7 @@ export async function POST(request: NextRequest) {
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(uniqueFileName, buffer, {
-          contentType: fileType || "application/octet-stream",
+          contentType: fileType,
           cacheControl: "3600",
           upsert: false,
         });
@@ -82,12 +86,10 @@ export async function POST(request: NextRequest) {
       console.error("Supabase upload failed:", supabaseError);
     }
 
-    const openaiFile = new File([buffer], fileName, {
-      type: fileType,
-    });
-
+    // Usar el archivo directamente del FormData
+    // El SDK de OpenAI maneja Blob/File internamente
     const uploadedFile = await client.files.create({
-      file: openaiFile,
+      file: file as any,
       purpose: "assistants",
     });
 
