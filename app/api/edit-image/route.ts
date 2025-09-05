@@ -272,10 +272,6 @@ export async function POST(request: NextRequest) {
         
         const base64Result = Buffer.from(arrayBuffer).toString('base64');
 
-        // Get actual image dimensions to verify
-        const img = new Image();
-        const imageDataUrl = `data:image/jpeg;base64,${base64Result}`;
-        
         console.log("[v0] Result image info:", {
           expectedWidth: falInput.width || "preset size",
           expectedHeight: falInput.height || "preset size", 
@@ -285,7 +281,7 @@ export async function POST(request: NextRequest) {
 
         console.log("[v0] Successfully got edited image from Fal.ai");
         return NextResponse.json({ 
-          image: imageDataUrl,
+          image: `data:image/jpeg;base64,${base64Result}`,
           ragMetadata: ragMetadata,
           debug: {
             requestedSize: imageSize,
