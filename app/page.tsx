@@ -61,6 +61,8 @@ export default function ImageEditor() {
   const [useRagEdit, setUseRagEdit] = useState(true) // RAG for edit image
   const [editGeneratedPrompt, setEditGeneratedPrompt] = useState<string>("") // Store generated prompt
   const [editImageSize, setEditImageSize] = useState("square_hd") // Image size for edit
+  const [customWidth, setCustomWidth] = useState("1024") // Custom width for edit
+  const [customHeight, setCustomHeight] = useState("1024") // Custom height for edit
 
   // Qwen LoRA Training States
   const [trainingFile, setTrainingFile] = useState<File | null>(null)
@@ -299,6 +301,12 @@ export default function ImageEditor() {
       formData.append("prompt", prompt)
       formData.append("useRAG", useRagEdit.toString())
       formData.append("image_size", editImageSize)
+      
+      // Add custom dimensions if using custom image_size
+      if (editImageSize === 'custom') {
+        formData.append("width", customWidth)
+        formData.append("height", customHeight)
+      }
       
       // Add active RAG information for edit
       const activeRAG = getActiveRAG()
@@ -883,9 +891,42 @@ export default function ImageEditor() {
                           <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
                           <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
                           <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Custom dimensions fields when 'custom' is selected */}
+                    {editImageSize === 'custom' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="custom-width">Width (px)</Label>
+                          <Input
+                            id="custom-width"
+                            type="number"
+                            min="256"
+                            max="2048"
+                            step="64"
+                            value={customWidth}
+                            onChange={(e) => setCustomWidth(e.target.value)}
+                            placeholder="1024"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="custom-height">Height (px)</Label>
+                          <Input
+                            id="custom-height"
+                            type="number"
+                            min="256"
+                            max="2048"
+                            step="64"
+                            value={customHeight}
+                            onChange={(e) => setCustomHeight(e.target.value)}
+                            placeholder="1024"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center space-x-2">
                       <Checkbox 

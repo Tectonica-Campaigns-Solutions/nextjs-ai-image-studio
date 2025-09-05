@@ -25,9 +25,11 @@ export async function POST(request: NextRequest) {
     const prompt = formData.get('prompt') as string
     const useRAG = formData.get('useRAG') === 'true' || formData.get('useRAG') === undefined // default true
     const imageSize = formData.get('image_size') as string || 'square_hd' // default to square_hd
+    const customWidth = formData.get('width') as string
+    const customHeight = formData.get('height') as string
     
     // Validate image_size parameter
-    const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9']
+    const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9', 'custom']
     if (imageSize && !validImageSizes.includes(imageSize)) {
       return NextResponse.json(
         {
@@ -37,6 +39,34 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       )
+    }
+    
+    // Validate custom dimensions if using custom image_size
+    if (imageSize === 'custom') {
+      if (!customWidth || !customHeight) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Missing custom dimensions",
+            details: "When using image_size 'custom', both 'width' and 'height' parameters are required"
+          },
+          { status: 400 }
+        )
+      }
+      
+      const width = parseInt(customWidth)
+      const height = parseInt(customHeight)
+      
+      if (isNaN(width) || isNaN(height) || width < 256 || width > 2048 || height < 256 || height > 2048) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid custom dimensions",
+            details: "Width and height must be numbers between 256 and 2048 pixels"
+          },
+          { status: 400 }
+        )
+      }
     }
     
     // Validate image file
@@ -260,16 +290,25 @@ export async function POST(request: NextRequest) {
       }
       console.log("[External Edit-Image] Request data:", JSON.stringify(requestData, null, 2))
 
+      // Prepare input for Fal.ai call
+      const falInput: any = {
+        prompt: cleanPrompt,
+        image_url: imageDataUrl,
+        image_size: imageSize,
+        // Add some common parameters that might help with compatibility
+        guidance_scale: 7.5,
+        num_inference_steps: 50,
+        strength: 0.8
+      }
+      
+      // Add custom dimensions if using custom image_size
+      if (imageSize === 'custom') {
+        falInput.width = parseInt(customWidth)
+        falInput.height = parseInt(customHeight)
+      }
+
       const result = await fal.subscribe("fal-ai/qwen-image-edit", {
-        input: {
-          prompt: cleanPrompt,
-          image_url: imageDataUrl,
-          image_size: imageSize,
-          // Add some common parameters that might help with compatibility
-          guidance_scale: 7.5,
-          num_inference_steps: 50,
-          strength: 0.8
-        },
+        input: falInput,
         logs: true,
         onQueueUpdate: (update) => {
           console.log("[External Edit-Image] Fal.ai status:", update.status)

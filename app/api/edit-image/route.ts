@@ -10,14 +10,36 @@ export async function POST(request: NextRequest) {
     const activeRAGId = formData.get("activeRAGId") as string
     const activeRAGName = formData.get("activeRAGName") as string
     const imageSize = formData.get("image_size") as string || "square_hd" // default to square_hd
+    const customWidth = formData.get("width") as string
+    const customHeight = formData.get("height") as string
     
     // Validate image_size parameter
-    const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9']
+    const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9', 'custom']
     if (imageSize && !validImageSizes.includes(imageSize)) {
       return NextResponse.json({ 
         error: "Invalid image_size parameter",
         details: `image_size must be one of: ${validImageSizes.join(', ')}. Received: ${imageSize}`
       }, { status: 400 })
+    }
+    
+    // Validate custom dimensions if using custom image_size
+    if (imageSize === 'custom') {
+      if (!customWidth || !customHeight) {
+        return NextResponse.json({ 
+          error: "Missing custom dimensions",
+          details: "When using image_size 'custom', both 'width' and 'height' parameters are required"
+        }, { status: 400 })
+      }
+      
+      const width = parseInt(customWidth)
+      const height = parseInt(customHeight)
+      
+      if (isNaN(width) || isNaN(height) || width < 256 || width > 2048 || height < 256 || height > 2048) {
+        return NextResponse.json({ 
+          error: "Invalid custom dimensions",
+          details: "Width and height must be numbers between 256 and 2048 pixels"
+        }, { status: 400 })
+      }
     }
 
     if (!image || !prompt) {
@@ -158,12 +180,21 @@ export async function POST(request: NextRequest) {
         credentials: falApiKey,
       });
 
+      // Prepare input for Fal.ai call
+      const falInput: any = {
+        prompt: finalPrompt,
+        image_url: `data:image/jpeg;base64,${base64Image}`,
+        image_size: imageSize
+      }
+      
+      // Add custom dimensions if using custom image_size
+      if (imageSize === 'custom') {
+        falInput.width = parseInt(customWidth)
+        falInput.height = parseInt(customHeight)
+      }
+
       const result = await fal.subscribe("fal-ai/qwen-image-edit", {
-        input: {
-          prompt: finalPrompt,
-          image_url: `data:image/jpeg;base64,${base64Image}`,
-          image_size: imageSize
-        },
+        input: falInput,
         logs: true,
         onQueueUpdate: (update) => {
           if (update.status === "IN_PROGRESS") {

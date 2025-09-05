@@ -67,10 +67,15 @@ export async function GET(request: NextRequest) {
               "portrait_4_3",
               "portrait_16_9",
               "landscape_4_3",
-              "landscape_16_9"
+              "landscape_16_9",
+              "custom"
             ],
             default: "square_hd",
-            description: "Output image size/aspect ratio"
+            description: "Output image size/aspect ratio",
+            customFields: {
+              width: { type: "number", min: 256, max: 2048, step: 64, description: "Custom width in pixels (required when image_size is 'custom')" },
+              height: { type: "number", min: 256, max: 2048, step: 64, description: "Custom height in pixels (required when image_size is 'custom')" }
+            }
           }
         }
       },
