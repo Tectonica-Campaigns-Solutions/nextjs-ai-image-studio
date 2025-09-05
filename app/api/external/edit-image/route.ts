@@ -288,6 +288,16 @@ export async function POST(request: NextRequest) {
 
       console.log("[External Edit-Image] Making Fal.ai call with qwen-image-edit...")
       
+      // Prepare input for Fal.ai call
+      const falInput: any = {
+        prompt: cleanPrompt,
+        image_url: imageDataUrl,
+        // Add some common parameters that might help with compatibility
+        guidance_scale: 7.5,
+        num_inference_steps: 50,
+        strength: 0.8
+      }
+
       // Log detailed request info for debugging
       const requestData = {
         model: "fal-ai/qwen-image-edit",
@@ -300,16 +310,6 @@ export async function POST(request: NextRequest) {
         }
       }
       console.log("[External Edit-Image] Request data:", JSON.stringify(requestData, null, 2))
-
-      // Prepare input for Fal.ai call
-      const falInput: any = {
-        prompt: cleanPrompt,
-        image_url: imageDataUrl,
-        // Add some common parameters that might help with compatibility
-        guidance_scale: 7.5,
-        num_inference_steps: 50,
-        strength: 0.8
-      }
       
       // Handle image_size: if custom, use width/height instead of image_size
       if (imageSize === 'custom') {
