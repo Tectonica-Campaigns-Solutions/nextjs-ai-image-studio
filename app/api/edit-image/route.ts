@@ -259,6 +259,17 @@ export async function POST(request: NextRequest) {
         const imageResponse = await fetch(imageUrl);
         const imageBlob = await imageResponse.blob();
         const arrayBuffer = await imageBlob.arrayBuffer();
+        
+        // For now, we'll note that custom sizes are "best effort" 
+        // The qwen-image-edit model may preserve aspect ratios
+        if (imageSize === 'custom') {
+          console.log("[v0] Custom size requested - note that qwen-image-edit may preserve original aspect ratio:", {
+            requestedWidth: falInput.width,
+            requestedHeight: falInput.height,
+            note: "Model output may vary from exact dimensions"
+          })
+        }
+        
         const base64Result = Buffer.from(arrayBuffer).toString('base64');
 
         // Get actual image dimensions to verify

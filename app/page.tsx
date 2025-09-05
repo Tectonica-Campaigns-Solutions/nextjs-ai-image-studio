@@ -898,33 +898,40 @@ export default function ImageEditor() {
 
                     {/* Custom dimensions fields when 'custom' is selected */}
                     {editImageSize === 'custom' && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="custom-width">Width (px)</Label>
-                          <Input
-                            id="custom-width"
-                            type="number"
-                            min="256"
-                            max="2048"
-                            step="64"
-                            value={customWidth}
-                            onChange={(e) => setCustomWidth(e.target.value)}
-                            placeholder="1024"
-                          />
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-width">Width (px)</Label>
+                            <Input
+                              id="custom-width"
+                              type="number"
+                              min="256"
+                              max="2048"
+                              step="64"
+                              value={customWidth}
+                              onChange={(e) => setCustomWidth(e.target.value)}
+                              placeholder="1024"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-height">Height (px)</Label>
+                            <Input
+                              id="custom-height"
+                              type="number"
+                              min="256"
+                              max="2048"
+                              step="64"
+                              value={customHeight}
+                              onChange={(e) => setCustomHeight(e.target.value)}
+                              placeholder="1024"
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="custom-height">Height (px)</Label>
-                          <Input
-                            id="custom-height"
-                            type="number"
-                            min="256"
-                            max="2048"
-                            step="64"
-                            value={customHeight}
-                            onChange={(e) => setCustomHeight(e.target.value)}
-                            placeholder="1024"
-                          />
-                        </div>
+                        <Alert>
+                          <AlertDescription className="text-sm">
+                            <strong>Note:</strong> The AI model may adjust dimensions to maintain image quality and aspect ratios. Final output may vary from exact specifications.
+                          </AlertDescription>
+                        </Alert>
                       </div>
                     )}
 
