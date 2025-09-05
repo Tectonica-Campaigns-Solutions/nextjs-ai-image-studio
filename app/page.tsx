@@ -60,6 +60,7 @@ export default function ImageEditor() {
   const [error, setError] = useState<string>("")
   const [useRagEdit, setUseRagEdit] = useState(true) // RAG for edit image
   const [editGeneratedPrompt, setEditGeneratedPrompt] = useState<string>("") // Store generated prompt
+  const [editImageSize, setEditImageSize] = useState("square_hd") // Image size for edit
 
   // Qwen LoRA Training States
   const [trainingFile, setTrainingFile] = useState<File | null>(null)
@@ -297,6 +298,7 @@ export default function ImageEditor() {
       formData.append("image", selectedImage)
       formData.append("prompt", prompt)
       formData.append("useRAG", useRagEdit.toString())
+      formData.append("image_size", editImageSize)
       
       // Add active RAG information for edit
       const activeRAG = getActiveRAG()
@@ -866,6 +868,23 @@ export default function ImageEditor() {
                         onChange={(e) => setPrompt(e.target.value)}
                         rows={3}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-image-size">Output Image Size</Label>
+                      <Select value={editImageSize} onValueChange={setEditImageSize}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select image size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="square_hd">Square HD</SelectItem>
+                          <SelectItem value="square">Square</SelectItem>
+                          <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
+                          <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
+                          <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
+                          <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="flex items-center space-x-2">
