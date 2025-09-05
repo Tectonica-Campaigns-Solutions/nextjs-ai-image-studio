@@ -591,6 +591,10 @@ function DashboardContent() {
     scrollToBottom();
   };
 
+  const handleEditCurrentImageFromModal = (newImageUrl: string) => {
+    setImageModal(newImageUrl);
+  };
+
   const handleAddImageToConversation = async (imageUrl: string) => {
     if (!currentConversationId) return;
 
@@ -673,6 +677,7 @@ function DashboardContent() {
           imageUrl={imageModal}
           handleDownloadImage={handleDownloadImage}
           handleAddImageToConversation={handleAddImageToConversation}
+          handleEditCurrentImage={handleEditCurrentImageFromModal}
         />
       )}
 
