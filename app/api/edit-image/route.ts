@@ -9,6 +9,16 @@ export async function POST(request: NextRequest) {
     const useRAG = formData.get("useRAG") === "true"
     const activeRAGId = formData.get("activeRAGId") as string
     const activeRAGName = formData.get("activeRAGName") as string
+    const imageSize = formData.get("image_size") as string || "square_hd" // default to square_hd
+    
+    // Validate image_size parameter
+    const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9']
+    if (imageSize && !validImageSizes.includes(imageSize)) {
+      return NextResponse.json({ 
+        error: "Invalid image_size parameter",
+        details: `image_size must be one of: ${validImageSizes.join(', ')}. Received: ${imageSize}`
+      }, { status: 400 })
+    }
 
     if (!image || !prompt) {
       return NextResponse.json({ error: "Image and prompt are required" }, { status: 400 })
@@ -27,6 +37,7 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Use RAG:", useRAG)
     console.log("[v0] Active RAG ID:", activeRAGId)
     console.log("[v0] Active RAG Name:", activeRAGName)
+    console.log("[v0] Image size:", imageSize)
 
     // Enhance prompt with RAG if requested
     let finalPrompt = prompt
@@ -150,7 +161,8 @@ export async function POST(request: NextRequest) {
       const result = await fal.subscribe("fal-ai/qwen-image-edit", {
         input: {
           prompt: finalPrompt,
-          image_url: `data:image/jpeg;base64,${base64Image}`
+          image_url: `data:image/jpeg;base64,${base64Image}`,
+          image_size: imageSize
         },
         logs: true,
         onQueueUpdate: (update) => {

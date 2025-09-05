@@ -54,11 +54,25 @@ export async function GET(request: NextRequest) {
       },
       editImage: {
         endpoint: "/api/external/edit-image",
-        model: "flux",
+        model: "qwen-image-edit",
         supportedInputFormats: ["png", "jpg", "jpeg", "webp"],
         supportedOutputFormats: ["png", "jpg", "webp"],
         maxFileSize: "10MB",
-        description: "Edit existing images with AI-powered modifications"
+        description: "Edit existing images with AI-powered modifications",
+        additionalSettings: {
+          image_size: {
+            options: [
+              "square_hd",
+              "square", 
+              "portrait_4_3",
+              "portrait_16_9",
+              "landscape_4_3",
+              "landscape_16_9"
+            ],
+            default: "square_hd",
+            description: "Output image size/aspect ratio"
+          }
+        }
       },
       guardrails: {
         enabled: true,

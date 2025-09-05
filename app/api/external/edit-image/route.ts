@@ -4,7 +4,7 @@ import { fal } from "@fal-ai/client"
 /**
  * POST /api/external/edit-image
  * 
- * External API endpoint for image editing using FLUX model.
+ * External API endpoint for image editing using qwen-image-edit model.
  * This endpoint replicates the functionality of the main app's edit-image
  * feature but without requiring authentication.
  * 
@@ -12,6 +12,7 @@ import { fal } from "@fal-ai/client"
  * - image (required): Image file to edit (PNG, JPG, JPEG, WEBP)
  * - prompt (required): Description of desired edits
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
+ * - image_size (optional): Output image size - one of: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9 (default: square_hd)
  * 
  * The endpoint automatically reads RAG configuration from the main app state.
  */
@@ -23,6 +24,20 @@ export async function POST(request: NextRequest) {
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
     const useRAG = formData.get('useRAG') === 'true' || formData.get('useRAG') === undefined // default true
+    const imageSize = formData.get('image_size') as string || 'square_hd' // default to square_hd
+    
+    // Validate image_size parameter
+    const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9']
+    if (imageSize && !validImageSizes.includes(imageSize)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid 'image_size' parameter",
+          details: `image_size must be one of: ${validImageSizes.join(', ')}. Received: ${imageSize}`
+        },
+        { status: 400 }
+      )
+    }
     
     // Validate image file
     if (!image || !(image instanceof File)) {
@@ -239,7 +254,8 @@ export async function POST(request: NextRequest) {
         model: "fal-ai/qwen-image-edit",
         input: {
           prompt: cleanPrompt,
-          image_url: imageDataUrl.substring(0, 50) + "... (" + imageDataUrl.length + " chars total)"
+          image_url: imageDataUrl.substring(0, 50) + "... (" + imageDataUrl.length + " chars total)",
+          image_size: imageSize
         }
       }
       console.log("[External Edit-Image] Request data:", JSON.stringify(requestData, null, 2))
@@ -248,6 +264,7 @@ export async function POST(request: NextRequest) {
         input: {
           prompt: cleanPrompt,
           image_url: imageDataUrl,
+          image_size: imageSize,
           // Add some common parameters that might help with compatibility
           guidance_scale: 7.5,
           num_inference_steps: 50,
