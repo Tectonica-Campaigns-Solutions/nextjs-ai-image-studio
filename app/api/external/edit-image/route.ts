@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      const width = parseInt(customWidth)
-      const height = parseInt(customHeight)
+      let width = parseInt(customWidth)
+      let height = parseInt(customHeight)
       
       if (isNaN(width) || isNaN(height) || width < 256 || width > 2048 || height < 256 || height > 2048) {
         return NextResponse.json(
@@ -67,6 +67,15 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
+      
+      // Ensure dimensions are multiples of 64 for better compatibility
+      width = Math.round(width / 64) * 64
+      height = Math.round(height / 64) * 64
+      
+      console.log("[External Edit-Image] Adjusted custom dimensions to multiples of 64:", { 
+        original: { width: parseInt(customWidth), height: parseInt(customHeight) },
+        adjusted: { width, height }
+      })
     }
     
     // Validate image file
@@ -304,9 +313,35 @@ export async function POST(request: NextRequest) {
       
       // Handle image_size: if custom, use width/height instead of image_size
       if (imageSize === 'custom') {
-        falInput.width = parseInt(customWidth)
-        falInput.height = parseInt(customHeight)
-        console.log("[External Edit-Image] Using custom dimensions:", { width: falInput.width, height: falInput.height })
+        // Use the validated and adjusted dimensions
+        let width = parseInt(customWidth)
+        let height = parseInt(customHeight)
+        
+        // Ensure dimensions are multiples of 64 for better compatibility
+        width = Math.round(width / 64) * 64
+        height = Math.round(height / 64) * 64
+        
+        falInput.width = width
+        falInput.height = height
+        
+        // Some models work better with aspect ratio hints
+        const aspectRatio = width / height
+        if (Math.abs(aspectRatio - 1) < 0.1) {
+          falInput.aspect_ratio = "square"
+        } else if (aspectRatio > 1.3) {
+          falInput.aspect_ratio = "landscape"
+        } else if (aspectRatio < 0.8) {
+          falInput.aspect_ratio = "portrait"
+        }
+        
+        console.log("[External Edit-Image] Using custom dimensions:", { 
+          originalWidth: parseInt(customWidth),
+          originalHeight: parseInt(customHeight),
+          adjustedWidth: falInput.width, 
+          adjustedHeight: falInput.height,
+          aspectRatio: aspectRatio.toFixed(2),
+          aspectRatioHint: falInput.aspect_ratio || "none"
+        })
       } else {
         falInput.image_size = imageSize
         console.log("[External Edit-Image] Using preset image_size:", imageSize)

@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
             default: "square_hd",
             description: "Output image size/aspect ratio",
             customFields: {
-              width: { type: "number", min: 256, max: 2048, step: 64, description: "Custom width in pixels (required when image_size is 'custom')" },
-              height: { type: "number", min: 256, max: 2048, step: 64, description: "Custom height in pixels (required when image_size is 'custom')" }
+              width: { type: "number", min: 256, max: 2048, step: 64, description: "Custom width in pixels (required when image_size is 'custom'). Note: Final output may vary due to model constraints." },
+              height: { type: "number", min: 256, max: 2048, step: 64, description: "Custom height in pixels (required when image_size is 'custom'). Note: Final output may vary due to model constraints." }
             }
           }
         }

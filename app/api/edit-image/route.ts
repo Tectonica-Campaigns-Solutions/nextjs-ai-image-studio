@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
       
-      const width = parseInt(customWidth)
-      const height = parseInt(customHeight)
+      let width = parseInt(customWidth)
+      let height = parseInt(customHeight)
       
       if (isNaN(width) || isNaN(height) || width < 256 || width > 2048 || height < 256 || height > 2048) {
         return NextResponse.json({ 
@@ -40,6 +40,15 @@ export async function POST(request: NextRequest) {
           details: "Width and height must be numbers between 256 and 2048 pixels"
         }, { status: 400 })
       }
+      
+      // Ensure dimensions are multiples of 64 for better compatibility
+      width = Math.round(width / 64) * 64
+      height = Math.round(height / 64) * 64
+      
+      console.log("[v0] Adjusted custom dimensions to multiples of 64:", { 
+        original: { width: parseInt(customWidth), height: parseInt(customHeight) },
+        adjusted: { width, height }
+      })
     }
 
     if (!image || !prompt) {
@@ -188,9 +197,35 @@ export async function POST(request: NextRequest) {
       
       // Handle image_size: if custom, use width/height instead of image_size
       if (imageSize === 'custom') {
-        falInput.width = parseInt(customWidth)
-        falInput.height = parseInt(customHeight)
-        console.log("[v0] Using custom dimensions:", { width: falInput.width, height: falInput.height })
+        // Use the validated and adjusted dimensions
+        let width = parseInt(customWidth)
+        let height = parseInt(customHeight)
+        
+        // Ensure dimensions are multiples of 64 for better compatibility
+        width = Math.round(width / 64) * 64
+        height = Math.round(height / 64) * 64
+        
+        falInput.width = width
+        falInput.height = height
+        
+        // Some models work better with aspect ratio hints
+        const aspectRatio = width / height
+        if (Math.abs(aspectRatio - 1) < 0.1) {
+          falInput.aspect_ratio = "square"
+        } else if (aspectRatio > 1.3) {
+          falInput.aspect_ratio = "landscape"
+        } else if (aspectRatio < 0.8) {
+          falInput.aspect_ratio = "portrait"
+        }
+        
+        console.log("[v0] Using custom dimensions:", { 
+          originalWidth: parseInt(customWidth),
+          originalHeight: parseInt(customHeight),
+          adjustedWidth: falInput.width, 
+          adjustedHeight: falInput.height,
+          aspectRatio: aspectRatio.toFixed(2),
+          aspectRatioHint: falInput.aspect_ratio || "none"
+        })
       } else {
         falInput.image_size = imageSize
         console.log("[v0] Using preset image_size:", imageSize)
@@ -226,10 +261,27 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await imageBlob.arrayBuffer();
         const base64Result = Buffer.from(arrayBuffer).toString('base64');
 
+        // Get actual image dimensions to verify
+        const img = new Image();
+        const imageDataUrl = `data:image/jpeg;base64,${base64Result}`;
+        
+        console.log("[v0] Result image info:", {
+          expectedWidth: falInput.width || "preset size",
+          expectedHeight: falInput.height || "preset size", 
+          imageSize: arrayBuffer.byteLength,
+          imageUrl: imageUrl
+        });
+
         console.log("[v0] Successfully got edited image from Fal.ai");
         return NextResponse.json({ 
-          image: `data:image/jpeg;base64,${base64Result}`,
-          ragMetadata: ragMetadata
+          image: imageDataUrl,
+          ragMetadata: ragMetadata,
+          debug: {
+            requestedSize: imageSize,
+            requestedWidth: falInput.width,
+            requestedHeight: falInput.height,
+            actualImageSize: arrayBuffer.byteLength
+          }
         });
       } else {
         console.log("[v0] Unexpected Fal.ai output format:", result);
