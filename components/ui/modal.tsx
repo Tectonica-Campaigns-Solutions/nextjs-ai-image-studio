@@ -8,6 +8,7 @@ type ModalProps = {
   imageUrl: string;
   handleDownloadImage: (image: string) => void;
   handleAddImageToConversation: (image: string) => void;
+  handleEditCurrentImage: (image: string) => void;
 };
 
 export default function Modal({
@@ -16,12 +17,14 @@ export default function Modal({
   imageUrl,
   handleDownloadImage,
   handleAddImageToConversation,
+  handleEditCurrentImage,
 }: ModalProps) {
   if (!isOpen) return null;
 
   const [isLoading, setIsLoading] = useState(false);
   const [responseImage, setResponseImage] = useState("");
   const [promptValue, setPromptValue] = useState("");
+  const [isEditCurrentImage, setIsEditCurrentImage] = useState<boolean>(false);
 
   const handleSubmit = async (imageUrl: string) => {
     setIsLoading(true);
@@ -30,11 +33,7 @@ export default function Modal({
       const imageResponse = await fetch(imageUrl);
       const blob = await imageResponse.blob();
 
-      // @ts-ignore
-      // const file = new File([blob], "image.png", { type: blob.type });
-
       const formData = new FormData();
-      // formData.append("image", file);
       formData.append("image", blob, "image.png");
       formData.append("prompt", promptValue);
       formData.append("useRag", "true");
@@ -77,6 +76,12 @@ export default function Modal({
                 disabled={isLoading}
                 value={promptValue}
                 onChange={(e) => setPromptValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(imageUrl);
+                  }
+                }}
               />
               <Button
                 onClick={() => handleSubmit(imageUrl)}
@@ -99,6 +104,22 @@ export default function Modal({
                 alt="Modal Image"
                 className="mb-4 max-w-full rounded"
               />
+              {isEditCurrentImage && (
+                <div className="flex gap-2 mt-2">
+                  <button
+                    className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                    onClick={() => handleDownloadImage(imageUrl)}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                    onClick={() => handleAddImageToConversation(imageUrl)}
+                  >
+                    Add image to conversation
+                  </button>
+                </div>
+              )}
             </div>
             <div className="flex-1 flex flex-col min-h-[300px] h-full">
               <h3 className="font-bold text-lg pb-3">Edited image</h3>
@@ -123,6 +144,16 @@ export default function Modal({
                       }
                     >
                       Add image to conversation
+                    </button>
+                    <button
+                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                      onClick={() => {
+                        handleEditCurrentImage(responseImage);
+                        setResponseImage("");
+                        setIsEditCurrentImage(true);
+                      }}
+                    >
+                      Edit this image
                     </button>
                   </div>
                 </>
