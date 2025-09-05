@@ -11,7 +11,7 @@ import { fal } from "@fal-ai/client"
  * Body parameters:
  * - prompt (required): Text description for image generation
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
- * - useLoRA (optional): Whether to apply custom LoRA styling (default: false)
+ * - useLoRA (optional): Whether to apply custom LoRA styling (default: true)
  * - settings (optional): Advanced generation settings
  * 
  * The endpoint automatically reads RAG and LoRA configuration from the main app state.
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       useRAG = true,
-      useLoRA = false,
+      useLoRA = true,
       settings = {}
     } = body
 
