@@ -183,15 +183,26 @@ export async function POST(request: NextRequest) {
       // Prepare input for Fal.ai call
       const falInput: any = {
         prompt: finalPrompt,
-        image_url: `data:image/jpeg;base64,${base64Image}`,
-        image_size: imageSize
+        image_url: `data:image/jpeg;base64,${base64Image}`
       }
       
-      // Add custom dimensions if using custom image_size
+      // Handle image_size: if custom, use width/height instead of image_size
       if (imageSize === 'custom') {
         falInput.width = parseInt(customWidth)
         falInput.height = parseInt(customHeight)
+        console.log("[v0] Using custom dimensions:", { width: falInput.width, height: falInput.height })
+      } else {
+        falInput.image_size = imageSize
+        console.log("[v0] Using preset image_size:", imageSize)
       }
+      
+      console.log("[v0] Fal.ai input parameters:", {
+        prompt: finalPrompt.substring(0, 100) + "...",
+        image_size: falInput.image_size || "custom (using width/height)",
+        width: falInput.width || "not set",
+        height: falInput.height || "not set",
+        image_url_length: falInput.image_url.length
+      })
 
       const result = await fal.subscribe("fal-ai/qwen-image-edit", {
         input: falInput,
@@ -224,9 +235,33 @@ export async function POST(request: NextRequest) {
         console.log("[v0] Unexpected Fal.ai output format:", result);
         return NextResponse.json({ error: "Unexpected output format from Fal.ai" }, { status: 500 });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Fal.ai failed:", error);
-      return NextResponse.json({ error: `Fal.ai processing failed: ${error}` }, { status: 500 });
+      
+      // Log more detailed error information
+      if (error.status === 422) {
+        console.error("[v0] Fal.ai validation error details:", {
+          status: error.status,
+          body: error.body,
+          message: error.message
+        });
+        
+        // Try to extract more specific error details
+        if (error.body) {
+          console.error("[v0] Fal.ai error body:", JSON.stringify(error.body, null, 2));
+        }
+      }
+      
+      return NextResponse.json({ 
+        error: `Fal.ai processing failed: ${error.message || error}`,
+        details: error.status === 422 ? "Input validation failed - check image size parameters" : undefined,
+        debug: {
+          status: error.status,
+          imageSize: imageSize,
+          customWidth: imageSize === 'custom' ? customWidth : undefined,
+          customHeight: imageSize === 'custom' ? customHeight : undefined
+        }
+      }, { status: 500 });
     }
 
     /* 

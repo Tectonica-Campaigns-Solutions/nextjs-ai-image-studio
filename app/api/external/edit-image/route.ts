@@ -283,9 +283,11 @@ export async function POST(request: NextRequest) {
       const requestData = {
         model: "fal-ai/qwen-image-edit",
         input: {
-          prompt: cleanPrompt,
+          prompt: cleanPrompt.substring(0, 100) + "...",
           image_url: imageDataUrl.substring(0, 50) + "... (" + imageDataUrl.length + " chars total)",
-          image_size: imageSize
+          image_size: falInput.image_size || "custom (using width/height)",
+          width: falInput.width || "not set",
+          height: falInput.height || "not set"
         }
       }
       console.log("[External Edit-Image] Request data:", JSON.stringify(requestData, null, 2))
@@ -294,17 +296,20 @@ export async function POST(request: NextRequest) {
       const falInput: any = {
         prompt: cleanPrompt,
         image_url: imageDataUrl,
-        image_size: imageSize,
         // Add some common parameters that might help with compatibility
         guidance_scale: 7.5,
         num_inference_steps: 50,
         strength: 0.8
       }
       
-      // Add custom dimensions if using custom image_size
+      // Handle image_size: if custom, use width/height instead of image_size
       if (imageSize === 'custom') {
         falInput.width = parseInt(customWidth)
         falInput.height = parseInt(customHeight)
+        console.log("[External Edit-Image] Using custom dimensions:", { width: falInput.width, height: falInput.height })
+      } else {
+        falInput.image_size = imageSize
+        console.log("[External Edit-Image] Using preset image_size:", imageSize)
       }
 
       const result = await fal.subscribe("fal-ai/qwen-image-edit", {
