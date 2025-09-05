@@ -48,10 +48,21 @@ Returns the current application configuration including available models, settin
     },
     "editImage": {
       "endpoint": "/api/external/edit-image",
-      "model": "flux",
+      "model": "qwen-image-edit",
       "supportedInputFormats": ["png", "jpg", "jpeg", "webp"],
       "supportedOutputFormats": ["png", "jpg", "webp"],
-      "maxFileSize": "10MB"
+      "maxFileSize": "10MB",
+      "additionalSettings": {
+        "image_size": {
+          "options": ["square_hd", "square", "portrait_4_3", "portrait_16_9", "landscape_4_3", "landscape_16_9", "custom"],
+          "default": "square_hd",
+          "description": "Output image size/aspect ratio",
+          "customFields": {
+            "width": { "type": "number", "min": 256, "max": 2048, "step": 64, "description": "Custom width in pixels (required when image_size is 'custom')" },
+            "height": { "type": "number", "min": 256, "max": 2048, "step": 64, "description": "Custom height in pixels (required when image_size is 'custom')" }
+          }
+        }
+      }
     },
     "guardrails": {
       "enabled": true,
@@ -129,19 +140,35 @@ Generate images from text descriptions using the Qwen model.
 
 **POST /api/external/edit-image**
 
-Edit existing images with AI-powered modifications using the FLUX model.
+Edit existing images with AI-powered modifications using the qwen-image-edit model.
 
 #### Request Body (multipart/form-data)
 - **image** (required): Image file to edit (PNG, JPG, JPEG, WEBP, max 10MB)
 - **prompt** (required): Description of desired edits
 - **useRAG** (optional, default: true): Whether to enhance prompt with branding guidelines
+- **image_size** (optional, default: "square_hd"): Output image size/aspect ratio
+  - Options: "square_hd", "square", "portrait_4_3", "portrait_16_9", "landscape_4_3", "landscape_16_9", "custom"
+- **width** (required when image_size="custom"): Custom width in pixels (256-2048, multiple of 64)
+- **height** (required when image_size="custom"): Custom height in pixels (256-2048, multiple of 64)
 
 #### Example using curl:
 ```bash
 curl -X POST "https://your-domain.com/api/external/edit-image" \
   -F "image=@path/to/your/image.jpg" \
   -F "prompt=change the sky to sunset colors" \
-  -F "useRAG=true"
+  -F "useRAG=true" \
+  -F "image_size=landscape_16_9"
+```
+
+#### Example with custom dimensions:
+```bash
+curl -X POST "https://your-domain.com/api/external/edit-image" \
+  -F "image=@path/to/your/image.jpg" \
+  -F "prompt=make the background more professional" \
+  -F "useRAG=true" \
+  -F "image_size=custom" \
+  -F "width=1280" \
+  -F "height=720"
 ```
 
 #### Response
@@ -159,8 +186,13 @@ curl -X POST "https://your-domain.com/api/external/edit-image" \
     "final": "change the sky to sunset colors, following EGP brand guidelines...",
     "enhanced": true
   },
+  "settings": {
+    "image_size": "landscape_16_9",
+    "width": 1920,
+    "height": 1080
+  },
   "processing": {
-    "model": "flux",
+    "model": "qwen-image-edit",
     "timestamp": "2025-09-03T10:30:00.000Z"
   }
 }
@@ -180,10 +212,30 @@ All endpoints return structured error responses:
 ```
 
 ### Common Error Codes
-- **400**: Bad Request (missing parameters, invalid content)
+- **400**: Bad Request (missing parameters, invalid content, invalid image_size)
 - **413**: File too large
 - **415**: Unsupported media type
+- **422**: Unprocessable Entity (invalid custom dimensions or model constraints)
 - **500**: Internal server error
+
+### Image Size Options
+
+The `image_size` parameter for the edit-image endpoint supports the following options:
+
+#### Preset Sizes
+- **square_hd**: High-definition square format
+- **square**: Standard square format  
+- **portrait_4_3**: Portrait aspect ratio (4:3)
+- **portrait_16_9**: Portrait aspect ratio (16:9)
+- **landscape_4_3**: Landscape aspect ratio (4:3)
+- **landscape_16_9**: Landscape aspect ratio (16:9)
+
+#### Custom Dimensions
+- **custom**: Allows specifying custom width and height
+  - Requires both `width` and `height` parameters
+  - Valid range: 256-2048 pixels
+  - Recommended: Use multiples of 64 for better compatibility
+  - Note: Final output dimensions may vary slightly due to model constraints
 
 ### Content Moderation
 
@@ -226,10 +278,12 @@ if (result.success) {
 
 ### JavaScript/Fetch Example (Image Editing)
 ```javascript
+// Example with preset image size
 const formData = new FormData();
 formData.append('image', fileInput.files[0]);
 formData.append('prompt', 'make the background more professional');
 formData.append('useRAG', 'true');
+formData.append('image_size', 'landscape_16_9');
 
 const response = await fetch('https://your-domain.com/api/external/edit-image', {
   method: 'POST',
@@ -242,51 +296,27 @@ if (result.success) {
 } else {
   console.error('Error:', result.error);
 }
-```
 
-### Python Example
-```python
-import requests
-import json
+// Example with custom dimensions
+const customFormData = new FormData();
+customFormData.append('image', fileInput.files[0]);
+customFormData.append('prompt', 'enhance the lighting and colors');
+customFormData.append('useRAG', 'true');
+customFormData.append('image_size', 'custom');
+customFormData.append('width', '1280');
+customFormData.append('height', '720');
 
-# Text-to-Image
-response = requests.post(
-    'https://your-domain.com/api/external/text-to-image',
-    json={
-        'prompt': 'A peaceful demonstration with diverse participants',
-        'useRAG': True,
-        'settings': {
-            'image_size': 'landscape_4_3',
-            'num_images': 1
-        }
-    }
-)
+const customResponse = await fetch('https://your-domain.com/api/external/edit-image', {
+  method: 'POST',
+  body: customFormData
+});
 
-result = response.json()
-if result['success']:
-    print(f"Generated image: {result['image']}")
-else:
-    print(f"Error: {result['error']}")
-
-# Image Editing
-with open('image.jpg', 'rb') as f:
-    files = {'image': f}
-    data = {
-        'prompt': 'add professional lighting',
-        'useRAG': 'true'
-    }
-    
-    response = requests.post(
-        'https://your-domain.com/api/external/edit-image',
-        files=files,
-        data=data
-    )
-
-result = response.json()
-if result['success']:
-    print(f"Edited image: {result['image']}")
-else:
-    print(f"Error: {result['error']}")
+const customResult = await customResponse.json();
+if (customResult.success) {
+  console.log('Custom edited image:', customResult.image);
+} else {
+  console.error('Error:', customResult.error);
+}
 ```
 
 ## Support
