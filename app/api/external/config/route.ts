@@ -79,6 +79,58 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      imageToImage: {
+        endpoint: "/api/external/image-to-image",
+        model: "qwen-image",
+        supportedInputFormats: ["png", "jpg", "jpeg", "webp"],
+        supportedOutputFormats: ["png", "jpg", "webp"],
+        maxFileSize: "10MB",
+        description: "Transform existing images using AI with image-to-image generation",
+        additionalSettings: {
+          image_size: {
+            options: [
+              "square_hd",
+              "square", 
+              "portrait_4_3",
+              "portrait_16_9",
+              "landscape_4_3",
+              "landscape_16_9"
+            ],
+            default: "landscape_4_3",
+            description: "Output image size/aspect ratio"
+          },
+          strength: {
+            type: "number",
+            min: 0.1,
+            max: 1.0,
+            step: 0.1,
+            default: 0.8,
+            description: "Transformation strength (0.1 = subtle changes, 1.0 = major changes)"
+          },
+          guidance_scale: {
+            type: "number",
+            min: 1.0,
+            max: 20.0,
+            step: 0.1,
+            default: 2.5,
+            description: "How closely to follow the prompt"
+          },
+          num_inference_steps: {
+            type: "number",
+            min: 1,
+            max: 100,
+            default: 30,
+            description: "Number of denoising steps"
+          },
+          num_images: {
+            type: "number",
+            min: 1,
+            max: 4,
+            default: 1,
+            description: "Number of images to generate"
+          }
+        }
+      },
       guardrails: {
         enabled: true,
         contentModeration: true,

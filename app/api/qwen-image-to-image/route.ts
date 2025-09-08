@@ -92,26 +92,38 @@ export async function POST(request: NextRequest) {
         const enhancePromptWithBranding = await getRAGSystem()
         if (enhancePromptWithBranding) {
           const enhancement = await enhancePromptWithBranding(prompt)
-          finalPrompt = enhancement.enhancedPrompt
-          ragMetadata = {
-            originalPrompt: prompt,
-            enhancedPrompt: enhancement.enhancedPrompt,
-            suggestedColors: enhancement.suggestedColors,
-            suggestedFormat: enhancement.suggestedFormat,
-            negativePrompt: enhancement.negativePrompt,
-            brandingElements: enhancement.brandingElements.length
+          if (enhancement && typeof enhancement === 'object') {
+            finalPrompt = enhancement.enhancedPrompt || enhancement.prompt || prompt
+            ragMetadata = {
+              originalPrompt: prompt,
+              enhancedPrompt: finalPrompt,
+              suggestedColors: enhancement.suggestedColors || [],
+              suggestedFormat: enhancement.suggestedFormat || "",
+              negativePrompt: enhancement.negativePrompt || "",
+              brandingElements: enhancement.brandingElements?.length || 0
+            }
+          } else if (typeof enhancement === 'string') {
+            finalPrompt = enhancement
+            ragMetadata = {
+              originalPrompt: prompt,
+              enhancedPrompt: finalPrompt,
+              brandingElements: 0
+            }
           }
           console.log("[v0] RAG enhanced prompt:", finalPrompt)
-          console.log("[v0] RAG enhanced prompt:", finalPrompt)
-          console.log("[v0] RAG suggested colors:", enhancement.suggestedColors)
-          console.log("[v0] RAG negative prompt:", enhancement.negativePrompt)
+          console.log("[v0] RAG suggested colors:", ragMetadata?.suggestedColors)
+          console.log("[v0] RAG negative prompt:", ragMetadata?.negativePrompt)
         } else {
           console.warn("[v0] RAG system not available")
+          finalPrompt = prompt
         }
       } catch (error) {
         console.warn("[v0] RAG enhancement failed, using original prompt:", error)
+        finalPrompt = prompt
         ragMetadata = { error: "RAG enhancement failed" }
       }
+    } else {
+      finalPrompt = prompt
     }
 
     // Process the input image
@@ -149,6 +161,9 @@ export async function POST(request: NextRequest) {
       // Image-to-image specific settings
       strength: Math.min(Math.max(settings.strength || 0.8, 0.1), 1.0),
       
+      // LoRA settings
+      loras: settings.loras || [],
+      
       // Optional settings
       ...(settings.seed && { seed: parseInt(settings.seed as string) }),
       ...(settings.width && { width: Math.min(Math.max(parseInt(settings.width as string), 256), 2048) }),
@@ -182,7 +197,9 @@ export async function POST(request: NextRequest) {
       sync_mode: input.sync_mode,
       seed: input.seed,
       width: input.width,
-      height: input.height
+      height: input.height,
+      loras: input.loras,
+      lorasCount: input.loras.length
     })
 
     console.log("[v0] Using Qwen Image-to-Image for generation...")

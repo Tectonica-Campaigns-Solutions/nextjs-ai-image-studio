@@ -64,6 +64,51 @@ export default function ImageEditor() {
   const [customWidth, setCustomWidth] = useState("1024") // Custom width for edit
   const [customHeight, setCustomHeight] = useState("1024") // Custom height for edit
 
+  // Qwen Image-to-Image States
+  const [img2imgFile, setImg2imgFile] = useState<File | null>(null)
+  const [img2imgPreviewUrl, setImg2imgPreviewUrl] = useState<string>("")
+  const [img2imgPrompt, setImg2imgPrompt] = useState("")
+  const [img2imgSettings, setImg2imgSettings] = useState<{
+    image_size: string;
+    num_inference_steps: number;
+    guidance_scale: number;
+    strength: number;
+    num_images: number;
+    output_format: string;
+    negative_prompt: string;
+    acceleration: string;
+    enable_safety_checker: boolean;
+    sync_mode: boolean;
+    seed: string;
+    width: string;
+    height: string;
+    loras?: Array<{ path: string; scale: number }>;
+  }>({
+    image_size: "landscape_4_3",
+    num_inference_steps: 30,
+    guidance_scale: 2.5,
+    strength: 0.8,
+    num_images: 1,
+    output_format: "png",
+    negative_prompt: "",
+    acceleration: "none",
+    enable_safety_checker: true,
+    sync_mode: false,
+    seed: "",
+    width: "",
+    height: ""
+  })
+  const [img2imgResult, setImg2imgResult] = useState<string[]>([])
+  const [isImg2imgGenerating, setIsImg2imgGenerating] = useState(false)
+  const [img2imgError, setImg2imgError] = useState<string>("")
+  const [useRagImg2img, setUseRagImg2img] = useState(true)
+  const [img2imgGeneratedPrompt, setImg2imgGeneratedPrompt] = useState<string>("")
+  const [showImg2imgAdvanced, setShowImg2imgAdvanced] = useState(false)
+  const [useImg2imgLoRA, setUseImg2imgLoRA] = useState(false)
+  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
+  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("")
+  const [img2imgLoraScale, setImg2imgLoraScale] = useState(1.0)
+
   // Qwen LoRA Training States
   const [trainingFile, setTrainingFile] = useState<File | null>(null)
   const [trainingSettings, setTrainingSettings] = useState({
@@ -347,6 +392,110 @@ export default function ImageEditor() {
     }
   }
 
+  // Image-to-Image handlers
+  const handleImg2imgFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setImg2imgError("Please select a valid image file")
+        return
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setImg2imgError("Image file must be smaller than 10MB")
+        return
+      }
+
+      setImg2imgFile(file)
+      setImg2imgError("")
+
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImg2imgPreviewUrl(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleImg2imgSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!img2imgFile || !img2imgPrompt.trim()) {
+      setImg2imgError("Please select an image and enter a prompt")
+      return
+    }
+
+    setIsImg2imgGenerating(true)
+    setImg2imgError("")
+
+    try {
+      const formData = new FormData()
+      
+      // Enhance prompt with trigger phrase if using custom LoRA
+      let finalPrompt = img2imgPrompt
+      if (useImg2imgLoRA && img2imgTriggerPhrase.trim()) {
+        finalPrompt = `${img2imgPrompt}, ${img2imgTriggerPhrase}`
+      }
+      
+      formData.append("image", img2imgFile)
+      formData.append("prompt", finalPrompt)
+      formData.append("useRAG", useRagImg2img.toString())
+      
+      // Add active RAG information
+      const activeRAG = getActiveRAG()
+      if (useRagImg2img && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
+
+      // Prepare settings object with LoRA if enabled
+      const settingsWithLora = { ...img2imgSettings }
+      if (useImg2imgLoRA && img2imgLoraUrl.trim()) {
+        settingsWithLora.loras = [{
+          path: img2imgLoraUrl,
+          scale: img2imgLoraScale
+        }]
+      }
+
+      formData.append("settings", JSON.stringify(settingsWithLora))
+
+      const response = await fetch("/api/qwen-image-to-image", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (errorData.blocked) {
+          throw new Error(handleModerationError(errorData))
+        }
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      // Capture generated prompt if available
+      if (result.finalPrompt) {
+        setImg2imgGeneratedPrompt(result.finalPrompt)
+      } else {
+        setImg2imgGeneratedPrompt(finalPrompt)
+      }
+      
+      if (result.success && result.images && result.images.length > 0) {
+        setImg2imgResult(result.images)
+      } else {
+        throw new Error("No images received from server")
+      }
+    } catch (err) {
+      setImg2imgError(err instanceof Error ? err.message : "Failed to generate image-to-image")
+    } finally {
+      setIsImg2imgGenerating(false)
+    }
+  }
+
   // Training handlers
   const handleTrainingFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -519,8 +668,9 @@ export default function ImageEditor() {
         </div>
 
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
+          <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="upload-branding">Upload Branding</TabsTrigger>
           <TabsTrigger value="qwen-train-lora">Train LoRA</TabsTrigger>
@@ -840,6 +990,297 @@ export default function ImageEditor() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Image-to-Image Tab */}
+          <TabsContent value="qwen-image-to-image" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Upload and Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Transform Image
+                  </CardTitle>
+                  <CardDescription>
+                    Upload an image and transform it using AI with Qwen Image-to-Image
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Image Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="img2img-file">Source Image</Label>
+                    <Input
+                      id="img2img-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImg2imgFileUpload}
+                      className="cursor-pointer"
+                    />
+                    {img2imgFile && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected: {img2imgFile.name} ({(img2imgFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  {img2imgPreviewUrl && (
+                    <div className="space-y-2">
+                      <Label>Preview</Label>
+                      <div className="border rounded-lg p-4 bg-muted/30">
+                        <img 
+                          src={img2imgPreviewUrl} 
+                          alt="Preview" 
+                          className="max-w-full h-auto max-h-48 mx-auto rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Transformation Form */}
+                  <form onSubmit={handleImg2imgSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="img2img-prompt">Transformation Prompt</Label>
+                      <Textarea
+                        id="img2img-prompt"
+                        placeholder="Describe how you want to transform the image (e.g., 'change to oil painting style', 'make it look like a sunset scene')"
+                        value={img2imgPrompt}
+                        onChange={(e) => setImg2imgPrompt(e.target.value)}
+                        rows={3}
+                        required
+                      />
+                    </div>
+
+                    {/* RAG Toggle */}
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="use-rag-img2img"
+                        checked={useRagImg2img}
+                        onCheckedChange={setUseRagImg2img}
+                      />
+                      <Label htmlFor="use-rag-img2img">Enhance with Branding Guidelines (RAG)</Label>
+                    </div>
+
+                    {/* LoRA Settings */}
+                    <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="use-img2img-lora"
+                          checked={useImg2imgLoRA}
+                          onCheckedChange={setUseImg2imgLoRA}
+                        />
+                        <Label htmlFor="use-img2img-lora">Apply Custom LoRA Style</Label>
+                      </div>
+                      
+                      {useImg2imgLoRA && (
+                        <div className="space-y-3 pl-6 border-l-2 border-primary/20">
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-lora-url">LoRA Model URL</Label>
+                            <Input
+                              id="img2img-lora-url"
+                              value={img2imgLoraUrl}
+                              onChange={(e) => setImg2imgLoraUrl(e.target.value)}
+                              placeholder="https://v3.fal.media/files/..."
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-trigger-phrase">Style Trigger Phrase</Label>
+                            <Input
+                              id="img2img-trigger-phrase"
+                              value={img2imgTriggerPhrase}
+                              onChange={(e) => setImg2imgTriggerPhrase(e.target.value)}
+                              placeholder="Style keywords to enhance the transformation"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-lora-scale">Style Strength: {img2imgLoraScale}</Label>
+                            <input
+                              id="img2img-lora-scale"
+                              type="range"
+                              min="0.1"
+                              max="2.0"
+                              step="0.1"
+                              value={img2imgLoraScale}
+                              onChange={(e) => setImg2imgLoraScale(parseFloat(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Advanced Settings */}
+                    <div className="space-y-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowImg2imgAdvanced(!showImg2imgAdvanced)}
+                        className="w-full"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        {showImg2imgAdvanced ? "Hide" : "Show"} Advanced Settings
+                      </Button>
+
+                      {showImg2imgAdvanced && (
+                        <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/20">
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-image-size">Image Size</Label>
+                            <Select
+                              value={img2imgSettings.image_size}
+                              onValueChange={(value) => setImg2imgSettings(prev => ({ ...prev, image_size: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="square_hd">Square HD</SelectItem>
+                                <SelectItem value="square">Square</SelectItem>
+                                <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
+                                <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
+                                <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
+                                <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-steps">Inference Steps: {img2imgSettings.num_inference_steps}</Label>
+                            <input
+                              id="img2img-steps"
+                              type="range"
+                              min="1"
+                              max="100"
+                              value={img2imgSettings.num_inference_steps}
+                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, num_inference_steps: parseInt(e.target.value) }))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-guidance">Guidance Scale: {img2imgSettings.guidance_scale}</Label>
+                            <input
+                              id="img2img-guidance"
+                              type="range"
+                              min="1"
+                              max="20"
+                              step="0.1"
+                              value={img2imgSettings.guidance_scale}
+                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, guidance_scale: parseFloat(e.target.value) }))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-strength">Transformation Strength: {img2imgSettings.strength}</Label>
+                            <input
+                              id="img2img-strength"
+                              type="range"
+                              min="0.1"
+                              max="1.0"
+                              step="0.1"
+                              value={img2imgSettings.strength}
+                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, strength: parseFloat(e.target.value) }))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-num-images">Number of Images: {img2imgSettings.num_images}</Label>
+                            <input
+                              id="img2img-num-images"
+                              type="range"
+                              min="1"
+                              max="4"
+                              value={img2imgSettings.num_images}
+                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, num_images: parseInt(e.target.value) }))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="img2img-negative-prompt">Negative Prompt</Label>
+                            <Input
+                              id="img2img-negative-prompt"
+                              value={img2imgSettings.negative_prompt}
+                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, negative_prompt: e.target.value }))}
+                              placeholder="What to avoid in the image"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {img2imgError && (
+                      <Alert className="border-red-200 bg-red-50">
+                        <AlertDescription className="text-red-700">
+                          {img2imgError}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Button type="submit" disabled={isImg2imgGenerating || !img2imgFile || !img2imgPrompt.trim()} className="w-full">
+                      {isImg2imgGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Transforming Image...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4 mr-2" />
+                          Transform Image
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Results Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Transformed Images
+                  </CardTitle>
+                  <CardDescription>
+                    AI-generated transformations of your image
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {img2imgResult.length > 0 ? (
+                    <div className="space-y-4">
+                      {img2imgResult.map((imageUrl, index) => (
+                        <div key={index} className="space-y-2">
+                          <img 
+                            src={imageUrl} 
+                            alt={`Transformed image ${index + 1}`} 
+                            className="w-full h-auto rounded-lg border shadow-sm"
+                          />
+                          <OpenInNewTabButton 
+                            imageUrl={imageUrl} 
+                            buttonText={`Open Result ${index + 1} in New Tab`} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      <ImageIcon className="h-12 w-12 mx-auto mb-2" />
+                      <p>Transform an image to see results</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Generated Prompt Display */}
+            {img2imgGeneratedPrompt && (
+              <GeneratedPromptDisplay 
+                prompt={img2imgGeneratedPrompt} 
+                title="Generated Transformation Prompt" 
+              />
+            )}
           </TabsContent>
 
           {/* Edit Image Tab */}

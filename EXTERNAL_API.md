@@ -136,7 +136,80 @@ Generate images from text descriptions using the Qwen model.
 }
 ```
 
-### 3. Image Editing
+### 3. Image-to-Image Transformation
+
+**POST /api/external/image-to-image**
+
+Transform existing images using AI-powered image-to-image generation with the Qwen model.
+
+#### Request Body (multipart/form-data)
+- **image** (required): Source image file to transform (PNG, JPG, JPEG, WEBP, max 10MB)
+- **prompt** (required): Description of the desired transformation
+- **useRAG** (optional, default: true): Whether to enhance prompt with branding guidelines
+- **useLoRA** (optional, default: false): Whether to apply custom LoRA styling
+- **settings** (optional): JSON string with advanced settings
+
+#### Advanced Settings (JSON object)
+```json
+{
+  "image_size": "landscape_4_3",
+  "strength": 0.8,
+  "guidance_scale": 2.5,
+  "num_inference_steps": 30,
+  "num_images": 1,
+  "output_format": "png",
+  "negative_prompt": "",
+  "acceleration": "none",
+  "seed": 12345
+}
+```
+
+#### Example using curl:
+```bash
+curl -X POST "https://your-domain.com/api/external/image-to-image" \
+  -F "image=@path/to/your/image.jpg" \
+  -F "prompt=transform into oil painting style" \
+  -F "useRAG=true" \
+  -F "useLoRA=true" \
+  -F 'settings={"strength": 0.8, "num_images": 2}'
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "images": [
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+  ],
+  "originalImage": {
+    "name": "image.jpg",
+    "size": 1024768,
+    "type": "image/jpeg"
+  },
+  "prompt": {
+    "original": "transform into oil painting style",
+    "final": "transform into oil painting style, following EGP brand guidelines...",
+    "enhanced": true,
+    "lora_applied": true
+  },
+  "settings": {
+    "image_size": "landscape_4_3",
+    "strength": 0.8,
+    "guidance_scale": 2.5,
+    "num_inference_steps": 30,
+    "num_images": 2,
+    "output_format": "png"
+  },
+  "processing": {
+    "model": "qwen-image",
+    "type": "image-to-image",
+    "timestamp": "2025-09-03T10:30:00.000Z"
+  }
+}
+```
+
+### 4. Image Editing
 
 **POST /api/external/edit-image**
 
@@ -273,6 +346,55 @@ if (result.success) {
   console.log('Generated image:', result.image);
 } else {
   console.error('Error:', result.error);
+}
+```
+
+### JavaScript/Fetch Example (Image-to-Image)
+```javascript
+// Example with basic transformation
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+formData.append('prompt', 'transform into watercolor painting style');
+formData.append('useRAG', 'true');
+formData.append('useLoRA', 'true');
+
+const response = await fetch('https://your-domain.com/api/external/image-to-image', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.json();
+if (result.success) {
+  console.log('Transformed images:', result.images);
+  console.log('Number of results:', result.images.length);
+} else {
+  console.error('Error:', result.error);
+}
+
+// Example with advanced settings
+const advancedFormData = new FormData();
+advancedFormData.append('image', fileInput.files[0]);
+advancedFormData.append('prompt', 'convert to cyberpunk aesthetic');
+advancedFormData.append('useRAG', 'true');
+advancedFormData.append('useLoRA', 'false');
+advancedFormData.append('settings', JSON.stringify({
+  strength: 0.6,
+  guidance_scale: 7.5,
+  num_inference_steps: 50,
+  num_images: 3,
+  image_size: "square_hd"
+}));
+
+const advancedResponse = await fetch('https://your-domain.com/api/external/image-to-image', {
+  method: 'POST',
+  body: advancedFormData
+});
+
+const advancedResult = await advancedResponse.json();
+if (advancedResult.success) {
+  console.log('Advanced transformed images:', advancedResult.images);
+} else {
+  console.error('Error:', advancedResult.error);
 }
 ```
 
