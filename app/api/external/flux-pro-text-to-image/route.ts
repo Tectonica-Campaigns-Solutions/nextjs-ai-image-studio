@@ -155,17 +155,14 @@ export async function POST(request: NextRequest) {
         input.seed = mergedSettings.seed
       }
 
-      console.log("[External Flux Pro] Generating with input:", {
-        prompt: finalPrompt,
-        image_size: input.image_size,
-        num_inference_steps: input.num_inference_steps,
-        guidance_scale: input.guidance_scale,
-        num_images: input.num_images,
-        safety_tolerance: input.safety_tolerance,
-        output_format: input.output_format,
-        loras_count: input.loras.length,
-        seed: input.seed
-      })
+      console.log("[External Flux Pro] Generating with input:")
+      console.log("=====================================")
+      console.log("Model: fal-ai/flux-pro/kontext/max/text-to-image")
+      console.log("Prompt:", finalPrompt)
+      console.log("LoRA enabled:", useLoRA)
+      console.log("LoRA config:", loraConfig)
+      console.log("Input object:", JSON.stringify(input, null, 2))
+      console.log("=====================================")
 
       const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
         input,
@@ -178,6 +175,16 @@ export async function POST(request: NextRequest) {
       })
 
       console.log("[External Flux Pro] Fal.ai result:", result)
+
+      // Check if LoRAs were actually applied
+      if (input.loras && input.loras.length > 0) {
+        console.log("[External Flux Pro] ✅ LoRAs were sent to the model:")
+        input.loras.forEach((lora: any, index: number) => {
+          console.log(`  LoRA ${index + 1}: ${lora.path} (scale: ${lora.scale})`)
+        })
+      } else {
+        console.log("[External Flux Pro] ⚠️ No LoRAs were applied to this generation")
+      }
 
       if (result.data && result.data.images && result.data.images.length > 0) {
         const images = result.data.images.map((img: any) => ({
