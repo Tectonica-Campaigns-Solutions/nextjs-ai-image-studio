@@ -363,7 +363,14 @@ export default function ImageEditor() {
     try {
       const formData = new FormData()
       
-      formData.append("prompt", fluxProPrompt)
+      // Enhance prompt with LoRA trigger phrase if enabled
+      let finalPrompt = fluxProPrompt
+      if (useFluxProLoRA && fluxProTriggerPhrase.trim()) {
+        finalPrompt = `${fluxProPrompt}, ${fluxProTriggerPhrase}`
+        console.log("[FRONTEND] Enhanced prompt with trigger phrase:", finalPrompt)
+      }
+      
+      formData.append("prompt", finalPrompt)
       formData.append("useRag", useRagFluxPro.toString())
       
       // Add active RAG information
@@ -376,6 +383,15 @@ export default function ImageEditor() {
       // Prepare settings object, converting types as needed
       const settings: any = { ...fluxProSettings }
       
+      // Add LoRA configuration if enabled
+      if (useFluxProLoRA && fluxProLoraUrl.trim()) {
+        settings.loras = [{
+          path: fluxProLoraUrl,
+          scale: fluxProLoraScale
+        }]
+        console.log("[FRONTEND] Adding LoRA to settings:", settings.loras)
+      }
+      
       // Remove empty string values
       Object.keys(settings).forEach(key => {
         if (settings[key] === "") {
@@ -387,6 +403,8 @@ export default function ImageEditor() {
       if (settings.width) settings.width = parseInt(settings.width as string)
       if (settings.height) settings.height = parseInt(settings.height as string)
       if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      console.log("[FRONTEND] Final settings being sent:", settings)
       
       formData.append("settings", JSON.stringify(settings))
       formData.append("orgType", "general")

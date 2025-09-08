@@ -48,6 +48,13 @@ export async function POST(request: NextRequest) {
     console.log("[FLUX-PRO] Text-to-Image endpoint called")
     console.log("[FLUX-PRO] Original prompt:", prompt)
     console.log("[FLUX-PRO] Use RAG:", useRag)
+    console.log("[FLUX-PRO] Settings JSON:", settingsJson)
+    
+    // Log all form data for debugging
+    console.log("[FLUX-PRO] All FormData entries:")
+    for (const [key, value] of formData.entries()) {
+      console.log(`  ${key}: ${value}`)
+    }
     console.log("[FLUX-PRO] Settings:", settingsJson)
 
     // Content moderation check
@@ -186,17 +193,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Add LoRA support for Flux Pro
+    console.log("[FLUX-PRO] Checking LoRA configuration...")
+    console.log("[FLUX-PRO] mergedSettings.loras:", mergedSettings.loras)
+    console.log("[FLUX-PRO] Is array?", Array.isArray(mergedSettings.loras))
+    console.log("[FLUX-PRO] Length:", mergedSettings.loras?.length)
+    
     if (mergedSettings.loras && Array.isArray(mergedSettings.loras) && mergedSettings.loras.length > 0) {
+      console.log("[FLUX-PRO] Processing LoRAs...")
+      mergedSettings.loras.forEach((lora: any, index: number) => {
+        console.log(`[FLUX-PRO] LoRA ${index}:`, {
+          path: lora.path,
+          scale: lora.scale,
+          originalScale: typeof lora.scale,
+          parsedScale: parseFloat(lora.scale) || 1.0
+        })
+      })
+      
       input.loras = mergedSettings.loras.map((lora: any) => ({
         path: lora.path,
         scale: parseFloat(lora.scale) || 1.0
       }))
-      console.log("[FLUX-PRO] LoRAs configured:", input.loras)
+      console.log("[FLUX-PRO] LoRAs configured for Flux Pro:", input.loras)
+    } else {
+      console.log("[FLUX-PRO] No LoRAs configured - will use base model")
     }
 
-    console.log("[FLUX-PRO] Calling Flux Pro Kontext Max with input:", JSON.stringify(input, null, 2))
+    console.log("[FLUX-PRO] Final input object being sent to fal.ai:")
+    console.log("=====================================")
+    console.log("Model: fal-ai/flux-pro/kontext/max/text-to-image")
+    console.log("Input:", JSON.stringify(input, null, 2))
+    console.log("=====================================")
 
     try {
+      console.log("[FLUX-PRO] Starting generation with Flux Pro Kontext Max...")
       const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
         input,
         logs: true,
@@ -207,7 +236,29 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      console.log("[FLUX-PRO] Generation completed:", result)
+      console.log("[FLUX-PRO] Generation completed successfully!")
+      console.log("[FLUX-PRO] Result data structure:")
+      console.log("  - data exists:", !!result.data)
+      console.log("  - images exists:", !!result.data?.images)
+      console.log("  - images length:", result.data?.images?.length || 0)
+      
+      if (result.data?.images?.[0]) {
+        console.log("  - first image URL:", result.data.images[0].url)
+        console.log("  - first image dimensions:", {
+          width: result.data.images[0].width,
+          height: result.data.images[0].height
+        })
+      }
+      
+      // Check if LoRAs were actually applied
+      if (input.loras && input.loras.length > 0) {
+        console.log("[FLUX-PRO] ✅ LoRAs were sent to the model:")
+        input.loras.forEach((lora: any, index: number) => {
+          console.log(`  LoRA ${index + 1}: ${lora.path} (scale: ${lora.scale})`)
+        })
+      } else {
+        console.log("[FLUX-PRO] ⚠️ No LoRAs were applied to this generation")
+      }
 
       if (result.data && result.data.images && result.data.images.length > 0) {
         const images = result.data.images.map((img: any) => ({
