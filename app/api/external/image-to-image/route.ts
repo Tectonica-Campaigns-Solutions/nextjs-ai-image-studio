@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { url } from 'inspector'
 
 /**
  * POST /api/external/image-to-image
@@ -26,6 +27,8 @@ export async function POST(request: NextRequest) {
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
     const useRAG = formData.get('useRAG') !== 'false' // default true
+    const activeRAGId = formData.get('activeRAGId') as string
+    const activeRAGName = formData.get('activeRAGName') as string
     const useLoRA = formData.get('useLoRA') === 'true' // default false
     const settingsString = formData.get('settings') as string
 
@@ -92,7 +95,9 @@ export async function POST(request: NextRequest) {
     
     // Read LoRA configuration from app state (hardcoded for now, will be dynamic)
     const loraConfig = {
-      url: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
+      // url: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
+    //   url: "https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors",
+      url: "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
       triggerPhrase: "", // Will be read from app state
       scale: 1.0
     }
@@ -105,14 +110,12 @@ export async function POST(request: NextRequest) {
     internalFormData.append("prompt", finalPrompt)
     internalFormData.append("useRAG", useRAG.toString())
     
-    // Add RAG information (will be dynamic when app state is accessible)
-    if (useRAG) {
-      // TODO: Read from actual app state
-      // const activeRAG = getActiveRAG()
-      // if (activeRAG) {
-      //   internalFormData.append("activeRAGId", activeRAG.id)
-      //   internalFormData.append("activeRAGName", activeRAG.name)
-      // }
+    // Add RAG information if provided
+    if (useRAG && activeRAGId) {
+      internalFormData.append("activeRAGId", activeRAGId)
+      if (activeRAGName) {
+        internalFormData.append("activeRAGName", activeRAGName)
+      }
     }
     
     // Parse and prepare settings

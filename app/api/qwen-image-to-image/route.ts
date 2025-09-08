@@ -4,24 +4,24 @@ import { ContentModerationService } from "@/lib/content-moderation"
 
 // Dynamic import for Vercel compatibility
 async function getRAGSystem() {
-  if (process.env.VERCEL) {
+  // In local development, try to use the full RAG system first
+  if (!process.env.VERCEL) {
+    try {
+      const { enhancePromptWithBranding } = await import("@/lib/rag-system")
+      console.log('[RAG] Using advanced RAG system (Local)')
+      return enhancePromptWithBranding
+    } catch (error) {
+      console.warn("Advanced RAG not available:", error)
+    }
+  } else {
     // In Vercel environment, use simple hardcoded RAG
     try {
       const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+      console.log('[RAG] Using simple RAG system (Vercel)')
       return enhanceWithEGPBranding
     } catch (error) {
       console.warn("Simple RAG not available:", error)
       return null
-    }
-  } else {
-    // In local development, try to use the full RAG system
-    try {
-      const { enhancePromptWithBranding } = await import("@/lib/rag-system")
-      return enhancePromptWithBranding
-    } catch (error) {
-      console.warn("Full RAG not available, falling back to simple RAG:", error)
-      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-      return enhanceWithEGPBranding
     }
   }
 }
@@ -31,8 +31,10 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const image = formData.get("image") as File
     const prompt = formData.get("prompt") as string
-    const useRAG = formData.get("useRAG") === "true"
     const settingsString = formData.get("settings") as string
+    const useRAG = formData.get("useRAG") === "true"
+    const activeRAGId = formData.get("activeRAGId") as string
+    const activeRAGName = formData.get("activeRAGName") as string
     const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
 
     console.log("[v0] Qwen Image-to-Image endpoint called")
@@ -86,12 +88,20 @@ export async function POST(request: NextRequest) {
     let finalPrompt = prompt
     let ragMetadata = null
 
-    if (useRAG) {
-      try {
-        console.log("[v0] Enhancing prompt with RAG...")
-        const enhancePromptWithBranding = await getRAGSystem()
-        if (enhancePromptWithBranding) {
-          const enhancement = await enhancePromptWithBranding(prompt)
+    if (useRAG && activeRAGId && prompt) {
+      console.log(`[RAG] Starting enhancement with ${activeRAGName} (${activeRAGId})`)
+      const ragSystem = await getRAGSystem()
+      
+      if (ragSystem) {
+        try {
+          console.log("[v0] Enhancing prompt with RAG...")
+          const enhancement = await ragSystem(prompt, {
+            projectId: activeRAGId,
+            projectName: activeRAGName
+          })
+          
+          console.log(`[RAG] Enhancement result:`, enhancement)
+          
           if (enhancement && typeof enhancement === 'object') {
             finalPrompt = enhancement.enhancedPrompt || enhancement.prompt || prompt
             ragMetadata = {
@@ -113,16 +123,20 @@ export async function POST(request: NextRequest) {
           console.log("[v0] RAG enhanced prompt:", finalPrompt)
           console.log("[v0] RAG suggested colors:", ragMetadata?.suggestedColors)
           console.log("[v0] RAG negative prompt:", ragMetadata?.negativePrompt)
-        } else {
-          console.warn("[v0] RAG system not available")
+        } catch (error) {
+          console.error('[RAG] Enhancement failed:', error)
           finalPrompt = prompt
         }
-      } catch (error) {
-        console.warn("[v0] RAG enhancement failed, using original prompt:", error)
+      } else {
+        console.warn("[v0] RAG system not available")
         finalPrompt = prompt
-        ragMetadata = { error: "RAG enhancement failed" }
       }
     } else {
+      console.log('[RAG] Skipping enhancement:', { 
+        useRAG, 
+        hasActiveRAGId: !!activeRAGId, 
+        hasPrompt: !!prompt 
+      })
       finalPrompt = prompt
     }
 

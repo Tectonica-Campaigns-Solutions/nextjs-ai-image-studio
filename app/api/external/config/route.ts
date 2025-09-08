@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
       lora: {
         available: true,
         // defaultUrl: "https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors",
-        defaultUrl: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
+        // defaultUrl: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
+        defaultUrl: "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
         defaultScale: 1.0,
         description: "LoRA models allow custom style training and application"
       },
@@ -49,6 +50,34 @@ export async function GET(request: NextRequest) {
           num_inference_steps: { min: 1, max: 100, default: 30 },
           guidance_scale: { min: 1, max: 20, default: 2.5, step: 0.1 },
           num_images: { min: 1, max: 4, default: 1 },
+          seed: { type: "number", optional: true, description: "Random if not provided" }
+        }
+      },
+      fluxProTextToImage: {
+        endpoint: "/api/external/flux-pro-text-to-image",
+        model: "flux-pro/kontext/max",
+        description: "Professional-grade text-to-image generation with superior quality",
+        supportedFormats: ["jpg", "png", "webp"],
+        maxImages: 4,
+        imageSizes: [
+          "square_hd",
+          "square", 
+          "portrait_4_3",
+          "portrait_16_9",
+          "landscape_4_3",
+          "landscape_16_9"
+        ],
+        lora: {
+          supported: true,
+          customUrl: true,
+          triggerPhrase: true,
+          scaleRange: { min: 0.1, max: 2.0, default: 1.0, step: 0.1 }
+        },
+        settings: {
+          num_inference_steps: { min: 1, max: 50, default: 30 },
+          guidance_scale: { min: 1, max: 20, default: 3.5, step: 0.1 },
+          num_images: { min: 1, max: 4, default: 1 },
+          safety_tolerance: { min: 1, max: 6, default: 2, description: "Content safety level" },
           seed: { type: "number", optional: true, description: "Random if not provided" }
         }
       },

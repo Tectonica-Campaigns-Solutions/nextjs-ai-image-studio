@@ -136,7 +136,92 @@ Generate images from text descriptions using the Qwen model.
 }
 ```
 
-### 3. Image-to-Image Transformation
+### 3. Flux Pro Text-to-Image Generation
+
+**POST /api/external/flux-pro-text-to-image**
+
+Generate high-quality images from text descriptions using the professional Flux Pro model. This endpoint provides superior image quality and supports advanced LoRA customization.
+
+#### Request Body (JSON)
+```json
+{
+  "prompt": "A professional corporate headshot of a diverse team leader",
+  "useRAG": true,
+  "useLoRA": true,
+  "loraUrl": "https://v3.fal.media/files/your-custom-lora.safetensors",
+  "loraTriggerPhrase": "corporate style",
+  "loraScale": 1.2,
+  "settings": {
+    "image_size": "landscape_4_3",
+    "num_inference_steps": 30,
+    "guidance_scale": 3.5,
+    "num_images": 1,
+    "safety_tolerance": 2,
+    "output_format": "jpg",
+    "seed": 12345
+  }
+}
+```
+
+#### Parameters
+- **prompt** (required): Text description for image generation
+- **useRAG** (optional, default: true): Whether to enhance prompt with branding guidelines
+- **useLoRA** (optional, default: false): Whether to apply custom LoRA styling
+- **loraUrl** (optional): Custom LoRA model URL (uses default if not provided)
+- **loraTriggerPhrase** (optional): Specific phrase to activate LoRA styling
+- **loraScale** (optional, default: 1.0): LoRA influence strength (0.1-2.0)
+- **settings** (optional): Advanced generation settings
+
+#### Flux Pro Specific Settings
+- **image_size**: Image dimensions (landscape_4_3, square_hd, portrait_4_3, etc.)
+- **num_inference_steps**: Generation quality steps (1-50, default: 30)
+- **guidance_scale**: Prompt adherence strength (1-20, default: 3.5)
+- **num_images**: Number of images to generate (1-4, default: 1)
+- **safety_tolerance**: Content safety level (1-6, default: 2)
+- **output_format**: Image format (webp, jpg, png, default: jpg)
+- **seed**: Random seed for reproducible results
+
+#### Response
+```json
+{
+  "success": true,
+  "image": "https://v3.fal.media/files/rabbit/...",
+  "images": [
+    {
+      "url": "https://v3.fal.media/files/rabbit/...",
+      "width": 1024,
+      "height": 768,
+      "content_type": "image/jpg"
+    }
+  ],
+  "prompt": {
+    "original": "A professional corporate headshot",
+    "final": "A professional corporate headshot, corporate style",
+    "enhanced": true,
+    "lora_applied": true,
+    "lora_config": {
+      "url": "https://v3.fal.media/files/your-custom-lora.safetensors",
+      "trigger_phrase": "corporate style",
+      "scale": 1.2
+    }
+  },
+  "settings": {
+    "image_size": "landscape_4_3",
+    "num_inference_steps": 30,
+    "guidance_scale": 3.5,
+    "loras": [
+      {
+        "path": "https://v3.fal.media/files/your-custom-lora.safetensors",
+        "scale": 1.2
+      }
+    ]
+  },
+  "model": "flux-pro/kontext/max",
+  "timestamp": "2025-09-03T10:30:00.000Z"
+}
+```
+
+### 4. Image-to-Image Transformation
 
 **POST /api/external/image-to-image**
 
@@ -209,7 +294,7 @@ curl -X POST "https://your-domain.com/api/external/image-to-image" \
 }
 ```
 
-### 4. Image Editing
+### 5. Image Editing
 
 **POST /api/external/edit-image**
 

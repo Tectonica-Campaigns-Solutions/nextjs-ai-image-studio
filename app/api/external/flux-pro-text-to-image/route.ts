@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
-import { url } from 'inspector'
 
 /**
- * POST /api/external/text-to-image
+ * POST /api/external/flux-pro-text-to-image
  * 
- * External API endpoint for text-to-image generation using Qwen model.
- * This endpoint replicates the functionality of the main app's text-to-image
- * feature but without requiring authentication.
+ * External API endpoint for text-to-image generation using Flux Pro model.
+ * This endpoint provides professional-grade image generation with advanced settings
+ * and LoRA support without requiring authentication.
  * 
  * Body parameters:
  * - prompt (required): Text description for image generation
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
- * - useLoRA (optional): Whether to apply custom LoRA styling (default: true)
+ * - useLoRA (optional): Whether to apply custom LoRA styling (default: false)
+ * - loraUrl (optional): Custom LoRA URL to use
+ * - loraTriggerPhrase (optional): Trigger phrase for the LoRA
+ * - loraScale (optional): LoRA strength scale (0.1-2.0, default: 1.0)
  * - settings (optional): Advanced generation settings
  * 
- * The endpoint automatically reads RAG and LoRA configuration from the main app state.
+ * Advanced settings include:
+ * - image_size: Image dimensions (landscape_4_3, square_hd, portrait_4_3, etc.)
+ * - num_inference_steps: Generation quality steps (1-50, default: 30)
+ * - guidance_scale: Prompt adherence (1-20, default: 3.5)
+ * - num_images: Number of images to generate (1-4, default: 1)
+ * - seed: Random seed for reproducible results
+ * - safety_tolerance: Content safety level (1-6, default: 2)
+ * - output_format: Image format (webp, jpg, png, default: jpg)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +46,10 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       useRAG = true,
-      useLoRA = true,
+      useLoRA = false,
+      loraUrl = "",
+      loraTriggerPhrase = "",
+      loraScale = 1.0,
       settings = {}
     } = body
 
@@ -54,49 +66,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Prepare form data for internal API call
-    const formData = new FormData()
-    
     // Enhance prompt with LoRA trigger phrase if enabled
     let finalPrompt = prompt.trim()
     
-    // Read LoRA configuration from app state (hardcoded for now, will be dynamic)
+    // Use provided LoRA configuration or default
     const loraConfig = {
-      // url: "https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors",
-      // url: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
-      url: "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
-      triggerPhrase: "", // Will be read from app state
-      scale: 1.0
+      url: loraUrl || "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
+      triggerPhrase: loraTriggerPhrase || "", // Can be empty
+      scale: Math.max(0.1, Math.min(2.0, loraScale)) // Clamp between 0.1 and 2.0
     }
     
     if (useLoRA && loraConfig.triggerPhrase) {
       finalPrompt = `${finalPrompt}, ${loraConfig.triggerPhrase}`
     }
-    
-    formData.append("prompt", finalPrompt)
-    formData.append("useRag", useRAG.toString())
-    
-    // Add RAG information (will be dynamic when app state is accessible)
-    if (useRAG) {
-      // TODO: Read from actual app state
-      // const activeRAG = getActiveRAG()
-      // if (activeRAG) {
-      //   formData.append("activeRAGId", activeRAG.id)
-      //   formData.append("activeRAGName", activeRAG.name)
-      // }
-    }
-    
-    // Prepare advanced settings
+
+    // Prepare advanced settings for Flux Pro
     const defaultSettings = {
       image_size: "landscape_4_3",
       num_inference_steps: 30,
-      guidance_scale: 2.5,
+      guidance_scale: 3.5,
       num_images: 1,
-      output_format: "png",
-      negative_prompt: "",
-      acceleration: "none",
-      enable_safety_checker: true,
-      sync_mode: false
+      safety_tolerance: 2,
+      output_format: "jpg",
+      seed: undefined
     }
     
     const mergedSettings = { ...defaultSettings, ...settings }
@@ -117,15 +109,24 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    // Convert string numbers to actual numbers
-    if (mergedSettings.width) mergedSettings.width = parseInt(mergedSettings.width as string)
-    if (mergedSettings.height) mergedSettings.height = parseInt(mergedSettings.height as string)
-    if (mergedSettings.seed) mergedSettings.seed = parseInt(mergedSettings.seed as string)
-    
-    formData.append("settings", JSON.stringify(mergedSettings))
-    formData.append("orgType", "general")
+    // Convert and validate numeric parameters
+    if (mergedSettings.num_inference_steps) {
+      mergedSettings.num_inference_steps = Math.max(1, Math.min(50, parseInt(mergedSettings.num_inference_steps as string)))
+    }
+    if (mergedSettings.guidance_scale) {
+      mergedSettings.guidance_scale = Math.max(1, Math.min(20, parseFloat(mergedSettings.guidance_scale as string)))
+    }
+    if (mergedSettings.num_images) {
+      mergedSettings.num_images = Math.max(1, Math.min(4, parseInt(mergedSettings.num_images as string)))
+    }
+    if (mergedSettings.safety_tolerance) {
+      mergedSettings.safety_tolerance = Math.max(1, Math.min(6, parseInt(mergedSettings.safety_tolerance as string)))
+    }
+    if (mergedSettings.seed) {
+      mergedSettings.seed = parseInt(mergedSettings.seed as string)
+    }
 
-    // For external API, make direct call to Fal.ai to get URLs instead of base64
+    // Direct call to Fal.ai Flux Pro
     try {
       // Configure Fal.ai client
       const falApiKey = process.env.FAL_API_KEY
@@ -137,31 +138,36 @@ export async function POST(request: NextRequest) {
         credentials: falApiKey,
       })
 
-      // Prepare input for Qwen-Image
+      // Prepare input for Flux Pro
       const input: any = {
         prompt: finalPrompt,
-        image_size: mergedSettings.image_size || "landscape_4_3",
-        num_inference_steps: mergedSettings.num_inference_steps || 30,
-        seed: mergedSettings.seed || undefined,
-        guidance_scale: mergedSettings.guidance_scale || 2.5,
-        sync_mode: mergedSettings.sync_mode || false,
-        num_images: mergedSettings.num_images || 1,
-        enable_safety_checker: mergedSettings.enable_safety_checker !== false,
-        output_format: mergedSettings.output_format || "png",
-        negative_prompt: mergedSettings.negative_prompt || "",
-        acceleration: mergedSettings.acceleration || "none",
+        image_size: mergedSettings.image_size,
+        num_inference_steps: mergedSettings.num_inference_steps,
+        guidance_scale: mergedSettings.guidance_scale,
+        num_images: mergedSettings.num_images,
+        safety_tolerance: mergedSettings.safety_tolerance,
+        output_format: mergedSettings.output_format,
         loras: mergedSettings.loras || []
       }
 
-      // Handle custom image size
-      if (mergedSettings.width && mergedSettings.height) {
-        input.image_size = {
-          width: mergedSettings.width,
-          height: mergedSettings.height
-        }
+      // Add seed if provided
+      if (mergedSettings.seed !== undefined) {
+        input.seed = mergedSettings.seed
       }
 
-      const result = await fal.subscribe("fal-ai/qwen-image", {
+      console.log("[External Flux Pro] Generating with input:", {
+        prompt: finalPrompt,
+        image_size: input.image_size,
+        num_inference_steps: input.num_inference_steps,
+        guidance_scale: input.guidance_scale,
+        num_images: input.num_images,
+        safety_tolerance: input.safety_tolerance,
+        output_format: input.output_format,
+        loras_count: input.loras.length,
+        seed: input.seed
+      })
+
+      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
         input,
         logs: true,
         onQueueUpdate: (update: any) => {
@@ -171,7 +177,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      console.log("[External Text-to-Image] Fal.ai result:", result)
+      console.log("[External Flux Pro] Fal.ai result:", result)
 
       if (result.data && result.data.images && result.data.images.length > 0) {
         const images = result.data.images.map((img: any) => ({
@@ -190,108 +196,122 @@ export async function POST(request: NextRequest) {
             original: prompt,
             final: finalPrompt,
             enhanced: useRAG,
-            lora_applied: useLoRA
+            lora_applied: useLoRA,
+            lora_config: useLoRA ? {
+              url: loraConfig.url,
+              trigger_phrase: loraConfig.triggerPhrase,
+              scale: loraConfig.scale
+            } : null
           },
           settings: mergedSettings,
+          model: "flux-pro/kontext/max",
           timestamp: new Date().toISOString()
         }
 
         return NextResponse.json(externalResponse)
       } else {
-        throw new Error("No images returned from Fal.ai")
+        throw new Error("No images returned from Flux Pro")
       }
     } catch (falError) {
-      console.error("[External Text-to-Image] Direct Fal.ai call failed:", falError)
+      console.error("[External Flux Pro] Direct Fal.ai call failed:", falError)
       
       // Fallback to internal API call
-      console.log("[External Text-to-Image] Falling back to internal API...")
-    }
-
-    // Fallback: Make internal API call
-    const response = await fetch(`${getBaseUrl()}/api/qwen-text-to-image`, {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null)
-      if (response.status === 400 && errorData?.error) {
-        // Use the same moderation error handling as the main app
-        const friendlyMessage = handleModerationError(errorData)
-        return NextResponse.json(
-          {
-            success: false,
-            error: friendlyMessage,
-            moderation: true
-          },
-          { status: 400 }
-        )
-      }
+      console.log("[External Flux Pro] Falling back to internal API...")
       
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Generation failed (${response.status})`,
-          details: errorData?.error || "Server error"
-        },
-        { status: response.status }
-      )
-    }
+      try {
+        const formData = new FormData()
+        formData.append("prompt", finalPrompt)
+        formData.append("useRag", useRAG.toString())
+        
+        // Add RAG information if available
+        if (useRAG) {
+          // TODO: Read from actual app state when available
+          // formData.append("activeRAGId", activeRAG?.id)
+          // formData.append("activeRAGName", activeRAG?.name)
+        }
+        
+        // Add LoRA information
+        if (useLoRA) {
+          formData.append("useLoRA", "true")
+          formData.append("loraUrl", loraConfig.url)
+          formData.append("loraTriggerPhrase", loraConfig.triggerPhrase)
+          formData.append("loraScale", loraConfig.scale.toString())
+        }
+        
+        formData.append("settings", JSON.stringify(mergedSettings))
+        formData.append("orgType", "general")
 
-    const result = await response.json()
-    
-    // Extract the URL from the result - handle both single image and multiple images formats
-    let imageUrl = null;
-    let images = [];
-    
-    if (result.images && result.images.length > 0) {
-      // Multiple images format - use the first image URL
-      imageUrl = result.images[0].url;
-      images = result.images;
-    } else if (result.image) {
-      // Single image format - extract URL from base64 or use direct URL
-      if (result.image.startsWith('data:')) {
-        // If it's base64, we need to get the original URL from images array
+        const response = await fetch(`${getBaseUrl()}/api/flux-pro-text-to-image`, {
+          method: "POST",
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null)
+          throw new Error(errorData?.error || `HTTP ${response.status}`)
+        }
+
+        const result = await response.json()
+        
+        // Extract the URL from the result
+        let imageUrl = null;
+        let images = [];
+        
         if (result.images && result.images.length > 0) {
           imageUrl = result.images[0].url;
           images = result.images;
-        } else {
-          // Fallback - keep the base64 data
-          imageUrl = result.image;
-          images = [{ url: result.image }];
+        } else if (result.image) {
+          if (result.image.startsWith('data:')) {
+            if (result.images && result.images.length > 0) {
+              imageUrl = result.images[0].url;
+              images = result.images;
+            } else {
+              imageUrl = result.image;
+              images = [{ url: result.image }];
+            }
+          } else {
+            imageUrl = result.image;
+            images = [{ url: result.image }];
+          }
         }
-      } else {
-        // Direct URL
-        imageUrl = result.image;
-        images = [{ url: result.image }];
+        
+        // Format response for external API
+        const externalResponse = {
+          success: true,
+          image: imageUrl,
+          images: images,
+          prompt: {
+            original: prompt,
+            final: result.finalPrompt || finalPrompt,
+            enhanced: useRAG,
+            lora_applied: useLoRA,
+            lora_config: useLoRA ? {
+              url: loraConfig.url,
+              trigger_phrase: loraConfig.triggerPhrase,
+              scale: loraConfig.scale
+            } : null
+          },
+          settings: mergedSettings,
+          model: "flux-pro/kontext/max",
+          timestamp: new Date().toISOString()
+        }
+
+        return NextResponse.json(externalResponse)
+      } catch (fallbackError) {
+        console.error("[External Flux Pro] Fallback also failed:", fallbackError)
+        throw fallbackError
       }
     }
-    
-    // Format response for external API
-    const externalResponse = {
-      success: true,
-      image: imageUrl,
-      images: images,
-      prompt: {
-        original: prompt,
-        final: result.finalPrompt || result.prompt || finalPrompt,
-        enhanced: useRAG,
-        lora_applied: useLoRA
-      },
-      settings: mergedSettings,
-      timestamp: new Date().toISOString()
-    }
-
-    return NextResponse.json(externalResponse)
 
   } catch (error) {
-    console.error('[External Text-to-Image API] Error:', error)
+    console.error('[External Flux Pro API] Error:', error)
     
     return NextResponse.json(
       {
         success: false,
         error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
+        model: "flux-pro/kontext/max"
       },
       { status: 500 }
     )
@@ -299,7 +319,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * OPTIONS /api/external/text-to-image
+ * OPTIONS /api/external/flux-pro-text-to-image
  * 
  * CORS preflight support
  */

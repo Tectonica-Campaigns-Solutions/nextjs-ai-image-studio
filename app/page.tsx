@@ -13,6 +13,7 @@ import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, Fi
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
@@ -46,10 +47,40 @@ export default function ImageEditor() {
   
   // LoRA States for Qwen Text-to-Image
   const [useCustomLoRA, setUseCustomLoRA] = useState(false)
-  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
+  // const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
+  // const [loraUrl, setLoraUrl] = useState("https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors")
+  
+  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors")
+
   const [triggerPhrase, setTriggerPhrase] = useState("")
   const [loraScale, setLoraScale] = useState(1.0)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
+
+  // Flux Pro Text-to-Image States
+  const [fluxProPrompt, setFluxProPrompt] = useState("")
+  const [fluxProSettings, setFluxProSettings] = useState({
+    image_size: "landscape_4_3",
+    num_inference_steps: 28,
+    guidance_scale: 3.5,
+    num_images: 1,
+    output_format: "png",
+    enable_safety_checker: true,
+    seed: "",
+    width: "",
+    height: ""
+  })
+  const [fluxProImageUrl, setFluxProImageUrl] = useState<string>("")
+  const [isFluxProGenerating, setIsFluxProGenerating] = useState(false)
+  const [fluxProError, setFluxProError] = useState<string>("")
+  const [useRagFluxPro, setUseRagFluxPro] = useState(true)
+  const [fluxProGeneratedPrompt, setFluxProGeneratedPrompt] = useState<string>("")
+  const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
+
+  // Flux Pro LoRA States
+  const [useFluxProLoRA, setUseFluxProLoRA] = useState(false)
+  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("")
+  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("")
+  const [fluxProLoraScale, setFluxProLoraScale] = useState(1.0)
 
   // Edit Image States
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -315,6 +346,89 @@ export default function ImageEditor() {
       setQwenError(err instanceof Error ? err.message : "Failed to generate image")
     } finally {
       setIsQwenGenerating(false)
+    }
+  }
+
+  const handleFluxProSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!fluxProPrompt.trim()) {
+      setFluxProError("Please enter a prompt")
+      return
+    }
+
+    setIsFluxProGenerating(true)
+    setFluxProError("")
+
+    try {
+      const formData = new FormData()
+      
+      formData.append("prompt", fluxProPrompt)
+      formData.append("useRag", useRagFluxPro.toString())
+      
+      // Add active RAG information
+      const activeRAG = getActiveRAG()
+      if (useRagFluxPro && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
+      
+      // Prepare settings object, converting types as needed
+      const settings: any = { ...fluxProSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert string numbers to actual numbers
+      if (settings.width) settings.width = parseInt(settings.width as string)
+      if (settings.height) settings.height = parseInt(settings.height as string)
+      if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      formData.append("settings", JSON.stringify(settings))
+      formData.append("orgType", "general")
+
+      const response = await fetch("/api/flux-pro-text-to-image", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          // Use user-friendly error handling for moderation
+          const friendlyMessage = handleModerationError(errorData)
+          throw new Error(friendlyMessage)
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      // Capture generated prompt if available
+      if (result.finalPrompt) {
+        setFluxProGeneratedPrompt(result.finalPrompt)
+      } else if (result.prompt) {
+        setFluxProGeneratedPrompt(result.prompt)
+      } else {
+        setFluxProGeneratedPrompt(fluxProPrompt) // Fallback to original prompt
+      }
+      
+      if (result.image) {
+        setFluxProImageUrl(result.image)
+      } else if (result.images && result.images.length > 0) {
+        // Handle multiple images - for now, show the first one
+        setFluxProImageUrl(result.images[0].url)
+      } else {
+        throw new Error("No image received from server")
+      }
+    } catch (err) {
+      setFluxProError(err instanceof Error ? err.message : "Failed to generate image")
+    } finally {
+      setIsFluxProGenerating(false)
     }
   }
 
@@ -668,8 +782,9 @@ export default function ImageEditor() {
         </div>
 
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
+          <TabsTrigger value="flux-pro-text-to-image">Flux Pro</TabsTrigger>
           <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="upload-branding">Upload Branding</TabsTrigger>
@@ -701,30 +816,46 @@ export default function ImageEditor() {
                       />
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    {/* RAG Toggle */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useRag ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div className="flex-1">
+                          <Label htmlFor="useRag" className="font-medium cursor-pointer">
+                            Use Branding Guidelines (RAG)
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {useRag ? 'Active - Prompts will be enhanced with EGP brand guidelines' : 'Inactive - Using original prompts only'}
+                          </p>
+                        </div>
+                      </div>
                       <Checkbox
                         id="useRag"
                         checked={useRag}
                         onCheckedChange={(checked) => setUseRag(checked as boolean)}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                       />
-                      <Label htmlFor="useRag" className="text-sm font-medium">
-                        Use Branding Guidelines (RAG)
-                      </Label>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      When enabled, your prompt will be automatically enhanced with EGP brand colors, styles, and layout guidelines.
-                    </p>
 
                     <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${useCustomLoRA ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                          <div>
+                            <Label htmlFor="useCustomLoRA" className="font-medium cursor-pointer">
+                              Use Custom LoRA Style
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {useCustomLoRA ? 'Active - Custom LoRA style will be applied' : 'Inactive - Using base model only'}
+                            </p>
+                          </div>
+                        </div>
                         <Checkbox
                           id="useCustomLoRA"
                           checked={useCustomLoRA}
                           onCheckedChange={(checked) => setUseCustomLoRA(checked as boolean)}
+                          className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
                         />
-                        <Label htmlFor="useCustomLoRA" className="text-sm font-medium">
-                          Use Custom LoRA Style
-                        </Label>
                       </div>
                       
                       {useCustomLoRA && (
@@ -992,6 +1123,314 @@ export default function ImageEditor() {
             </div>
           </TabsContent>
 
+          {/* Flux Pro Text-to-Image Tab */}
+          <TabsContent value="flux-pro-text-to-image" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Flux Pro Generation Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Flux Pro Text-to-Image
+                  </CardTitle>
+                  <CardDescription>
+                    Generate high-quality images using Flux Pro Kontext Max model
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFluxProSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-pro-prompt">Image Description</Label>
+                      <Textarea
+                        id="flux-pro-prompt"
+                        placeholder="Describe the image you want to generate..."
+                        value={fluxProPrompt}
+                        onChange={(e) => setFluxProPrompt(e.target.value)}
+                        required
+                        rows={3}
+                        disabled={isFluxProGenerating}
+                      />
+                    </div>
+
+                    {/* RAG Toggle */}
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useRagFluxPro ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div>
+                          <Label htmlFor="use-rag-flux-pro" className="text-sm font-medium cursor-pointer">
+                            Enhance with Branding Guidelines (RAG)
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {useRagFluxPro ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        id="use-rag-flux-pro"
+                        checked={useRagFluxPro}
+                        onCheckedChange={setUseRagFluxPro}
+                        disabled={isFluxProGenerating}
+                      />
+                    </div>
+
+                    {/* RAG Selector */}
+                    <RAGSelector />
+
+                    {/* LoRA Toggle */}
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useFluxProLoRA ? 'bg-orange-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div>
+                          <Label htmlFor="use-flux-pro-lora" className="text-sm font-medium cursor-pointer">
+                            Apply Custom LoRA Style
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {useFluxProLoRA ? 'Active - Custom style training applied' : 'Inactive - Using base model only'}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        id="use-flux-pro-lora"
+                        checked={useFluxProLoRA}
+                        onCheckedChange={setUseFluxProLoRA}
+                        disabled={isFluxProGenerating}
+                      />
+                    </div>
+
+                    {/* LoRA Configuration */}
+                    {useFluxProLoRA && (
+                      <Card className="p-4 space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-pro-lora-url">LoRA Model URL</Label>
+                          <Input
+                            id="flux-pro-lora-url"
+                            type="url"
+                            placeholder="https://v3.fal.media/files/your-lora.safetensors"
+                            value={fluxProLoraUrl}
+                            onChange={(e) => setFluxProLoraUrl(e.target.value)}
+                            disabled={isFluxProGenerating}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            URL to your trained LoRA model (must be publicly accessible)
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-pro-trigger-phrase">Trigger Phrase (Optional)</Label>
+                          <Input
+                            id="flux-pro-trigger-phrase"
+                            type="text"
+                            placeholder="e.g., in the style of xyz, mystyle, etc."
+                            value={fluxProTriggerPhrase}
+                            onChange={(e) => setFluxProTriggerPhrase(e.target.value)}
+                            disabled={isFluxProGenerating}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Special words that activate your LoRA style (leave empty if not needed)
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-pro-lora-scale">LoRA Scale: {fluxProLoraScale}</Label>
+                          <Slider
+                            id="flux-pro-lora-scale"
+                            min={0.1}
+                            max={2.0}
+                            step={0.1}
+                            value={[fluxProLoraScale]}
+                            onValueChange={(value) => setFluxProLoraScale(value[0])}
+                            disabled={isFluxProGenerating}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Subtle (0.1)</span>
+                            <span>Balanced (1.0)</span>
+                            <span>Strong (2.0)</span>
+                          </div>
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="show-flux-pro-advanced"
+                        checked={showFluxProAdvanced}
+                        onCheckedChange={setShowFluxProAdvanced}
+                      />
+                      <Label htmlFor="show-flux-pro-advanced" className="text-sm">Show Advanced Settings</Label>
+                    </div>
+
+                    {showFluxProAdvanced && (
+                      <Card className="p-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-pro-image-size">Image Size</Label>
+                            <Select
+                              value={fluxProSettings.image_size}
+                              onValueChange={(value) => setFluxProSettings(prev => ({ ...prev, image_size: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="square_hd">Square HD (1024x1024)</SelectItem>
+                                <SelectItem value="square">Square (512x512)</SelectItem>
+                                <SelectItem value="portrait_4_3">Portrait 4:3 (768x1024)</SelectItem>
+                                <SelectItem value="portrait_16_9">Portrait 16:9 (576x1024)</SelectItem>
+                                <SelectItem value="landscape_4_3">Landscape 4:3 (1024x768)</SelectItem>
+                                <SelectItem value="landscape_16_9">Landscape 16:9 (1024x576)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-pro-inference-steps">Inference Steps</Label>
+                            <Input
+                              id="flux-pro-inference-steps"
+                              type="number"
+                              min="1"
+                              max="50"
+                              value={fluxProSettings.num_inference_steps}
+                              onChange={(e) => setFluxProSettings(prev => ({ ...prev, num_inference_steps: parseInt(e.target.value) || 28 }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-pro-guidance-scale">Guidance Scale</Label>
+                            <Input
+                              id="flux-pro-guidance-scale"
+                              type="number"
+                              min="1"
+                              max="20"
+                              step="0.1"
+                              value={fluxProSettings.guidance_scale}
+                              onChange={(e) => setFluxProSettings(prev => ({ ...prev, guidance_scale: parseFloat(e.target.value) || 3.5 }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-pro-seed">Seed (Optional)</Label>
+                            <Input
+                              id="flux-pro-seed"
+                              type="number"
+                              placeholder="Random seed"
+                              value={fluxProSettings.seed}
+                              onChange={(e) => setFluxProSettings(prev => ({ ...prev, seed: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Custom Size */}
+                        {fluxProSettings.image_size === "custom" && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="flux-pro-width">Width</Label>
+                              <Input
+                                id="flux-pro-width"
+                                type="number"
+                                min="256"
+                                max="2048"
+                                value={fluxProSettings.width}
+                                onChange={(e) => setFluxProSettings(prev => ({ ...prev, width: e.target.value }))}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="flux-pro-height">Height</Label>
+                              <Input
+                                id="flux-pro-height"
+                                type="number"
+                                min="256"
+                                max="2048"
+                                value={fluxProSettings.height}
+                                onChange={(e) => setFluxProSettings(prev => ({ ...prev, height: e.target.value }))}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    )}
+
+                    <Button type="submit" className="w-full" disabled={isFluxProGenerating}>
+                      {isFluxProGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generate with Flux Pro
+                        </>
+                      )}
+                    </Button>
+                  </form>
+
+                  {fluxProError && (
+                    <Alert className="mt-4">
+                      <AlertDescription className="text-red-600">
+                        {fluxProError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Generated Prompt Display */}
+                  <GeneratedPromptDisplay prompt={fluxProGeneratedPrompt} title="Generated Prompt (Flux Pro)" />
+                </CardContent>
+              </Card>
+
+              {/* Flux Pro Result Display */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Generated Image
+                  </CardTitle>
+                  <CardDescription>
+                    Your Flux Pro generated image will appear here
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {fluxProImageUrl ? (
+                    <div className="space-y-4">
+                      <div className="aspect-square overflow-hidden rounded-lg border">
+                        <img
+                          src={fluxProImageUrl}
+                          alt="Flux Pro Generated"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = fluxProImageUrl
+                            link.download = 'flux-pro-generated-image.png'
+                            document.body.appendChild(link)
+                            link.click()
+                            document.body.removeChild(link)
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <Sparkles className="h-12 w-12 mx-auto mb-2" />
+                        <p>No image generated yet</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           {/* Image-to-Image Tab */}
           <TabsContent value="qwen-image-to-image" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
@@ -1053,24 +1492,46 @@ export default function ImageEditor() {
                     </div>
 
                     {/* RAG Toggle */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useRagImg2img ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div>
+                          <Label htmlFor="use-rag-img2img" className="font-medium cursor-pointer">
+                            Enhance with Branding Guidelines (RAG)
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {useRagImg2img ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
+                          </p>
+                        </div>
+                      </div>
                       <Switch
                         id="use-rag-img2img"
                         checked={useRagImg2img}
                         onCheckedChange={setUseRagImg2img}
+                        className="data-[state=checked]:bg-green-600"
                       />
-                      <Label htmlFor="use-rag-img2img">Enhance with Branding Guidelines (RAG)</Label>
                     </div>
 
                     {/* LoRA Settings */}
                     <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${useImg2imgLoRA ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                          <div>
+                            <Label htmlFor="use-img2img-lora" className="font-medium cursor-pointer">
+                              Apply Custom LoRA Style
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {useImg2imgLoRA ? 'Active - Custom LoRA style will be applied' : 'Inactive - Using base model only'}
+                            </p>
+                          </div>
+                        </div>
                         <Switch
                           id="use-img2img-lora"
                           checked={useImg2imgLoRA}
                           onCheckedChange={setUseImg2imgLoRA}
+                          className="data-[state=checked]:bg-purple-600"
                         />
-                        <Label htmlFor="use-img2img-lora">Apply Custom LoRA Style</Label>
                       </div>
                       
                       {useImg2imgLoRA && (
@@ -1376,15 +1837,25 @@ export default function ImageEditor() {
                       </div>
                     )}
 
-                    <div className="flex items-center space-x-2">
+                    {/* RAG Toggle */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useRagEdit ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div>
+                          <Label htmlFor="use-rag-edit" className="font-medium cursor-pointer">
+                            Use brand guidelines (RAG)
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {useRagEdit ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
+                          </p>
+                        </div>
+                      </div>
                       <Checkbox 
                         id="use-rag-edit" 
                         checked={useRagEdit}
                         onCheckedChange={(checked) => setUseRagEdit(checked as boolean)}
+                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                       />
-                      <Label htmlFor="use-rag-edit" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Use brand guidelines (RAG)
-                      </Label>
                     </div>
 
                     <Button type="submit" className="w-full" disabled={!selectedImage || !prompt.trim() || isLoading}>

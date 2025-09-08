@@ -1,0 +1,252 @@
+import { type NextRequest, NextResponse } from "next/server"
+import { fal } from "@fal-ai/client"
+import { ContentModerationService } from "@/lib/content-moderation"
+
+// Dynamic import for platform compatibility
+async function getRAGSystem() {
+  // Check if we should use full RAG (Railway, local) or simple RAG (Vercel)
+  const useFullRAG = !process.env.VERCEL
+  
+  if (useFullRAG) {
+    // In Railway/local environment, use optimized RAG system
+    try {
+      const { enhancePromptWithBranding } = await import("@/lib/rag-system-optimized")
+      console.log('[RAG] Using optimized RAG system')
+      return enhancePromptWithBranding
+    } catch (error) {
+      console.warn("Optimized RAG not available, falling back to simple RAG:", error)
+      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+      return enhanceWithEGPBranding
+    }
+  } else {
+    // In Vercel environment, use simple hardcoded RAG
+    try {
+      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+      console.log('[RAG] Using simple RAG system (Vercel)')
+      return enhanceWithEGPBranding
+    } catch (error) {
+      console.warn("Simple RAG not available:", error)
+      return null
+    }
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+    const prompt = formData.get("prompt") as string
+    const settingsJson = formData.get("settings") as string
+    const useRag = formData.get("useRag") === "true"
+    const activeRAGId = formData.get("activeRAGId") as string
+    const activeRAGName = formData.get("activeRAGName") as string
+    const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
+
+    if (!prompt) {
+      return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
+    }
+
+    console.log("[FLUX-PRO] Text-to-Image endpoint called")
+    console.log("[FLUX-PRO] Original prompt:", prompt)
+    console.log("[FLUX-PRO] Use RAG:", useRag)
+    console.log("[FLUX-PRO] Settings:", settingsJson)
+
+    // Content moderation check
+    try {
+      console.log("[MODERATION] Checking content for Flux Pro prompt:", prompt.substring(0, 50) + "...")
+      const moderationService = new ContentModerationService(orgType)
+      const moderationResult = await moderationService.moderateContent({ prompt })
+      
+      if (!moderationResult.safe) {
+        console.log("[MODERATION] Content blocked:", moderationResult.reason)
+        return NextResponse.json({ 
+          error: moderationResult.reason,
+          category: moderationResult.category,
+          blocked: true
+        }, { status: 400 })
+      }
+      console.log("[MODERATION] Content approved")
+    } catch (moderationError) {
+      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+    }
+
+    // Check if Fal.ai API key is available
+    const falApiKey = process.env.FAL_API_KEY
+    if (!falApiKey) {
+      return NextResponse.json({ error: "FAL_API_KEY not configured" }, { status: 500 })
+    }
+
+    // Parse settings
+    let settings: any = {}
+    if (settingsJson) {
+      try {
+        settings = JSON.parse(settingsJson)
+        console.log("[FLUX-PRO] Parsed settings:", settings)
+      } catch (error) {
+        console.warn("[FLUX-PRO] Failed to parse settings:", error)
+      }
+    }
+
+    // Enhance prompt with RAG if requested
+    let finalPrompt = prompt
+    let ragMetadata = null
+
+    if (useRag && activeRAGId && prompt) {
+      console.log(`[RAG] Starting enhancement with ${activeRAGName} (${activeRAGId})`)
+      const ragSystem = await getRAGSystem()
+      
+      if (ragSystem) {
+        try {
+          console.log("[FLUX-PRO] Enhancing prompt with RAG...")
+          const enhancement = await ragSystem(prompt, {
+            projectId: activeRAGId,
+            projectName: activeRAGName
+          })
+          
+          console.log(`[RAG] Enhancement result:`, enhancement)
+          
+          if (enhancement && typeof enhancement === 'object') {
+            finalPrompt = enhancement.enhancedPrompt || enhancement.prompt || prompt
+            ragMetadata = {
+              originalPrompt: prompt,
+              enhancedPrompt: finalPrompt,
+              suggestedColors: enhancement.suggestedColors || [],
+              suggestedFormat: enhancement.suggestedFormat || "",
+              negativePrompt: enhancement.negativePrompt || "",
+              brandingElements: enhancement.brandingElements?.length || 0
+            }
+          } else if (typeof enhancement === 'string') {
+            finalPrompt = enhancement
+            ragMetadata = {
+              originalPrompt: prompt,
+              enhancedPrompt: finalPrompt,
+              brandingElements: 0
+            }
+          }
+          console.log("[FLUX-PRO] RAG enhanced prompt:", finalPrompt)
+          console.log("[FLUX-PRO] RAG suggested colors:", ragMetadata?.suggestedColors)
+          console.log("[FLUX-PRO] RAG negative prompt:", ragMetadata?.negativePrompt)
+        } catch (error) {
+          console.error('[RAG] Enhancement failed:', error)
+          finalPrompt = prompt
+        }
+      } else {
+        console.warn("[FLUX-PRO] RAG system not available")
+        finalPrompt = prompt
+      }
+    } else {
+      console.log('[RAG] Skipping enhancement:', { 
+        useRag, 
+        hasActiveRAGId: !!activeRAGId, 
+        hasPrompt: !!prompt 
+      })
+      finalPrompt = prompt
+    }
+
+    // Configure Fal.ai client
+    fal.config({
+      credentials: falApiKey,
+    })
+
+    // Prepare default settings for Flux Pro
+    const defaultSettings = {
+      image_size: "landscape_4_3",
+      num_inference_steps: 28,
+      guidance_scale: 3.5,
+      num_images: 1,
+      enable_safety_checker: true,
+      output_format: "png",
+      seed: undefined
+    }
+
+    // Merge with user settings
+    const mergedSettings = { ...defaultSettings, ...settings }
+
+    // Prepare input for Flux Pro Kontext Max
+    const input: any = {
+      prompt: finalPrompt,
+      image_size: mergedSettings.image_size,
+      num_inference_steps: mergedSettings.num_inference_steps,
+      guidance_scale: mergedSettings.guidance_scale,
+      num_images: mergedSettings.num_images,
+      enable_safety_checker: mergedSettings.enable_safety_checker,
+      output_format: mergedSettings.output_format
+    }
+
+    // Add seed if provided
+    if (mergedSettings.seed && mergedSettings.seed !== undefined) {
+      input.seed = parseInt(mergedSettings.seed.toString())
+    }
+
+    // Handle custom image size for Flux Pro
+    if (mergedSettings.width && mergedSettings.height) {
+      input.image_size = {
+        width: parseInt(mergedSettings.width.toString()),
+        height: parseInt(mergedSettings.height.toString())
+      }
+    }
+
+    // Add LoRA support for Flux Pro
+    if (mergedSettings.loras && Array.isArray(mergedSettings.loras) && mergedSettings.loras.length > 0) {
+      input.loras = mergedSettings.loras.map((lora: any) => ({
+        path: lora.path,
+        scale: parseFloat(lora.scale) || 1.0
+      }))
+      console.log("[FLUX-PRO] LoRAs configured:", input.loras)
+    }
+
+    console.log("[FLUX-PRO] Calling Flux Pro Kontext Max with input:", JSON.stringify(input, null, 2))
+
+    try {
+      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
+        input,
+        logs: true,
+        onQueueUpdate: (update: any) => {
+          if (update.status === "IN_PROGRESS") {
+            update.logs.map((log: any) => log.message).forEach(console.log)
+          }
+        },
+      })
+
+      console.log("[FLUX-PRO] Generation completed:", result)
+
+      if (result.data && result.data.images && result.data.images.length > 0) {
+        const images = result.data.images.map((img: any) => ({
+          url: img.url,
+          width: img.width || 1024,
+          height: img.height || 1024,
+          content_type: img.content_type || "image/png"
+        }))
+
+        return NextResponse.json({
+          success: true,
+          images: images,
+          image: images[0].url, // For backward compatibility
+          finalPrompt: finalPrompt,
+          originalPrompt: prompt,
+          ragMetadata: ragMetadata,
+          settings: mergedSettings,
+          model: "flux-pro-kontext-max"
+        })
+      } else {
+        console.error("[FLUX-PRO] No images returned from API")
+        return NextResponse.json({ 
+          error: "No images generated",
+          details: "Flux Pro API returned no images"
+        }, { status: 500 })
+      }
+    } catch (error) {
+      console.error("[FLUX-PRO] Generation failed:", error)
+      return NextResponse.json({ 
+        error: "Image generation failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+        model: "flux-pro-kontext-max"
+      }, { status: 500 })
+    }
+  } catch (error) {
+    console.error("[FLUX-PRO] API error:", error)
+    return NextResponse.json({ 
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 })
+  }
+}
