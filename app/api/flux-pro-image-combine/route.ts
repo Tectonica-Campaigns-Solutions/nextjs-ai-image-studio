@@ -41,25 +41,48 @@ export async function POST(request: NextRequest) {
     const activeRAGName = formData.get("activeRAGName") as string
     const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
 
+    // Extract multiple image files
+    const imageFiles: File[] = []
+    const imageUrls: string[] = []
+    
+    // Get all files with 'image' prefix from form data
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('image') && value instanceof File) {
+        imageFiles.push(value)
+        console.log(`[FLUX-COMBINE] Found image file: ${key}, size: ${value.size}, type: ${value.type}`)
+      } else if (key.startsWith('imageUrl') && typeof value === 'string' && value.trim()) {
+        imageUrls.push(value.trim())
+        console.log(`[FLUX-COMBINE] Found image URL: ${key}, url: ${value}`)
+      }
+    }
+
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
-    console.log("[FLUX-PRO] Text-to-Image endpoint called")
-    console.log("[FLUX-PRO] Original prompt:", prompt)
-    console.log("[FLUX-PRO] Use RAG:", useRag)
-    console.log("[FLUX-PRO] Settings JSON:", settingsJson)
-    
-    // Log all form data for debugging
-    console.log("[FLUX-PRO] All FormData entries:")
-    for (const [key, value] of formData.entries()) {
-      console.log(`  ${key}: ${value}`)
+    if (imageFiles.length === 0 && imageUrls.length === 0) {
+      return NextResponse.json({ 
+        error: "At least one image is required for combination" 
+      }, { status: 400 })
     }
-    console.log("[FLUX-PRO] Settings:", settingsJson)
+
+    if (imageFiles.length + imageUrls.length < 2) {
+      return NextResponse.json({ 
+        error: "At least 2 images are required for combination" 
+      }, { status: 400 })
+    }
+
+    console.log("[FLUX-COMBINE] Image combination endpoint called")
+    console.log("[FLUX-COMBINE] Original prompt:", prompt)
+    console.log("[FLUX-COMBINE] Image files count:", imageFiles.length)
+    console.log("[FLUX-COMBINE] Image URLs count:", imageUrls.length)
+    console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length)
+    console.log("[FLUX-COMBINE] Use RAG:", useRag)
+    console.log("[FLUX-COMBINE] Settings JSON:", settingsJson)
 
     // Content moderation check
     try {
-      console.log("[MODERATION] Checking content for Flux Pro prompt:", prompt.substring(0, 50) + "...")
+      console.log("[MODERATION] Checking content for Flux Combine prompt:", prompt.substring(0, 50) + "...")
       const moderationService = new ContentModerationService(orgType)
       const moderationResult = await moderationService.moderateContent({ prompt })
       
@@ -74,6 +97,7 @@ export async function POST(request: NextRequest) {
       console.log("[MODERATION] Content approved")
     } catch (moderationError) {
       console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+      // Continue with generation if moderation fails to avoid blocking users
     }
 
     // Check if Fal.ai API key is available
@@ -87,9 +111,9 @@ export async function POST(request: NextRequest) {
     if (settingsJson) {
       try {
         settings = JSON.parse(settingsJson)
-        console.log("[FLUX-PRO] Parsed settings:", settings)
+        console.log("[FLUX-COMBINE] Parsed settings:", settings)
       } catch (error) {
-        console.warn("[FLUX-PRO] Failed to parse settings:", error)
+        console.warn("[FLUX-COMBINE] Failed to parse settings:", error)
       }
     }
 
@@ -103,16 +127,16 @@ export async function POST(request: NextRequest) {
       
       if (ragSystem) {
         try {
-          console.log("[FLUX-PRO] Enhancing prompt with RAG...")
+          console.log("[FLUX-COMBINE] Enhancing prompt with RAG...")
           const enhancement = await ragSystem(prompt, {
-            activeRAGId: activeRAGId,
-            activeRAGName: activeRAGName
+            projectId: activeRAGId,
+            projectName: activeRAGName
           })
           
           console.log(`[RAG] Enhancement result:`, enhancement)
           
           if (enhancement && typeof enhancement === 'object') {
-            finalPrompt = enhancement.enhancedPrompt || prompt
+            finalPrompt = enhancement.enhancedPrompt || enhancement.prompt || prompt
             ragMetadata = {
               originalPrompt: prompt,
               enhancedPrompt: finalPrompt,
@@ -129,15 +153,15 @@ export async function POST(request: NextRequest) {
               brandingElements: 0
             }
           }
-          console.log("[FLUX-PRO] RAG enhanced prompt:", finalPrompt)
-          console.log("[FLUX-PRO] RAG suggested colors:", ragMetadata?.suggestedColors)
-          console.log("[FLUX-PRO] RAG negative prompt:", ragMetadata?.negativePrompt)
+          console.log("[FLUX-COMBINE] RAG enhanced prompt:", finalPrompt)
+          console.log("[FLUX-COMBINE] RAG suggested colors:", ragMetadata?.suggestedColors)
+          console.log("[FLUX-COMBINE] RAG negative prompt:", ragMetadata?.negativePrompt)
         } catch (error) {
           console.error('[RAG] Enhancement failed:', error)
           finalPrompt = prompt
         }
       } else {
-        console.warn("[FLUX-PRO] RAG system not available")
+        console.warn("[FLUX-COMBINE] RAG system not available")
         finalPrompt = prompt
       }
     } else {
@@ -154,85 +178,72 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
 
-    // Prepare default settings for Flux Pro
-    const defaultSettings = {
-      image_size: "landscape_4_3",
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
-      num_images: 1,
-      enable_safety_checker: true,
-      output_format: "png",
-      seed: undefined
-    }
-
-    // Merge with user settings
-    const mergedSettings = { ...defaultSettings, ...settings }
-
-    // Prepare input for Flux Pro Kontext Max
-    const input: any = {
-      prompt: finalPrompt,
-      image_size: mergedSettings.image_size,
-      num_inference_steps: mergedSettings.num_inference_steps,
-      guidance_scale: mergedSettings.guidance_scale,
-      num_images: mergedSettings.num_images,
-      enable_safety_checker: mergedSettings.enable_safety_checker,
-      output_format: mergedSettings.output_format,
-      enhance_prompt: true  // Always enable Flux Pro's native prompt enhancement
-    }
-
-    // Add seed if provided
-    if (mergedSettings.seed && mergedSettings.seed !== undefined) {
-      input.seed = parseInt(mergedSettings.seed.toString())
-    }
-
-    // Handle custom image size for Flux Pro
-    if (mergedSettings.width && mergedSettings.height) {
-      input.image_size = {
-        width: parseInt(mergedSettings.width.toString()),
-        height: parseInt(mergedSettings.height.toString())
+    // Upload image files to fal.ai storage if any
+    const uploadedImageUrls: string[] = [...imageUrls]
+    
+    if (imageFiles.length > 0) {
+      console.log("[FLUX-COMBINE] Uploading image files to fal.ai storage...")
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i]
+        try {
+          console.log(`[FLUX-COMBINE] Uploading image ${i + 1}/${imageFiles.length}: ${file.name} (${file.size} bytes)`)
+          const uploadedUrl = await fal.storage.upload(file)
+          uploadedImageUrls.push(uploadedUrl)
+          console.log(`[FLUX-COMBINE] Image ${i + 1} uploaded successfully: ${uploadedUrl}`)
+        } catch (uploadError) {
+          console.error(`[FLUX-COMBINE] Failed to upload image ${i + 1}:`, uploadError)
+          return NextResponse.json({ 
+            error: `Failed to upload image ${i + 1}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}` 
+          }, { status: 500 })
+        }
       }
     }
 
-    // Add LoRA support for Flux Pro
-    console.log("[FLUX-PRO] Checking LoRA configuration...")
-    console.log("[FLUX-PRO] mergedSettings.loras:", mergedSettings.loras)
-    console.log("[FLUX-PRO] Is array?", Array.isArray(mergedSettings.loras))
-    console.log("[FLUX-PRO] Length:", mergedSettings.loras?.length)
-    
-    if (mergedSettings.loras && Array.isArray(mergedSettings.loras) && mergedSettings.loras.length > 0) {
-      console.log("[FLUX-PRO] Processing LoRAs...")
-      mergedSettings.loras.forEach((lora: any, index: number) => {
-        console.log(`[FLUX-PRO] LoRA ${index}:`, {
-          path: lora.path,
-          scale: lora.scale,
-          originalScale: typeof lora.scale,
-          parsedScale: parseFloat(lora.scale) || 1.0
-        })
-      })
-      
-      input.loras = mergedSettings.loras.map((lora: any) => ({
-        path: lora.path,
-        scale: parseFloat(lora.scale) || 1.0
-      }))
-      console.log("[FLUX-PRO] LoRAs configured for Flux Pro:", input.loras)
-    } else {
-      console.log("[FLUX-PRO] No LoRAs configured - will use base model")
+    console.log("[FLUX-COMBINE] All image URLs ready:", uploadedImageUrls)
+
+    // Prepare default settings for Flux Pro Combine
+    const defaultSettings = {
+      aspect_ratio: "1:1",
+      guidance_scale: 3.5,
+      num_images: 1, // Single combined image output
+      safety_tolerance: 2,
+      output_format: "jpeg",
+      seed: undefined,
+      enhance_prompt: false
     }
 
-    console.log("[FLUX-PRO] Final input object being sent to fal.ai:")
+    const mergedSettings = { ...defaultSettings, ...settings }
+
+    // Prepare input for Flux Pro Multi with image combination
+    const input: any = {
+      prompt: finalPrompt,
+      image_urls: uploadedImageUrls, // Multiple input images
+      aspect_ratio: mergedSettings.aspect_ratio,
+      guidance_scale: mergedSettings.guidance_scale,
+      num_images: mergedSettings.num_images,
+      safety_tolerance: mergedSettings.safety_tolerance,
+      output_format: mergedSettings.output_format,
+      enhance_prompt: mergedSettings.enhance_prompt
+    }
+
+    // Add seed if provided
+    if (mergedSettings.seed !== undefined) {
+      input.seed = mergedSettings.seed
+    }
+
+    console.log("[FLUX-COMBINE] Final input object being sent to fal.ai:")
     console.log("=====================================")
-    console.log("Model: fal-ai/flux-pro/kontext/max/text-to-image")
-    console.log("Hybrid Enhancement Strategy:")
-    console.log("  1. RAG Enhancement:", useRag ? "✅ Applied" : "❌ Skipped")
-    console.log("  2. Flux Pro Enhancement: ✅ Always enabled (enhance_prompt: true)")
-    console.log("  3. Original prompt:", prompt.substring(0, 100) + "...")
-    console.log("  4. RAG-enhanced prompt:", finalPrompt.substring(0, 100) + "...")
-    console.log("Input:", JSON.stringify(input, null, 2))
+    console.log("Model: fal-ai/flux-pro/kontext/max/multi")
+    console.log("Input images count:", uploadedImageUrls.length)
+    console.log("Input:", JSON.stringify({
+      ...input,
+      image_urls: `[${uploadedImageUrls.length} image URLs]` // Don't log full URLs for privacy
+    }, null, 2))
     console.log("=====================================")
 
     try {
-      console.log("[FLUX-PRO] Starting generation with Flux Pro Kontext Max...")
-      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
+      console.log("[FLUX-COMBINE] Starting image combination with Flux Pro Kontext Max Multi...")
+      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/multi", {
         input,
         logs: true,
         onQueueUpdate: (update: any) => {
@@ -242,8 +253,8 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      console.log("[FLUX-PRO] Generation completed successfully!")
-      console.log("[FLUX-PRO] Result data structure:")
+      console.log("[FLUX-COMBINE] Image combination completed successfully!")
+      console.log("[FLUX-COMBINE] Result data structure:")
       console.log("  - data exists:", !!result.data)
       console.log("  - images exists:", !!result.data?.images)
       console.log("  - images length:", result.data?.images?.length || 0)
@@ -255,52 +266,38 @@ export async function POST(request: NextRequest) {
           height: result.data.images[0].height
         })
       }
-      
-      // Check if LoRAs were actually applied
-      if (input.loras && input.loras.length > 0) {
-        console.log("[FLUX-PRO] ✅ LoRAs were sent to the model:")
-        input.loras.forEach((lora: any, index: number) => {
-          console.log(`  LoRA ${index + 1}: ${lora.path} (scale: ${lora.scale})`)
-        })
-      } else {
-        console.log("[FLUX-PRO] ⚠️ No LoRAs were applied to this generation")
-      }
 
       if (result.data && result.data.images && result.data.images.length > 0) {
-        const images = result.data.images.map((img: any) => ({
-          url: img.url,
-          width: img.width || 1024,
-          height: img.height || 1024,
-          content_type: img.content_type || "image/png"
-        }))
-
+        const combinedImage = result.data.images[0] // Single combined result
+        
         return NextResponse.json({
           success: true,
-          images: images,
-          image: images[0].url, // For backward compatibility
+          image: combinedImage.url,
+          width: combinedImage.width,
+          height: combinedImage.height,
+          content_type: combinedImage.content_type || "image/jpeg",
           finalPrompt: finalPrompt,
           originalPrompt: prompt,
+          inputImages: uploadedImageUrls.length,
           ragMetadata: ragMetadata,
           settings: mergedSettings,
-          model: "flux-pro-kontext-max"
+          model: "flux-pro/kontext/max/multi",
+          timestamp: new Date().toISOString()
         })
       } else {
-        console.error("[FLUX-PRO] No images returned from API")
-        return NextResponse.json({ 
-          error: "No images generated",
-          details: "Flux Pro API returned no images"
-        }, { status: 500 })
+        throw new Error("No combined image returned from Flux Pro Multi")
       }
-    } catch (error) {
-      console.error("[FLUX-PRO] Generation failed:", error)
+    } catch (falError) {
+      console.error("[FLUX-COMBINE] Fal.ai error:", falError)
       return NextResponse.json({ 
-        error: "Image generation failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-        model: "flux-pro-kontext-max"
+        error: "Failed to combine images with Flux Pro Multi",
+        details: falError instanceof Error ? falError.message : "Unknown error",
+        model: "flux-pro/kontext/max/multi"
       }, { status: 500 })
     }
+
   } catch (error) {
-    console.error("[FLUX-PRO] API error:", error)
+    console.error("[FLUX-COMBINE] Error:", error)
     return NextResponse.json({ 
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error"

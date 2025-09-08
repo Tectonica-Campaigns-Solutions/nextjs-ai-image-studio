@@ -82,6 +82,52 @@ export default function ImageEditor() {
   const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("")
   const [fluxProLoraScale, setFluxProLoraScale] = useState(1.0)
 
+  // Flux Pro Multi Text-to-Image States
+  const [fluxProMultiPrompt, setFluxProMultiPrompt] = useState("")
+  const [fluxProMultiSettings, setFluxProMultiSettings] = useState({
+    image_size: "landscape_4_3",
+    num_inference_steps: 28,
+    guidance_scale: 3.5,
+    num_images: 4, // Default for multi generation
+    output_format: "jpg",
+    safety_tolerance: 2,
+    seed: "",
+    width: "",
+    height: ""
+  })
+  const [fluxProMultiResult, setFluxProMultiResult] = useState<any[]>([])
+  const [isFluxProMultiGenerating, setIsFluxProMultiGenerating] = useState(false)
+  const [fluxProMultiError, setFluxProMultiError] = useState<string>("")
+  const [useRagFluxProMulti, setUseRagFluxProMulti] = useState(true)
+  const [fluxProMultiGeneratedPrompt, setFluxProMultiGeneratedPrompt] = useState<string>("")
+  const [showFluxProMultiAdvanced, setShowFluxProMultiAdvanced] = useState(false)
+
+  // Flux Pro Multi LoRA States
+  const [useFluxProMultiLoRA, setUseFluxProMultiLoRA] = useState(false)
+  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("")
+  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("")
+  const [fluxProMultiLoraScale, setFluxProMultiLoraScale] = useState(1.0)
+
+  // Flux Pro Image Combine States
+  const [fluxCombinePrompt, setFluxCombinePrompt] = useState("")
+  const [fluxCombineImages, setFluxCombineImages] = useState<File[]>([])
+  const [fluxCombineImageUrls, setFluxCombineImageUrls] = useState<string[]>([])
+  const [fluxCombineSettings, setFluxCombineSettings] = useState({
+    aspect_ratio: "1:1",
+    guidance_scale: 3.5,
+    num_images: 1,
+    output_format: "jpeg",
+    safety_tolerance: 2,
+    seed: "",
+    enhance_prompt: false
+  })
+  const [fluxCombineResult, setFluxCombineResult] = useState<string>("")
+  const [isFluxCombineGenerating, setIsFluxCombineGenerating] = useState(false)
+  const [fluxCombineError, setFluxCombineError] = useState<string>("")
+  const [useRagFluxCombine, setUseRagFluxCombine] = useState(true)
+  const [fluxCombineGeneratedPrompt, setFluxCombineGeneratedPrompt] = useState<string>("")
+  const [showFluxCombineAdvanced, setShowFluxCombineAdvanced] = useState(false)
+
   // Edit Image States
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>("")
@@ -450,6 +496,222 @@ export default function ImageEditor() {
     }
   }
 
+  const handleFluxProMultiSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!fluxProMultiPrompt.trim()) {
+      setFluxProMultiError("Please enter a prompt")
+      return
+    }
+
+    setIsFluxProMultiGenerating(true)
+    setFluxProMultiError("")
+
+    try {
+      const formData = new FormData()
+      
+      // Enhance prompt with LoRA trigger phrase if enabled
+      let finalPrompt = fluxProMultiPrompt
+      if (useFluxProMultiLoRA && fluxProMultiTriggerPhrase.trim()) {
+        finalPrompt = `${fluxProMultiPrompt}, ${fluxProMultiTriggerPhrase}`
+        console.log("[FRONTEND] Enhanced multi prompt with trigger phrase:", finalPrompt)
+      }
+      
+      formData.append("prompt", finalPrompt)
+      formData.append("useRag", useRagFluxProMulti.toString())
+      
+      // Add active RAG information
+      const activeRAG = getActiveRAG()
+      if (useRagFluxProMulti && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
+      
+      // Prepare settings object, converting types as needed
+      const settings: any = { ...fluxProMultiSettings }
+      
+      // Add LoRA configuration if enabled
+      if (useFluxProMultiLoRA && fluxProMultiLoraUrl.trim()) {
+        settings.loras = [{
+          path: fluxProMultiLoraUrl,
+          scale: fluxProMultiLoraScale
+        }]
+        console.log("[FRONTEND] Adding LoRA to multi settings:", settings.loras)
+      }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert string numbers to actual numbers
+      if (settings.width) settings.width = parseInt(settings.width as string)
+      if (settings.height) settings.height = parseInt(settings.height as string)
+      if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      console.log("[FRONTEND] Final multi settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+      formData.append("orgType", "general")
+
+      const response = await fetch("/api/flux-pro-multi-text-to-image", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (errorData?.blocked) {
+          throw new Error(handleModerationError(errorData))
+        }
+        throw new Error(errorData?.error || `Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      // Capture generated prompt if available
+      if (result.finalPrompt) {
+        setFluxProMultiGeneratedPrompt(result.finalPrompt)
+      } else if (result.prompt) {
+        setFluxProMultiGeneratedPrompt(result.prompt)
+      } else {
+        setFluxProMultiGeneratedPrompt(fluxProMultiPrompt) // Fallback to original prompt
+      }
+      
+      if (result.success && result.images && result.images.length > 0) {
+        setFluxProMultiResult(result.images)
+      } else {
+        throw new Error("No images received from server")
+      }
+    } catch (err) {
+      setFluxProMultiError(err instanceof Error ? err.message : "Failed to generate images")
+    } finally {
+      setIsFluxProMultiGenerating(false)
+    }
+  }
+
+  const handleFluxCombineSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!fluxCombinePrompt.trim()) {
+      setFluxCombineError("Please enter a prompt")
+      return
+    }
+
+    if (fluxCombineImages.length + fluxCombineImageUrls.length < 2) {
+      setFluxCombineError("Please upload at least 2 images to combine")
+      return
+    }
+
+    setIsFluxCombineGenerating(true)
+    setFluxCombineError("")
+
+    try {
+      const formData = new FormData()
+      
+      formData.append("prompt", fluxCombinePrompt)
+      formData.append("useRag", useRagFluxCombine.toString())
+      
+      // Add active RAG information
+      const activeRAG = getActiveRAG()
+      if (useRagFluxCombine && activeRAG) {
+        formData.append("activeRAGId", activeRAG.id)
+        formData.append("activeRAGName", activeRAG.name)
+      }
+      
+      // Add uploaded image files
+      fluxCombineImages.forEach((file, index) => {
+        formData.append(`image${index}`, file)
+      })
+      
+      // Add image URLs
+      fluxCombineImageUrls.forEach((url, index) => {
+        if (url.trim()) {
+          formData.append(`imageUrl${index}`, url.trim())
+        }
+      })
+      
+      // Prepare settings object
+      const settings = { ...fluxCombineSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert string numbers to actual numbers
+      if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      console.log("[FRONTEND] Final combine settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+      formData.append("orgType", "general")
+
+      const response = await fetch("/api/flux-pro-image-combine", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (errorData?.blocked) {
+          throw new Error(handleModerationError(errorData))
+        }
+        throw new Error(errorData?.error || `Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      // Capture generated prompt if available
+      if (result.finalPrompt) {
+        setFluxCombineGeneratedPrompt(result.finalPrompt)
+      } else {
+        setFluxCombineGeneratedPrompt(fluxCombinePrompt) // Fallback to original prompt
+      }
+      
+      if (result.success && result.image) {
+        setFluxCombineResult(result.image)
+      } else {
+        throw new Error("No combined image received from server")
+      }
+    } catch (err) {
+      setFluxCombineError(err instanceof Error ? err.message : "Failed to combine images")
+    } finally {
+      setIsFluxCombineGenerating(false)
+    }
+  }
+
+  const handleCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length > 0) {
+      setFluxCombineImages(prev => [...prev, ...files])
+    }
+  }
+
+  const removeCombineImage = (index: number) => {
+    setFluxCombineImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addCombineImageUrl = () => {
+    setFluxCombineImageUrls(prev => [...prev, ""])
+  }
+
+  const updateCombineImageUrl = (index: number, url: string) => {
+    setFluxCombineImageUrls(prev => {
+      const newUrls = [...prev]
+      newUrls[index] = url
+      return newUrls
+    })
+  }
+
+  const removeCombineImageUrl = (index: number) => {
+    setFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -800,9 +1062,10 @@ export default function ImageEditor() {
         </div>
 
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image">Flux Pro</TabsTrigger>
+          <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="upload-branding">Upload Branding</TabsTrigger>
@@ -1339,6 +1602,21 @@ export default function ImageEditor() {
                           </div>
                         </div>
 
+                        {/* Prompt Enhancement Info */}
+                        <div className="p-4 border rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <div className="flex-1">
+                              <Label className="font-medium text-green-700 dark:text-green-300">
+                                🚀 Hybrid Enhancement Active
+                              </Label>
+                              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                Your prompts get double enhancement: Our RAG branding + Flux Pro's native optimization
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Custom Size */}
                         {fluxProSettings.image_size === "custom" && (
                           <div className="grid grid-cols-2 gap-4">
@@ -1442,6 +1720,277 @@ export default function ImageEditor() {
                         <Sparkles className="h-12 w-12 mx-auto mb-2" />
                         <p>No image generated yet</p>
                       </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Flux Pro Image Combine Tab */}
+          <TabsContent value="flux-pro-image-combine" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    Combine Images
+                  </CardTitle>
+                  <CardDescription>
+                    Upload multiple images and combine them into a single new image using Flux Pro Multi
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFluxCombineSubmit} className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Upload Images (minimum 2)</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleCombineImageUpload}
+                          className="cursor-pointer"
+                        />
+                        {fluxCombineImages.length > 0 && (
+                          <div className="space-y-2">
+                            <Label>Uploaded Files:</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {fluxCombineImages.map((file, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 border rounded">
+                                  <span className="text-sm truncate">{file.name}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeCombineImage(index)}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    ×
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Image URLs Section */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label>Or Add Image URLs</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addCombineImageUrl}
+                          >
+                            Add URL
+                          </Button>
+                        </div>
+                        {fluxCombineImageUrls.map((url, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              placeholder="https://example.com/image.jpg"
+                              value={url}
+                              onChange={(e) => updateCombineImageUrl(index, e.target.value)}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeCombineImageUrl(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="text-sm text-muted-foreground">
+                        Total images: {fluxCombineImages.length + fluxCombineImageUrls.filter(url => url.trim()).length}
+                      </div>
+                    </div>
+
+                    {/* Prompt Section */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-combine-prompt">Prompt</Label>
+                      <Textarea
+                        id="flux-combine-prompt"
+                        placeholder="Describe how you want to combine the images..."
+                        value={fluxCombinePrompt}
+                        onChange={(e) => setFluxCombinePrompt(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    {/* RAG Toggle */}
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="flux-combine-rag"
+                          checked={useRagFluxCombine}
+                          onCheckedChange={setUseRagFluxCombine}
+                          className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                        />
+                        <Label htmlFor="flux-combine-rag" className="cursor-pointer font-medium">
+                          Enhance with {getActiveRAG()?.name || 'RAG'} branding
+                        </Label>
+                      </div>
+                      <div className={`w-2 h-2 rounded-full ${useRagFluxCombine ? 'bg-blue-500' : 'bg-gray-400'} transition-colors`}></div>
+                    </div>
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/20 dark:to-slate-950/20">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="flux-combine-advanced"
+                          checked={showFluxCombineAdvanced}
+                          onCheckedChange={setShowFluxCombineAdvanced}
+                          className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                        />
+                        <Label htmlFor="flux-combine-advanced" className="cursor-pointer font-medium">
+                          Advanced Settings
+                        </Label>
+                      </div>
+                      <div className={`w-2 h-2 rounded-full ${showFluxCombineAdvanced ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                    </div>
+
+                    {showFluxCombineAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-combine-aspect-ratio">Aspect Ratio</Label>
+                            <Select
+                              value={fluxCombineSettings.aspect_ratio}
+                              onValueChange={(value) => setFluxCombineSettings(prev => ({ ...prev, aspect_ratio: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                                <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                                <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                                <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-combine-guidance">
+                              Guidance Scale: {fluxCombineSettings.guidance_scale}
+                            </Label>
+                            <Slider
+                              id="flux-combine-guidance"
+                              min={1}
+                              max={20}
+                              step={0.1}
+                              value={[fluxCombineSettings.guidance_scale]}
+                              onValueChange={(value) => setFluxCombineSettings(prev => ({ ...prev, guidance_scale: value[0] }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-combine-output-format">Output Format</Label>
+                            <Select
+                              value={fluxCombineSettings.output_format}
+                              onValueChange={(value) => setFluxCombineSettings(prev => ({ ...prev, output_format: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="jpeg">JPEG</SelectItem>
+                                <SelectItem value="png">PNG</SelectItem>
+                                <SelectItem value="webp">WebP</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="flux-combine-seed">Seed (optional)</Label>
+                            <Input
+                              id="flux-combine-seed"
+                              type="number"
+                              placeholder="Random if empty"
+                              value={fluxCombineSettings.seed}
+                              onChange={(e) => setFluxCombineSettings(prev => ({ ...prev, seed: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="flux-combine-enhance-prompt"
+                              checked={fluxCombineSettings.enhance_prompt}
+                              onCheckedChange={(checked) => setFluxCombineSettings(prev => ({ ...prev, enhance_prompt: checked }))}
+                              className="data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                            />
+                            <Label htmlFor="flux-combine-enhance-prompt" className="cursor-pointer font-medium">
+                              Enhance Prompt
+                            </Label>
+                          </div>
+                          <div className={`w-2 h-2 rounded-full ${fluxCombineSettings.enhance_prompt ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                        </div>
+                      </div>
+                    )}
+
+                    <Button type="submit" disabled={isFluxCombineGenerating} className="w-full">
+                      {isFluxCombineGenerating ? "Combining Images..." : "Combine Images"}
+                    </Button>
+
+                    {fluxCombineError && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{fluxCombineError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Results Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Combined Image</CardTitle>
+                  {fluxCombineGeneratedPrompt && (
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Used prompt:</strong> {fluxCombineGeneratedPrompt}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {isFluxCombineGenerating ? (
+                    <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                        <p className="text-gray-500">Combining images...</p>
+                      </div>
+                    </div>
+                  ) : fluxCombineResult ? (
+                    <div className="space-y-4">
+                      <img
+                        src={fluxCombineResult}
+                        alt="Combined image"
+                        className="w-full h-auto rounded-lg shadow-md"
+                      />
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => window.open(fluxCombineResult, '_blank')}
+                      >
+                        Open Full Size
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
+                      <p className="text-gray-500">Combined image will appear here</p>
                     </div>
                   )}
                 </CardContent>

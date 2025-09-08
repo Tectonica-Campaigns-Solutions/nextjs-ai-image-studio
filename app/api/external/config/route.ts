@@ -160,6 +160,61 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      imageCombine: {
+        endpoint: "/api/external/flux-pro-image-combine",
+        model: "flux-pro/kontext/max/multi",
+        supportedInputFormats: ["png", "jpg", "jpeg", "webp"],
+        supportedOutputFormats: ["jpeg", "png", "webp"],
+        minImages: 2,
+        maxImages: 10,
+        maxFileSize: "10MB",
+        description: "Combine multiple images into a single new image using advanced AI",
+        additionalSettings: {
+          aspect_ratio: {
+            options: [
+              "1:1",
+              "4:3",
+              "3:4", 
+              "16:9",
+              "9:16",
+              "21:9"
+            ],
+            default: "1:1",
+            description: "Output image aspect ratio"
+          },
+          guidance_scale: {
+            type: "number",
+            min: 1.0,
+            max: 20.0,
+            step: 0.1,
+            default: 3.5,
+            description: "How closely to follow the prompt"
+          },
+          safety_tolerance: {
+            type: "number",
+            min: 1,
+            max: 6,
+            default: 2,
+            description: "Content safety level (1=strict, 6=permissive)"
+          },
+          seed: {
+            type: "number",
+            min: 0,
+            max: 2147483647,
+            description: "Random seed for reproducible results (optional)"
+          },
+          enhance_prompt: {
+            type: "boolean",
+            default: false,
+            description: "Automatically enhance the prompt for better results"
+          },
+          output_format: {
+            options: ["jpeg", "png", "webp"],
+            default: "jpeg",
+            description: "Output image format"
+          }
+        }
+      },
       guardrails: {
         enabled: true,
         contentModeration: true,

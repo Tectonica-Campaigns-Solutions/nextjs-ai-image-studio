@@ -147,6 +147,7 @@ export async function POST(request: NextRequest) {
         num_images: mergedSettings.num_images,
         safety_tolerance: mergedSettings.safety_tolerance,
         output_format: mergedSettings.output_format,
+        enhance_prompt: true,  // Always enable Flux Pro's native prompt enhancement (Hybrid approach)
         loras: mergedSettings.loras || []
       }
 
@@ -158,6 +159,11 @@ export async function POST(request: NextRequest) {
       console.log("[External Flux Pro] Generating with input:")
       console.log("=====================================")
       console.log("Model: fal-ai/flux-pro/kontext/max/text-to-image")
+      console.log("Hybrid Enhancement Strategy:")
+      console.log("  1. RAG Enhancement:", useRAG ? "✅ Applied" : "❌ Skipped")
+      console.log("  2. Flux Pro Enhancement: ✅ Always enabled (enhance_prompt: true)")
+      console.log("  3. Original prompt:", prompt.substring(0, 100) + "...")
+      console.log("  4. RAG-enhanced prompt:", finalPrompt.substring(0, 100) + "...")
       console.log("Prompt:", finalPrompt)
       console.log("LoRA enabled:", useLoRA)
       console.log("LoRA config:", loraConfig)

@@ -1,7 +1,6 @@
 // Test script for External Flux Pro API with LoRA
-// Run with: node test-external-flux-pro.js
-
-import fetch from 'node-fetch';
+// Run with: node test-external-flux-pro-simple.js
+// Uses built-in fetch (Node 18+)
 
 async function testExternalFluxPro() {
   const payload = {
@@ -52,6 +51,12 @@ async function testExternalFluxPro() {
       loraApplied: result.prompt?.lora_applied,
       loraConfig: result.prompt?.lora_config
     });
+    
+    if (result.images && result.images[0]) {
+      console.log('\n📷 Image generated successfully!');
+      console.log('🔗 Image URL:', result.images[0].url);
+      console.log('📐 Dimensions:', `${result.images[0].width}x${result.images[0].height}`);
+    }
     
   } catch (error) {
     console.error('Error:', error.message);

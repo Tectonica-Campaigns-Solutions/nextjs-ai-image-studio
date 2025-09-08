@@ -45,21 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
-    console.log("[FLUX-PRO] Text-to-Image endpoint called")
-    console.log("[FLUX-PRO] Original prompt:", prompt)
-    console.log("[FLUX-PRO] Use RAG:", useRag)
-    console.log("[FLUX-PRO] Settings JSON:", settingsJson)
+    console.log("[FLUX-PRO-MULTI] Multi-generation endpoint called")
+    console.log("[FLUX-PRO-MULTI] Original prompt:", prompt)
+    console.log("[FLUX-PRO-MULTI] Use RAG:", useRag)
+    console.log("[FLUX-PRO-MULTI] Settings JSON:", settingsJson)
     
     // Log all form data for debugging
-    console.log("[FLUX-PRO] All FormData entries:")
+    console.log("[FLUX-PRO-MULTI] All FormData entries:")
     for (const [key, value] of formData.entries()) {
       console.log(`  ${key}: ${value}`)
     }
-    console.log("[FLUX-PRO] Settings:", settingsJson)
 
     // Content moderation check
     try {
-      console.log("[MODERATION] Checking content for Flux Pro prompt:", prompt.substring(0, 50) + "...")
+      console.log("[MODERATION] Checking content for Flux Pro Multi prompt:", prompt.substring(0, 50) + "...")
       const moderationService = new ContentModerationService(orgType)
       const moderationResult = await moderationService.moderateContent({ prompt })
       
@@ -74,6 +73,7 @@ export async function POST(request: NextRequest) {
       console.log("[MODERATION] Content approved")
     } catch (moderationError) {
       console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+      // Continue with generation if moderation fails to avoid blocking users
     }
 
     // Check if Fal.ai API key is available
@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
     if (settingsJson) {
       try {
         settings = JSON.parse(settingsJson)
-        console.log("[FLUX-PRO] Parsed settings:", settings)
+        console.log("[FLUX-PRO-MULTI] Parsed settings:", settings)
       } catch (error) {
-        console.warn("[FLUX-PRO] Failed to parse settings:", error)
+        console.warn("[FLUX-PRO-MULTI] Failed to parse settings:", error)
       }
     }
 
@@ -103,16 +103,16 @@ export async function POST(request: NextRequest) {
       
       if (ragSystem) {
         try {
-          console.log("[FLUX-PRO] Enhancing prompt with RAG...")
+          console.log("[FLUX-PRO-MULTI] Enhancing prompt with RAG...")
           const enhancement = await ragSystem(prompt, {
-            activeRAGId: activeRAGId,
-            activeRAGName: activeRAGName
+            projectId: activeRAGId,
+            projectName: activeRAGName
           })
           
           console.log(`[RAG] Enhancement result:`, enhancement)
           
           if (enhancement && typeof enhancement === 'object') {
-            finalPrompt = enhancement.enhancedPrompt || prompt
+            finalPrompt = enhancement.enhancedPrompt || enhancement.prompt || prompt
             ragMetadata = {
               originalPrompt: prompt,
               enhancedPrompt: finalPrompt,
@@ -129,15 +129,15 @@ export async function POST(request: NextRequest) {
               brandingElements: 0
             }
           }
-          console.log("[FLUX-PRO] RAG enhanced prompt:", finalPrompt)
-          console.log("[FLUX-PRO] RAG suggested colors:", ragMetadata?.suggestedColors)
-          console.log("[FLUX-PRO] RAG negative prompt:", ragMetadata?.negativePrompt)
+          console.log("[FLUX-PRO-MULTI] RAG enhanced prompt:", finalPrompt)
+          console.log("[FLUX-PRO-MULTI] RAG suggested colors:", ragMetadata?.suggestedColors)
+          console.log("[FLUX-PRO-MULTI] RAG negative prompt:", ragMetadata?.negativePrompt)
         } catch (error) {
           console.error('[RAG] Enhancement failed:', error)
           finalPrompt = prompt
         }
       } else {
-        console.warn("[FLUX-PRO] RAG system not available")
+        console.warn("[FLUX-PRO-MULTI] RAG system not available")
         finalPrompt = prompt
       }
     } else {
@@ -154,38 +154,36 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
 
-    // Prepare default settings for Flux Pro
+    // Prepare default settings for Flux Pro Multi
     const defaultSettings = {
       image_size: "landscape_4_3",
-      num_inference_steps: 28,
+      num_inference_steps: 30,
       guidance_scale: 3.5,
-      num_images: 1,
-      enable_safety_checker: true,
-      output_format: "png",
+      num_images: 4, // Multi generation default
+      safety_tolerance: 2,
+      output_format: "jpg",
       seed: undefined
     }
 
-    // Merge with user settings
     const mergedSettings = { ...defaultSettings, ...settings }
 
-    // Prepare input for Flux Pro Kontext Max
+    // Prepare input for Flux Pro Multi
     const input: any = {
       prompt: finalPrompt,
       image_size: mergedSettings.image_size,
       num_inference_steps: mergedSettings.num_inference_steps,
       guidance_scale: mergedSettings.guidance_scale,
       num_images: mergedSettings.num_images,
-      enable_safety_checker: mergedSettings.enable_safety_checker,
-      output_format: mergedSettings.output_format,
-      enhance_prompt: true  // Always enable Flux Pro's native prompt enhancement
+      safety_tolerance: mergedSettings.safety_tolerance,
+      output_format: mergedSettings.output_format
     }
 
     // Add seed if provided
-    if (mergedSettings.seed && mergedSettings.seed !== undefined) {
-      input.seed = parseInt(mergedSettings.seed.toString())
+    if (mergedSettings.seed !== undefined) {
+      input.seed = mergedSettings.seed
     }
 
-    // Handle custom image size for Flux Pro
+    // Handle custom image size for Flux Pro Multi
     if (mergedSettings.width && mergedSettings.height) {
       input.image_size = {
         width: parseInt(mergedSettings.width.toString()),
@@ -193,16 +191,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add LoRA support for Flux Pro
-    console.log("[FLUX-PRO] Checking LoRA configuration...")
-    console.log("[FLUX-PRO] mergedSettings.loras:", mergedSettings.loras)
-    console.log("[FLUX-PRO] Is array?", Array.isArray(mergedSettings.loras))
-    console.log("[FLUX-PRO] Length:", mergedSettings.loras?.length)
+    // Add LoRA support for Flux Pro Multi
+    console.log("[FLUX-PRO-MULTI] Checking LoRA configuration...")
+    console.log("[FLUX-PRO-MULTI] mergedSettings.loras:", mergedSettings.loras)
+    console.log("[FLUX-PRO-MULTI] Is array?", Array.isArray(mergedSettings.loras))
+    console.log("[FLUX-PRO-MULTI] Length:", mergedSettings.loras?.length)
     
     if (mergedSettings.loras && Array.isArray(mergedSettings.loras) && mergedSettings.loras.length > 0) {
-      console.log("[FLUX-PRO] Processing LoRAs...")
+      console.log("[FLUX-PRO-MULTI] Processing LoRAs...")
       mergedSettings.loras.forEach((lora: any, index: number) => {
-        console.log(`[FLUX-PRO] LoRA ${index}:`, {
+        console.log(`[FLUX-PRO-MULTI] LoRA ${index}:`, {
           path: lora.path,
           scale: lora.scale,
           originalScale: typeof lora.scale,
@@ -214,25 +212,20 @@ export async function POST(request: NextRequest) {
         path: lora.path,
         scale: parseFloat(lora.scale) || 1.0
       }))
-      console.log("[FLUX-PRO] LoRAs configured for Flux Pro:", input.loras)
+      console.log("[FLUX-PRO-MULTI] LoRAs configured for Flux Pro Multi:", input.loras)
     } else {
-      console.log("[FLUX-PRO] No LoRAs configured - will use base model")
+      console.log("[FLUX-PRO-MULTI] No LoRAs configured - will use base model")
     }
 
-    console.log("[FLUX-PRO] Final input object being sent to fal.ai:")
+    console.log("[FLUX-PRO-MULTI] Final input object being sent to fal.ai:")
     console.log("=====================================")
-    console.log("Model: fal-ai/flux-pro/kontext/max/text-to-image")
-    console.log("Hybrid Enhancement Strategy:")
-    console.log("  1. RAG Enhancement:", useRag ? "✅ Applied" : "❌ Skipped")
-    console.log("  2. Flux Pro Enhancement: ✅ Always enabled (enhance_prompt: true)")
-    console.log("  3. Original prompt:", prompt.substring(0, 100) + "...")
-    console.log("  4. RAG-enhanced prompt:", finalPrompt.substring(0, 100) + "...")
+    console.log("Model: fal-ai/flux-pro/kontext/max/multi")
     console.log("Input:", JSON.stringify(input, null, 2))
     console.log("=====================================")
 
     try {
-      console.log("[FLUX-PRO] Starting generation with Flux Pro Kontext Max...")
-      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
+      console.log("[FLUX-PRO-MULTI] Starting multi-generation with Flux Pro Kontext Max Multi...")
+      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/multi", {
         input,
         logs: true,
         onQueueUpdate: (update: any) => {
@@ -242,8 +235,8 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      console.log("[FLUX-PRO] Generation completed successfully!")
-      console.log("[FLUX-PRO] Result data structure:")
+      console.log("[FLUX-PRO-MULTI] Multi-generation completed successfully!")
+      console.log("[FLUX-PRO-MULTI] Result data structure:")
       console.log("  - data exists:", !!result.data)
       console.log("  - images exists:", !!result.data?.images)
       console.log("  - images length:", result.data?.images?.length || 0)
@@ -258,49 +251,47 @@ export async function POST(request: NextRequest) {
       
       // Check if LoRAs were actually applied
       if (input.loras && input.loras.length > 0) {
-        console.log("[FLUX-PRO] ✅ LoRAs were sent to the model:")
+        console.log("[FLUX-PRO-MULTI] ✅ LoRAs were sent to the model:")
         input.loras.forEach((lora: any, index: number) => {
           console.log(`  LoRA ${index + 1}: ${lora.path} (scale: ${lora.scale})`)
         })
       } else {
-        console.log("[FLUX-PRO] ⚠️ No LoRAs were applied to this generation")
+        console.log("[FLUX-PRO-MULTI] ⚠️ No LoRAs were applied to this generation")
       }
 
       if (result.data && result.data.images && result.data.images.length > 0) {
         const images = result.data.images.map((img: any) => ({
           url: img.url,
-          width: img.width || 1024,
-          height: img.height || 1024,
-          content_type: img.content_type || "image/png"
+          width: img.width,
+          height: img.height,
+          content_type: img.content_type || "image/jpg"
         }))
 
         return NextResponse.json({
           success: true,
           images: images,
-          image: images[0].url, // For backward compatibility
+          image: images[0].url, // First image for compatibility
           finalPrompt: finalPrompt,
           originalPrompt: prompt,
           ragMetadata: ragMetadata,
           settings: mergedSettings,
-          model: "flux-pro-kontext-max"
+          model: "flux-pro/kontext/max/multi",
+          timestamp: new Date().toISOString()
         })
       } else {
-        console.error("[FLUX-PRO] No images returned from API")
-        return NextResponse.json({ 
-          error: "No images generated",
-          details: "Flux Pro API returned no images"
-        }, { status: 500 })
+        throw new Error("No images returned from Flux Pro Multi")
       }
-    } catch (error) {
-      console.error("[FLUX-PRO] Generation failed:", error)
+    } catch (falError) {
+      console.error("[FLUX-PRO-MULTI] Fal.ai error:", falError)
       return NextResponse.json({ 
-        error: "Image generation failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-        model: "flux-pro-kontext-max"
+        error: "Failed to generate images with Flux Pro Multi",
+        details: falError instanceof Error ? falError.message : "Unknown error",
+        model: "flux-pro/kontext/max/multi"
       }, { status: 500 })
     }
+
   } catch (error) {
-    console.error("[FLUX-PRO] API error:", error)
+    console.error("[FLUX-PRO-MULTI] Error:", error)
     return NextResponse.json({ 
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error"
