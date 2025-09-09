@@ -7,9 +7,9 @@ async function testExternalFluxPro() {
     prompt: "A beautiful landscape with mountains",
     useRAG: false,
     useLoRA: true,
-    loraUrl: "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
-    loraTriggerPhrase: "epic style",
-    loraScale: 1.2,
+    loraUrl: "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
+    loraTriggerPhrase: "TCT-AI-9-9-2025A",
+    loraScale: 1.3,
     settings: {
       image_size: "landscape_4_3",
       num_inference_steps: 25,

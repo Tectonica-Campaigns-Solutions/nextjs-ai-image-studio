@@ -6,19 +6,13 @@ interface JSONEnhancementConfig {
   version: string
   kit: string
   description: string
-  enums: Record<string, string[]>
-  rules: Record<string, Record<string, string[]>>
+  enhancement_text: string
   defaults: {
-    selection: Record<string, string>
-    weights: Record<string, number>
+    intensity: number
+    join_string: string
     params: Record<string, any>
-    loras: any[]
   }
   enforced_negatives: string[]
-  assembly: {
-    order: string[]
-    join: string
-  }
 }
 
 export async function GET() {
@@ -39,42 +33,16 @@ export async function GET() {
     
     // Return a fallback configuration
     const fallbackConfig: JSONEnhancementConfig = {
-      version: "1.0",
+      version: "2.0",
       kit: "fallback_enhancer",
       description: "Basic enhancement when config file is not available",
-      enums: {
-        quality: ["high quality", "professional", "detailed"],
-        style: ["artistic", "creative", "polished"]
-      },
-      rules: {
-        quality: {
-          "high quality": ["sharp", "crisp", "clear"],
-          "professional": ["studio lighting", "commercial grade"],
-          "detailed": ["intricate details", "fine textures"]
-        },
-        style: {
-          "artistic": ["creative composition", "visual appeal"],
-          "creative": ["unique perspective", "innovative design"],
-          "polished": ["refined", "elegant finish"]
-        }
-      },
+      enhancement_text: "high quality, professional style, detailed artwork",
       defaults: {
-        selection: {
-          quality: "high quality",
-          style: "artistic"
-        },
-        weights: {
-          quality: 0.8,
-          style: 0.6
-        },
-        params: {},
-        loras: []
+        intensity: 1.0,
+        join_string: ", ",
+        params: {}
       },
-      enforced_negatives: ["blurry", "low quality", "distorted", "amateur"],
-      assembly: {
-        order: ["quality", "style"],
-        join: ", "
-      }
+      enforced_negatives: ["blurry", "low quality", "distorted", "amateur"]
     }
     
     return NextResponse.json({

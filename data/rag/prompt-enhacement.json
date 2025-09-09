@@ -1,183 +1,11 @@
 {
-  "version": "1.1",
-  "kit": "high_contrast_halftone_enhancer",
-  "description": "High-contrast halftone illustration with bold diagonal patterns, deep violet/white foreground, gradient backgrounds in purple/blue/pink/orange, geometric overlays, and modern vector-like precision.",
-  "enums": {
-    "halftone_style": ["bold_diagonal_halftone", "high_contrast_engraving", "crisp_vector_halftone"],
-    "foreground_palette": ["deep_violet_white", "monochrome_violet", "high_contrast_duotone"],
-    "background_gradient": ["purple_blue_pink_orange", "violet_gradient", "minimal_gradient", "flat_background"],
-    "geometric_overlays": ["circles_squares_diamonds", "radial_lines_grids", "abstract_framing", "minimal_geometric", "none"],
-    "composition_style": ["layered_halftone_center", "balanced_negative_space", "modern_poster_layout"],
-    "vector_precision": ["crisp_digital_edges", "flat_minimal_fills", "clean_vector_style"],
-    "contrast_level": ["ultra_high", "high", "medium_high"]
-  },
-  "rules": {
-    "halftone_style": {
-      "bold_diagonal_halftone": [
-        "bold diagonal line patterns for shading",
-        "high-contrast halftone illustration style",
-        "strong diagonal hatching",
-        "crisp halftone dots in diagonal arrangement"
-      ],
-      "high_contrast_engraving": [
-        "engraving-style line work",
-        "bold contour emphasis", 
-        "sharp edge definition",
-        "woodcut-inspired linework"
-      ],
-      "crisp_vector_halftone": [
-        "vector-like precision",
-        "clean halftone patterns",
-        "digital poster aesthetic",
-        "sharp geometric halftone"
-      ]
-    },
-    "foreground_palette": {
-      "deep_violet_white": [
-        "foreground elements in deep violet and white",
-        "strong contour emphasis",
-        "bold violet ink",
-        "crisp white highlights"
-      ],
-      "monochrome_violet": [
-        "monochrome deep violet tones",
-        "single color foreground",
-        "violet gradations only"
-      ],
-      "high_contrast_duotone": [
-        "limited duotone palette",
-        "maximum contrast between colors",
-        "bold color separation"
-      ]
-    },
-    "background_gradient": {
-      "purple_blue_pink_orange": [
-        "smooth gradient transitions",
-        "purple, blue, pink, and orange tones",
-        "flowing color transitions",
-        "multi-color gradient background"
-      ],
-      "violet_gradient": [
-        "violet to purple gradient",
-        "monochromatic background transition",
-        "subtle color flow"
-      ],
-      "minimal_gradient": [
-        "subtle gradient transitions",
-        "minimal color variation",
-        "clean background flow"
-      ],
-      "flat_background": [
-        "flat color background",
-        "no gradient transitions",
-        "solid color backdrop"
-      ]
-    },
-    "geometric_overlays": {
-      "circles_squares_diamonds": [
-        "geometric overlays with circles, squares, diamonds",
-        "integrated as framing devices",
-        "layered geometric forms",
-        "abstract geometric elements"
-      ],
-      "radial_lines_grids": [
-        "radial lines and grid patterns",
-        "structural geometric guides",
-        "linear overlay elements",
-        "grid-based composition"
-      ],
-      "abstract_framing": [
-        "abstract geometric framing devices",
-        "compositional geometric elements",
-        "artistic overlay patterns"
-      ],
-      "minimal_geometric": [
-        "subtle geometric accents",
-        "minimal overlay elements",
-        "clean geometric touches"
-      ],
-      "none": [
-        "no geometric overlays",
-        "clean background"
-      ]
-    },
-    "composition_style": {
-      "layered_halftone_center": [
-        "layered composition",
-        "central subject in halftone",
-        "surrounded by abstract geometric forms",
-        "focal point emphasis"
-      ],
-      "balanced_negative_space": [
-        "balanced use of negative space",
-        "maintaining clarity and legibility",
-        "thoughtful spacing",
-        "clean composition"
-      ],
-      "modern_poster_layout": [
-        "modern digital poster aesthetic",
-        "contemporary layout design",
-        "artistic poster composition"
-      ]
-    },
-    "vector_precision": {
-      "crisp_digital_edges": [
-        "crisp vector-like precision",
-        "sharp digital edges",
-        "clean line definition",
-        "perfect edge clarity"
-      ],
-      "flat_minimal_fills": [
-        "flat, minimal color fills",
-        "no realistic textures",
-        "solid color areas",
-        "clean color application"
-      ],
-      "clean_vector_style": [
-        "vector illustration style",
-        "digital art precision",
-        "clean graphic design",
-        "professional vector quality"
-      ]
-    },
-    "contrast_level": {
-      "ultra_high": [
-        "maximum contrast",
-        "bold black and white separation",
-        "dramatic tonal differences"
-      ],
-      "high": [
-        "high contrast",
-        "strong tonal separation",
-        "clear value differences"
-      ],
-      "medium_high": [
-        "elevated contrast",
-        "good tonal range",
-        "balanced contrast"
-      ]
-    }
-  },
+  "version": "2.0",
+  "kit": "simple_text_enhancer",
+  "description": "Simple text-based prompt enhancement with customizable style injection",
+  "enhancement_text": "High-contrast halftone illustration style, using bold diagonal line patterns for shading. Foreground elements rendered in deep violet and white, with strong contour emphasis. Backgrounds feature smooth gradient transitions in purple, blue, pink, and orange tones. Geometric overlays (circles, squares, diamonds, radial lines, grids) integrated as framing devices. Flat, minimal color fills with no realistic textures. Layered composition: central subject in halftone, surrounded by abstract geometric forms. Modern, digital poster aesthetic with crisp vector-like precision. Balanced use of negative space, maintaining clarity and legibility.",
   "defaults": {
-    "selection": {
-      "halftone_style": "bold_diagonal_halftone",
-      "foreground_palette": "deep_violet_white",
-      "background_gradient": "purple_blue_pink_orange",
-      "geometric_overlays": "circles_squares_diamonds",
-      "composition_style": "layered_halftone_center",
-      "vector_precision": "crisp_digital_edges",
-      "contrast_level": "ultra_high"
-    },
-    "weights": {
-      "halftone_style": 1.0,
-      "foreground_palette": 0.95,
-      "background_gradient": 0.85,
-      "geometric_overlays": 0.8,
-      "composition_style": 0.9,
-      "vector_precision": 0.9,
-      "contrast_level": 0.95,
-      "safety": 1.0
-    },
+    "intensity": 1.0,
+    "join_string": ", ",
     "params": {
       "steps": 28,
       "cfg_scale": 3.5,
@@ -185,8 +13,7 @@
       "height": 1024,
       "seed": null,
       "sampler": "dpmpp_2m"
-    },
-    "loras": []
+    }
   },
   "enforced_negatives": [
     "blurry",
@@ -223,17 +50,5 @@
     "low contrast",
     "washed out",
     "faded colors"
-  ],
-  "assembly": {
-    "order": [
-      "halftone_style",
-      "foreground_palette", 
-      "background_gradient",
-      "geometric_overlays",
-      "composition_style",
-      "vector_precision",
-      "contrast_level"
-    ],
-    "join": ", "
-  }
+  ]
 }

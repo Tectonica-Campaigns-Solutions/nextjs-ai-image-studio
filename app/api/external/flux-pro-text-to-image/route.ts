@@ -45,11 +45,11 @@ export async function POST(request: NextRequest) {
     // Extract parameters with defaults
     const {
       prompt,
-      useRAG = true,
-      useLoRA = false,
+      useRAG = false, // JSON-only by default
+      useLoRA = true, // LoRA enabled by default
       loraUrl = "",
       loraTriggerPhrase = "",
-      loraScale = 1.0,
+      loraScale = 1.3,
       settings = {}
     } = body
 
@@ -71,13 +71,13 @@ export async function POST(request: NextRequest) {
     
     // Use provided LoRA configuration or default
     const loraConfig = {
-      url: loraUrl || "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
-      triggerPhrase: loraTriggerPhrase || "", // Can be empty
+      url: loraUrl || "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
+      triggerPhrase: loraTriggerPhrase || "TCT-AI-9-9-2025A", // Default trigger phrase
       scale: Math.max(0.1, Math.min(2.0, loraScale)) // Clamp between 0.1 and 2.0
     }
     
     if (useLoRA && loraConfig.triggerPhrase) {
-      finalPrompt = `${finalPrompt}, ${loraConfig.triggerPhrase}`
+      finalPrompt = `${loraConfig.triggerPhrase}, ${finalPrompt}`
     }
 
     // Prepare advanced settings for Flux LoRA

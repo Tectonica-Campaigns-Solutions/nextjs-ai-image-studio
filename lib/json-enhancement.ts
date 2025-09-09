@@ -1,40 +1,35 @@
 // JSON-based prompt enhancement system
-// Works independently or in combination with RAG
+// Simplified version with single text field enhancement
 
 interface JSONEnhancementConfig {
   version: string
   kit: string
   description: string
-  enums: Record<string, string[]>
-  rules: Record<string, Record<string, string[]>>
+  enhancement_text: string
   defaults: {
-    selection: Record<string, string>
-    weights: Record<string, number>
+    intensity: number
+    join_string: string
     params: Record<string, any>
-    loras: any[]
   }
   enforced_negatives: string[]
-  assembly: {
-    order: string[]
-    join: string
-  }
+}
+
+export interface JSONEnhancementOptions {
+  useDefaults?: boolean
+  customText?: string // Allow custom override of enhancement text
+  intensity?: number // 0.0 to 1.0
 }
 
 export interface JSONEnhancementResult {
   enhancedPrompt: string
   originalPrompt: string
-  appliedEnhancements: string[]
+  appliedText: string
   negativePrompt: string
-  technicalElements: Array<{
-    category: string
-    elements: string[]
-    weight: number
-  }>
   suggestedParams: Record<string, any>
   metadata: {
     enhancementMethod: string
     kitUsed: string
-    totalEnhancements: number
+    intensity: number
     processingTime: number
   }
 }
@@ -76,11 +71,7 @@ async function loadEnhancementConfig(): Promise<JSONEnhancementConfig | null> {
 // Main function to enhance prompt with JSON rules
 export async function enhancePromptWithJSON(
   originalPrompt: string,
-  options: {
-    useDefaults?: boolean
-    customSelection?: Record<string, string>
-    intensity?: number // 0.1 to 1.0
-  } = {}
+  options: JSONEnhancementOptions = {}
 ): Promise<JSONEnhancementResult> {
   const startTime = Date.now()
   
@@ -93,49 +84,32 @@ export async function enhancePromptWithJSON(
 
     const {
       useDefaults = true,
-      customSelection = {},
+      customText,
       intensity = 1.0
     } = options
 
-    // Determine selection (defaults + custom overrides)
-    const selection = useDefaults 
-      ? { ...config.defaults.selection, ...customSelection }
-      : customSelection
-
-    console.log('[JSON Enhancement] Using selection:', selection)
-
-    // Build enhancement elements based on selection
-    const appliedEnhancements: string[] = []
-    const technicalElements: Array<{ category: string; elements: string[]; weight: number }> = []
-
-    for (const category of config.assembly.order) {
-      const selectedValue = selection[category]
-      if (!selectedValue || !config.rules[category]?.[selectedValue]) {
-        continue
+    // Determine enhancement text to use
+    const enhancementText = customText || config.enhancement_text
+    
+    // Apply intensity - if less than 1.0, truncate the enhancement text
+    let appliedText = enhancementText
+    if (intensity < 1.0 && intensity > 0) {
+      const sentences = enhancementText.split('. ')
+      const sentencesToUse = Math.max(1, Math.ceil(sentences.length * intensity))
+      appliedText = sentences.slice(0, sentencesToUse).join('. ')
+      if (sentencesToUse < sentences.length) {
+        appliedText += '.'
       }
-
-      const elements = config.rules[category][selectedValue]
-      const weight = config.defaults.weights[category] || 1.0
-      const adjustedWeight = weight * intensity
-
-      if (elements && elements.length > 0) {
-        // Apply weight-based filtering
-        const elementsToApply = adjustedWeight >= 0.7 
-          ? elements 
-          : elements.slice(0, Math.ceil(elements.length * adjustedWeight))
-
-        appliedEnhancements.push(...elementsToApply)
-        technicalElements.push({
-          category,
-          elements: elementsToApply,
-          weight: adjustedWeight
-        })
-      }
+    } else if (intensity === 0) {
+      appliedText = ''
     }
 
+    console.log('[JSON Enhancement] Enhancement text length:', appliedText.length)
+    console.log('[JSON Enhancement] Applied intensity:', intensity)
+
     // Build enhanced prompt
-    const enhancedPrompt = appliedEnhancements.length > 0
-      ? `${originalPrompt}${config.assembly.join}${appliedEnhancements.join(config.assembly.join)}`
+    const enhancedPrompt = appliedText 
+      ? `${originalPrompt}${config.defaults.join_string}${appliedText}`
       : originalPrompt
 
     // Build negative prompt
@@ -147,20 +121,19 @@ export async function enhancePromptWithJSON(
     const result: JSONEnhancementResult = {
       enhancedPrompt,
       originalPrompt,
-      appliedEnhancements,
+      appliedText,
       negativePrompt,
-      technicalElements,
       suggestedParams,
       metadata: {
-        enhancementMethod: 'json-rules',
+        enhancementMethod: 'simple-text',
         kitUsed: config.kit,
-        totalEnhancements: appliedEnhancements.length,
+        intensity,
         processingTime: Date.now() - startTime
       }
     }
 
     console.log('[JSON Enhancement] Enhanced prompt generated:', enhancedPrompt.substring(0, 100) + '...')
-    console.log('[JSON Enhancement] Applied', appliedEnhancements.length, 'enhancements')
+    console.log('[JSON Enhancement] Applied text:', appliedText.substring(0, 100) + '...')
     
     return result
 
@@ -168,99 +141,80 @@ export async function enhancePromptWithJSON(
     console.error('[JSON Enhancement] Error:', error)
     
     // Fallback enhancement
+    const fallbackText = 'high quality, professional style'
     return {
-      enhancedPrompt: `${originalPrompt}, high quality, professional style`,
+      enhancedPrompt: `${originalPrompt}, ${fallbackText}`,
       originalPrompt,
-      appliedEnhancements: ['high quality', 'professional style'],
+      appliedText: fallbackText,
       negativePrompt: 'blurry, low quality, amateur',
-      technicalElements: [{
-        category: 'fallback',
-        elements: ['high quality', 'professional style'],
-        weight: 0.5
-      }],
       suggestedParams: {},
       metadata: {
         enhancementMethod: 'fallback',
         kitUsed: 'fallback',
-        totalEnhancements: 2,
+        intensity: 1.0,
         processingTime: Date.now() - startTime
       }
     }
   }
 }
 
-// Function to get available enhancement options
-export async function getAvailableEnhancementOptions(): Promise<{
-  categories: string[]
-  options: Record<string, string[]>
-  defaults: Record<string, string>
-} | null> {
+// Function to get current enhancement text for editing
+export async function getEnhancementText(): Promise<string | null> {
   try {
     const config = await loadEnhancementConfig()
-    if (!config) return null
-
-    return {
-      categories: config.assembly.order,
-      options: config.enums,
-      defaults: config.defaults.selection
-    }
+    return config?.enhancement_text || null
   } catch (error) {
-    console.error('[JSON Enhancement] Error getting options:', error)
+    console.error('[JSON Enhancement] Error getting enhancement text:', error)
     return null
   }
 }
 
-// Function to validate custom selection
-export async function validateSelection(
-  selection: Record<string, string>
-): Promise<{ valid: boolean; errors: string[] }> {
+// Function to update enhancement text (this would need API support)
+export async function updateEnhancementText(newText: string): Promise<boolean> {
   try {
-    const config = await loadEnhancementConfig()
-    if (!config) {
-      return { valid: false, errors: ['Configuration not available'] }
+    // For now, just update the cache
+    if (enhancementConfigCache) {
+      enhancementConfigCache.enhancement_text = newText
+      console.log('[JSON Enhancement] Updated enhancement text in cache')
+      return true
     }
-
-    const errors: string[] = []
-
-    for (const [category, value] of Object.entries(selection)) {
-      if (!config.enums[category]) {
-        errors.push(`Unknown category: ${category}`)
-        continue
-      }
-
-      if (!config.enums[category].includes(value)) {
-        errors.push(`Invalid value "${value}" for category "${category}". Valid options: ${config.enums[category].join(', ')}`)
-      }
-    }
-
-    return { valid: errors.length === 0, errors }
-
+    return false
   } catch (error) {
-    return { valid: false, errors: [`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`] }
+    console.error('[JSON Enhancement] Error updating enhancement text:', error)
+    return false
   }
 }
 
-// Function to preview enhancement without applying
+// Function to preview enhancement
 export async function previewEnhancement(
-  selection: Record<string, string>
-): Promise<{ preview: string[]; estimatedLength: number } | null> {
+  originalPrompt: string,
+  customText?: string,
+  intensity: number = 1.0
+): Promise<{ preview: string; appliedText: string } | null> {
   try {
     const config = await loadEnhancementConfig()
     if (!config) return null
 
-    const preview: string[] = []
+    const enhancementText = customText || config.enhancement_text
     
-    for (const category of config.assembly.order) {
-      const selectedValue = selection[category]
-      if (selectedValue && config.rules[category]?.[selectedValue]) {
-        preview.push(...config.rules[category][selectedValue])
+    // Apply intensity
+    let appliedText = enhancementText
+    if (intensity < 1.0 && intensity > 0) {
+      const sentences = enhancementText.split('. ')
+      const sentencesToUse = Math.max(1, Math.ceil(sentences.length * intensity))
+      appliedText = sentences.slice(0, sentencesToUse).join('. ')
+      if (sentencesToUse < sentences.length) {
+        appliedText += '.'
       }
+    } else if (intensity === 0) {
+      appliedText = ''
     }
 
-    return {
-      preview,
-      estimatedLength: preview.join(config.assembly.join).length
-    }
+    const preview = appliedText 
+      ? `${originalPrompt}${config.defaults.join_string}${appliedText}`
+      : originalPrompt
+
+    return { preview, appliedText }
 
   } catch (error) {
     console.error('[JSON Enhancement] Preview error:', error)

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,6 +19,7 @@ import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
 import { useRAGStore } from "@/lib/rag-store"
 import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, type HybridEnhancementOptions } from "@/lib/hybrid-enhancement"
+import { getEnhancementText } from "@/lib/json-enhancement"
 import { EnhancementPreview } from "@/components/enhancement-preview"
 
 export default function ImageEditor() {
@@ -48,14 +49,14 @@ export default function ImageEditor() {
   const { getActiveRAG } = useRAGStore()
   
   // LoRA States for Qwen Text-to-Image
-  const [useCustomLoRA, setUseCustomLoRA] = useState(false)
+  const [useCustomLoRA, setUseCustomLoRA] = useState(true)
   // const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
   // const [loraUrl, setLoraUrl] = useState("https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors")
   
-  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors")
+  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
 
-  const [triggerPhrase, setTriggerPhrase] = useState("")
-  const [loraScale, setLoraScale] = useState(1.0)
+  const [triggerPhrase, setTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [loraScale, setLoraScale] = useState(1.3)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
 
   // Flux LoRA Text-to-Image States
@@ -80,11 +81,13 @@ export default function ImageEditor() {
   const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
 
   // Hybrid Enhancement States
-  const [useJSONEnhancement, setUseJSONEnhancement] = useState(false)
-  const [hybridStrategy, setHybridStrategy] = useState<'rag-only' | 'json-only' | 'hybrid' | 'none'>('rag-only')
+  const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
+  const [hybridStrategy, setHybridStrategy] = useState<'rag-only' | 'json-only' | 'hybrid' | 'none'>('json-only')
   const [jsonIntensity, setJsonIntensity] = useState(0.8)
   const [enhancementPreview, setEnhancementPreview] = useState<string>("")
   const [enhancementMeta, setEnhancementMeta] = useState<any>(null)
+  const [customEnhancementText, setCustomEnhancementText] = useState<string>("")
+  const [defaultEnhancementText, setDefaultEnhancementText] = useState<string>("")
   
   // Function to generate enhancement preview
   const generateEnhancementPreview = async (prompt: string) => {
@@ -105,7 +108,8 @@ export default function ImageEditor() {
         activeRAGName: getActiveRAG()?.name
       } : undefined,
       jsonOptions: useJSON ? {
-        useDefaults: true,
+        useDefaults: !customEnhancementText || customEnhancementText === defaultEnhancementText,
+        customText: customEnhancementText !== defaultEnhancementText ? customEnhancementText : undefined,
         intensity: jsonIntensity
       } : undefined
     }
@@ -122,10 +126,10 @@ export default function ImageEditor() {
   }
 
   // Flux LoRA States
-  const [useFluxProLoRA, setUseFluxProLoRA] = useState(false)
-  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("")
-  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("")
-  const [fluxProLoraScale, setFluxProLoraScale] = useState(1.0)
+  const [useFluxProLoRA, setUseFluxProLoRA] = useState(true)
+  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
+  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [fluxProLoraScale, setFluxProLoraScale] = useState(1.3)
 
   // Flux Pro Multi Text-to-Image States
   const [fluxProMultiPrompt, setFluxProMultiPrompt] = useState("")
@@ -148,10 +152,10 @@ export default function ImageEditor() {
   const [showFluxProMultiAdvanced, setShowFluxProMultiAdvanced] = useState(false)
 
   // Flux Pro Multi LoRA States
-  const [useFluxProMultiLoRA, setUseFluxProMultiLoRA] = useState(false)
-  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("")
-  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("")
-  const [fluxProMultiLoraScale, setFluxProMultiLoraScale] = useState(1.0)
+  const [useFluxProMultiLoRA, setUseFluxProMultiLoRA] = useState(true)
+  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
+  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [fluxProMultiLoraScale, setFluxProMultiLoraScale] = useState(1.3)
 
   // Flux Pro Image Combine States
   const [fluxCombinePrompt, setFluxCombinePrompt] = useState("")
@@ -226,10 +230,10 @@ export default function ImageEditor() {
   const [useRagImg2img, setUseRagImg2img] = useState(true)
   const [img2imgGeneratedPrompt, setImg2imgGeneratedPrompt] = useState<string>("")
   const [showImg2imgAdvanced, setShowImg2imgAdvanced] = useState(false)
-  const [useImg2imgLoRA, setUseImg2imgLoRA] = useState(false)
-  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
-  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("")
-  const [img2imgLoraScale, setImg2imgLoraScale] = useState(1.0)
+  const [useImg2imgLoRA, setUseImg2imgLoRA] = useState(true)
+  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
+  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [img2imgLoraScale, setImg2imgLoraScale] = useState(1.3)
 
   // Qwen LoRA Training States
   const [trainingFile, setTrainingFile] = useState<File | null>(null)
@@ -308,6 +312,23 @@ export default function ImageEditor() {
     )
   }
 
+  // Load default enhancement text on component mount
+  useEffect(() => {
+    const loadDefaultText = async () => {
+      try {
+        const text = await getEnhancementText()
+        if (text) {
+          setDefaultEnhancementText(text)
+          setCustomEnhancementText(text) // Initialize with default
+        }
+      } catch (error) {
+        console.warn('Failed to load default enhancement text:', error)
+      }
+    }
+    
+    loadDefaultText()
+  }, [])
+
   // Helper function to handle moderation errors with user-friendly messages
   const handleModerationError = (errorData: any): string => {
     if (!errorData?.error) return "Could not generate image. Please try with different content."
@@ -360,7 +381,7 @@ export default function ImageEditor() {
       // Enhance prompt with trigger phrase if using custom LoRA
       let finalPrompt = qwenPrompt
       if (useCustomLoRA && triggerPhrase.trim()) {
-        finalPrompt = `${qwenPrompt}, ${triggerPhrase}`
+        finalPrompt = `${triggerPhrase}, ${qwenPrompt}`
       }
       
       formData.append("prompt", finalPrompt)
@@ -473,7 +494,8 @@ export default function ImageEditor() {
             activeRAGName: getActiveRAG()?.name
           } : undefined,
           jsonOptions: useJSON ? {
-            useDefaults: true,
+            useDefaults: !customEnhancementText || customEnhancementText === defaultEnhancementText,
+            customText: customEnhancementText !== defaultEnhancementText ? customEnhancementText : undefined,
             intensity: jsonIntensity
           } : undefined
         }
@@ -505,7 +527,7 @@ export default function ImageEditor() {
       
       // Enhance prompt with LoRA trigger phrase if enabled
       if (useFluxProLoRA && fluxProTriggerPhrase.trim()) {
-        finalPrompt = `${finalPrompt}, ${fluxProTriggerPhrase}`
+        finalPrompt = `${fluxProTriggerPhrase}, ${finalPrompt}`
         console.log("[FRONTEND] Enhanced prompt with trigger phrase:", finalPrompt)
       }
       
@@ -619,7 +641,7 @@ export default function ImageEditor() {
       // Enhance prompt with LoRA trigger phrase if enabled
       let finalPrompt = fluxProMultiPrompt
       if (useFluxProMultiLoRA && fluxProMultiTriggerPhrase.trim()) {
-        finalPrompt = `${fluxProMultiPrompt}, ${fluxProMultiTriggerPhrase}`
+        finalPrompt = `${fluxProMultiTriggerPhrase}, ${fluxProMultiPrompt}`
         console.log("[FRONTEND] Enhanced multi prompt with trigger phrase:", finalPrompt)
       }
       
@@ -937,7 +959,7 @@ export default function ImageEditor() {
       // Enhance prompt with trigger phrase if using custom LoRA
       let finalPrompt = img2imgPrompt
       if (useImg2imgLoRA && img2imgTriggerPhrase.trim()) {
-        finalPrompt = `${img2imgPrompt}, ${img2imgTriggerPhrase}`
+        finalPrompt = `${img2imgTriggerPhrase}, ${img2imgPrompt}`
       }
       
       formData.append("image", img2imgFile)
@@ -1598,19 +1620,49 @@ export default function ImageEditor() {
                       
                       {/* JSON Enhancement Intensity (only show if JSON is enabled) */}
                       {(hybridStrategy === 'json-only' || hybridStrategy === 'hybrid') && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-sm">JSON Enhancement Intensity</Label>
-                            <span className="text-xs text-muted-foreground">{Math.round(jsonIntensity * 100)}%</span>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm">JSON Enhancement Intensity</Label>
+                              <span className="text-xs text-muted-foreground">{Math.round(jsonIntensity * 100)}%</span>
+                            </div>
+                            <Slider
+                              value={[jsonIntensity]}
+                              onValueChange={(value) => setJsonIntensity(value[0])}
+                              min={0.1}
+                              max={1.0}
+                              step={0.1}
+                              className="w-full"
+                            />
                           </div>
-                          <Slider
-                            value={[jsonIntensity]}
-                            onValueChange={(value) => setJsonIntensity(value[0])}
-                            min={0.1}
-                            max={1.0}
-                            step={0.1}
-                            className="w-full"
-                          />
+                          
+                          {/* Custom Enhancement Text */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm">Enhancement Style Text</Label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setCustomEnhancementText(defaultEnhancementText)}
+                                className="h-6 px-2 text-xs"
+                                disabled={customEnhancementText === defaultEnhancementText}
+                              >
+                                Reset to Default
+                              </Button>
+                            </div>
+                            <Textarea
+                              placeholder="Enter custom enhancement text..."
+                              value={customEnhancementText}
+                              onChange={(e) => setCustomEnhancementText(e.target.value)}
+                              className="min-h-[120px] text-sm"
+                              disabled={isFluxProGenerating}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              This text will be added to your prompt to define the artistic style. 
+                              Intensity controls how much of this text is used (100% = full text, lower values = truncated).
+                            </p>
+                          </div>
                         </div>
                       )}
                       
