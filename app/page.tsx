@@ -18,6 +18,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
 import { useRAGStore } from "@/lib/rag-store"
+import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, type HybridEnhancementOptions } from "@/lib/hybrid-enhancement"
+import { EnhancementPreview } from "@/components/enhancement-preview"
 
 export default function ImageEditor() {
   // Qwen Text-to-Image States
@@ -65,6 +67,7 @@ export default function ImageEditor() {
     num_images: 1,
     output_format: "png",
     enable_safety_checker: true,
+    negative_prompt: "",
     seed: "",
     width: "",
     height: ""
@@ -75,6 +78,48 @@ export default function ImageEditor() {
   const [useRagFluxPro, setUseRagFluxPro] = useState(true)
   const [fluxProGeneratedPrompt, setFluxProGeneratedPrompt] = useState<string>("")
   const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
+
+  // Hybrid Enhancement States
+  const [useJSONEnhancement, setUseJSONEnhancement] = useState(false)
+  const [hybridStrategy, setHybridStrategy] = useState<'rag-only' | 'json-only' | 'hybrid' | 'none'>('rag-only')
+  const [jsonIntensity, setJsonIntensity] = useState(0.8)
+  const [enhancementPreview, setEnhancementPreview] = useState<string>("")
+  const [enhancementMeta, setEnhancementMeta] = useState<any>(null)
+  
+  // Function to generate enhancement preview
+  const generateEnhancementPreview = async (prompt: string) => {
+    if (!prompt.trim() || hybridStrategy === 'none') {
+      setEnhancementPreview("")
+      setEnhancementMeta(null)
+      return
+    }
+
+    const useRAG = hybridStrategy === 'rag-only' || hybridStrategy === 'hybrid'
+    const useJSON = hybridStrategy === 'json-only' || hybridStrategy === 'hybrid'
+    
+    const hybridOptions: HybridEnhancementOptions = {
+      useRAG,
+      useJSONEnhancement: useJSON,
+      ragContext: useRAG ? {
+        activeRAGId: getActiveRAG()?.id,
+        activeRAGName: getActiveRAG()?.name
+      } : undefined,
+      jsonOptions: useJSON ? {
+        useDefaults: true,
+        intensity: jsonIntensity
+      } : undefined
+    }
+
+    try {
+      const result = await enhancePromptHybrid(prompt, hybridOptions)
+      setEnhancementPreview(result.enhancedPrompt)
+      setEnhancementMeta(result.metadata)
+    } catch (error) {
+      console.warn('Enhancement preview failed:', error)
+      setEnhancementPreview(prompt)
+      setEnhancementMeta(null)
+    }
+  }
 
   // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(false)
@@ -409,25 +454,86 @@ export default function ImageEditor() {
     try {
       const formData = new FormData()
       
-      // Enhance prompt with LoRA trigger phrase if enabled
+      // HYBRID ENHANCEMENT: Determine strategy based on UI state
+      const useRAG = hybridStrategy === 'rag-only' || hybridStrategy === 'hybrid'
+      const useJSON = hybridStrategy === 'json-only' || hybridStrategy === 'hybrid'
+      
       let finalPrompt = fluxProPrompt
+      let enhancementResult = null
+      
+      // Apply hybrid enhancement if any strategy is enabled
+      if (hybridStrategy !== 'none') {
+        console.log('[FRONTEND] Applying hybrid enhancement with strategy:', hybridStrategy)
+        
+        const hybridOptions: HybridEnhancementOptions = {
+          useRAG,
+          useJSONEnhancement: useJSON,
+          ragContext: useRAG ? {
+            activeRAGId: getActiveRAG()?.id,
+            activeRAGName: getActiveRAG()?.name
+          } : undefined,
+          jsonOptions: useJSON ? {
+            useDefaults: true,
+            intensity: jsonIntensity
+          } : undefined
+        }
+        
+        // Validate options
+        const validation = validateHybridOptions(hybridOptions)
+        if (validation.warnings.length > 0) {
+          console.warn('[FRONTEND] Enhancement warnings:', validation.warnings)
+        }
+        
+        try {
+          enhancementResult = await enhancePromptHybrid(fluxProPrompt, hybridOptions)
+          finalPrompt = enhancementResult.enhancedPrompt
+          
+          console.log('[FRONTEND] Enhancement applied:', enhancementResult.metadata)
+          console.log('[FRONTEND] Enhanced prompt length:', finalPrompt.length)
+          
+          // Store enhanced prompt for display
+          setFluxProGeneratedPrompt(finalPrompt)
+        } catch (enhanceError) {
+          console.warn('[FRONTEND] Enhancement failed, using original prompt:', enhanceError)
+          finalPrompt = fluxProPrompt
+          setFluxProGeneratedPrompt(fluxProPrompt)
+        }
+      } else {
+        console.log('[FRONTEND] No enhancement applied (strategy: none)')
+        setFluxProGeneratedPrompt(fluxProPrompt)
+      }
+      
+      // Enhance prompt with LoRA trigger phrase if enabled
       if (useFluxProLoRA && fluxProTriggerPhrase.trim()) {
-        finalPrompt = `${fluxProPrompt}, ${fluxProTriggerPhrase}`
+        finalPrompt = `${finalPrompt}, ${fluxProTriggerPhrase}`
         console.log("[FRONTEND] Enhanced prompt with trigger phrase:", finalPrompt)
       }
       
       formData.append("prompt", finalPrompt)
-      formData.append("useRag", useRagFluxPro.toString())
-      
-      // Add active RAG information
-      const activeRAG = getActiveRAG()
-      if (useRagFluxPro && activeRAG) {
-        formData.append("activeRAGId", activeRAG.id)
-        formData.append("activeRAGName", activeRAG.name)
-      }
+      formData.append("useRag", "false") // RAG is now handled by hybrid system
       
       // Prepare settings object, converting types as needed
       const settings: any = { ...fluxProSettings }
+      
+      // Add LoRA configuration if enabled
+      if (useFluxProLoRA && fluxProLoraUrl.trim()) {
+        settings.loras = [{
+          path: fluxProLoraUrl,
+          scale: fluxProLoraScale
+        }]
+        console.log("[FRONTEND] Adding LoRA to settings:", settings.loras)
+      }
+      
+      // Add negative prompt from enhancement if available
+      if (enhancementResult?.finalNegativePrompt) {
+        // Combine with existing negative prompt if any
+        const existingNegative = fluxProSettings.negative_prompt || ""
+        const combinedNegative = [existingNegative, enhancementResult.finalNegativePrompt]
+          .filter(Boolean)
+          .join(", ")
+        settings.negative_prompt = combinedNegative
+        console.log("[FRONTEND] Combined negative prompt:", combinedNegative)
+      }
       
       // Add LoRA configuration if enabled
       if (useFluxProLoRA && fluxProLoraUrl.trim()) {
@@ -634,7 +740,7 @@ export default function ImageEditor() {
       })
       
       // Prepare settings object
-      const settings = { ...fluxCombineSettings }
+      const settings: any = { ...fluxCombineSettings }
       
       // Remove empty string values
       Object.keys(settings).forEach(key => {
@@ -1433,29 +1539,114 @@ export default function ImageEditor() {
                       />
                     </div>
 
-                    {/* RAG Toggle */}
-                    <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${useRagFluxPro ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                    {/* HYBRID ENHANCEMENT CONTROLS */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="use-rag-flux-pro" className="text-sm font-medium cursor-pointer">
-                            Enhance with Branding Guidelines (RAG)
-                          </Label>
-                          <p className="text-xs text-muted-foreground">
-                            {useRagFluxPro ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
+                          <Label className="text-sm font-semibold">Enhancement Strategy</Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {getStrategyDescription({
+                              useRAG: hybridStrategy === 'rag-only' || hybridStrategy === 'hybrid',
+                              useJSONEnhancement: hybridStrategy === 'json-only' || hybridStrategy === 'hybrid'
+                            })}
                           </p>
                         </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          hybridStrategy === 'hybrid' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                          hybridStrategy === 'rag-only' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                          hybridStrategy === 'json-only' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                        }`}>
+                          {hybridStrategy === 'hybrid' ? 'HYBRID' :
+                           hybridStrategy === 'rag-only' ? 'RAG ONLY' :
+                           hybridStrategy === 'json-only' ? 'JSON ONLY' : 'NONE'}
+                        </div>
                       </div>
-                      <Switch
-                        id="use-rag-flux-pro"
-                        checked={useRagFluxPro}
-                        onCheckedChange={setUseRagFluxPro}
-                        disabled={isFluxProGenerating}
-                      />
+                      
+                      {/* Strategy Selector */}
+                      <Select value={hybridStrategy} onValueChange={(value: any) => setHybridStrategy(value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select enhancement strategy" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                              <span>No Enhancement</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="rag-only">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              <span>RAG Only (Brand Guidelines)</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="json-only">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                              <span>JSON Only (Technical Style)</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="hybrid">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                              <span>Hybrid (RAG + JSON)</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {/* JSON Enhancement Intensity (only show if JSON is enabled) */}
+                      {(hybridStrategy === 'json-only' || hybridStrategy === 'hybrid') && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm">JSON Enhancement Intensity</Label>
+                            <span className="text-xs text-muted-foreground">{Math.round(jsonIntensity * 100)}%</span>
+                          </div>
+                          <Slider
+                            value={[jsonIntensity]}
+                            onValueChange={(value) => setJsonIntensity(value[0])}
+                            min={0.1}
+                            max={1.0}
+                            step={0.1}
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Preview Enhancement Button */}
+                      {hybridStrategy !== 'none' && fluxProPrompt.trim() && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateEnhancementPreview(fluxProPrompt)}
+                          className="w-full"
+                          disabled={isFluxProGenerating}
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Preview Enhancement
+                        </Button>
+                      )}
                     </div>
 
-                    {/* RAG Selector */}
-                    <RAGSelector />
+                    {/* Enhancement Preview Display */}
+                    {enhancementPreview && enhancementMeta && (
+                      <EnhancementPreview
+                        strategy={hybridStrategy}
+                        ragApplied={enhancementMeta.ragApplied}
+                        jsonApplied={enhancementMeta.jsonApplied}
+                        totalEnhancements={enhancementMeta.totalEnhancements}
+                        processingTime={enhancementMeta.processingTime}
+                        enhancementSources={enhancementMeta.enhancementSources}
+                        previewText={enhancementPreview}
+                      />
+                    )}
+
+                    {/* RAG Selector (only show if RAG is enabled) */}
+                    {(hybridStrategy === 'rag-only' || hybridStrategy === 'hybrid') && (
+                      <RAGSelector />
+                    )}
 
                     {/* LoRA Toggle */}
                     <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20">
@@ -1537,7 +1728,7 @@ export default function ImageEditor() {
                       <Checkbox
                         id="show-flux-pro-advanced"
                         checked={showFluxProAdvanced}
-                        onCheckedChange={setShowFluxProAdvanced}
+                        onCheckedChange={(checked) => setShowFluxProAdvanced(checked === true)}
                       />
                       <Label htmlFor="show-flux-pro-advanced" className="text-sm">Show Advanced Settings</Label>
                     </div>

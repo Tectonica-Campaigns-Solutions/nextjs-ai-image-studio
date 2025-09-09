@@ -1,173 +1,210 @@
-import OpenAI from 'openai';
-import { createHash } from 'crypto';
-import { readFile, writeFile, access } from 'fs/promises';
-import { join } from 'path';
+// OpenAI Embeddings Client for Frontend
+// Uses API routes to avoid fs/promises issues in client-side code
 
-// Initialize OpenAI client with error handling
-let openai: OpenAI | null = null;
+interface EmbeddingResponse {
+  embedding?: number[]
+  error?: string
+}
 
-function getOpenAIClient(): OpenAI | null {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      console.warn('[OpenAI Embeddings] Failed to initialize OpenAI client:', error);
-      return null;
+interface SimilarityResponse {
+  similarities?: Array<{
+    content: string
+    metadata?: any
+    similarity: number
+    embedding: number[]
+  }>
+  error?: string
+}
+
+interface StatusResponse {
+  available: boolean
+  hasApiKey: boolean
+  cacheSize: number
+}
+
+// Generate embedding for a given text using API
+export async function generateEmbedding(text: string): Promise<number[] | null> {
+  try {
+    console.log('[OpenAI Embeddings Client] Generating embedding for text length:', text.length)
+    
+    const response = await fetch('/api/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'generate',
+        text: text
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('[OpenAI Embeddings Client] API error:', response.status, errorData)
+      return null
     }
-  }
-  return openai;
-}
 
-// Cache configuration
-const EMBEDDINGS_CACHE_DIR = join(process.cwd(), 'data', 'rag');
-const OPENAI_CACHE_FILE = join(EMBEDDINGS_CACHE_DIR, 'openai-embeddings-cache.json');
-
-interface EmbeddingCacheEntry {
-  prompt: string;
-  embedding: number[];
-  hash: string;
-  timestamp: string;
-  model: string;
-  dimensions: number;
-}
-
-interface EmbeddingCache {
-  [hash: string]: EmbeddingCacheEntry;
-}
-
-// Create hash for prompt to use as cache key
-function createPromptHash(prompt: string): string {
-  return createHash('sha256').update(prompt.trim().toLowerCase()).digest('hex');
-}
-
-// Check if file exists
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Load embeddings cache
-async function loadEmbeddingsCache(): Promise<EmbeddingCache> {
-  try {
-    if (await fileExists(OPENAI_CACHE_FILE)) {
-      const cacheData = await readFile(OPENAI_CACHE_FILE, 'utf-8');
-      return JSON.parse(cacheData);
+    const data: EmbeddingResponse = await response.json()
+    
+    if (data.error) {
+      console.error('[OpenAI Embeddings Client] Error from API:', data.error)
+      return null
     }
+
+    if (!data.embedding) {
+      console.error('[OpenAI Embeddings Client] No embedding in response')
+      return null
+    }
+
+    console.log('[OpenAI Embeddings Client] Successfully generated embedding with', data.embedding.length, 'dimensions')
+    return data.embedding
+    
   } catch (error) {
-    console.warn('[OpenAI Embeddings] Error loading cache:', error);
+    console.error('[OpenAI Embeddings Client] Network error:', error)
+    return null
   }
-  return {};
 }
 
-// Save embeddings cache
-async function saveEmbeddingsCache(cache: EmbeddingCache): Promise<void> {
+// Calculate similarities between query and multiple embeddings
+export async function calculateSimilarities(
+  queryEmbedding: number[],
+  embeddings: Array<{
+    content: string
+    metadata?: any
+    embedding: number[]
+  }>
+): Promise<Array<{
+  content: string
+  metadata?: any
+  similarity: number
+  embedding: number[]
+}> | null> {
   try {
-    await writeFile(OPENAI_CACHE_FILE, JSON.stringify(cache, null, 2));
+    console.log('[OpenAI Embeddings Client] Calculating similarities for', embeddings.length, 'embeddings')
+    
+    const response = await fetch('/api/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'similarity',
+        queryEmbedding,
+        embeddings
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('[OpenAI Embeddings Client] Similarity API error:', response.status, errorData)
+      return null
+    }
+
+    const data: SimilarityResponse = await response.json()
+    
+    if (data.error) {
+      console.error('[OpenAI Embeddings Client] Similarity error from API:', data.error)
+      return null
+    }
+
+    if (!data.similarities) {
+      console.error('[OpenAI Embeddings Client] No similarities in response')
+      return null
+    }
+
+    console.log('[OpenAI Embeddings Client] Successfully calculated', data.similarities.length, 'similarities')
+    return data.similarities
+    
   } catch (error) {
-    console.error('[OpenAI Embeddings] Error saving cache:', error);
+    console.error('[OpenAI Embeddings Client] Similarity network error:', error)
+    return null
   }
 }
 
-// Get embedding for a text using OpenAI API with caching
-export async function getOpenAIEmbedding(text: string): Promise<number[] | null> {
-  const promptHash = createPromptHash(text);
+// Get embeddings service status
+export async function getEmbeddingsStatus(): Promise<StatusResponse | null> {
+  try {
+    const response = await fetch('/api/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'status'
+      })
+    })
+
+    if (!response.ok) {
+      console.error('[OpenAI Embeddings Client] Status API error:', response.status)
+      return null
+    }
+
+    const data: StatusResponse = await response.json()
+    console.log('[OpenAI Embeddings Client] Service status:', data)
+    return data
+    
+  } catch (error) {
+    console.error('[OpenAI Embeddings Client] Status network error:', error)
+    return null
+  }
+}
+
+// Legacy function compatibility
+export async function getEmbedding(prompt: string): Promise<number[] | null> {
+  return generateEmbedding(prompt)
+}
+
+// Legacy function for similarity calculation
+export function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 0
+
+  let dotProduct = 0
+  let normA = 0
+  let normB = 0
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i]
+    normA += a[i] * a[i]
+    normB += b[i] * b[i]
+  }
+
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB))
+}
+
+// Batch processing function for multiple texts
+export async function generateMultipleEmbeddings(texts: string[]): Promise<Array<{
+  text: string
+  embedding: number[] | null
+  index: number
+}>> {
+  console.log('[OpenAI Embeddings Client] Generating embeddings for', texts.length, 'texts')
   
-  try {
-    // Check if OpenAI is available
-    const client = getOpenAIClient();
-    if (!client) {
-      console.warn('[OpenAI Embeddings] OpenAI client not available - API key missing or invalid');
-      return null;
-    }
+  const results = await Promise.all(
+    texts.map(async (text, index) => ({
+      text,
+      embedding: await generateEmbedding(text),
+      index
+    }))
+  )
 
-    // Check cache first
-    const cache = await loadEmbeddingsCache();
-    
-    if (cache[promptHash]) {
-      console.log('[OpenAI Embeddings] Using cached embedding for prompt');
-      return cache[promptHash].embedding;
-    }
-
-    // Call OpenAI API
-    console.log('[OpenAI Embeddings] Generating new embedding via API');
-    const response = await client.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: text,
-      encoding_format: 'float',
-    });
-
-    const embedding = response.data[0].embedding;
-
-    // Cache the result
-    const cacheEntry: EmbeddingCacheEntry = {
-      prompt: text,
-      embedding,
-      hash: promptHash,
-      timestamp: new Date().toISOString(),
-      model: 'text-embedding-3-small',
-      dimensions: embedding.length,
-    };
-
-    cache[promptHash] = cacheEntry;
-    await saveEmbeddingsCache(cache);
-
-    console.log(`[OpenAI Embeddings] Generated and cached embedding with ${embedding.length} dimensions`);
-    return embedding;
-
-  } catch (error) {
-    console.error('[OpenAI Embeddings] Error generating embedding:', error);
-    
-    // Check if it's a quota/billing error
-    if (error instanceof Error && error.message.includes('429')) {
-      console.warn('[OpenAI Embeddings] Quota exceeded - API credits may be exhausted');
-      console.log('[OpenAI Embeddings] Please check your OpenAI billing at: https://platform.openai.com/account/billing');
-    }
-    
-    return null;
-  }
-}
-
-// Calculate cosine similarity between two embeddings
-export function calculateCosineSimilarity(embedding1: number[], embedding2: number[]): number {
-  if (embedding1.length !== embedding2.length) {
-    throw new Error('Embeddings must have the same dimensions');
-  }
-
-  const dotProduct = embedding1.reduce((sum, a, i) => sum + a * embedding2[i], 0);
-  const magnitude1 = Math.sqrt(embedding1.reduce((sum, a) => sum + a * a, 0));
-  const magnitude2 = Math.sqrt(embedding2.reduce((sum, b) => sum + b * b, 0));
+  const successCount = results.filter(r => r.embedding !== null).length
+  console.log('[OpenAI Embeddings Client] Successfully generated', successCount, 'of', texts.length, 'embeddings')
   
-  return dotProduct / (magnitude1 * magnitude2);
+  return results
 }
 
-// Batch process embeddings for EGP categories
-export async function generateEGPCategoryEmbeddings(): Promise<{ [category: string]: number[] }> {
-  const egpCategories = {
-    brand_essence: "sustainability, green politics, environmental protection, social justice, democracy, European values, community, collaboration",
-    photography_style: "lifestyle photography, authentic moments, natural environments, community gatherings, sustainable living, positive energy",
-    color_primary: "EGP green, vibrant yellow, bold pink, nature-inspired colors, sustainable palette, organic tones",
-    color_secondary: "earth tones, natural colors, warm lighting, sustainable materials, eco-friendly aesthetics",
-    composition: "community-focused, environmental settings, group activities, collaborative scenes, sustainable lifestyle",
-    lighting: "natural lighting, warm tones, golden hour, soft illumination, eco-friendly environments",
-    mood_emotion: "optimism, hope, collaboration, sustainability, community spirit, positive change, environmental awareness",
-    visual_elements: "green elements, community gatherings, sustainability themes, diverse representation, collaborative activities"
-  };
+// Helper function to check if embeddings are available
+export async function isEmbeddingsAvailable(): Promise<boolean> {
+  const status = await getEmbeddingsStatus()
+  return status?.available && status?.hasApiKey || false
+}
 
-  const categoryEmbeddings: { [category: string]: number[] } = {};
-
-  for (const [category, description] of Object.entries(egpCategories)) {
-    console.log(`[OpenAI Embeddings] Generating embedding for category: ${category}`);
-    const embedding = await getOpenAIEmbedding(description);
-    if (embedding) {
-      categoryEmbeddings[category] = embedding;
-    }
-  }
-
-  return categoryEmbeddings;
+// Legacy compatibility export
+export async function generateEmbeddings(prompts: string[]): Promise<Array<{ prompt: string; embedding: number[] | null; index: number }>> {
+  const results = await generateMultipleEmbeddings(prompts)
+  return results.map(r => ({
+    prompt: r.text,
+    embedding: r.embedding,
+    index: r.index
+  }))
 }
