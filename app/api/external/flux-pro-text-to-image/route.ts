@@ -4,17 +4,38 @@ import { fal } from "@fal-ai/client"
 /**
  * POST /api/external/flux-pro-text-to-image
  * 
- * External API endpoint for text-to-image generation using Flux Pro model.
- * This endpoint provides professional-grade image generation with advanced settings
+ * External API endpoint for text-to-image generation using Flux Pro mode    } catch (falError: any) {
+      console.error("[External Flux LoRA] Direct Fal.ai call failed:", falError)
+      console.error("[External Flux LoRA] Error details:", {
+        message: falError?.message,
+        status: falError?.status,
+        body: falError?.body,
+        stack: falError?.stack
+      })
+      
+      // If it's a validation error, log the exact input that caused it
+      if (falError?.status === 422) {
+        console.error("[External Flux LoRA] Validation error - Input that caused the error:")
+        console.error("Final prompt:", finalPrompt)
+        console.error("LoRA config:", loraConfig)
+        console.error("Merged settings:", JSON.stringify(mergedSettings, null, 2))
+      }
+      
+      // Fallback to internal API call
+      console.log("[External Flux LoRA] Falling back to internal API...")t provides professional-grade image generation with advanced settings
  * and LoRA support without requiring authentication.
  * 
  * Body parameters:
  * - prompt (required): Text description for image generation
- * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
- * - useLoRA (optional): Whether to apply custom LoRA styling (default: false)
- * - loraUrl (optional): Custom LoRA URL to use
- * - loraTriggerPhrase (optional): Trigger phrase for the LoRA
- * - loraScale (optional): LoRA strength scale (0.1-2.0, default: 1.0)
+ * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false)
+ * - useLoRA (optional): Whether to apply custom LoRA styling (default: true)
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
+ * - jsonOptions (optional): JSON enhancement configuration
+ *   - customText: Custom enhancement description (if not provided, uses defaults)
+ *   - intensity: Enhancement intensity (0.1-1.0, default: 0.8)
+ * - loraUrl (optional): Custom LoRA URL to use (default: Tectonica LoRA)
+ * - loraTriggerPhrase (optional): Trigger phrase for the LoRA (default: "TCT-AI-9-9-2025A")
+ * - loraScale (optional): LoRA strength scale (0.1-2.0, default: 1.3)
  * - settings (optional): Advanced generation settings
  * 
  * Advanced settings include:
@@ -46,7 +67,9 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       useRAG = false, // JSON-only by default
-      useLoRA = true, // LoRA enabled by default
+      useLoRA = true, // LoRA enabled by default as requested
+      useJSONEnhancement = true, // JSON enhancement enabled by default
+      jsonOptions = {},
       loraUrl = "",
       loraTriggerPhrase = "",
       loraScale = 1.3,
@@ -69,13 +92,42 @@ export async function POST(request: NextRequest) {
     // Enhance prompt with LoRA trigger phrase if enabled
     let finalPrompt = prompt.trim()
     
-    // Use provided LoRA configuration or default
+    // Apply JSON enhancement if enabled (before adding trigger phrase)
+    if (useJSONEnhancement) {
+      try {
+        // Import the hybrid enhancement system
+        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
+        
+        const hybridOptions = {
+          useRAG: false, // RAG disabled for external API
+          useJSONEnhancement: true,
+          jsonOptions: {
+            useDefaults: !jsonOptions.customText,
+            customText: jsonOptions.customText,
+            intensity: jsonOptions.intensity || 0.8
+          }
+        }
+
+        const enhancementResult = await enhancePromptHybrid(prompt, hybridOptions)
+        finalPrompt = enhancementResult.enhancedPrompt
+        
+        console.log("[External Flux LoRA] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
+      } catch (error) {
+        console.warn("[External Flux LoRA] JSON enhancement failed, using original prompt:", error)
+        finalPrompt = prompt.trim()
+      }
+    } else {
+      console.log("[External Flux LoRA] Using original prompt without JSON enhancement")
+    }
+    
+    // Use provided LoRA configuration or defaults (same as internal API)
     const loraConfig = {
-      url: loraUrl || "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
-      triggerPhrase: loraTriggerPhrase || "TCT-AI-9-9-2025A", // Default trigger phrase
+      url: loraUrl || "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors", // Default LoRA from internal API
+      triggerPhrase: loraTriggerPhrase || "TCT-AI-9-9-2025A", // Default trigger phrase from internal API
       scale: Math.max(0.1, Math.min(2.0, loraScale)) // Clamp between 0.1 and 2.0
     }
     
+    // Add trigger phrase if LoRA is enabled (at the beginning of the prompt)
     if (useLoRA && loraConfig.triggerPhrase) {
       finalPrompt = `${loraConfig.triggerPhrase}, ${finalPrompt}`
     }
@@ -87,18 +139,21 @@ export async function POST(request: NextRequest) {
       guidance_scale: 3.5,
       num_images: 1,
       enable_safety_checker: true,
-      output_format: "jpg",
+      output_format: "png",
       seed: undefined
     }
     
     const mergedSettings = { ...defaultSettings, ...settings }
     
-    // Add LoRA configuration if enabled
+    // Add LoRA configuration if enabled (same logic as internal API)
     if (useLoRA && loraConfig.url) {
       mergedSettings.loras = [{
         path: loraConfig.url,
         scale: loraConfig.scale
       }]
+      console.log("[External Flux LoRA] LoRA configured:", mergedSettings.loras[0])
+    } else {
+      console.log("[External Flux LoRA] LoRA disabled or no URL provided")
     }
     
     // Validate and clean settings
@@ -146,8 +201,15 @@ export async function POST(request: NextRequest) {
         guidance_scale: mergedSettings.guidance_scale,
         num_images: mergedSettings.num_images,
         enable_safety_checker: mergedSettings.enable_safety_checker,
-        output_format: mergedSettings.output_format,
-        loras: mergedSettings.loras || []
+        output_format: mergedSettings.output_format
+      }
+
+      // Only add LoRAs if they are properly configured
+      if (mergedSettings.loras && mergedSettings.loras.length > 0) {
+        input.loras = mergedSettings.loras
+        console.log("[External Flux LoRA] ✅ LoRAs will be applied:", input.loras)
+      } else {
+        console.log("[External Flux LoRA] ⚠️ No LoRAs configured - using base model")
       }
 
       // Add seed if provided
@@ -158,14 +220,17 @@ export async function POST(request: NextRequest) {
       console.log("[External Flux LoRA] Generating with input:")
       console.log("=====================================")
       console.log("Model: fal-ai/flux-lora")
-      console.log("Enhanced RAG Strategy:")
+      console.log("Enhanced Strategy:")
       console.log("  1. RAG Enhancement:", useRAG ? "✅ Applied" : "❌ Skipped")
-      console.log("  2. Flux LoRA Native: ✅ Optimized for LoRA integration")
-      console.log("  3. Original prompt:", prompt.substring(0, 100) + "...")
-      console.log("  4. RAG-enhanced prompt:", finalPrompt.substring(0, 100) + "...")
-      console.log("Prompt:", finalPrompt)
+      console.log("  2. JSON Enhancement:", useJSONEnhancement ? "✅ Applied" : "❌ Skipped")
+      console.log("  3. LoRA Integration:", useLoRA ? "✅ Applied" : "❌ Skipped")
+      console.log("  4. Original prompt:", prompt.substring(0, 100) + "...")
+      console.log("  5. Final prompt:", finalPrompt.substring(0, 100) + "...")
+      console.log("Prompt structure: [trigger phrase] + [user prompt] + [enhancement text]")
       console.log("LoRA enabled:", useLoRA)
       console.log("LoRA config:", loraConfig)
+      console.log("JSON Enhancement enabled:", useJSONEnhancement)
+      console.log("JSON Options:", jsonOptions)
       console.log("Input object:", JSON.stringify(input, null, 2))
       console.log("=====================================")
 
@@ -208,6 +273,8 @@ export async function POST(request: NextRequest) {
             original: prompt,
             final: finalPrompt,
             enhanced: useRAG,
+            json_enhanced: useJSONEnhancement,
+            json_options: useJSONEnhancement ? jsonOptions : undefined,
             lora_applied: useLoRA,
             lora_config: useLoRA ? {
               url: loraConfig.url,
@@ -224,8 +291,22 @@ export async function POST(request: NextRequest) {
       } else {
         throw new Error("No images returned from Flux LoRA")
       }
-    } catch (falError) {
+    } catch (falError: any) {
       console.error("[External Flux LoRA] Direct Fal.ai call failed:", falError)
+      console.error("[External Flux LoRA] Error details:", {
+        message: falError?.message,
+        status: falError?.status,
+        body: falError?.body,
+        stack: falError?.stack
+      })
+      
+      // If it's a validation error, log the exact input that caused it
+      if (falError?.status === 422) {
+        console.error("[External Flux LoRA] Validation error - Input that caused the error:")
+        console.error("Final prompt:", finalPrompt)
+        console.error("LoRA config:", loraConfig)
+        console.error("Merged settings:", JSON.stringify(mergedSettings, null, 2))
+      }
       
       // Fallback to internal API call
       console.log("[External Flux LoRA] Falling back to internal API...")
@@ -296,6 +377,8 @@ export async function POST(request: NextRequest) {
             original: prompt,
             final: result.finalPrompt || finalPrompt,
             enhanced: useRAG,
+            json_enhanced: useJSONEnhancement,
+            json_options: useJSONEnhancement ? jsonOptions : undefined,
             lora_applied: useLoRA,
             lora_config: useLoRA ? {
               url: loraConfig.url,

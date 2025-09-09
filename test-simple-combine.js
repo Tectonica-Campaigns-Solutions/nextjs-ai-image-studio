@@ -13,7 +13,11 @@ async function testImageCombine() {
       "https://picsum.photos/400/300?random=1",
       "https://picsum.photos/400/300?random=2"
     ],
-    useRAG: true,
+    useRAG: false, // RAG disabled for image combination
+    useJSONEnhancement: false, // JSON enhancement disabled by default
+    jsonOptions: {
+      intensity: 0.7
+    },
     settings: {
       aspect_ratio: "1:1",
       guidance_scale: 3.5,

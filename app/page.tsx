@@ -125,6 +125,35 @@ export default function ImageEditor() {
     }
   }
 
+  // Function to generate enhancement preview for Combine Images
+  const generateFluxCombineEnhancementPreview = async (prompt: string) => {
+    if (!prompt.trim() || !fluxCombineUseJSONEnhancement) {
+      setFluxCombineEnhancementPreview("")
+      setFluxCombineEnhancementMeta(null)
+      return
+    }
+
+    const hybridOptions: HybridEnhancementOptions = {
+      useRAG: false, // Only JSON for Combine Images
+      useJSONEnhancement: true,
+      jsonOptions: {
+        useDefaults: !fluxCombineCustomEnhancementText || fluxCombineCustomEnhancementText === fluxCombineDefaultEnhancementText,
+        customText: fluxCombineCustomEnhancementText !== fluxCombineDefaultEnhancementText ? fluxCombineCustomEnhancementText : undefined,
+        intensity: fluxCombineJsonIntensity
+      }
+    }
+
+    try {
+      const result = await enhancePromptHybrid(prompt, hybridOptions)
+      setFluxCombineEnhancementPreview(result.enhancedPrompt)
+      setFluxCombineEnhancementMeta(result.metadata)
+    } catch (error) {
+      console.warn('Combine Images enhancement preview failed:', error)
+      setFluxCombineEnhancementPreview(prompt)
+      setFluxCombineEnhancementMeta(null)
+    }
+  }
+
   // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(true)
   const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
@@ -173,9 +202,16 @@ export default function ImageEditor() {
   const [fluxCombineResult, setFluxCombineResult] = useState<string>("")
   const [isFluxCombineGenerating, setIsFluxCombineGenerating] = useState(false)
   const [fluxCombineError, setFluxCombineError] = useState<string>("")
-  const [useRagFluxCombine, setUseRagFluxCombine] = useState(true)
   const [fluxCombineGeneratedPrompt, setFluxCombineGeneratedPrompt] = useState<string>("")
   const [showFluxCombineAdvanced, setShowFluxCombineAdvanced] = useState(false)
+
+  // Flux Combine JSON Enhancement States
+  const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(false) // Disabled by default
+  const [fluxCombineJsonIntensity, setFluxCombineJsonIntensity] = useState(0.8)
+  const [fluxCombineEnhancementPreview, setFluxCombineEnhancementPreview] = useState<string>("")
+  const [fluxCombineEnhancementMeta, setFluxCombineEnhancementMeta] = useState<any>(null)
+  const [fluxCombineCustomEnhancementText, setFluxCombineCustomEnhancementText] = useState<string>("")
+  const [fluxCombineDefaultEnhancementText, setFluxCombineDefaultEnhancementText] = useState<string>("")
 
   // Edit Image States
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -320,6 +356,10 @@ export default function ImageEditor() {
         if (text) {
           setDefaultEnhancementText(text)
           setCustomEnhancementText(text) // Initialize with default
+          
+          // Also initialize for Combine Images
+          setFluxCombineDefaultEnhancementText(text)
+          setFluxCombineCustomEnhancementText(text)
         }
       } catch (error) {
         console.warn('Failed to load default enhancement text:', error)
@@ -737,17 +777,34 @@ export default function ImageEditor() {
     setFluxCombineError("")
 
     try {
+      // Apply JSON enhancement if enabled
+      let finalPrompt = fluxCombinePrompt
+      if (fluxCombineUseJSONEnhancement) {
+        try {
+          const hybridOptions: HybridEnhancementOptions = {
+            useRAG: false, // Only JSON for Combine Images
+            useJSONEnhancement: true,
+            jsonOptions: {
+              useDefaults: !fluxCombineCustomEnhancementText || fluxCombineCustomEnhancementText === fluxCombineDefaultEnhancementText,
+              customText: fluxCombineCustomEnhancementText !== fluxCombineDefaultEnhancementText ? fluxCombineCustomEnhancementText : undefined,
+              intensity: fluxCombineJsonIntensity
+            }
+          }
+
+          const enhancementResult = await enhancePromptHybrid(fluxCombinePrompt, hybridOptions)
+          finalPrompt = enhancementResult.enhancedPrompt
+          
+          console.log("[COMBINE] Enhanced prompt:", finalPrompt)
+        } catch (error) {
+          console.warn("[COMBINE] Enhancement failed, using original prompt:", error)
+          finalPrompt = fluxCombinePrompt
+        }
+      }
+
       const formData = new FormData()
       
-      formData.append("prompt", fluxCombinePrompt)
-      formData.append("useRag", useRagFluxCombine.toString())
-      
-      // Add active RAG information
-      const activeRAG = getActiveRAG()
-      if (useRagFluxCombine && activeRAG) {
-        formData.append("activeRAGId", activeRAG.id)
-        formData.append("activeRAGName", activeRAG.name)
-      }
+      formData.append("prompt", finalPrompt)
+      formData.append("useRag", "false")
       
       // Add uploaded image files
       fluxCombineImages.forEach((file, index) => {
@@ -794,12 +851,8 @@ export default function ImageEditor() {
 
       const result = await response.json()
       
-      // Capture generated prompt if available
-      if (result.finalPrompt) {
-        setFluxCombineGeneratedPrompt(result.finalPrompt)
-      } else {
-        setFluxCombineGeneratedPrompt(fluxCombinePrompt) // Fallback to original prompt
-      }
+      // Capture generated prompt (use the enhanced prompt we sent)
+      setFluxCombineGeneratedPrompt(finalPrompt)
       
       if (result.success && result.image) {
         setFluxCombineResult(result.image)
@@ -1190,11 +1243,11 @@ export default function ImageEditor() {
         </div>
 
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image">Flux Lora</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
-          <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger>
+          {/* <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger> */}
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="upload-branding">Upload Branding</TabsTrigger>
           <TabsTrigger value="qwen-train-lora">Train LoRA</TabsTrigger>
@@ -2070,21 +2123,90 @@ export default function ImageEditor() {
                       />
                     </div>
 
-                    {/* RAG Toggle */}
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="flux-combine-rag"
-                          checked={useRagFluxCombine}
-                          onCheckedChange={setUseRagFluxCombine}
-                          className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
-                        />
-                        <Label htmlFor="flux-combine-rag" className="cursor-pointer font-medium">
-                          Enhance with {getActiveRAG()?.name || 'RAG'} branding
-                        </Label>
+                    {/* JSON Enhancement Section */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="flux-combine-json-enhancement"
+                              checked={fluxCombineUseJSONEnhancement}
+                              onCheckedChange={setFluxCombineUseJSONEnhancement}
+                              className="data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                            />
+                            <Label htmlFor="flux-combine-json-enhancement" className="cursor-pointer font-medium">
+                              JSON Enhancement
+                            </Label>
+                          </div>
+                          <div className={`w-2 h-2 rounded-full ${fluxCombineUseJSONEnhancement ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                        </div>
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={!fluxCombinePrompt.trim() || !fluxCombineUseJSONEnhancement}
+                          onClick={() => generateFluxCombineEnhancementPreview(fluxCombinePrompt)}
+                          className="text-xs"
+                        >
+                          Preview Enhancement
+                        </Button>
                       </div>
-                      <div className={`w-2 h-2 rounded-full ${useRagFluxCombine ? 'bg-blue-500' : 'bg-gray-400'} transition-colors`}></div>
+
+                      {fluxCombineUseJSONEnhancement && (
+                        <div className="space-y-4">
+                          {/* JSON Enhancement Intensity */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm">JSON Enhancement Intensity</Label>
+                              <span className="text-xs text-muted-foreground">{(fluxCombineJsonIntensity * 100).toFixed(0)}%</span>
+                            </div>
+                            <Slider
+                              value={[fluxCombineJsonIntensity]}
+                              onValueChange={(value) => setFluxCombineJsonIntensity(value[0])}
+                              max={1.0}
+                              min={0.1}
+                              step={0.1}
+                              className="w-full"
+                            />
+                          </div>
+
+                          {/* Custom Enhancement Text */}
+                          <div className="space-y-2">
+                            <Label className="text-sm">Enhancement Description</Label>
+                            <Textarea
+                              value={fluxCombineCustomEnhancementText}
+                              onChange={(e) => setFluxCombineCustomEnhancementText(e.target.value)}
+                              placeholder="Describe the visual enhancements you want to apply..."
+                              className="min-h-[80px] text-sm"
+                            />
+                            <div className="text-xs text-muted-foreground">
+                              Edit this description to customize how your prompts are enhanced. This affects image style, composition, and technical details.
+                            </div>
+                          </div>
+
+                          {/* Enhancement Preview */}
+                          {fluxCombineEnhancementPreview && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Enhanced Prompt Preview</Label>
+                              <div className="p-3 bg-white dark:bg-gray-900 rounded-md border text-sm max-h-32 overflow-y-auto">
+                                {fluxCombineEnhancementPreview}
+                              </div>
+                              {fluxCombineEnhancementMeta && (
+                                <EnhancementPreview 
+                                  strategy="json-only"
+                                  ragApplied={false}
+                                  jsonApplied={fluxCombineEnhancementMeta.jsonApplied}
+                                  totalEnhancements={fluxCombineEnhancementMeta.totalEnhancements}
+                                  processingTime={fluxCombineEnhancementMeta.processingTime}
+                                />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
+
 
                     {/* Advanced Settings Toggle */}
                     <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/20 dark:to-slate-950/20">
@@ -2241,10 +2363,10 @@ export default function ImageEditor() {
             </div>
           </TabsContent>
 
-          {/* Image-to-Image Tab */}
+          {/* Image-to-Image Tab - HIDDEN
           <TabsContent value="qwen-image-to-image" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Upload and Form Section */}
+              Upload and Form Section
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -2255,304 +2377,12 @@ export default function ImageEditor() {
                     Upload an image and transform it using AI with Qwen Image-to-Image
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Image Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="img2img-file">Source Image</Label>
-                    <Input
-                      id="img2img-file"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImg2imgFileUpload}
-                      className="cursor-pointer"
-                    />
-                    {img2imgFile && (
-                      <p className="text-sm text-muted-foreground">
-                        Selected: {img2imgFile.name} ({(img2imgFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Preview */}
-                  {img2imgPreviewUrl && (
-                    <div className="space-y-2">
-                      <Label>Preview</Label>
-                      <div className="border rounded-lg p-4 bg-muted/30">
-                        <img 
-                          src={img2imgPreviewUrl} 
-                          alt="Preview" 
-                          className="max-w-full h-auto max-h-48 mx-auto rounded"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Transformation Form */}
-                  <form onSubmit={handleImg2imgSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="img2img-prompt">Transformation Prompt</Label>
-                      <Textarea
-                        id="img2img-prompt"
-                        placeholder="Describe how you want to transform the image (e.g., 'change to oil painting style', 'make it look like a sunset scene')"
-                        value={img2imgPrompt}
-                        onChange={(e) => setImg2imgPrompt(e.target.value)}
-                        rows={3}
-                        required
-                      />
-                    </div>
-
-                    {/* RAG Toggle */}
-                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${useRagImg2img ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
-                        <div>
-                          <Label htmlFor="use-rag-img2img" className="font-medium cursor-pointer">
-                            Enhance with Branding Guidelines (RAG)
-                          </Label>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {useRagImg2img ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
-                          </p>
-                        </div>
-                      </div>
-                      <Switch
-                        id="use-rag-img2img"
-                        checked={useRagImg2img}
-                        onCheckedChange={setUseRagImg2img}
-                        className="data-[state=checked]:bg-green-600"
-                      />
-                    </div>
-
-                    {/* LoRA Settings */}
-                    <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
-                      <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-3 h-3 rounded-full ${useImg2imgLoRA ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
-                          <div>
-                            <Label htmlFor="use-img2img-lora" className="font-medium cursor-pointer">
-                              Apply Custom LoRA Style
-                            </Label>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {useImg2imgLoRA ? 'Active - Custom LoRA style will be applied' : 'Inactive - Using base model only'}
-                            </p>
-                          </div>
-                        </div>
-                        <Switch
-                          id="use-img2img-lora"
-                          checked={useImg2imgLoRA}
-                          onCheckedChange={setUseImg2imgLoRA}
-                          className="data-[state=checked]:bg-purple-600"
-                        />
-                      </div>
-                      
-                      {useImg2imgLoRA && (
-                        <div className="space-y-3 pl-6 border-l-2 border-primary/20">
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-lora-url">LoRA Model URL</Label>
-                            <Input
-                              id="img2img-lora-url"
-                              value={img2imgLoraUrl}
-                              onChange={(e) => setImg2imgLoraUrl(e.target.value)}
-                              placeholder="https://v3.fal.media/files/..."
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-trigger-phrase">Style Trigger Phrase</Label>
-                            <Input
-                              id="img2img-trigger-phrase"
-                              value={img2imgTriggerPhrase}
-                              onChange={(e) => setImg2imgTriggerPhrase(e.target.value)}
-                              placeholder="Style keywords to enhance the transformation"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-lora-scale">Style Strength: {img2imgLoraScale}</Label>
-                            <input
-                              id="img2img-lora-scale"
-                              type="range"
-                              min="0.1"
-                              max="2.0"
-                              step="0.1"
-                              value={img2imgLoraScale}
-                              onChange={(e) => setImg2imgLoraScale(parseFloat(e.target.value))}
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Advanced Settings */}
-                    <div className="space-y-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowImg2imgAdvanced(!showImg2imgAdvanced)}
-                        className="w-full"
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        {showImg2imgAdvanced ? "Hide" : "Show"} Advanced Settings
-                      </Button>
-
-                      {showImg2imgAdvanced && (
-                        <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/20">
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-image-size">Image Size</Label>
-                            <Select
-                              value={img2imgSettings.image_size}
-                              onValueChange={(value) => setImg2imgSettings(prev => ({ ...prev, image_size: value }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="square_hd">Square HD</SelectItem>
-                                <SelectItem value="square">Square</SelectItem>
-                                <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
-                                <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
-                                <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
-                                <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-steps">Inference Steps: {img2imgSettings.num_inference_steps}</Label>
-                            <input
-                              id="img2img-steps"
-                              type="range"
-                              min="1"
-                              max="100"
-                              value={img2imgSettings.num_inference_steps}
-                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, num_inference_steps: parseInt(e.target.value) }))}
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-guidance">Guidance Scale: {img2imgSettings.guidance_scale}</Label>
-                            <input
-                              id="img2img-guidance"
-                              type="range"
-                              min="1"
-                              max="20"
-                              step="0.1"
-                              value={img2imgSettings.guidance_scale}
-                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, guidance_scale: parseFloat(e.target.value) }))}
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-strength">Transformation Strength: {img2imgSettings.strength}</Label>
-                            <input
-                              id="img2img-strength"
-                              type="range"
-                              min="0.1"
-                              max="1.0"
-                              step="0.1"
-                              value={img2imgSettings.strength}
-                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, strength: parseFloat(e.target.value) }))}
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-num-images">Number of Images: {img2imgSettings.num_images}</Label>
-                            <input
-                              id="img2img-num-images"
-                              type="range"
-                              min="1"
-                              max="4"
-                              value={img2imgSettings.num_images}
-                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, num_images: parseInt(e.target.value) }))}
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="img2img-negative-prompt">Negative Prompt</Label>
-                            <Input
-                              id="img2img-negative-prompt"
-                              value={img2imgSettings.negative_prompt}
-                              onChange={(e) => setImg2imgSettings(prev => ({ ...prev, negative_prompt: e.target.value }))}
-                              placeholder="What to avoid in the image"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {img2imgError && (
-                      <Alert className="border-red-200 bg-red-50">
-                        <AlertDescription className="text-red-700">
-                          {img2imgError}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Button type="submit" disabled={isImg2imgGenerating || !img2imgFile || !img2imgPrompt.trim()} className="w-full">
-                      {isImg2imgGenerating ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Transforming Image...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="h-4 w-4 mr-2" />
-                          Transform Image
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              {/* Results Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5" />
-                    Transformed Images
-                  </CardTitle>
-                  <CardDescription>
-                    AI-generated transformations of your image
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {img2imgResult.length > 0 ? (
-                    <div className="space-y-4">
-                      {img2imgResult.map((imageUrl, index) => (
-                        <div key={index} className="space-y-2">
-                          <img 
-                            src={imageUrl} 
-                            alt={`Transformed image ${index + 1}`} 
-                            className="w-full h-auto rounded-lg border shadow-sm"
-                          />
-                          <OpenInNewTabButton 
-                            imageUrl={imageUrl} 
-                            buttonText={`Open Result ${index + 1} in New Tab`} 
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <ImageIcon className="h-12 w-12 mx-auto mb-2" />
-                      <p>Transform an image to see results</p>
-                    </div>
-                  )}
-                </CardContent>
+                ... rest of content hidden ...
               </Card>
             </div>
-
-            {/* Generated Prompt Display */}
-            {img2imgGeneratedPrompt && (
-              <GeneratedPromptDisplay 
-                prompt={img2imgGeneratedPrompt} 
-                title="Generated Transformation Prompt" 
-              />
-            )}
+            Generated Prompt Display hidden...
           </TabsContent>
+          */}
 
           {/* Edit Image Tab */}
           <TabsContent value="edit-image" className="space-y-6">

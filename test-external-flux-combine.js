@@ -35,7 +35,12 @@ async function testImageCombineAPI() {
       "https://picsum.photos/800/600?random=1",
       "https://picsum.photos/800/600?random=2"
     ],
-    useRAG: true,
+    useRAG: false, // RAG disabled for image combination
+    useJSONEnhancement: false, // JSON enhancement disabled by default
+    jsonOptions: {
+      intensity: 0.8,
+      customText: "Professional, high-quality artistic composition with enhanced lighting, improved contrast, and refined visual elements."
+    },
     settings: {
       aspect_ratio: "16:9",
       guidance_scale: 4.0,

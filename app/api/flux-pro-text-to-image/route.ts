@@ -10,7 +10,7 @@ async function getRAGSystem() {
   if (useFullRAG) {
     // In Railway/local environment, use optimized RAG system
     try {
-      const { enhancePromptWithBranding } = await import("@/lib/rag-system-optimized")
+      const { enhancePromptWithBranding } = await import("@/lib/rag-system")
       console.log('[RAG] Using optimized RAG system')
       return enhancePromptWithBranding
     } catch (error) {
@@ -104,10 +104,7 @@ export async function POST(request: NextRequest) {
       if (ragSystem) {
         try {
           console.log("[FLUX-LORA] Enhancing prompt with RAG...")
-          const enhancement = await ragSystem(prompt, {
-            activeRAGId: activeRAGId,
-            activeRAGName: activeRAGName
-          })
+          const enhancement = await ragSystem(prompt)
           
           console.log(`[RAG] Enhancement result:`, enhancement)
           
