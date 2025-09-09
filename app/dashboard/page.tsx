@@ -394,10 +394,10 @@ function DashboardContent() {
           description: error instanceof Error ? error.message : "Unknown error",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
       }
     }
+
+    setIsLoading(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
