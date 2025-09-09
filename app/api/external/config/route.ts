@@ -28,8 +28,9 @@ export async function GET(request: NextRequest) {
         available: true,
         // defaultUrl: "https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors",
         // defaultUrl: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
-        defaultUrl: "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
-        defaultScale: 1.0,
+        defaultUrl: "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
+        defaultScale: 1.3,
+        defaultTriggerPhrase: "TCT-AI-9-9-2025A",
         description: "LoRA models allow custom style training and application"
       },
       textToImage: {
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
           supported: true,
           customUrl: true,
           triggerPhrase: true,
-          scaleRange: { min: 0.1, max: 2.0, default: 1.0, step: 0.1 }
+          scaleRange: { min: 0.1, max: 2.0, default: 1.3, step: 0.1 }
         },
         settings: {
           num_inference_steps: { min: 1, max: 50, default: 30 },

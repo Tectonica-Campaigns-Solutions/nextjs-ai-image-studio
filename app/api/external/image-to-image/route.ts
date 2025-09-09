@@ -97,13 +97,13 @@ export async function POST(request: NextRequest) {
     const loraConfig = {
       // url: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
     //   url: "https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors",
-      url: "https://v3.fal.media/files/kangaroo/bUQL-AZq6ctnB1gifw2ku_pytorch_lora_weights.safetensors",
-      triggerPhrase: "", // Will be read from app state
-      scale: 1.0
+      url: "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
+      triggerPhrase: "TCT-AI-9-9-2025A", // Will be read from app state
+      scale: 1.3
     }
     
     if (useLoRA && loraConfig.triggerPhrase) {
-      finalPrompt = `${finalPrompt}, ${loraConfig.triggerPhrase}`
+      finalPrompt = `${loraConfig.triggerPhrase}, ${finalPrompt}`
     }
     
     internalFormData.append("image", image)
