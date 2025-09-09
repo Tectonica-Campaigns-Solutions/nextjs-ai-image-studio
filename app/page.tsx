@@ -1242,9 +1242,9 @@ export default function ImageEditor() {
           </div>
         </div>
 
-              <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
+              <Tabs defaultValue="flux-pro-text-to-image" className="w-full max-w-6xl mx-auto">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="qwen-text-to-image" style={{ display: 'none' }}>Generate Image</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image">Flux Lora</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           {/* <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger> */}
@@ -1254,7 +1254,7 @@ export default function ImageEditor() {
         </TabsList>
 
           {/* Qwen Text-to-Image Tab */}
-          <TabsContent value="qwen-text-to-image" className="space-y-6">
+          <TabsContent value="qwen-text-to-image" className="space-y-6" style={{ display: 'none' }}>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Qwen Generation Form */}
               <Card>
@@ -1596,7 +1596,7 @@ export default function ImageEditor() {
                     Flux LoRA Text-to-Image
                   </CardTitle>
                   <CardDescription>
-                    Generate high-quality images using Flux LoRA (FLUX.1 dev) - 36% cost reduction with enhanced LoRA support
+                    Generate high-quality images using Flux LoRA (FLUX.1 dev)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1676,7 +1676,7 @@ export default function ImageEditor() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm">JSON Enhancement Intensity</Label>
+                              <Label className="text-sm">Enhancement Intensity</Label>
                               <span className="text-xs text-muted-foreground">{Math.round(jsonIntensity * 100)}%</span>
                             </div>
                             <Slider
