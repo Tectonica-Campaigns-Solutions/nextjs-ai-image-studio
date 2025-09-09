@@ -125,7 +125,7 @@ export async function POST(
           .select()
           .single();
 
-        const result = await supabase.from("message_files").insert({
+        await supabase.from("message_files").insert({
           message_id: messageId,
           file_id: file.fileId,
           created_at: new Date().toISOString(),
@@ -133,29 +133,26 @@ export async function POST(
       }
     }
 
+    const inputMessage = {
+      role: "user",
+      content: [
+        { type: "input_text", text: content },
+        ...(fileIds || []).map((file: any) => {
+          const ext = file.name?.split(".").pop()?.toLowerCase();
+
+          return {
+            type: ext === "pdf" ? "input_file" : "input_image",
+            file_id: file.fileId,
+          };
+        }),
+      ],
+    };
+
     // @ts-ignore
     const response = await client?.responses.create({
-      prompt: {
-        id: promptId,
-      },
+      prompt: { id: promptId },
       model: "gpt-4-turbo",
-      input: [
-        ...conversationHistory,
-        {
-          role: "user",
-          content: [
-            { type: "input_text", text: content },
-            ...(fileIds || []).map((file: any) => {
-              const ext = file.name?.split(".").pop()?.toLowerCase();
-
-              return {
-                type: ext === "pdf" ? "input_file" : "input_image",
-                file_id: file.fileId,
-              };
-            }),
-          ],
-        },
-      ],
+      input: [...conversationHistory, inputMessage],
       tools: [
         {
           type: "file_search",
@@ -198,6 +195,31 @@ export async function POST(
             additionalProperties: false,
           },
         },
+        {
+          type: "function",
+          name: "combine_images",
+          description:
+            "Use this function when the user uploads multiple images and explicitly asks to combine them. You must return the SAME file_ids that were provided in the user input. Never invent or generate new IDs.",
+          strict: true,
+          parameters: {
+            type: "object",
+            properties: {
+              prompt: {
+                type: "string",
+                description:
+                  "Instructions on how to arrange or combine the uploaded images.",
+              },
+              file_ids: {
+                type: "array",
+                description:
+                  "List of OpenAI file_ids provided in the user input. Use exactly these values, do not generate or guess.",
+                items: { type: "string" },
+              },
+            },
+            required: ["prompt", "file_ids"],
+            additionalProperties: false,
+          },
+        },
       ],
     });
 
@@ -220,37 +242,30 @@ export async function POST(
         item.name === "on_image_edit_request" &&
         item.status === "completed"
     );
-
-    // console.log({ imageEditTool });
+    const imageCombineTool = response?.output?.find(
+      (item) =>
+        item.type === "function_call" &&
+        item.name === "combine_images" &&
+        item.status === "completed"
+    );
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
       // const parameters = imageGenerationTool.parameters;
 
       const conversationText = conversationHistory
+        // @ts-ignore
         .map((msg) => msg.content.map((c) => c.text).join(" "))
         .join(" ");
-
-      console.log({ conversationHistory, conversationText });
+      const prompt = `${conversationText}. ${content}.`;
 
       try {
         const imageResp = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/text-to-image`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-text-to-image`,
           {
             method: "POST",
             body: JSON.stringify({
-              prompt: `${conversationText} ${content}, your trained style`,
-              useRAG: "true",
-              settings: {
-                image_size: "landscape_4_3",
-                num_inference_steps: 30,
-                guidance_scale: 2.5,
-                num_images: 1,
-                output_format: "png",
-                negative_prompt: "",
-                acceleration: "none",
-                seed: 12345,
-              },
+              prompt: prompt,
             }),
           }
         );
@@ -258,8 +273,6 @@ export async function POST(
         if (!imageResp.ok) {
           throw new Error(`Image generation failed: ${imageResp.status}`);
         }
-
-        console.log("generating image");
 
         const imageData = await imageResp.json();
         if (imageData?.images) {
@@ -284,6 +297,40 @@ export async function POST(
         "";
 
       activateEditImage = true;
+    } else if (imageCombineTool) {
+      try {
+        const params = JSON.parse((imageCombineTool as any)?.arguments);
+
+        const prompt = params?.prompt;
+        const prevFileUrls = extractFileIds(previousMessages);
+
+        const imageUrls = fileIds
+          ? fileIds.map((f: any) => f.fileUrl)
+          : prevFileUrls
+          ? prevFileUrls
+          : [];
+
+        const combineResp = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-image-combine`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              prompt,
+              imageUrls: imageUrls,
+            }),
+          }
+        );
+
+        if (!combineResp.ok) {
+          throw new Error(`Image combination failed: ${combineResp.status}`);
+        }
+
+        const combineData = await combineResp.json();
+        finalMessage = combineData?.image || "Image combination failed";
+      } catch (err) {
+        console.error("Error combining images:", err);
+        finalMessage = "Error combining images.";
+      }
     }
 
     // Save assistant message
@@ -362,4 +409,21 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+// Utils
+function extractFileIds(messages: any) {
+  const fileUrls: string[] = [];
+
+  messages.forEach((msg: any) => {
+    if (Array.isArray(msg.message_files)) {
+      msg.message_files.forEach((item: any) => {
+        if (item.files?.file_url) {
+          fileUrls.push(item.files.file_url);
+        }
+      });
+    }
+  });
+
+  return fileUrls;
 }
