@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test JSON Enhancement</title>
+</head>
+<body>
+    <h1>JSON Enhancement Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function testEnhancement() {
+            const output = document.getElementById('output');
+            
+            try {
+                output.innerHTML += '<p>Testing enhancement config API...</p>';
+                
+                const response = await fetch('/api/enhancement-config');
+                const data = await response.json();
+                
+                output.innerHTML += '<p>API Response:</p>';
+                output.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success && data.config) {
+                    output.innerHTML += '<p>Enhancement text preview:</p>';
+                    output.innerHTML += '<p>' + data.config.enhancement_text.substring(0, 300) + '...</p>';
+                }
+                
+                // Now test the external API
+                output.innerHTML += '<h2>Testing External API</h2>';
+                
+                const testPrompt = "a beautiful landscape";
+                const apiResponse = await fetch('/api/external/flux-pro-text-to-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: testPrompt,
+                        useJSONEnhancement: true,
+                        jsonOptions: {
+                            intensity: 0.8
+                        }
+                    })
+                });
+                
+                const apiData = await apiResponse.json();
+                output.innerHTML += '<p>External API Response:</p>';
+                output.innerHTML += '<pre>' + JSON.stringify(apiData, null, 2) + '</pre>';
+                
+            } catch (error) {
+                output.innerHTML += '<p>Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Run test when page loads
+        window.onload = testEnhancement;
+    </script>
+</body>
+</html>

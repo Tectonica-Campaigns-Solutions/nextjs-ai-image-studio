@@ -2,35 +2,6 @@ import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 
-// Dynamic import for platform compatibility
-async function getRAGSystem() {
-  // Check if we should use full RAG (Railway, local) or simple RAG (Vercel)
-  const useFullRAG = !process.env.VERCEL
-  
-  if (useFullRAG) {
-    // In Railway/local environment, use optimized RAG system
-    try {
-      const { enhancePromptWithBranding } = await import("@/lib/rag-system-optimized")
-      console.log('[RAG] Using optimized RAG system')
-      return enhancePromptWithBranding
-    } catch (error) {
-      console.warn("Optimized RAG not available, falling back to simple RAG:", error)
-      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-      return enhanceWithEGPBranding
-    }
-  } else {
-    // In Vercel environment, use simple hardcoded RAG
-    try {
-      const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-      console.log('[RAG] Using simple RAG system (Vercel)')
-      return enhanceWithEGPBranding
-    } catch (error) {
-      console.warn("Simple RAG not available:", error)
-      return null
-    }
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -40,6 +11,18 @@ export async function POST(request: NextRequest) {
     const activeRAGId = formData.get("activeRAGId") as string
     const activeRAGName = formData.get("activeRAGName") as string
     const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
+    
+    // JSON Enhancement parameters
+    const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
+    const jsonOptionsStr = formData.get("jsonOptions") as string
+    let jsonOptions = {}
+    if (jsonOptionsStr) {
+      try {
+        jsonOptions = JSON.parse(jsonOptionsStr)
+      } catch (error) {
+        console.warn("[FLUX-COMBINE] Failed to parse JSON options:", error)
+      }
+    }
 
     // Extract multiple image files
     const imageFiles: File[] = []
@@ -77,7 +60,9 @@ export async function POST(request: NextRequest) {
     console.log("[FLUX-COMBINE] Image files count:", imageFiles.length)
     console.log("[FLUX-COMBINE] Image URLs count:", imageUrls.length)
     console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length)
-    console.log("[FLUX-COMBINE] Use RAG:", useRag)
+    console.log("[FLUX-COMBINE] Use JSON Enhancement:", useJSONEnhancement)
+    console.log("[FLUX-COMBINE] JSON Options:", jsonOptions)
+    console.log("[FLUX-COMBINE] RAG enhancement: disabled for image combination")
     console.log("[FLUX-COMBINE] Settings JSON:", settingsJson)
 
     // Content moderation check
@@ -117,61 +102,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Enhance prompt with RAG if requested
+    // RAG enhancement is now disabled for image combination
+    // Original prompt will be used as-is
     let finalPrompt = prompt
     let ragMetadata = null
 
-    if (useRag && activeRAGId && prompt) {
-      console.log(`[RAG] Starting enhancement with ${activeRAGName} (${activeRAGId})`)
-      const ragSystem = await getRAGSystem()
-      
-      if (ragSystem) {
-        try {
-          console.log("[FLUX-COMBINE] Enhancing prompt with RAG...")
-          const enhancement = await ragSystem(prompt, {
-            projectId: activeRAGId,
-            projectName: activeRAGName
-          })
-          
-          console.log(`[RAG] Enhancement result:`, enhancement)
-          
-          if (enhancement && typeof enhancement === 'object') {
-            finalPrompt = enhancement.enhancedPrompt || enhancement.prompt || prompt
-            ragMetadata = {
-              originalPrompt: prompt,
-              enhancedPrompt: finalPrompt,
-              suggestedColors: enhancement.suggestedColors || [],
-              suggestedFormat: enhancement.suggestedFormat || "",
-              negativePrompt: enhancement.negativePrompt || "",
-              brandingElements: enhancement.brandingElements?.length || 0
-            }
-          } else if (typeof enhancement === 'string') {
-            finalPrompt = enhancement
-            ragMetadata = {
-              originalPrompt: prompt,
-              enhancedPrompt: finalPrompt,
-              brandingElements: 0
-            }
+    // Apply JSON enhancement if enabled
+    if (useJSONEnhancement) {
+      try {
+        // Import the hybrid enhancement system
+        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
+        
+        const hybridOptions = {
+          useRAG: false, // RAG disabled for image combination
+          useJSONEnhancement: true,
+          jsonOptions: {
+            useDefaults: !jsonOptions.customText,
+            customText: jsonOptions.customText,
+            intensity: jsonOptions.intensity || 0.8
           }
-          console.log("[FLUX-COMBINE] RAG enhanced prompt:", finalPrompt)
-          console.log("[FLUX-COMBINE] RAG suggested colors:", ragMetadata?.suggestedColors)
-          console.log("[FLUX-COMBINE] RAG negative prompt:", ragMetadata?.negativePrompt)
-        } catch (error) {
-          console.error('[RAG] Enhancement failed:', error)
-          finalPrompt = prompt
         }
-      } else {
-        console.warn("[FLUX-COMBINE] RAG system not available")
+
+        const enhancementResult = await enhancePromptHybrid(prompt, hybridOptions)
+        finalPrompt = enhancementResult.enhancedPrompt
+        
+        console.log("[FLUX-COMBINE] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
+      } catch (error) {
+        console.warn("[FLUX-COMBINE] JSON enhancement failed, using original prompt:", error)
         finalPrompt = prompt
       }
     } else {
-      console.log('[RAG] Skipping enhancement:', { 
-        useRag, 
-        hasActiveRAGId: !!activeRAGId, 
-        hasPrompt: !!prompt 
-      })
-      finalPrompt = prompt
+      console.log("[FLUX-COMBINE] Using original prompt without enhancement")
     }
+
+    console.log("[FLUX-COMBINE] Final prompt:", finalPrompt)
 
     // Configure Fal.ai client
     fal.config({
@@ -276,10 +240,12 @@ export async function POST(request: NextRequest) {
           width: combinedImage.width,
           height: combinedImage.height,
           content_type: combinedImage.content_type || "image/jpeg",
-          finalPrompt: finalPrompt,
+          prompt: finalPrompt,
           originalPrompt: prompt,
           inputImages: uploadedImageUrls.length,
           ragMetadata: ragMetadata,
+          jsonEnhancementUsed: useJSONEnhancement,
+          jsonOptions: useJSONEnhancement ? jsonOptions : undefined,
           settings: mergedSettings,
           model: "flux-pro/kontext/max/multi",
           timestamp: new Date().toISOString()

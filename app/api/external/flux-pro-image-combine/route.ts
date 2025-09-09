@@ -11,7 +11,11 @@ import { fal } from "@fal-ai/client"
  * Body parameters:
  * - prompt (required): Text description for how to combine the images
  * - imageUrls (required): Array of image URLs to combine (minimum 2 images)
- * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
+ * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false - disabled for combination)
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: false)
+ * - jsonOptions (optional): JSON enhancement configuration
+ *   - customText: Custom enhancement description (if not provided, uses defaults)
+ *   - intensity: Enhancement intensity (0.1-1.0, default: 0.8)
  * - settings (optional): Advanced generation settings
  * 
  * Advanced settings include:
@@ -80,14 +84,17 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       imageUrls,
-      useRAG = true,
+      useRAG = false, // RAG disabled for image combination
+      useJSONEnhancement = false, // JSON enhancement disabled by default
+      jsonOptions = {},
       settings = {}
     } = body
 
     console.log("[External Flux Combine] Request received:")
     console.log("  - Prompt:", prompt.substring(0, 100) + "...")
     console.log("  - Image URLs count:", imageUrls.length)
-    console.log("  - Use RAG:", useRAG)
+    console.log("  - Use RAG:", useRAG, "(disabled for combination)")
+    console.log("  - Use JSON Enhancement:", useJSONEnhancement)
     console.log("  - Settings:", settings)
 
     // Basic content moderation
@@ -118,22 +125,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Enhance prompt with RAG if requested
+    // Apply JSON enhancement if enabled
     let finalPrompt = prompt
-    if (useRAG) {
+    if (useJSONEnhancement) {
       try {
-        // Simple hardcoded branding enhancement for external API
-        const brandingContext = `
-Style guidelines: Create professional, high-quality, visually appealing compositions.
-Ensure good lighting, proper contrast, and cohesive visual elements.
-Maintain brand consistency with clean, modern aesthetics.
-`
-        finalPrompt = `${prompt}\n\n${brandingContext}`
-        console.log("[External Flux Combine] Enhanced prompt with branding guidelines")
+        // Import the hybrid enhancement system
+        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
+        
+        const hybridOptions = {
+          useRAG: false, // RAG disabled for image combination
+          useJSONEnhancement: true,
+          jsonOptions: {
+            useDefaults: !jsonOptions.customText,
+            customText: jsonOptions.customText,
+            intensity: jsonOptions.intensity || 0.8
+          }
+        }
+
+        const enhancementResult = await enhancePromptHybrid(prompt, hybridOptions)
+        finalPrompt = enhancementResult.enhancedPrompt
+        
+        console.log("[External Flux Combine] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
       } catch (error) {
-        console.warn("[External Flux Combine] RAG enhancement failed, using original prompt:", error)
+        console.warn("[External Flux Combine] JSON enhancement failed, using original prompt:", error)
         finalPrompt = prompt
       }
+    } else {
+      console.log("[External Flux Combine] Using original prompt without enhancement")
     }
 
     // Configure Fal.ai client
@@ -221,10 +239,10 @@ Maintain brand consistency with clean, modern aesthetics.
       
       try {
         const fallbackFormData = new FormData()
-        fallbackFormData.append("prompt", prompt)
-        fallbackFormData.append("useRag", useRAG.toString())
-        fallbackFormData.append("activeRAGId", "external-branding")
-        fallbackFormData.append("activeRAGName", "External Branding")
+        fallbackFormData.append("prompt", finalPrompt) // Use enhanced prompt
+        fallbackFormData.append("useRag", "false") // Disable RAG for image combination
+        fallbackFormData.append("activeRAGId", "none")
+        fallbackFormData.append("activeRAGName", "None")
         fallbackFormData.append("orgType", "general")
         
         // Add image URLs to form data

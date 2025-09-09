@@ -42,16 +42,34 @@ async function loadEnhancementConfig(): Promise<JSONEnhancementConfig | null> {
   try {
     // Cache for 5 minutes
     if (enhancementConfigCache && (Date.now() - configLastLoaded) < 300000) {
+      console.log('[JSON Enhancement] Using cached config:', enhancementConfigCache.kit)
       return enhancementConfigCache
     }
 
-    console.log('[JSON Enhancement] Loading config from API...')
-    const response = await fetch('/api/enhancement-config')
+    console.log('[JSON Enhancement] Loading config from API... (v2)')
+    
+    // Use full URL in server-side context  
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.VERCEL_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      : 'http://localhost:3000'
+    
+    const apiUrl = typeof window === 'undefined' 
+      ? `${baseUrl}/api/enhancement-config`  // Server-side: use full URL
+      : '/api/enhancement-config'            // Client-side: use relative URL
+    
+    console.log('[JSON Enhancement] Fetching from:', apiUrl)
+    const response = await fetch(apiUrl)
+    console.log('[JSON Enhancement] API response status:', response.status)
+    
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`)
     }
     
     const { success, config, error } = await response.json()
+    console.log('[JSON Enhancement] API response success:', success)
+    console.log('[JSON Enhancement] Config kit:', config?.kit)
+    console.log('[JSON Enhancement] Enhancement text preview:', config?.enhancement_text?.substring(0, 100) + '...')
+    
     if (!success) {
       console.warn('[JSON Enhancement] API returned error:', error)
     }
@@ -75,8 +93,11 @@ export async function enhancePromptWithJSON(
 ): Promise<JSONEnhancementResult> {
   const startTime = Date.now()
   
+  console.log('[JSON Enhancement] Starting enhancement with options:', JSON.stringify(options))
+  
   try {
     const config = await loadEnhancementConfig()
+    console.log('[JSON Enhancement] Config loaded:', config ? `${config.kit} (${config.enhancement_text.length} chars)` : 'null')
     
     if (!config) {
       throw new Error('Enhancement configuration not available')
