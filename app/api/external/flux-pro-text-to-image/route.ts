@@ -80,13 +80,13 @@ export async function POST(request: NextRequest) {
       finalPrompt = `${finalPrompt}, ${loraConfig.triggerPhrase}`
     }
 
-    // Prepare advanced settings for Flux Pro
+    // Prepare advanced settings for Flux LoRA
     const defaultSettings = {
       image_size: "landscape_4_3",
       num_inference_steps: 30,
       guidance_scale: 3.5,
       num_images: 1,
-      safety_tolerance: 2,
+      enable_safety_checker: true,
       output_format: "jpg",
       seed: undefined
     }
@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
     if (mergedSettings.num_images) {
       mergedSettings.num_images = Math.max(1, Math.min(4, parseInt(mergedSettings.num_images as string)))
     }
-    if (mergedSettings.safety_tolerance) {
-      mergedSettings.safety_tolerance = Math.max(1, Math.min(6, parseInt(mergedSettings.safety_tolerance as string)))
+    if (mergedSettings.enable_safety_checker !== undefined) {
+      mergedSettings.enable_safety_checker = Boolean(mergedSettings.enable_safety_checker)
     }
     if (mergedSettings.seed) {
       mergedSettings.seed = parseInt(mergedSettings.seed as string)
@@ -138,16 +138,15 @@ export async function POST(request: NextRequest) {
         credentials: falApiKey,
       })
 
-      // Prepare input for Flux Pro
+      // Prepare input for Flux LoRA
       const input: any = {
         prompt: finalPrompt,
         image_size: mergedSettings.image_size,
         num_inference_steps: mergedSettings.num_inference_steps,
         guidance_scale: mergedSettings.guidance_scale,
         num_images: mergedSettings.num_images,
-        safety_tolerance: mergedSettings.safety_tolerance,
+        enable_safety_checker: mergedSettings.enable_safety_checker,
         output_format: mergedSettings.output_format,
-        enhance_prompt: true,  // Always enable Flux Pro's native prompt enhancement (Hybrid approach)
         loras: mergedSettings.loras || []
       }
 
@@ -156,12 +155,12 @@ export async function POST(request: NextRequest) {
         input.seed = mergedSettings.seed
       }
 
-      console.log("[External Flux Pro] Generating with input:")
+      console.log("[External Flux LoRA] Generating with input:")
       console.log("=====================================")
-      console.log("Model: fal-ai/flux-pro/kontext/max/text-to-image")
-      console.log("Hybrid Enhancement Strategy:")
+      console.log("Model: fal-ai/flux-lora")
+      console.log("Enhanced RAG Strategy:")
       console.log("  1. RAG Enhancement:", useRAG ? "✅ Applied" : "❌ Skipped")
-      console.log("  2. Flux Pro Enhancement: ✅ Always enabled (enhance_prompt: true)")
+      console.log("  2. Flux LoRA Native: ✅ Optimized for LoRA integration")
       console.log("  3. Original prompt:", prompt.substring(0, 100) + "...")
       console.log("  4. RAG-enhanced prompt:", finalPrompt.substring(0, 100) + "...")
       console.log("Prompt:", finalPrompt)
@@ -170,7 +169,7 @@ export async function POST(request: NextRequest) {
       console.log("Input object:", JSON.stringify(input, null, 2))
       console.log("=====================================")
 
-      const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/text-to-image", {
+      const result = await fal.subscribe("fal-ai/flux-lora", {
         input,
         logs: true,
         onQueueUpdate: (update: any) => {
@@ -180,16 +179,16 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      console.log("[External Flux Pro] Fal.ai result:", result)
+      console.log("[External Flux LoRA] Fal.ai result:", result)
 
       // Check if LoRAs were actually applied
       if (input.loras && input.loras.length > 0) {
-        console.log("[External Flux Pro] ✅ LoRAs were sent to the model:")
+        console.log("[External Flux LoRA] ✅ LoRAs were sent to the model:")
         input.loras.forEach((lora: any, index: number) => {
           console.log(`  LoRA ${index + 1}: ${lora.path} (scale: ${lora.scale})`)
         })
       } else {
-        console.log("[External Flux Pro] ⚠️ No LoRAs were applied to this generation")
+        console.log("[External Flux LoRA] ⚠️ No LoRAs were applied to this generation")
       }
 
       if (result.data && result.data.images && result.data.images.length > 0) {
@@ -217,19 +216,19 @@ export async function POST(request: NextRequest) {
             } : null
           },
           settings: mergedSettings,
-          model: "flux-pro/kontext/max",
+          model: "flux-lora",
           timestamp: new Date().toISOString()
         }
 
         return NextResponse.json(externalResponse)
       } else {
-        throw new Error("No images returned from Flux Pro")
+        throw new Error("No images returned from Flux LoRA")
       }
     } catch (falError) {
-      console.error("[External Flux Pro] Direct Fal.ai call failed:", falError)
+      console.error("[External Flux LoRA] Direct Fal.ai call failed:", falError)
       
       // Fallback to internal API call
-      console.log("[External Flux Pro] Falling back to internal API...")
+      console.log("[External Flux LoRA] Falling back to internal API...")
       
       try {
         const formData = new FormData()
@@ -305,26 +304,26 @@ export async function POST(request: NextRequest) {
             } : null
           },
           settings: mergedSettings,
-          model: "flux-pro/kontext/max",
+          model: "flux-lora",
           timestamp: new Date().toISOString()
         }
 
         return NextResponse.json(externalResponse)
       } catch (fallbackError) {
-        console.error("[External Flux Pro] Fallback also failed:", fallbackError)
+        console.error("[External Flux LoRA] Fallback also failed:", fallbackError)
         throw fallbackError
       }
     }
 
   } catch (error) {
-    console.error('[External Flux Pro API] Error:', error)
+    console.error('[External Flux LoRA API] Error:', error)
     
     return NextResponse.json(
       {
         success: false,
         error: "Internal server error",
         details: error instanceof Error ? error.message : "Unknown error",
-        model: "flux-pro/kontext/max"
+        model: "flux-lora"
       },
       { status: 500 }
     )
