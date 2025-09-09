@@ -936,7 +936,7 @@ function DashboardContent() {
                       <h3 className="text-lg font-medium text-card-foreground">
                         Hello! I'm {selectedBotData?.name}
                       </h3>
-                      <p className="text-muted-foreground max-w-md">
+                      <p className="text-muted-foreground text-center">
                         {selectedBotData?.description}
                       </p>
                     </div>
