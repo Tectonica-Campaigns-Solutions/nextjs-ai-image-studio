@@ -56,7 +56,7 @@ export default function ImageEditor() {
   const [loraScale, setLoraScale] = useState(1.0)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
 
-  // Flux Pro Text-to-Image States
+  // Flux LoRA Text-to-Image States
   const [fluxProPrompt, setFluxProPrompt] = useState("")
   const [fluxProSettings, setFluxProSettings] = useState({
     image_size: "landscape_4_3",
@@ -76,7 +76,7 @@ export default function ImageEditor() {
   const [fluxProGeneratedPrompt, setFluxProGeneratedPrompt] = useState<string>("")
   const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
 
-  // Flux Pro LoRA States
+  // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(false)
   const [fluxProLoraUrl, setFluxProLoraUrl] = useState("")
   const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("")
@@ -1064,7 +1064,7 @@ export default function ImageEditor() {
               <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
         <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
-          <TabsTrigger value="flux-pro-text-to-image">Flux Pro</TabsTrigger>
+          <TabsTrigger value="flux-pro-text-to-image">Flux Lora</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
@@ -1407,15 +1407,15 @@ export default function ImageEditor() {
           {/* Flux Pro Text-to-Image Tab */}
           <TabsContent value="flux-pro-text-to-image" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Flux Pro Generation Form */}
+              {/* Flux LoRA Generation Form */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5" />
-                    Flux Pro Text-to-Image
+                    Flux LoRA Text-to-Image
                   </CardTitle>
                   <CardDescription>
-                    Generate high-quality images using Flux Pro Kontext Max model
+                    Generate high-quality images using Flux LoRA (FLUX.1 dev) - 36% cost reduction with enhanced LoRA support
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1608,10 +1608,10 @@ export default function ImageEditor() {
                             <div className="w-3 h-3 rounded-full bg-green-500"></div>
                             <div className="flex-1">
                               <Label className="font-medium text-green-700 dark:text-green-300">
-                                🚀 Hybrid Enhancement Active
+                                🚀 Enhanced RAG + LoRA Strategy
                               </Label>
                               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                Your prompts get double enhancement: Our RAG branding + Flux Pro's native optimization
+                                Your prompts get enhanced with brand guidelines + Flux LoRA optimization (36% cost reduction)
                               </p>
                             </div>
                           </div>
