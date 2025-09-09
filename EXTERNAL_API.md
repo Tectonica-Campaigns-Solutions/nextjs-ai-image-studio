@@ -221,7 +221,125 @@ Generate high-quality images from text descriptions using the professional Flux 
 }
 ```
 
-### 4. Image-to-Image Transformation
+### 4. Flux Pro Image Combination
+
+**POST /api/external/flux-pro-image-combine**
+
+Combine multiple images into a single new image using the professional Flux Pro Multi model. This endpoint allows external applications to merge multiple input images with AI-powered composition and styling.
+
+This endpoint supports **two input methods**:
+1. **JSON with image URLs** - For images already hosted online
+2. **Multipart form data** - For uploading files directly and/or using URLs
+
+#### Method 1: JSON Request Body
+```json
+{
+  "prompt": "Create a beautiful artistic collage combining these images with vibrant colors",
+  "imageUrls": [
+    "https://picsum.photos/512/512?random=1",
+    "https://picsum.photos/512/512?random=2"
+  ],
+  "useJSONEnhancement": true,
+  "jsonOptions": {
+    "intensity": 0.8
+  },
+  "settings": {
+    "aspect_ratio": "16:9",
+    "guidance_scale": 3.5,
+    "output_format": "jpeg",
+    "safety_tolerance": 2,
+    "seed": 12345
+  }
+}
+```
+
+#### Method 2: Multipart Form Data
+- **prompt** (required): Text description for how to combine the images
+- **image0, image1, image2...** (optional): Image files to upload (PNG, JPG, JPEG, WEBP, max 10MB each)
+- **imageUrl0, imageUrl1, imageUrl2...** (optional): Image URLs to combine
+- **useRAG** (optional): Whether to enhance prompt with branding guidelines (default: false)
+- **useJSONEnhancement** (optional): Whether to apply JSON-based prompt enhancement (default: false)
+- **jsonOptions** (optional): JSON string with enhancement configuration
+- **settings** (optional): JSON string with advanced generation settings
+
+**Note**: You need at least 2 images total (combination of uploaded files and URLs).
+```json
+{
+  "prompt": "Create a beautiful artistic collage combining these images with vibrant colors",
+  "imageUrls": [
+    "https://picsum.photos/512/512?random=1",
+    "https://picsum.photos/512/512?random=2"
+  ],
+  "useJSONEnhancement": true,
+  "jsonOptions": {
+    "intensity": 0.8
+  },
+  "settings": {
+    "aspect_ratio": "16:9",
+    "guidance_scale": 3.5,
+    "output_format": "jpeg",
+    "safety_tolerance": 2,
+    "seed": 12345
+  }
+}
+```
+
+#### Parameters (JSON Method)
+- **prompt** (required): Text description for how to combine the images
+- **imageUrls** (required): Array of image URLs to combine (minimum 2 images)
+- **useRAG** (optional, default: false): Whether to enhance prompt with branding guidelines (disabled for combination)
+- **useJSONEnhancement** (optional, default: false): Whether to apply JSON-based prompt enhancement
+- **jsonOptions** (optional): JSON enhancement configuration
+  - **customText**: Custom enhancement description (if not provided, uses defaults)
+  - **intensity**: Enhancement intensity (0.1-1.0, default: 0.8)
+- **settings** (optional): Advanced generation settings
+
+#### Parameters (Form Data Method)
+- **prompt** (required): Text description for how to combine the images
+- **image0, image1, image2...** (optional): Image files to upload and combine
+- **imageUrl0, imageUrl1, imageUrl2...** (optional): Image URLs to combine
+- **useRAG** (optional, default: false): Whether to enhance prompt with branding guidelines
+- **useJSONEnhancement** (optional, default: false): Whether to apply JSON-based prompt enhancement
+- **jsonOptions** (optional): JSON string with enhancement configuration
+- **settings** (optional): JSON string with advanced generation settings
+
+#### File Upload Constraints
+- **Maximum file size**: 10MB per file
+- **Supported formats**: PNG, JPG, JPEG, WEBP
+- **Minimum images**: 2 total (files + URLs combined)
+
+#### Flux Pro Combination Settings
+- **aspect_ratio**: Output aspect ratio (1:1, 4:3, 3:4, 16:9, 9:16, 21:9, default: 1:1)
+- **guidance_scale**: Prompt adherence strength (1-20, default: 3.5)
+- **num_images**: Number of combined images to generate (always 1 for combination)
+- **seed**: Random seed for reproducible results
+- **safety_tolerance**: Content safety level (1-6, default: 2)
+- **output_format**: Image format (jpeg, png, webp, default: jpeg)
+- **enhance_prompt**: Whether to automatically enhance the prompt (default: false)
+
+#### Response
+```json
+{
+  "success": true,
+  "image": "https://fal.media/files/tiger/xyz123.jpeg",
+  "width": 1024,
+  "height": 1024,
+  "content_type": "image/jpeg",
+  "prompt": "Create a beautiful artistic collage combining these images with vibrant colors",
+  "model": "flux-pro/kontext/max/multi",
+  "inputImages": 2,
+  "uploadedFiles": 0,
+  "directUrls": 2,
+  "settings": {
+    "aspect_ratio": "16:9",
+    "guidance_scale": 3.5,
+    "output_format": "jpeg"
+  },
+  "timestamp": "2025-09-03T10:30:00.000Z"
+}
+```
+
+### 5. Image-to-Image Transformation
 
 **POST /api/external/image-to-image**
 
@@ -294,7 +412,7 @@ curl -X POST "https://your-domain.com/api/external/image-to-image" \
 }
 ```
 
-### 5. Image Editing
+### 6. Image Editing
 
 **POST /api/external/edit-image**
 
@@ -370,11 +488,36 @@ All endpoints return structured error responses:
 ```
 
 ### Common Error Codes
-- **400**: Bad Request (missing parameters, invalid content, invalid image_size)
-- **413**: File too large
-- **415**: Unsupported media type
+- **400**: Bad Request (missing parameters, invalid content, invalid image_size, insufficient images)
+- **413**: File too large (over 10MB per file for image combination)
+- **415**: Unsupported media type (invalid file format for uploads)
 - **422**: Unprocessable Entity (invalid custom dimensions or model constraints)
 - **500**: Internal server error
+
+### Image Combination Specific Errors
+```json
+{
+  "success": false,
+  "error": "Missing or insufficient images",
+  "details": "At least 2 images are required for combination. Found 0 files and 1 URLs (total: 1)"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "File too large",
+  "details": "File image1.jpg is 15MB. Maximum allowed size is 10MB."
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Unsupported file type",
+  "details": "File document.pdf has type application/pdf. Allowed types: image/jpeg, image/jpg, image/png, image/webp"
+}
+```
 
 ### Image Size Options
 
@@ -483,7 +626,127 @@ if (advancedResult.success) {
 }
 ```
 
-### JavaScript/Fetch Example (Image Editing)
+### JavaScript/Fetch Example (Image Combination)
+```javascript
+// Method 1: JSON with image URLs
+const jsonResponse = await fetch('https://your-domain.com/api/external/flux-pro-image-combine', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt: 'Create a stunning artistic collage with vibrant colors',
+    imageUrls: [
+      'https://picsum.photos/512/512?random=1',
+      'https://picsum.photos/512/512?random=2',
+      'https://picsum.photos/512/512?random=3'
+    ],
+    useJSONEnhancement: true,
+    jsonOptions: {
+      intensity: 0.8
+    },
+    settings: {
+      aspect_ratio: '16:9',
+      guidance_scale: 3.5,
+      output_format: 'jpeg'
+    }
+  })
+});
+
+const jsonResult = await jsonResponse.json();
+if (jsonResult.success) {
+  console.log('Combined image:', jsonResult.image);
+  console.log('Input images:', jsonResult.inputImages);
+} else {
+  console.error('Error:', jsonResult.error);
+}
+
+// Method 2: Form data with file uploads
+const formData = new FormData();
+formData.append('prompt', 'Combine these images into a beautiful landscape');
+formData.append('image0', fileInput1.files[0]); // First uploaded file
+formData.append('image1', fileInput2.files[0]); // Second uploaded file
+formData.append('imageUrl0', 'https://picsum.photos/512/512?random=4'); // Additional URL
+formData.append('useJSONEnhancement', 'true');
+formData.append('jsonOptions', JSON.stringify({
+  intensity: 0.9
+}));
+formData.append('settings', JSON.stringify({
+  aspect_ratio: '1:1',
+  guidance_scale: 4.0,
+  output_format: 'png'
+}));
+
+const formResponse = await fetch('https://your-domain.com/api/external/flux-pro-image-combine', {
+  method: 'POST',
+  body: formData
+});
+
+const formResult = await formResponse.json();
+if (formResult.success) {
+  console.log('Combined image:', formResult.image);
+  console.log('Total images used:', formResult.inputImages);
+  console.log('Files uploaded:', formResult.uploadedFiles);
+  console.log('Direct URLs used:', formResult.directUrls);
+} else {
+  console.error('Error:', formResult.error);
+}
+
+// Method 3: Mixed approach (files + URLs)
+const mixedFormData = new FormData();
+mixedFormData.append('prompt', 'Create an artistic collage blending nature and architecture');
+mixedFormData.append('image0', userUploadedFile); // User's file
+mixedFormData.append('imageUrl0', 'https://example.com/architecture.jpg'); // Remote image
+mixedFormData.append('imageUrl1', 'https://example.com/nature.jpg'); // Another remote image
+mixedFormData.append('settings', JSON.stringify({
+  aspect_ratio: '21:9',
+  guidance_scale: 3.5
+}));
+
+const mixedResponse = await fetch('https://your-domain.com/api/external/flux-pro-image-combine', {
+  method: 'POST',
+  body: mixedFormData
+});
+
+const mixedResult = await mixedResponse.json();
+console.log('Mixed combination result:', mixedResult);
+```
+
+### curl Examples (Image Combination)
+```bash
+# JSON method with URLs
+curl -X POST "https://your-domain.com/api/external/flux-pro-image-combine" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Create a beautiful artistic collage",
+    "imageUrls": [
+      "https://picsum.photos/512/512?random=1",
+      "https://picsum.photos/512/512?random=2"
+    ],
+    "settings": {
+      "aspect_ratio": "16:9",
+      "output_format": "jpeg"
+    }
+  }'
+
+# Form data method with file uploads
+curl -X POST "https://your-domain.com/api/external/flux-pro-image-combine" \
+  -F "prompt=Combine these images into a stunning artwork" \
+  -F "image0=@/path/to/image1.jpg" \
+  -F "image1=@/path/to/image2.png" \
+  -F "imageUrl0=https://picsum.photos/512/512?random=3" \
+  -F 'settings={"aspect_ratio": "1:1", "guidance_scale": 4.0}' \
+  -F "useJSONEnhancement=true" \
+  -F 'jsonOptions={"intensity": 0.8}'
+
+# Mixed approach (files + URLs)
+curl -X POST "https://your-domain.com/api/external/flux-pro-image-combine" \
+  -F "prompt=Create an artistic blend of uploaded and remote images" \
+  -F "image0=@/path/to/local-image.jpg" \
+  -F "imageUrl0=https://example.com/remote-image.png" \
+  -F "imageUrl1=https://example.com/another-remote.jpg" \
+  -F 'settings={"aspect_ratio": "4:3", "output_format": "webp"}'
+```
 ```javascript
 // Example with preset image size
 const formData = new FormData();
