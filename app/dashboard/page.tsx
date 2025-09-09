@@ -324,6 +324,7 @@ function DashboardContent() {
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    setIsLoading(true);
 
     for (const file of files) {
       if (file.size > THRESHOLD) {
@@ -393,6 +394,8 @@ function DashboardContent() {
           description: error instanceof Error ? error.message : "Unknown error",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -556,11 +559,6 @@ function DashboardContent() {
     currentConversationIdRef.current = null;
     setAttachedFiles([]);
     setSidebarOpen(false);
-
-    toast({
-      title: "Ready for new conversation",
-      description: "Send a message to start",
-    });
   };
 
   const handleBackToClientSelection = () => {

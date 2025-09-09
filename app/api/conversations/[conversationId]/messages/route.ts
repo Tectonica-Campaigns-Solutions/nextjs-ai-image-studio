@@ -248,7 +248,6 @@ export async function POST(
         item.name === "combine_images" &&
         item.status === "completed"
     );
-    console.log({ imageGenerationTool, imageEditTool, imageCombineTool });
 
     // Only proceed with image generation if it's not a simple greeting and the tool was called
     if (imageGenerationTool) {
@@ -258,27 +257,15 @@ export async function POST(
         // @ts-ignore
         .map((msg) => msg.content.map((c) => c.text).join(" "))
         .join(" ");
-
-      const prompt = `${conversationText} ${content}`;
+      const prompt = `${conversationText}. ${content}.`;
 
       try {
         const imageResp = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/text-to-image`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-text-to-image`,
           {
             method: "POST",
             body: JSON.stringify({
               prompt: prompt,
-              useRAG: "true",
-              settings: {
-                image_size: "landscape_4_3",
-                num_inference_steps: 30,
-                guidance_scale: 2.5,
-                num_images: 1,
-                output_format: "png",
-                negative_prompt: "",
-                acceleration: "none",
-                seed: 12345,
-              },
             }),
           }
         );
@@ -315,15 +302,18 @@ export async function POST(
         const params = JSON.parse((imageCombineTool as any)?.arguments);
 
         const prompt = params?.prompt;
-        const imageUrls = fileIds.map((f: any) => f.fileUrl) || [];
+        const prevFileUrls = extractFileIds(previousMessages);
 
-        console.log({ prompt, imageUrls });
+        const imageUrls = fileIds
+          ? fileIds.map((f: any) => f.fileUrl)
+          : prevFileUrls
+          ? prevFileUrls
+          : [];
 
         const combineResp = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/combine-images`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-image-combine`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               prompt,
               imageUrls: imageUrls,
@@ -336,7 +326,7 @@ export async function POST(
         }
 
         const combineData = await combineResp.json();
-        finalMessage = combineData?.imageUrl || "Image combination failed";
+        finalMessage = combineData?.image || "Image combination failed";
       } catch (err) {
         console.error("Error combining images:", err);
         finalMessage = "Error combining images.";
@@ -419,4 +409,21 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+// Utils
+function extractFileIds(messages: any) {
+  const fileUrls: string[] = [];
+
+  messages.forEach((msg: any) => {
+    if (Array.isArray(msg.message_files)) {
+      msg.message_files.forEach((item: any) => {
+        if (item.files?.file_url) {
+          fileUrls.push(item.files.file_url);
+        }
+      });
+    }
+  });
+
+  return fileUrls;
 }
