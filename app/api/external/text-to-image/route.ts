@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Extract parameters with defaults
     const {
       prompt,
-      useRAG = true,
+      useRAG = false, // JSON-only by default
       useLoRA = true,
       settings = {}
     } = body

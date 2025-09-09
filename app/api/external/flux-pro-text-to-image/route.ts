@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     // Extract parameters with defaults
     const {
       prompt,
-      useRAG = true,
-      useLoRA = false,
+      useRAG = false, // JSON-only by default
+      useLoRA = true, // LoRA enabled by default
       loraUrl = "",
       loraTriggerPhrase = "",
       loraScale = 1.3,

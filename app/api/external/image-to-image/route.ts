@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
     // Extract and validate required parameters
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
-    const useRAG = formData.get('useRAG') !== 'false' // default true
+    const useRAG = formData.get('useRAG') === 'true' // default false (JSON-only)
     const activeRAGId = formData.get('activeRAGId') as string
     const activeRAGName = formData.get('activeRAGName') as string
-    const useLoRA = formData.get('useLoRA') === 'true' // default false
+    const useLoRA = formData.get('useLoRA') !== 'false' // default true
     const settingsString = formData.get('settings') as string
 
     if (!image || !prompt) {
