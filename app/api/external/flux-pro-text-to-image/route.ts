@@ -122,8 +122,8 @@ export async function POST(request: NextRequest) {
     
     // Use provided LoRA configuration or defaults (same as internal API)
     const loraConfig = {
-      url: loraUrl || "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors", // Default LoRA from internal API
-      triggerPhrase: loraTriggerPhrase || "TCT-AI-9-9-2025A", // Default trigger phrase from internal API
+      url: loraUrl || "https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors", // Default LoRA from internal API
+      triggerPhrase: loraTriggerPhrase || "MDF-9-9-2025B", // Default trigger phrase from internal API
       scale: Math.max(0.1, Math.min(2.0, loraScale)) // Clamp between 0.1 and 2.0
     }
     

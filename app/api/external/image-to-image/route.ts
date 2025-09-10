@@ -97,8 +97,8 @@ export async function POST(request: NextRequest) {
     const loraConfig = {
       // url: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
     //   url: "https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors",
-      url: "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
-      triggerPhrase: "TCT-AI-9-9-2025A", // Will be read from app state
+      url: "https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors",
+      triggerPhrase: "MDF-9-9-2025B", // Will be read from app state
       scale: 1.3
     }
     

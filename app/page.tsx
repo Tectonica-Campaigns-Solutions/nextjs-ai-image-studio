@@ -53,9 +53,9 @@ export default function ImageEditor() {
   // const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
   // const [loraUrl, setLoraUrl] = useState("https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors")
   
-  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
+  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
 
-  const [triggerPhrase, setTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [triggerPhrase, setTriggerPhrase] = useState("MDF-9-9-2025B")
   const [loraScale, setLoraScale] = useState(1.3)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
 
@@ -156,8 +156,8 @@ export default function ImageEditor() {
 
   // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(true)
-  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
-  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
+  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("MDF-9-9-2025B")
   const [fluxProLoraScale, setFluxProLoraScale] = useState(1.3)
 
   // Flux Pro Multi Text-to-Image States
@@ -182,8 +182,8 @@ export default function ImageEditor() {
 
   // Flux Pro Multi LoRA States
   const [useFluxProMultiLoRA, setUseFluxProMultiLoRA] = useState(true)
-  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
-  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
+  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("MDF-9-9-2025B")
   const [fluxProMultiLoraScale, setFluxProMultiLoraScale] = useState(1.3)
 
   // Flux Pro Image Combine States
@@ -267,8 +267,8 @@ export default function ImageEditor() {
   const [img2imgGeneratedPrompt, setImg2imgGeneratedPrompt] = useState<string>("")
   const [showImg2imgAdvanced, setShowImg2imgAdvanced] = useState(false)
   const [useImg2imgLoRA, setUseImg2imgLoRA] = useState(true)
-  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
-  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
+  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("MDF-9-9-2025B")
   const [img2imgLoraScale, setImg2imgLoraScale] = useState(1.3)
 
   // Qwen LoRA Training States
