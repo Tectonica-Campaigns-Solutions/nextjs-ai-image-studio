@@ -53,9 +53,9 @@ export default function ImageEditor() {
   // const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors")
   // const [loraUrl, setLoraUrl] = useState("https://storage.googleapis.com/isolate-dev-hot-rooster_toolkit_public_bucket/github_110602490/0f076a59f424409db92b2f0e4e16402a_pytorch_lora_weights.safetensors")
   
-  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
+  const [loraUrl, setLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
 
-  const [triggerPhrase, setTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [triggerPhrase, setTriggerPhrase] = useState("MDF-9-9-2025B")
   const [loraScale, setLoraScale] = useState(1.3)
   const [qwenGeneratedPrompt, setQwenGeneratedPrompt] = useState<string>("") // Store generated prompt
 
@@ -79,6 +79,26 @@ export default function ImageEditor() {
   const [useRagFluxPro, setUseRagFluxPro] = useState(true)
   const [fluxProGeneratedPrompt, setFluxProGeneratedPrompt] = useState<string>("")
   const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
+
+  // Flux Ultra Finetuned States
+  const [fluxUltraPrompt, setFluxUltraPrompt] = useState("")
+  const [fluxUltraSettings, setFluxUltraSettings] = useState({
+    aspect_ratio: "1:1",
+    num_images: 1,
+    safety_tolerance: 1,
+    output_format: "jpeg",
+    enable_safety_checker: true,
+    raw: false, // Raw mode setting
+    seed: ""
+  })
+  const [fluxUltraFinetuneId, setFluxUltraFinetuneId] = useState("a4bd761c-0f90-41cc-be78-c7b6cf22285a")
+  const [fluxUltraFinetuneStrength, setFluxUltraFinetuneStrength] = useState(1.0)
+  const [fluxUltraTriggerPhrase, setFluxUltraTriggerPhrase] = useState("TCT-AI-8")
+  const [fluxUltraImageUrl, setFluxUltraImageUrl] = useState<string>("")
+  const [isFluxUltraGenerating, setIsFluxUltraGenerating] = useState(false)
+  const [fluxUltraError, setFluxUltraError] = useState<string>("")
+  const [fluxUltraGeneratedPrompt, setFluxUltraGeneratedPrompt] = useState<string>("")
+  const [showFluxUltraAdvanced, setShowFluxUltraAdvanced] = useState(false)
 
   // Hybrid Enhancement States
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
@@ -156,8 +176,8 @@ export default function ImageEditor() {
 
   // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(true)
-  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
-  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
+  const [fluxProTriggerPhrase, setFluxProTriggerPhrase] = useState("MDF-9-9-2025B")
   const [fluxProLoraScale, setFluxProLoraScale] = useState(1.3)
 
   // Flux Pro Multi Text-to-Image States
@@ -182,8 +202,8 @@ export default function ImageEditor() {
 
   // Flux Pro Multi LoRA States
   const [useFluxProMultiLoRA, setUseFluxProMultiLoRA] = useState(true)
-  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
-  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [fluxProMultiLoraUrl, setFluxProMultiLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
+  const [fluxProMultiTriggerPhrase, setFluxProMultiTriggerPhrase] = useState("MDF-9-9-2025B")
   const [fluxProMultiLoraScale, setFluxProMultiLoraScale] = useState(1.3)
 
   // Flux Pro Image Combine States
@@ -267,8 +287,8 @@ export default function ImageEditor() {
   const [img2imgGeneratedPrompt, setImg2imgGeneratedPrompt] = useState<string>("")
   const [showImg2imgAdvanced, setShowImg2imgAdvanced] = useState(false)
   const [useImg2imgLoRA, setUseImg2imgLoRA] = useState(true)
-  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors")
-  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("TCT-AI-9-9-2025A")
+  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
+  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("MDF-9-9-2025B")
   const [img2imgLoraScale, setImg2imgLoraScale] = useState(1.3)
 
   // Qwen LoRA Training States
@@ -760,6 +780,91 @@ export default function ImageEditor() {
     }
   }
 
+  const handleFluxUltraSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!fluxUltraPrompt.trim()) {
+      setFluxUltraError("Please enter a prompt")
+      return
+    }
+
+    if (!fluxUltraFinetuneId.trim()) {
+      setFluxUltraError("Please enter a fine-tune ID")
+      return
+    }
+
+    if (!fluxUltraTriggerPhrase.trim()) {
+      setFluxUltraError("Please enter a trigger phrase")
+      return
+    }
+
+    setIsFluxUltraGenerating(true)
+    setFluxUltraError("")
+
+    try {
+      const formData = new FormData()
+      
+      // The API will construct the final prompt with trigger phrase
+      formData.append("prompt", fluxUltraPrompt)
+      formData.append("finetuneId", fluxUltraFinetuneId)
+      formData.append("finetuneStrength", fluxUltraFinetuneStrength.toString())
+      formData.append("triggerPhrase", fluxUltraTriggerPhrase)
+      
+      // Prepare settings object
+      const settings: any = { ...fluxUltraSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert string numbers to actual numbers
+      if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      console.log("[FRONTEND] Flux Ultra settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+      formData.append("orgType", "general")
+
+      const response = await fetch("/api/flux-ultra-finetuned", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          // Use user-friendly error handling for moderation
+          const friendlyMessage = handleModerationError(errorData)
+          throw new Error(friendlyMessage)
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      // Capture generated prompt if available (should include trigger phrase)
+      if (result.finalPrompt) {
+        setFluxUltraGeneratedPrompt(result.finalPrompt)
+      } else {
+        // Fallback: construct the expected final prompt
+        setFluxUltraGeneratedPrompt(`${fluxUltraTriggerPhrase}, ${fluxUltraPrompt}`)
+      }
+      
+      if (result.image) {
+        setFluxUltraImageUrl(result.image)
+      } else {
+        throw new Error("No image received from server")
+      }
+    } catch (err) {
+      setFluxUltraError(err instanceof Error ? err.message : "Failed to generate image")
+    } finally {
+      setIsFluxUltraGenerating(false)
+    }
+  }
+
   const handleFluxCombineSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
@@ -1242,19 +1347,20 @@ export default function ImageEditor() {
           </div>
         </div>
 
-              <Tabs defaultValue="qwen-text-to-image" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="qwen-text-to-image">Generate Image</TabsTrigger>
-          <TabsTrigger value="flux-pro-text-to-image">Flux Lora</TabsTrigger>
+        <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="qwen-text-to-image" style={{ display: 'none' }}>Generate Image</TabsTrigger>
+          <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           {/* <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger> */}
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
-          <TabsTrigger value="upload-branding">Upload Branding</TabsTrigger>
-          <TabsTrigger value="qwen-train-lora">Train LoRA</TabsTrigger>
+          <TabsTrigger value="flux-pro-text-to-image">Flux Lora</TabsTrigger>
+          {/* <TabsTrigger value="upload-branding" style={{ display: 'none' }}>Upload Branding</TabsTrigger>
+          <TabsTrigger value="qwen-train-lora" style={{ display: 'none' }}>Train LoRA</TabsTrigger> */}
         </TabsList>
 
           {/* Qwen Text-to-Image Tab */}
-          <TabsContent value="qwen-text-to-image" className="space-y-6">
+          <TabsContent value="qwen-text-to-image" className="space-y-6" style={{ display: 'none' }}>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Qwen Generation Form */}
               <Card>
@@ -1596,7 +1702,7 @@ export default function ImageEditor() {
                     Flux LoRA Text-to-Image
                   </CardTitle>
                   <CardDescription>
-                    Generate high-quality images using Flux LoRA (FLUX.1 dev) - 36% cost reduction with enhanced LoRA support
+                    Generate high-quality images using Flux LoRA (FLUX.1 dev)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1676,7 +1782,7 @@ export default function ImageEditor() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <Label className="text-sm">JSON Enhancement Intensity</Label>
+                              <Label className="text-sm">Enhancement Intensity</Label>
                               <span className="text-xs text-muted-foreground">{Math.round(jsonIntensity * 100)}%</span>
                             </div>
                             <Slider
@@ -2583,7 +2689,7 @@ export default function ImageEditor() {
           </TabsContent>
 
           {/* Branding Configuration Tab */}
-          <TabsContent value="upload-branding" className="space-y-6">
+          <TabsContent value="upload-branding" className="space-y-6" style={{ display: 'none' }}>
             <div className="flex justify-center">
               <BrandingUploader 
                 onUploadSuccess={() => {
@@ -2595,7 +2701,7 @@ export default function ImageEditor() {
           </TabsContent>
 
           {/* Train LoRA Tab */}
-          <TabsContent value="qwen-train-lora" className="space-y-6">
+          <TabsContent value="qwen-train-lora" className="space-y-6" style={{ display: 'none' }}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -2807,6 +2913,235 @@ export default function ImageEditor() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Flux Ultra Finetuned Tab */}
+          <TabsContent value="flux-ultra-finetuned" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Flux Ultra Generation Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-500" />
+                    Flux Ultra Finetuned
+                  </CardTitle>
+                  <CardDescription>
+                    Generate high-quality images using Flux Ultra v1.1 with custom fine-tuned models
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFluxUltraSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fluxUltraPrompt">Prompt</Label>
+                      <Textarea
+                        id="fluxUltraPrompt"
+                        placeholder="Describe the image you want to generate"
+                        value={fluxUltraPrompt}
+                        onChange={(e) => setFluxUltraPrompt(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fluxUltraFinetuneId">Fine-tune ID</Label>
+                        <Input
+                          id="fluxUltraFinetuneId"
+                          value={fluxUltraFinetuneId}
+                          onChange={(e) => setFluxUltraFinetuneId(e.target.value)}
+                          placeholder="Fine-tune model ID"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="fluxUltraTriggerPhrase">Trigger Phrase</Label>
+                        <Input
+                          id="fluxUltraTriggerPhrase"
+                          value={fluxUltraTriggerPhrase}
+                          onChange={(e) => setFluxUltraTriggerPhrase(e.target.value)}
+                          placeholder="Model trigger phrase"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fluxUltraFinetuneStrength">Fine-tune Strength: {fluxUltraFinetuneStrength}</Label>
+                      <input
+                        id="fluxUltraFinetuneStrength"
+                        type="range"
+                        min="0.1"
+                        max="2.0"
+                        step="0.1"
+                        value={fluxUltraFinetuneStrength}
+                        onChange={(e) => setFluxUltraFinetuneStrength(parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Subtle (0.1)</span>
+                        <span>Strong (2.0)</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowFluxUltraAdvanced(!showFluxUltraAdvanced)}
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        {showFluxUltraAdvanced ? "Hide" : "Show"} Advanced Settings
+                      </Button>
+
+                      {showFluxUltraAdvanced && (
+                        <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                          <div className="space-y-2">
+                            <Label htmlFor="fluxUltraAspectRatio">Aspect Ratio</Label>
+                            <Select
+                              value={fluxUltraSettings.aspect_ratio}
+                              onValueChange={(value) => setFluxUltraSettings(prev => ({ ...prev, aspect_ratio: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                                <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                                <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                                <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="fluxUltraSafetyTolerance">Safety Tolerance</Label>
+                            <Select
+                              value={fluxUltraSettings.safety_tolerance.toString()}
+                              onValueChange={(value) => setFluxUltraSettings(prev => ({ ...prev, safety_tolerance: parseInt(value) }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select safety tolerance" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">Level 1 - Most Strict (Default)</SelectItem>
+                                <SelectItem value="2">Level 2 - Moderate</SelectItem>
+                                <SelectItem value="3">Level 3 - Least Strict</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="fluxUltraRaw"
+                                checked={fluxUltraSettings.raw}
+                                onCheckedChange={(checked) => setFluxUltraSettings(prev => ({ ...prev, raw: !!checked }))}
+                              />
+                              <Label htmlFor="fluxUltraRaw">Raw Mode</Label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Disable prompt enhancement and use raw input
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="fluxUltraSeed">Seed (optional)</Label>
+                            <Input
+                              id="fluxUltraSeed"
+                              type="number"
+                              placeholder="Random if empty"
+                              value={fluxUltraSettings.seed}
+                              onChange={(e) => setFluxUltraSettings(prev => ({ ...prev, seed: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={!fluxUltraPrompt.trim() || isFluxUltraGenerating}>
+                      {isFluxUltraGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate Image
+                        </>
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* Display generated prompt */}
+                  <GeneratedPromptDisplay 
+                    prompt={fluxUltraGeneratedPrompt} 
+                    title="Final Prompt (with Trigger Phrase)"
+                  />
+
+                  {fluxUltraError && (
+                    <div className="p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
+                      <div className="flex items-start space-x-3">
+                        <div className="text-2xl">🚫</div>
+                        <div className="flex-1">
+                          <div className="font-medium mb-2">Content Not Allowed</div>
+                          <div className="text-sm mb-3">{fluxUltraError}</div>
+                          <div className="text-xs bg-amber-100 p-2 rounded border border-amber-200">
+                            <div className="font-medium mb-1">💡 Examples of appropriate content:</div>
+                            <ul className="list-disc list-inside space-y-1">
+                              <li>Peaceful environmental demonstration</li>
+                              <li>People working as a team</li>
+                              <li>Educational informational material</li>
+                              <li>Community events</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Flux Ultra Result Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generated Image</CardTitle>
+                  <CardDescription>Your Flux Ultra finetuned image</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isFluxUltraGenerating ? (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-12 w-12 mx-auto mb-2 animate-spin" />
+                        <p className="text-muted-foreground">Generating image...</p>
+                      </div>
+                    </div>
+                  ) : fluxUltraImageUrl ? (
+                    <div className="space-y-3">
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={fluxUltraImageUrl || "/placeholder.svg"}
+                          alt="Flux Ultra generated image"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <OpenInNewTabButton imageUrl={fluxUltraImageUrl} />
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <Sparkles className="h-12 w-12 mx-auto mb-2" />
+                        <p>No image generated yet</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
         </Tabs>
       </div>
     </div>

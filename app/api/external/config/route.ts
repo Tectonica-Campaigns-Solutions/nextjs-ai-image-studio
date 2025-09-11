@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
         available: true,
         // defaultUrl: "https://v3.fal.media/files/zebra/xfGohqkcp1ulBXtjat3OS_adapter.safetensors",
         // defaultUrl: "https://v3.fal.media/files/lion/p9zfHVb60jBBiVEbb8ahw_adapter.safetensors",
-        defaultUrl: "https://v3.fal.media/files/tiger/yrGqT2PRYptZkykFqxQRL_pytorch_lora_weights.safetensors",
+        defaultUrl: "https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors",
         defaultScale: 1.3,
-        defaultTriggerPhrase: "TCT-AI-9-9-2025A",
+        defaultTriggerPhrase: "MDF-9-9-2025B",
         description: "LoRA models allow custom style training and application"
       },
       textToImage: {
