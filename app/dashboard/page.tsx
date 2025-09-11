@@ -394,10 +394,10 @@ function DashboardContent() {
           description: error instanceof Error ? error.message : "Unknown error",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
       }
     }
+
+    setIsLoading(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -1005,7 +1005,7 @@ function DashboardContent() {
                             <img
                               src={message.text}
                               alt="Generated image"
-                              className="max-w-full rounded-lg shadow"
+                              className="max-w-[800px] rounded-lg shadow"
                             />
                           ) : message.text.startsWith("http") &&
                             /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
@@ -1013,7 +1013,7 @@ function DashboardContent() {
                               <img
                                 src={message.text}
                                 alt="Generated image"
-                                className="max-w-full rounded-lg shadow"
+                                className="max-w-[800px] rounded-lg shadow"
                               />
                               <div className="flex gap-2 mt-2">
                                 <button
