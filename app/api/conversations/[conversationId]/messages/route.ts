@@ -261,11 +261,23 @@ export async function POST(
 
       try {
         const imageResp = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-text-to-image`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-ultra-finetuned`,
           {
             method: "POST",
             body: JSON.stringify({
               prompt: prompt,
+              finetuneId: "a4bd761c-0f90-41cc-be78-c7b6cf22285a",
+              triggerPhrase: "TCT-AI-8",
+              finetuneStrength: 1.2,
+              settings: {
+                aspect_ratio: "4:3",
+                num_images: 2,
+                safety_tolerance: 2,
+                output_format: "png",
+                enable_safety_checker: true,
+                raw: true,
+                seed: 987654321,
+              },
             }),
           }
         );
@@ -275,8 +287,9 @@ export async function POST(
         }
 
         const imageData = await imageResp.json();
-        if (imageData?.images) {
-          const imageUrl = imageData.images[0]?.url || imageData.image;
+
+        if (imageData?.image) {
+          const imageUrl = imageData.image;
 
           if (response?.output_text) {
             finalMessage = `${response.output_text}\n\n${imageUrl}`;
