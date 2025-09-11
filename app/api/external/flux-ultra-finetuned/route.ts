@@ -76,7 +76,7 @@ function handleModerationError(errorData: any): string {
  * - aspect_ratio: Image dimensions (1:1, 4:3, 3:4, 16:9, 9:16, 21:9, default: 1:1)
  * - num_images: Number of images to generate (1-4, default: 1)
  * - safety_tolerance: Content safety level (1-3, default: 1 - most strict)
- * - output_format: Image format (jpg, png, webp, default: jpg)
+ * - output_format: Image format (jpeg, png, webp, default: jpeg)
  * - enable_safety_checker: Whether to enable safety checking (default: true)
  * - seed: Random seed for reproducible results
  * 
@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
     console.log("  - Final prompt:", finalPrompt)
     console.log("  - Fine-tune ID:", finetuneId.trim())
     console.log("  - Fine-tune Strength:", finetuneStrength)
+    console.log("  - Settings provided:", JSON.stringify(settings, null, 2))
 
     // Apply content moderation early
     const moderationResult = await moderateContent(finalPrompt)
@@ -153,12 +154,12 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
 
-    // Prepare default settings for Flux Ultra Finetuned (updated defaults)
+    // Prepare default settings for Flux Ultra Finetuned (corrected defaults)
     const defaultSettings = {
       aspect_ratio: "1:1",
       num_images: 1,
       safety_tolerance: 1, // Most strict by default
-      output_format: "jpg", // Changed to jpg as requested
+      output_format: "jpeg", // Changed back to jpeg (jpg might not be valid)
       enable_safety_checker: true,
       seed: undefined
     }
@@ -261,6 +262,8 @@ export async function POST(request: NextRequest) {
         console.error("Final prompt:", finalPrompt)
         console.error("Fine-tune config:", { finetuneId: finetuneId.trim(), finetuneStrength: clampedFinetuneStrength })
         console.error("Merged settings:", JSON.stringify(mergedSettings, null, 2))
+        console.error("Full input object:", JSON.stringify(input, null, 2))
+        console.error("Fal.ai error body:", falError?.body)
       }
       
       // Fallback to internal API call
@@ -399,8 +402,8 @@ export async function GET() {
             output_format: {
               type: "string",
               description: "Image format",
-              default: "jpg",
-              options: ["jpg", "png", "webp"]
+              default: "jpeg",
+              options: ["jpeg", "png", "webp"]
             },
             enable_safety_checker: {
               type: "boolean",
