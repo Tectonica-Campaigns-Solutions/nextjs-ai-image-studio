@@ -11,7 +11,7 @@ type ModalProps = {
   handleEditCurrentImage: (image: string) => void;
 };
 
-type ImageSize = 
+type ImageSize =
   | "square_hd"
   | "square"
   | "portrait_4_3"
@@ -88,7 +88,7 @@ export default function Modal({
             &times;
           </button>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex flex-col gap-6">
             {/* Input section */}
@@ -133,7 +133,7 @@ export default function Modal({
                 </Button>
               </div>
             </div>
-            
+
             {/* Images section */}
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1 min-w-0">
@@ -162,7 +162,7 @@ export default function Modal({
                   </div>
                 )}
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-lg pb-3">Edited image</h3>
                 {responseImage !== "" ? (

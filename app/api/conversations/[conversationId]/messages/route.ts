@@ -160,66 +160,151 @@ export async function POST(
         },
         {
           type: "function",
-          name: "generate_image_post_request",
-          description:
-            "ONLY use this function when the user EXPLICITLY asks for an image generation. DO NOT use for greetings, general questions, or casual conversation. The user must specifically request an image, picture, drawing, or visual creation.",
-          strict: true,
+          name: "generate_image_request",
+          description: "Generate an image based on user requirements",
           parameters: {
             type: "object",
             properties: {
-              prompt: {
+              details: {
+                type: "string",
+                description: "Description of what should appear in the image",
+              },
+              format: {
                 type: "string",
                 description:
-                  "Description or instructions for the desired image",
+                  "Overall style or format (e.g. poster, flyer, banner)",
+              },
+              aspect_ratio: {
+                type: "string",
+                enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
+                description: "Aspect ratio of the image (default: 1:1)",
+                default: "1:1",
+              },
+              num_images: {
+                type: "integer",
+                description: "Number of images to render (max 2, default: 1)",
+                minimum: 1,
+                maximum: 2,
+                default: 1,
+              },
+              output_format: {
+                type: "string",
+                enum: ["jpeg", "png", "webp"],
+                description: "Output image format (default: jpeg)",
+                default: "jpeg",
               },
             },
-            required: ["prompt"],
-            additionalProperties: false,
+            required: ["details", "format", "aspect_ratio"],
           },
         },
         {
           type: "function",
-          name: "on_image_edit_request",
-          description:
-            "Always call this function immediately whenever the user says they want to edit, modify, or change an image. Do not ask questions and do not respond with text.",
-          strict: true,
+          name: "edit_image_request",
+          description: `
+            Edit a single existing image based on user instructions.
+            Only use this function when there is exactly one image to edit.
+            If the user mentions multiple images, combining elements, or merging,
+            do NOT use this tool—use combine_image_request instead.
+          `,
           parameters: {
             type: "object",
             properties: {
               image_url: {
                 type: "string",
-                description: "URL or reference to the uploaded image.",
+                description: "URL of the image to edit",
+              },
+              instructions: {
+                type: "string",
+                description:
+                  "What changes to make: add, remove, modify elements",
               },
             },
-            required: ["image_url"],
-            additionalProperties: false,
+            required: ["image_url", "instructions"],
           },
         },
         {
           type: "function",
-          name: "combine_images",
+          name: "combine_image_request",
           description:
-            "Use this function when the user uploads multiple images and explicitly asks to combine them. You must return the SAME file_ids that were provided in the user input. Never invent or generate new IDs.",
-          strict: true,
+            "Combine multiple images into one based on user instructions",
           parameters: {
             type: "object",
             properties: {
-              prompt: {
-                type: "string",
-                description:
-                  "Instructions on how to arrange or combine the uploaded images.",
-              },
-              file_ids: {
+              image_urls: {
                 type: "array",
-                description:
-                  "List of OpenAI file_ids provided in the user input. Use exactly these values, do not generate or guess.",
                 items: { type: "string" },
+                description: "List of image URLs to combine (min 2)",
+              },
+              instructions: {
+                type: "string",
+                description: "Instructions on how to combine the images",
               },
             },
-            required: ["prompt", "file_ids"],
-            additionalProperties: false,
+            required: ["image_urls", "instructions"],
           },
         },
+        // {
+        //   type: "function",
+        //   name: "generate_image_post_request",
+        //   description:
+        //     "ONLY use this function when the user EXPLICITLY asks for an image generation. DO NOT use for greetings, general questions, or casual conversation. The user must specifically request an image, picture, drawing, or visual creation.",
+        //   strict: true,
+        //   parameters: {
+        //     type: "object",
+        //     properties: {
+        //       prompt: {
+        //         type: "string",
+        //         description:
+        //           "Description or instructions for the desired image",
+        //       },
+        //     },
+        //     required: ["prompt"],
+        //     additionalProperties: false,
+        //   },
+        // },
+        // {
+        //   type: "function",
+        //   name: "on_image_edit_request",
+        //   description:
+        //     "Always call this function immediately whenever the user says they want to edit, modify, or change an image. Do not ask questions and do not respond with text.",
+        //   strict: true,
+        //   parameters: {
+        //     type: "object",
+        //     properties: {
+        //       image_url: {
+        //         type: "string",
+        //         description: "URL or reference to the uploaded image.",
+        //       },
+        //     },
+        //     required: ["image_url"],
+        //     additionalProperties: false,
+        //   },
+        // },
+        // {
+        //   type: "function",
+        //   name: "combine_images",
+        //   description:
+        //     "Use this function when the user uploads multiple images and explicitly asks to combine them. You must return the SAME file_ids that were provided in the user input. Never invent or generate new IDs.",
+        //   strict: true,
+        //   parameters: {
+        //     type: "object",
+        //     properties: {
+        //       prompt: {
+        //         type: "string",
+        //         description:
+        //           "Instructions on how to arrange or combine the uploaded images.",
+        //       },
+        //       file_ids: {
+        //         type: "array",
+        //         description:
+        //           "List of OpenAI file_ids provided in the user input. Use exactly these values, do not generate or guess.",
+        //         items: { type: "string" },
+        //       },
+        //     },
+        //     required: ["prompt", "file_ids"],
+        //     additionalProperties: false,
+        //   },
+        // },
       ],
     });
 
@@ -233,31 +318,30 @@ export async function POST(
     const imageGenerationTool = response?.output?.find(
       (item) =>
         item.type === "function_call" &&
-        item.name === "generate_image_post_request" &&
+        item.name === "generate_image_request" &&
         item.status === "completed"
     );
     const imageEditTool = response?.output?.find(
       (item) =>
         item.type === "function_call" &&
-        item.name === "on_image_edit_request" &&
+        item.name === "edit_image_request" &&
         item.status === "completed"
     );
     const imageCombineTool = response?.output?.find(
       (item) =>
         item.type === "function_call" &&
-        item.name === "combine_images" &&
+        item.name === "combine_image_request" &&
         item.status === "completed"
     );
 
-    // Only proceed with image generation if it's not a simple greeting and the tool was called
-    if (imageGenerationTool) {
-      // const parameters = imageGenerationTool.parameters;
+    console.log({ imageGenerationTool, imageEditTool, imageCombineTool });
 
-      const conversationText = conversationHistory
-        // @ts-ignore
-        .map((msg) => msg.content.map((c) => c.text).join(" "))
-        .join(" ");
-      const prompt = `${conversationText}. ${content}.`;
+    // TOOLs
+    if (imageGenerationTool) {
+      // @ts-ignore
+      const parameters = JSON.parse(imageGenerationTool.arguments);
+      const { details, aspect_ratio, num_images, output_format } = parameters;
+      console.log({ parameters });
 
       try {
         const imageResp = await fetch(
@@ -265,15 +349,15 @@ export async function POST(
           {
             method: "POST",
             body: JSON.stringify({
-              prompt: prompt,
+              prompt: details,
               finetuneId: "a4bd761c-0f90-41cc-be78-c7b6cf22285a",
               triggerPhrase: "TCT-AI-8",
               finetuneStrength: 1.2,
               settings: {
-                aspect_ratio: "4:3",
-                num_images: 2,
+                aspect_ratio: aspect_ratio,
+                num_images: num_images,
                 safety_tolerance: 2,
-                output_format: "png",
+                output_format: output_format,
                 enable_safety_checker: true,
                 raw: true,
                 seed: 987654321,
@@ -304,6 +388,12 @@ export async function POST(
         finalMessage = "Error generating image.";
       }
     } else if (imageEditTool) {
+      // @ts-ignore
+      const parameters = JSON.parse(imageEditTool.arguments);
+      const { instructions } = parameters;
+
+      console.log({ parameters });
+
       finalMessage =
         fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
         response?.output_text ||
