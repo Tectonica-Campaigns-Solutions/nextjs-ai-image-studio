@@ -67,8 +67,8 @@ function handleModerationError(errorData: any): string {
  * 
  * Body parameters:
  * - prompt (required): Text description for image generation
- * - finetuneId (required): Fine-tune model ID for custom styling
- * - triggerPhrase (required): Trigger phrase for the fine-tuned model
+ * - finetuneId (optional): Fine-tune model ID for custom styling (default: "a4bd761c-0f90-41cc-be78-c7b6cf22285a")
+ * - triggerPhrase (optional): Trigger phrase for the fine-tuned model (default: "TCT-AI-8")
  * - finetuneStrength (optional): Fine-tune strength (0.1-2.0, default: 1.0)
  * - settings (optional): Advanced generation settings
  * 
@@ -76,7 +76,7 @@ function handleModerationError(errorData: any): string {
  * - aspect_ratio: Image dimensions (1:1, 4:3, 3:4, 16:9, 9:16, 21:9, default: 1:1)
  * - num_images: Number of images to generate (1-4, default: 1)
  * - safety_tolerance: Content safety level (1-3, default: 1 - most strict)
- * - output_format: Image format (jpeg, png, webp, default: jpeg)
+ * - output_format: Image format (jpg, png, webp, default: jpg)
  * - enable_safety_checker: Whether to enable safety checking (default: true)
  * - seed: Random seed for reproducible results
  * 
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Validate required parameters
+    // Validate required parameters - only prompt is required now
     if (!body.prompt || typeof body.prompt !== 'string' || !body.prompt.trim()) {
       return NextResponse.json(
         {
@@ -103,33 +103,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!body.finetuneId || typeof body.finetuneId !== 'string' || !body.finetuneId.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing or invalid 'finetuneId' parameter",
-          details: "Fine-tune ID must be a non-empty string"
-        },
-        { status: 400 }
-      )
-    }
-
-    if (!body.triggerPhrase || typeof body.triggerPhrase !== 'string' || !body.triggerPhrase.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing or invalid 'triggerPhrase' parameter",
-          details: "Trigger phrase must be a non-empty string"
-        },
-        { status: 400 }
-      )
-    }
-
-    // Extract parameters with defaults (same as internal API)
+    // Extract parameters with defaults
     const {
       prompt,
-      finetuneId,
-      triggerPhrase,
+      finetuneId = "a4bd761c-0f90-41cc-be78-c7b6cf22285a", // Default fine-tune ID
+      triggerPhrase = "TCT-AI-8", // Default trigger phrase
       finetuneStrength = 1.0, // Default strength 1.0
       settings = {}
     } = body
@@ -175,12 +153,12 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
 
-    // Prepare default settings for Flux Ultra Finetuned (same as internal API)
+    // Prepare default settings for Flux Ultra Finetuned (updated defaults)
     const defaultSettings = {
       aspect_ratio: "1:1",
       num_images: 1,
       safety_tolerance: 1, // Most strict by default
-      output_format: "jpeg",
+      output_format: "jpg", // Changed to jpg as requested
       enable_safety_checker: true,
       seed: undefined
     }
@@ -375,19 +353,21 @@ export async function GET() {
           type: "string",
           description: "Text description for image generation",
           example: "a beautiful landscape with mountains and lakes"
-        },
+        }
+      },
+      optional: {
         finetuneId: {
           type: "string",
           description: "Fine-tune model ID for custom styling",
+          default: "a4bd761c-0f90-41cc-be78-c7b6cf22285a",
           example: "a4bd761c-0f90-41cc-be78-c7b6cf22285a"
         },
         triggerPhrase: {
           type: "string",
           description: "Trigger phrase for the fine-tuned model",
+          default: "TCT-AI-8",
           example: "TCT-AI-8"
-        }
-      },
-      optional: {
+        },
         finetuneStrength: {
           type: "number",
           description: "Fine-tune strength (0.1-2.0)",
@@ -419,8 +399,8 @@ export async function GET() {
             output_format: {
               type: "string",
               description: "Image format",
-              default: "jpeg",
-              options: ["jpeg", "png", "webp"]
+              default: "jpg",
+              options: ["jpg", "png", "webp"]
             },
             enable_safety_checker: {
               type: "boolean",
@@ -460,14 +440,15 @@ export async function GET() {
     },
     examples: {
       basicRequest: {
-        prompt: "a professional team meeting in a modern office",
-        finetuneId: "a4bd761c-0f90-41cc-be78-c7b6cf22285a",
-        triggerPhrase: "TCT-AI-8"
+        prompt: "a professional team meeting in a modern office"
+      },
+      customModelRequest: {
+        prompt: "a sustainable city with green buildings and clean energy",
+        finetuneId: "my-custom-model-id",
+        triggerPhrase: "MY-CUSTOM-TRIGGER"
       },
       advancedRequest: {
-        prompt: "a sustainable city with green buildings and clean energy",
-        finetuneId: "a4bd761c-0f90-41cc-be78-c7b6cf22285a",
-        triggerPhrase: "TCT-AI-8",
+        prompt: "a beautiful landscape with mountains and lakes",
         finetuneStrength: 1.2,
         settings: {
           aspect_ratio: "16:9",
