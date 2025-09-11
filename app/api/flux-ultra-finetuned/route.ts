@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       safety_tolerance: 1,
       output_format: "jpeg",
       enable_safety_checker: true,
+      raw: false, // Default raw mode disabled
       seed: undefined
     }
 
@@ -98,7 +99,8 @@ export async function POST(request: NextRequest) {
       num_images: mergedSettings.num_images,
       safety_tolerance: mergedSettings.safety_tolerance,
       output_format: mergedSettings.output_format,
-      enable_safety_checker: mergedSettings.enable_safety_checker
+      enable_safety_checker: mergedSettings.enable_safety_checker,
+      raw: mergedSettings.raw
     }
 
     // Add seed if provided

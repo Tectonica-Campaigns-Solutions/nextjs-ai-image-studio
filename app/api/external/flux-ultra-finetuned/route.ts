@@ -78,6 +78,7 @@ function handleModerationError(errorData: any): string {
  * - safety_tolerance: Content safety level (1-3, default: 1 - most strict)
  * - output_format: Image format (jpeg, png, webp, default: jpeg)
  * - enable_safety_checker: Whether to enable safety checking (default: true)
+ * - raw: Disable prompt enhancement and use raw input (default: false)
  * - seed: Random seed for reproducible results
  * 
  * Response format:
@@ -161,6 +162,7 @@ export async function POST(request: NextRequest) {
       safety_tolerance: 1, // Most strict by default
       output_format: "jpeg", // Changed back to jpeg (jpg might not be valid)
       enable_safety_checker: true,
+      raw: false, // Raw mode disabled by default
       seed: undefined
     }
     
@@ -186,7 +188,8 @@ export async function POST(request: NextRequest) {
       num_images: mergedSettings.num_images,
       safety_tolerance: mergedSettings.safety_tolerance,
       output_format: mergedSettings.output_format,
-      enable_safety_checker: mergedSettings.enable_safety_checker
+      enable_safety_checker: mergedSettings.enable_safety_checker,
+      raw: mergedSettings.raw
     }
 
     // Add seed if provided

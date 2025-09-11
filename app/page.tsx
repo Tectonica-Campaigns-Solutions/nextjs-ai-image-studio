@@ -88,6 +88,7 @@ export default function ImageEditor() {
     safety_tolerance: 1,
     output_format: "jpeg",
     enable_safety_checker: true,
+    raw: false, // Raw mode setting
     seed: ""
   })
   const [fluxUltraFinetuneId, setFluxUltraFinetuneId] = useState("a4bd761c-0f90-41cc-be78-c7b6cf22285a")
@@ -3029,6 +3030,20 @@ export default function ImageEditor() {
                                 <SelectItem value="3">Level 3 - Least Strict</SelectItem>
                               </SelectContent>
                             </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="fluxUltraRaw"
+                                checked={fluxUltraSettings.raw}
+                                onCheckedChange={(checked) => setFluxUltraSettings(prev => ({ ...prev, raw: !!checked }))}
+                              />
+                              <Label htmlFor="fluxUltraRaw">Raw Mode</Label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Disable prompt enhancement and use raw input
+                            </p>
                           </div>
 
                           <div className="space-y-2">
