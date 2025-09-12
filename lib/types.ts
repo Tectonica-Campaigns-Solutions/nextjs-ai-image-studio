@@ -36,6 +36,8 @@ export type ChatMessage = {
     name: string;
     fileId: string;
   }>;
+  kind?: "normal" | "disambiguation";
+  options?: string[];
 };
 
 export type Conversation = {

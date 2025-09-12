@@ -509,7 +509,23 @@ function DashboardContent() {
       }
 
       const data = await response.json();
-      const { message, activateEditImage } = data;
+      const { message, activateEditImage, imageDisambiguationTool, options } =
+        data;
+
+      if (imageDisambiguationTool) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            text: "What do you want to do?",
+            timestamp: new Date(),
+            kind: "disambiguation",
+            options: options,
+          },
+        ]);
+        return;
+      }
 
       if (activateEditImage) {
         console.log("Edit image requested, looking for uploaded images...");
@@ -683,7 +699,9 @@ function DashboardContent() {
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 bg-card/95 backdrop-blur-sm border-r border-border transform transition-all duration-300 ease-out lg:translate-x-0",
-          sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+          sidebarOpen
+            ? "translate-x-0 shadow-2xl z-[1000] bg-white"
+            : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
@@ -978,95 +996,126 @@ function DashboardContent() {
                           : "justify-start"
                       )}
                     >
-                      {message.role === "assistant" && (
-                        <div
-                          className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                            selectedBotData?.bgColor
-                          )}
-                        >
-                          {selectedBotData && (
-                            <selectedBotData.icon
-                              className={cn("h-4 w-4", selectedBotData.color)}
-                            />
-                          )}
-                        </div>
-                      )}
-                      <div
-                        className={cn(
-                          "max-w-[80%] rounded-lg p-4",
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        )}
-                      >
-                        <div className="markdown-content">
-                          {message.text.startsWith("data:image/") ? (
-                            <img
-                              src={message.text}
-                              alt="Generated image"
-                              className="max-w-[800px] rounded-lg shadow"
-                            />
-                          ) : message.text.startsWith("http") &&
-                            /\.(png|jpg|jpeg|gif|webp)$/i.test(message.text) ? (
-                            <div>
-                              <img
-                                src={message.text}
-                                alt="Generated image"
-                                className="max-w-[800px] rounded-lg shadow"
-                              />
-                              <div className="flex gap-2 mt-2">
-                                <button
-                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
-                                  onClick={() =>
-                                    handleDownloadImage(message.text)
-                                  }
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
-                                  onClick={() => handleEditor(message.text)}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
-                                  onClick={() => handleContinueConversation()}
-                                >
-                                  Continue conversation
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <Markdown>{message.text}</Markdown>
-                          )}
-                        </div>
-
-                        {message.attachedFiles &&
-                          message.attachedFiles.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-border/50">
-                              <div className="flex flex-wrap gap-1">
-                                {message.attachedFiles.map((file, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-background/50"
-                                  >
-                                    <Paperclip className="h-3 w-3" />
-                                    <span className="max-w-[150px] truncate">
-                                      {file.name}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        {message.timestamp && (
-                          <div className="mt-2 text-xs opacity-70">
-                            {new Date(message.timestamp).toLocaleTimeString()}
+                      {message.kind === "disambiguation" ? (
+                        <div>
+                          <p className="mb-3">{message.text}</p>
+                          <div className="flex flex-col gap-2">
+                            {message.options?.map((opt) => (
+                              <Button
+                                key={opt}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSubmit(opt)}
+                              >
+                                {opt}
+                              </Button>
+                            ))}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <>
+                          {message.role === "assistant" && (
+                            <div
+                              className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                                selectedBotData?.bgColor
+                              )}
+                            >
+                              {selectedBotData && (
+                                <selectedBotData.icon
+                                  className={cn(
+                                    "h-4 w-4",
+                                    selectedBotData.color
+                                  )}
+                                />
+                              )}
+                            </div>
+                          )}
+
+                          <div
+                            className={cn(
+                              "max-w-[80%] rounded-lg p-4",
+                              message.role === "user"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            )}
+                          >
+                            <div className="markdown-content">
+                              {message.text.startsWith("data:image/") ? (
+                                <img
+                                  src={message.text}
+                                  alt="Generated image"
+                                  className="max-w-[800px] rounded-lg shadow"
+                                />
+                              ) : message.text.startsWith("http") &&
+                                /\.(png|jpg|jpeg|gif|webp)$/i.test(
+                                  message.text
+                                ) ? (
+                                <div>
+                                  <img
+                                    src={message.text}
+                                    alt="Generated image"
+                                    className="max-w-[800px] rounded-lg shadow"
+                                  />
+                                  <div className="flex gap-2 mt-2">
+                                    <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() =>
+                                        handleDownloadImage(message.text)
+                                      }
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() => handleEditor(message.text)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() =>
+                                        handleContinueConversation()
+                                      }
+                                    >
+                                      Continue conversation
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <Markdown>{message.text}</Markdown>
+                              )}
+                            </div>
+
+                            {message.attachedFiles &&
+                              message.attachedFiles.length > 0 && (
+                                <div className="mt-2 pt-2 border-t border-border/50">
+                                  <div className="flex flex-wrap gap-1">
+                                    {message.attachedFiles.map((file, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-background/50"
+                                      >
+                                        <Paperclip className="h-3 w-3" />
+                                        <span className="max-w-[150px] truncate">
+                                          {file.name}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                            {message.timestamp && (
+                              <div className="mt-2 text-xs opacity-70">
+                                {new Date(
+                                  message.timestamp
+                                ).toLocaleTimeString()}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
 
