@@ -204,7 +204,7 @@ export async function POST(
             Edit a single existing image based on user instructions.
             Only use this function when there is exactly one image to edit.
             If the user mentions multiple images, combining elements, or merging,
-            do NOT use this tool—use combine_image_request instead.
+            do NOT use this tool—use combine_image_request instead. Only run this tool if the user has uploaded images, otherwise ask for them.
           `,
           parameters: {
             type: "object",
@@ -226,14 +226,14 @@ export async function POST(
           type: "function",
           name: "combine_image_request",
           description:
-            "Combine multiple images into one based on user instructions",
+            "Combine multiple images into one based on user instructions. Only run this tool if the user has uploaded images, otherwise ask for them.",
           parameters: {
             type: "object",
             properties: {
               image_urls: {
                 type: "array",
                 items: { type: "string" },
-                description: "List of image URLs to combine (min 2)",
+                description: "List of image URLs to combine",
               },
               instructions: {
                 type: "string",
@@ -241,6 +241,33 @@ export async function POST(
               },
             },
             required: ["image_urls", "instructions"],
+          },
+        },
+        {
+          type: "function",
+          name: "image_action_disambiguation",
+          description:
+            "Use this tool whenever it is unclear if the user wants to create a new image, edit an uploaded image, or combine multiple images. This tool asks clarifying questions to help the user decide the right path.",
+          strict: true,
+          parameters: {
+            type: "object",
+            properties: {
+              question: {
+                type: "string",
+                description:
+                  "The clarifying question to ask the user (e.g., 'Do you want to create a new image, edit an existing one, or combine images?').",
+              },
+              options: {
+                type: "array",
+                description:
+                  "List of possible user choices to clarify intent. These will be shown as buttons in the UI.",
+                items: {
+                  type: "string",
+                },
+              },
+            },
+            required: ["question", "options"],
+            additionalProperties: false,
           },
         },
         // {
@@ -333,8 +360,20 @@ export async function POST(
         item.name === "combine_image_request" &&
         item.status === "completed"
     );
+    const imageDisambiguationTool = response?.output?.find(
+      (item) =>
+        item.type === "function_call" &&
+        item.name === "image_action_disambiguation" &&
+        item.status === "completed"
+    );
 
-    console.log({ imageGenerationTool, imageEditTool, imageCombineTool });
+    console.log({
+      imageGenerationTool,
+      imageEditTool,
+      imageCombineTool,
+      imageDisambiguationTool,
+      finalMessage,
+    });
 
     // TOOLs
     if (imageGenerationTool) {
@@ -390,21 +429,58 @@ export async function POST(
     } else if (imageEditTool) {
       // @ts-ignore
       const parameters = JSON.parse(imageEditTool.arguments);
-      const { instructions } = parameters;
+      const { instructions, image_url } = parameters;
 
-      console.log({ parameters });
+      const imageResponse = await fetch(image_url);
+      const blob = await imageResponse.blob();
 
-      finalMessage =
-        fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
-        response?.output_text ||
-        "";
+      const formData = new FormData();
+      formData.append("image", blob, "image.png");
+      formData.append("prompt", instructions);
+      formData.append("useRag", "true");
 
-      activateEditImage = true;
+      try {
+        const imageResp = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/edit-image`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!imageResp.ok) {
+          throw new Error(`Image generation failed: ${imageResp.status}`);
+        }
+
+        const imageData = await imageResp.json();
+
+        if (imageData?.image) {
+          const imageUrl = imageData.image;
+
+          if (response?.output_text) {
+            finalMessage = `${response.output_text}\n\n${imageUrl}`;
+          } else {
+            finalMessage = imageUrl;
+          }
+        } else {
+          finalMessage =
+            response?.output_text || "Image edit generation failed";
+        }
+      } catch (error) {
+        console.error("Error generating image:", error);
+        finalMessage = "Error generating image.";
+      }
+
+      // finalMessage =
+      //   fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
+      //   response?.output_text ||
+      //   "";
+      // activateEditImage = true;
     } else if (imageCombineTool) {
       try {
         const params = JSON.parse((imageCombineTool as any)?.arguments);
+        const { instructions } = params;
 
-        const prompt = params?.prompt;
         const prevFileUrls = extractFileIds(previousMessages);
 
         const imageUrls = fileIds
@@ -413,12 +489,14 @@ export async function POST(
           ? prevFileUrls
           : [];
 
+        console.log({ params, instructions, imageUrls });
+
         const combineResp = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-image-combine`,
           {
             method: "POST",
             body: JSON.stringify({
-              prompt,
+              prompt: instructions,
               imageUrls: imageUrls,
             }),
           }
@@ -434,6 +512,16 @@ export async function POST(
         console.error("Error combining images:", err);
         finalMessage = "Error combining images.";
       }
+    } else if (imageDisambiguationTool) {
+      // @ts-ignore
+      const parameters = JSON.parse(imageDisambiguationTool.arguments);
+      const { question, options } = parameters;
+
+      return Response.json({
+        message: "",
+        imageDisambiguationTool: true,
+        options,
+      });
     }
 
     // Save assistant message
