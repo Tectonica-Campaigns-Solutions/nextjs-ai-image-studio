@@ -612,7 +612,6 @@ function DashboardContent() {
   const handleAddImageToConversation = async (imageUrl: string) => {
     if (!currentConversationId) return;
 
-    setShowModal(false);
     const tempUserMessageId = `assistant-${Date.now()}`;
     const newMessage: ChatMessage = {
       role: "assistant",
@@ -649,6 +648,7 @@ function DashboardContent() {
     );
 
     if (response.ok) {
+      setShowModal(false);
       setMessages((prev) => [...prev, newMessage]);
       scrollToBottom();
     }
