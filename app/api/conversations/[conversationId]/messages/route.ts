@@ -239,6 +239,12 @@ export async function POST(
                 type: "string",
                 description: "Instructions on how to combine the images",
               },
+              aspect_ratio: {
+                type: "string",
+                enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
+                description: "Aspect ratio of the image (default: 1:1)",
+                default: "1:1",
+              },
             },
             required: ["image_urls", "instructions"],
           },
@@ -479,7 +485,7 @@ export async function POST(
     } else if (imageCombineTool) {
       try {
         const params = JSON.parse((imageCombineTool as any)?.arguments);
-        const { instructions } = params;
+        const { instructions, aspect_ratio } = params;
 
         const prevFileUrls = extractFileIds(previousMessages);
 
@@ -498,6 +504,9 @@ export async function POST(
             body: JSON.stringify({
               prompt: instructions,
               imageUrls: imageUrls,
+              settings: {
+                aspect_ratio: aspect_ratio || "1:1",
+              },
             }),
           }
         );
