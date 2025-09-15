@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink } from "lucide-react"
+import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
@@ -174,6 +174,35 @@ export default function ImageEditor() {
     }
   }
 
+  // Edit Image Enhancement Preview Function
+  const generateEditEnhancementPreview = async (prompt: string) => {
+    if (!prompt.trim() || !useEditJSONEnhancement) {
+      setEditEnhancementPreview("")
+      setEditEnhancementMeta(null)
+      return
+    }
+
+    const hybridOptions: HybridEnhancementOptions = {
+      useRAG: false, // Only JSON for Edit Image
+      useJSONEnhancement: true,
+      jsonOptions: {
+        useDefaults: !editCustomEnhancementText || editCustomEnhancementText === editDefaultEnhancementText,
+        customText: editCustomEnhancementText !== editDefaultEnhancementText ? editCustomEnhancementText : undefined,
+        intensity: editJsonIntensity
+      }
+    }
+
+    try {
+      const result = await enhancePromptHybrid(prompt, hybridOptions)
+      setEditEnhancementPreview(result.enhancedPrompt)
+      setEditEnhancementMeta(result.metadata)
+    } catch (error) {
+      console.warn('Edit Image enhancement preview failed:', error)
+      setEditEnhancementPreview(prompt)
+      setEditEnhancementMeta(null)
+    }
+  }
+
   // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(true)
   const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
@@ -238,6 +267,14 @@ export default function ImageEditor() {
   const [previewUrl, setPreviewUrl] = useState<string>("")
   const [prompt, setPrompt] = useState("")
   const [editedImageUrl, setEditedImageUrl] = useState<string>("")
+
+  // Edit Image JSON Enhancement States
+  const [useEditJSONEnhancement, setUseEditJSONEnhancement] = useState(false) // Disabled by default
+  const [editJsonIntensity, setEditJsonIntensity] = useState(0.8)
+  const [editEnhancementPreview, setEditEnhancementPreview] = useState<string>("")
+  const [editEnhancementMeta, setEditEnhancementMeta] = useState<any>(null)
+  const [editCustomEnhancementText, setEditCustomEnhancementText] = useState<string>("")
+  const [editDefaultEnhancementText, setEditDefaultEnhancementText] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>("")
   const [useRagEdit, setUseRagEdit] = useState(true) // RAG for edit image
@@ -1021,9 +1058,31 @@ export default function ImageEditor() {
     setError("")
 
     try {
+      // Apply JSON Enhancement if enabled
+      let finalPrompt = prompt
+      if (useEditJSONEnhancement) {
+        const hybridOptions: HybridEnhancementOptions = {
+          useRAG: false, // Only JSON for Edit Image
+          useJSONEnhancement: true,
+          jsonOptions: {
+            useDefaults: !editCustomEnhancementText || editCustomEnhancementText === editDefaultEnhancementText,
+            customText: editCustomEnhancementText !== editDefaultEnhancementText ? editCustomEnhancementText : undefined,
+            intensity: editJsonIntensity
+          }
+        }
+        
+        try {
+          const result = await enhancePromptHybrid(prompt, hybridOptions)
+          finalPrompt = result.enhancedPrompt
+        } catch (error) {
+          console.warn('Edit Image JSON Enhancement failed, using original prompt:', error)
+          // Continue with original prompt if enhancement fails
+        }
+      }
+
       const formData = new FormData()
       formData.append("image", selectedImage)
-      formData.append("prompt", prompt)
+      formData.append("prompt", finalPrompt)
       formData.append("useRAG", useRagEdit.toString())
       formData.append("image_size", editImageSize)
       
@@ -1331,7 +1390,7 @@ export default function ImageEditor() {
           <div className="text-center space-y-2 flex-1">
             <h1 className="text-3xl font-bold">AI Image Studio</h1>
             <p className="text-muted-foreground">
-              Generate, edit, and transform images using advanced Qwen and FLUX AI models
+              Generate, edit, and transform images
             </p>
           </div>
           
@@ -1699,10 +1758,10 @@ export default function ImageEditor() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5" />
-                    Flux LoRA Text-to-Image
+                    Text-to-Image
                   </CardTitle>
                   <CardDescription>
-                    Generate high-quality images using Flux LoRA (FLUX.1 dev)
+                    Generate high-quality images based a LoRA training
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -2085,7 +2144,7 @@ export default function ImageEditor() {
                     Generated Image
                   </CardTitle>
                   <CardDescription>
-                    Your Flux Pro generated image will appear here
+                    Your generated image will appear here
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -2140,7 +2199,7 @@ export default function ImageEditor() {
                     Combine Images
                   </CardTitle>
                   <CardDescription>
-                    Upload multiple images and combine them into a single new image using Flux Pro Multi
+                    Upload multiple images and combine them into a single new image
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -2604,6 +2663,98 @@ export default function ImageEditor() {
                       />
                     </div>
 
+                    {/* JSON Enhancement Toggle */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-purple-50/50 dark:to-purple-900/20">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useEditJSONEnhancement ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div>
+                          <Label htmlFor="use-edit-json-enhancement" className="font-medium cursor-pointer">
+                            JSON Enhancement
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {useEditJSONEnhancement ? 'Active - Advanced prompt structuring enabled' : 'Inactive - Using original prompts only'}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch 
+                        id="use-edit-json-enhancement" 
+                        checked={useEditJSONEnhancement}
+                        onCheckedChange={setUseEditJSONEnhancement}
+                      />
+                    </div>
+
+                    {/* JSON Enhancement Controls */}
+                    {useEditJSONEnhancement && (
+                      <div className="space-y-4 p-4 bg-gradient-to-r from-purple-50/50 to-background dark:from-purple-900/20 dark:to-background rounded-lg border border-purple-200/50 dark:border-purple-700/50">
+                        {/* Intensity Slider */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="edit-json-intensity" className="text-sm font-medium">
+                              Enhancement Intensity
+                            </Label>
+                            <span className="text-xs text-muted-foreground bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
+                              {editJsonIntensity.toFixed(1)}
+                            </span>
+                          </div>
+                          <Slider
+                            id="edit-json-intensity"
+                            min={0.1}
+                            max={1.0}
+                            step={0.1}
+                            value={[editJsonIntensity]}
+                            onValueChange={(value) => setEditJsonIntensity(value[0])}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Subtle</span>
+                            <span>Moderate</span>
+                            <span>Strong</span>
+                          </div>
+                        </div>
+
+                        {/* Custom Enhancement Text */}
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-custom-enhancement" className="text-sm font-medium">
+                            Custom Enhancement Text (Optional)
+                          </Label>
+                          <Textarea
+                            id="edit-custom-enhancement"
+                            placeholder="Enter custom enhancement instructions..."
+                            value={editCustomEnhancementText}
+                            onChange={(e) => setEditCustomEnhancementText(e.target.value)}
+                            rows={2}
+                            className="text-sm"
+                          />
+                        </div>
+
+                        {/* Preview Button */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          disabled={!prompt.trim() || !useEditJSONEnhancement}
+                          onClick={() => generateEditEnhancementPreview(prompt)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Preview Enhancement
+                        </Button>
+
+                        {/* Enhancement Preview Display */}
+                        {editEnhancementPreview && editEnhancementMeta && (
+                          <EnhancementPreview
+                            strategy="json-only"
+                            ragApplied={editEnhancementMeta.ragApplied}
+                            jsonApplied={editEnhancementMeta.jsonApplied}
+                            totalEnhancements={editEnhancementMeta.totalEnhancements}
+                            processingTime={editEnhancementMeta.processingTime}
+                            enhancementSources={editEnhancementMeta.enhancementSources}
+                            previewText={editEnhancementPreview}
+                          />
+                        )}
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full" disabled={!selectedImage || !prompt.trim() || isLoading}>
                       {isLoading ? (
                         <>
@@ -2922,11 +3073,8 @@ export default function ImageEditor() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-purple-500" />
-                    Flux Ultra Finetuned
+                    Generate high-quality images
                   </CardTitle>
-                  <CardDescription>
-                    Generate high-quality images using Flux Ultra v1.1 with custom fine-tuned models
-                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <form onSubmit={handleFluxUltraSubmit} className="space-y-4">
@@ -3108,7 +3256,6 @@ export default function ImageEditor() {
               <Card>
                 <CardHeader>
                   <CardTitle>Generated Image</CardTitle>
-                  <CardDescription>Your Flux Ultra finetuned image</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {isFluxUltraGenerating ? (
