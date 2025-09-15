@@ -161,7 +161,8 @@ export async function POST(
         {
           type: "function",
           name: "generate_image_request",
-          description: "Generate an image based on user requirements",
+          description:
+            "Generate an image based on user requirements. IMPORTANT: If the user does not specify an aspect ratio, ALWAYS use 3:4",
           parameters: {
             type: "object",
             properties: {
@@ -169,16 +170,12 @@ export async function POST(
                 type: "string",
                 description: "Description of what should appear in the image",
               },
-              format: {
-                type: "string",
-                description:
-                  "Overall style or format (e.g. poster, flyer, banner)",
-              },
               aspect_ratio: {
                 type: "string",
                 enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
-                description: "Aspect ratio of the image (default: 1:1)",
-                default: "1:1",
+                description:
+                  "Aspect ratio of the image. If the user does not specify one, ALWAYS use 3:4.",
+                default: "3:4",
               },
               num_images: {
                 type: "integer",
@@ -194,7 +191,7 @@ export async function POST(
                 default: "jpeg",
               },
             },
-            required: ["details", "format", "aspect_ratio"],
+            required: ["details"],
           },
         },
         {
@@ -377,7 +374,7 @@ export async function POST(
       imageGenerationTool,
       imageEditTool,
       imageCombineTool,
-      imageDisambiguationTool,
+      // imageDisambiguationTool,
       finalMessage,
     });
 
@@ -386,7 +383,8 @@ export async function POST(
       // @ts-ignore
       const parameters = JSON.parse(imageGenerationTool.arguments);
       const { details, aspect_ratio, num_images, output_format } = parameters;
-      console.log({ parameters });
+
+      console.log({ details, aspect_ratio });
 
       try {
         const imageResp = await fetch(
@@ -399,7 +397,7 @@ export async function POST(
               triggerPhrase: "TCT-AI-8",
               finetuneStrength: 1.2,
               settings: {
-                aspect_ratio: aspect_ratio,
+                aspect_ratio: aspect_ratio || "3:4",
                 num_images: num_images,
                 safety_tolerance: 2,
                 output_format: output_format,
@@ -505,7 +503,7 @@ export async function POST(
               prompt: instructions,
               imageUrls: imageUrls,
               settings: {
-                aspect_ratio: aspect_ratio || "1:1",
+                aspect_ratio: aspect_ratio || "3:4",
               },
             }),
           }
@@ -626,4 +624,19 @@ function extractFileIds(messages: any) {
   });
 
   return fileUrls;
+}
+
+function normalizeArgs(userPrompt: string, args: string) {
+  let parsed = JSON.parse(args);
+
+  const ratioHints =
+    /(1:1|4:3|3:4|16:9|9:16|21:9|square|portrait|landscape|widescreen)/i;
+
+  if (!ratioHints.test(userPrompt)) {
+    parsed.aspect_ratio = "3:4";
+  } else {
+    parsed.aspect_ratio = parsed.aspect_ratio || "3:4";
+  }
+
+  return parsed;
 }
