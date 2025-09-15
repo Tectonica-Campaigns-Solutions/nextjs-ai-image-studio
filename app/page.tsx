@@ -277,7 +277,7 @@ export default function ImageEditor() {
   const [editDefaultEnhancementText, setEditDefaultEnhancementText] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>("")
-  const [useRagEdit, setUseRagEdit] = useState(true) // RAG for edit image
+  const [useRagEdit, setUseRagEdit] = useState(false) // RAG for edit image - disabled by default
   const [editGeneratedPrompt, setEditGeneratedPrompt] = useState<string>("") // Store generated prompt
   const [editImageSize, setEditImageSize] = useState("square_hd") // Image size for edit
   const [customWidth, setCustomWidth] = useState("1024") // Custom width for edit
@@ -2642,26 +2642,28 @@ export default function ImageEditor() {
                       </div>
                     )}
 
-                    {/* RAG Toggle */}
-                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${useRagEdit ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
-                        <div>
-                          <Label htmlFor="use-rag-edit" className="font-medium cursor-pointer">
-                            Use brand guidelines (RAG)
-                          </Label>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {useRagEdit ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
-                          </p>
+                    {/* RAG Toggle - Hidden (disabled by default) */}
+                    {false && (
+                      <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-muted/30">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${useRagEdit ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                          <div>
+                            <Label htmlFor="use-rag-edit" className="font-medium cursor-pointer">
+                              Use brand guidelines (RAG)
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {useRagEdit ? 'Active - Prompts will be enhanced with brand guidelines' : 'Inactive - Using original prompts only'}
+                            </p>
+                          </div>
                         </div>
+                        <Checkbox 
+                          id="use-rag-edit" 
+                          checked={useRagEdit}
+                          onCheckedChange={(checked) => setUseRagEdit(checked as boolean)}
+                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                        />
                       </div>
-                      <Checkbox 
-                        id="use-rag-edit" 
-                        checked={useRagEdit}
-                        onCheckedChange={(checked) => setUseRagEdit(checked as boolean)}
-                        className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                      />
-                    </div>
+                    )}
 
                     {/* JSON Enhancement Toggle */}
                     <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-purple-50/50 dark:to-purple-900/20">
