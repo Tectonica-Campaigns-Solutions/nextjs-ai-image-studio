@@ -32,7 +32,7 @@ export const bots: SidebarBotType[] = [
   },
   {
     id: "visual_assistant",
-    name: "Visual",
+    name: "Visual RAG",
     description: "Assistant for visual generation",
     icon: Zap,
     color: "text-amber-500",
@@ -45,9 +45,9 @@ export const bots: SidebarBotType[] = [
     ],
   },
   {
-    id: "image_testing_assistant",
-    name: "Image Testing",
-    description: "Assistant for image generation and testing",
+    id: "visual_no_rag_assistant",
+    name: "Visual NO RAG",
+    description: "Assistant for image generation with NO RAG",
     icon: Zap,
     color: "text-rose-500",
     bgColor: "bg-rose-500/10",

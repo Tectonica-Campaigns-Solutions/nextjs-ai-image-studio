@@ -2,7 +2,7 @@ export type BotType =
   | "copy_assistant"
   | "strategy_assistant"
   | "visual_assistant"
-  | "image_testing_assistant";
+  | "visual_no_rag_assistant";
 
 export type SidebarBotType = {
   id: BotType;
@@ -23,7 +23,7 @@ export type ClientType = {
     copy_assistant_id: string;
     strategy_assistant_id: string;
     visual_assistant_id: string;
-    image_testing_assistant_id: string;
+    visual_no_rag_assistant_id: string;
   };
 };
 

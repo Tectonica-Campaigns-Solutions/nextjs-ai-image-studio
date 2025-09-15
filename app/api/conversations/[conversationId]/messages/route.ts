@@ -249,33 +249,33 @@ export async function POST(
             required: ["image_urls", "instructions"],
           },
         },
-        {
-          type: "function",
-          name: "image_action_disambiguation",
-          description:
-            "Use this tool whenever it is unclear if the user wants to create a new image, edit an uploaded image, or combine multiple images. This tool asks clarifying questions to help the user decide the right path.",
-          strict: true,
-          parameters: {
-            type: "object",
-            properties: {
-              question: {
-                type: "string",
-                description:
-                  "The clarifying question to ask the user (e.g., 'Do you want to create a new image, edit an existing one, or combine images?').",
-              },
-              options: {
-                type: "array",
-                description:
-                  "List of possible user choices to clarify intent. These will be shown as buttons in the UI.",
-                items: {
-                  type: "string",
-                },
-              },
-            },
-            required: ["question", "options"],
-            additionalProperties: false,
-          },
-        },
+        // {
+        //   type: "function",
+        //   name: "image_action_disambiguation",
+        //   description:
+        //     "Use this tool whenever it is unclear if the user wants to create a new image, edit an uploaded image, or combine multiple images. This tool asks clarifying questions to help the user decide the right path.",
+        //   strict: true,
+        //   parameters: {
+        //     type: "object",
+        //     properties: {
+        //       question: {
+        //         type: "string",
+        //         description:
+        //           "The clarifying question to ask the user (e.g., 'Do you want to create a new image, edit an existing one, or combine images?').",
+        //       },
+        //       options: {
+        //         type: "array",
+        //         description:
+        //           "List of possible user choices to clarify intent. These will be shown as buttons in the UI.",
+        //         items: {
+        //           type: "string",
+        //         },
+        //       },
+        //     },
+        //     required: ["question", "options"],
+        //     additionalProperties: false,
+        //   },
+        // },
         // {
         //   type: "function",
         //   name: "generate_image_post_request",
