@@ -417,6 +417,10 @@ export default function ImageEditor() {
           // Also initialize for Combine Images
           setFluxCombineDefaultEnhancementText(text)
           setFluxCombineCustomEnhancementText(text)
+          
+          // Also initialize for Edit Image
+          setEditDefaultEnhancementText(text)
+          setEditCustomEnhancementText(text)
         }
       } catch (error) {
         console.warn('Failed to load default enhancement text:', error)
