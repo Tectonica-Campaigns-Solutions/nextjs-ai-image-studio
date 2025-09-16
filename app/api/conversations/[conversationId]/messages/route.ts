@@ -42,7 +42,9 @@ export async function POST(
     } = body;
 
     console.log(
-      `[CONVERSATION] Bot type: ${botType}. Content: ${content}. Prompt ID: ${promptId}`
+      `[CONVERSATION] Bot type: ${botType}. Content: ${content}. Prompt ID: ${promptId}. File IDs: ${JSON.stringify(
+        fileIds
+      )}`
     );
 
     const withImageTools =
@@ -139,11 +141,15 @@ export async function POST(
           .select()
           .single();
 
+        console.log(`Uploaded file id: ${uploadedFile.id}`);
+
         await supabase.from("message_files").insert({
           message_id: messageId,
           file_id: file.fileId,
           created_at: new Date().toISOString(),
         });
+
+        console.log(`Relation between files + messages done.`);
       }
     }
 
@@ -400,7 +406,12 @@ export async function POST(
       const parameters = JSON.parse(imageEditTool.arguments);
       const { instructions, image_url } = parameters;
 
-      const imageResponse = await fetch(image_url);
+      const lastImageUrl = await getLastImageUrl(conversationId);
+      const finalImage = image_url.includes("supabase.co/storage/")
+        ? image_url
+        : lastImageUrl;
+
+      const imageResponse = await fetch(finalImage);
       const blob = await imageResponse.blob();
 
       const formData = new FormData();
@@ -496,10 +507,6 @@ export async function POST(
         finalMessage = "Upload a valid image.";
         return;
       }
-
-      // @ts-ignore
-      // const parameters = JSON.parse(imageBrandingTool.arguments);
-      // console.log({ parameters });
 
       const imageResponse = await fetch(lastImageUrl);
       const blob = await imageResponse.blob();
@@ -654,22 +661,21 @@ function normalizeArgs(userPrompt: string, args: string) {
 async function getLastImageUrl(conversationId: string): Promise<string | null> {
   const supabase = await createClient();
 
-  // Find the last message that has an attached image file
-  const { data: messages, error } = await supabase
-    .from("messages")
+  const { data, error } = await supabase
+    .from("message_files")
     .select(
       `
-        id,
         created_at,
-        message_files (
-          files (
-            file_url,
-            file_name
-          )
+        files (
+          file_url,
+          file_name
+        ),
+        messages!inner (
+          conversation_id
         )
       `
     )
-    .eq("conversation_id", conversationId)
+    .eq("messages.conversation_id", conversationId)
     .order("created_at", { ascending: false })
     .limit(1);
 
@@ -678,11 +684,12 @@ async function getLastImageUrl(conversationId: string): Promise<string | null> {
     return null;
   }
 
-  if (!messages || messages.length === 0) return null;
+  if (!data || data.length === 0) {
+    console.log(`No files found for conversation ${conversationId}`);
+    return null;
+  }
 
-  // Extract image URL if file is an image
-  const lastMessage = messages[0];
-  const file = lastMessage.message_files?.[0]?.files;
+  const file = data[0].files;
 
   if (!file?.file_url) return null;
 
