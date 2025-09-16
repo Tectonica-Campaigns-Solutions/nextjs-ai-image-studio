@@ -269,8 +269,8 @@ export default function ImageEditor() {
   const [editedImageUrl, setEditedImageUrl] = useState<string>("")
 
   // Edit Image JSON Enhancement States
-  const [useEditJSONEnhancement, setUseEditJSONEnhancement] = useState(false) // Disabled by default
-  const [editJsonIntensity, setEditJsonIntensity] = useState(0.8)
+  const [useEditJSONEnhancement, setUseEditJSONEnhancement] = useState(true) // Enabled by default
+  const [editJsonIntensity, setEditJsonIntensity] = useState(1.0)
   const [editEnhancementPreview, setEditEnhancementPreview] = useState<string>("")
   const [editEnhancementMeta, setEditEnhancementMeta] = useState<any>(null)
   const [editCustomEnhancementText, setEditCustomEnhancementText] = useState<string>("")
