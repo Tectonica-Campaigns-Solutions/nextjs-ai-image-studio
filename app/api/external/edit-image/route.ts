@@ -219,17 +219,31 @@ export async function POST(request: NextRequest) {
       try {
         // Load edit enhancement text if no custom text provided
         let enhancementText = customText
+        let usingDefaultText = false
+        
         if (!enhancementText) {
           try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
             const { success, config } = await response.json()
             if (success && config?.edit_enhancement_text) {
               enhancementText = config.edit_enhancement_text
+              usingDefaultText = true
               console.log("[External Edit-Image] Using edit_enhancement_text:", enhancementText)
+            } else {
+              console.warn("[External Edit-Image] edit_enhancement_text not found in config")
             }
           } catch (error) {
             console.warn("[External Edit-Image] Could not load edit_enhancement_text:", error)
           }
+          
+          // Fallback to hardcoded edit_enhancement_text if API call failed
+          if (!enhancementText) {
+            enhancementText = "Keep style of the image. Same color palette and same background."
+            usingDefaultText = true
+            console.log("[External Edit-Image] Using hardcoded fallback edit_enhancement_text")
+          }
+        } else {
+          console.log("[External Edit-Image] Using custom enhancement text:", enhancementText)
         }
 
         // Import the hybrid enhancement system
@@ -239,16 +253,30 @@ export async function POST(request: NextRequest) {
           useRAG: false, // RAG already processed above
           useJSONEnhancement: true,
           jsonOptions: {
-            useDefaults: !enhancementText,
+            useDefaults: false, // Always use our specific text (either custom or edit_enhancement_text)
             customText: enhancementText,
             intensity: intensity
           }
         }
 
+        console.log("[External Edit-Image] JSON Enhancement options:", {
+          useDefaults: !enhancementText,
+          customText: enhancementText,
+          intensity: intensity,
+          originalPrompt: finalPrompt
+        })
+
         const enhancementResult = await enhancePromptHybrid(finalPrompt, hybridOptions)
+        
+        console.log("[External Edit-Image] JSON Enhancement result:", {
+          originalPrompt: enhancementResult.originalPrompt,
+          enhancedPrompt: enhancementResult.enhancedPrompt,
+          appliedText: enhancementResult.jsonResult?.appliedText
+        })
+        
         finalPrompt = enhancementResult.enhancedPrompt
         
-        console.log("[External Edit-Image] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
+        console.log("[External Edit-Image] Final enhanced prompt:", finalPrompt)
       } catch (error) {
         console.warn("[External Edit-Image] JSON enhancement failed, using current prompt:", error)
       }
