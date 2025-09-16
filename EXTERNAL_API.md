@@ -8,6 +8,19 @@ This document describes the external API endpoints that allow external applicati
 https://your-domain.com/api/external
 ```
 
+## Available Endpoints
+
+| Endpoint | Method | Purpose | Input |
+|----------|--------|---------|-------|
+| `/config` | GET | Get API configuration | None |
+| `/text-to-image` | POST | Generate images from text | `prompt` + settings |
+| `/flux-pro-text-to-image` | POST | High-quality text-to-image | `prompt` + advanced settings |
+| `/flux-ultra-finetuned` | POST | Ultra-high quality generation | `prompt` + LoRA settings |
+| `/flux-pro-image-combine` | POST | Combine multiple images | Multiple `images` + `prompt` |
+| `/edit-image` | POST | Edit existing images | `image` + `prompt` |
+| `/seedream-v4-edit` | POST | AI style transfer | `image` only |
+| `/image-to-image` | POST | Transform images | `image` + `prompt` |
+
 ## Endpoints
 
 ### 1. Configuration Endpoint
@@ -62,6 +75,24 @@ Returns the current application configuration including available models, settin
             "height": { "type": "number", "min": 256, "max": 2048, "step": 64, "description": "Custom height in pixels (required when image_size is 'custom')" }
           }
         }
+      }
+    },
+    "sedreamStyleTransfer": {
+      "endpoint": "/api/external/seedream-v4-edit",
+      "model": "fal-ai/bytedance/seedream/v4/edit",
+      "supportedInputFormats": ["png", "jpg", "jpeg", "webp"],
+      "maxFileSize": "10MB",
+      "description": "AI-powered style transfer with automatic purple/white aesthetic",
+      "features": {
+        "automaticStyle": true,
+        "preConfiguredPrompt": true,
+        "referenceImage": "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg",
+        "preservesHumanFeatures": true,
+        "colorPalette": "Purple and white tones",
+        "textureEffects": "Screen-printed, halftone style"
+      },
+      "inputParameters": {
+        "image": { "type": "file", "required": true, "description": "Image to transform" }
       }
     },
     "guardrails": {
@@ -473,6 +504,70 @@ curl -X POST "https://your-domain.com/api/external/edit-image" \
   }
 }
 ```
+
+### 7. SeDream v4 Style Transfer
+
+**POST /api/external/seedream-v4-edit**
+
+Transform images with AI-powered style transfer using the SeDream v4 model. This endpoint applies a pre-configured artistic style to your input image automatically.
+
+#### Request Body (multipart/form-data)
+- **image** (required): Image file to transform (PNG, JPG, JPEG, WEBP, max 10MB)
+
+#### Key Features
+- **Automatic Style Application**: Uses a pre-configured style prompt optimized for SeDream v4
+- **Reference Image**: Automatically applies style from a curated reference image
+- **Realistic Preservation**: Maintains human features while applying artistic transformations
+- **Purple & White Aesthetic**: Applies signature color palette with screen-printed texture effects
+
+#### Example using curl:
+```bash
+curl -X POST "https://your-domain.com/api/external/seedream-v4-edit" \
+  -F "image=@path/to/your/photo.jpg"
+```
+
+#### Example using JavaScript:
+```javascript
+const formData = new FormData();
+formData.append('image', imageFile);
+
+const response = await fetch('https://your-domain.com/api/external/seedream-v4-edit', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.json();
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "images": [
+    {
+      "url": "https://v3.fal.media/files/rabbit/SeDreamStyleTransfer_abc123.png",
+      "width": 1280,
+      "height": 1280
+    }
+  ],
+  "prompt": "Make the first image in the style of the other image. The first image should have the same color palette and same background as the second one but must be kept as it is no variants. People must be kept realistic but rendered in purple and white shades...",
+  "referenceUsed": "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg"
+}
+```
+
+#### Style Characteristics
+The SeDream v4 endpoint automatically applies the following style transformations:
+- **Color Palette**: Purple and white tones throughout the image
+- **Texture Effects**: Soft diagonal or curved line textures for screen-printed feel
+- **Background**: Gradient backgrounds with smooth transitions
+- **Human Preservation**: Realistic human details maintained while stylized
+- **Artistic Feel**: Modern, poster-like aesthetic with halftone effects
+
+#### Notes
+- No prompt input required - the style is automatically configured
+- Processing time typically 10-30 seconds depending on image complexity
+- Best results with portrait or people-focused images
+- The reference style image is automatically applied to create consistent results
 
 ## Error Responses
 

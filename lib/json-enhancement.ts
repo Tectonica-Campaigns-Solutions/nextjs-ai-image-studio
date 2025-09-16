@@ -7,6 +7,7 @@ interface JSONEnhancementConfig {
   description: string
   enhancement_text: string
   edit_enhancement_text?: string // Optional specific text for Edit Image
+  sedream_enhancement_text?: string // Optional specific text for SeDream v4
   defaults: {
     intensity: number
     join_string: string
@@ -251,6 +252,20 @@ export async function previewEnhancement(
 
   } catch (error) {
     console.error('[JSON Enhancement] Preview error:', error)
+    return null
+  }
+}
+
+/**
+ * Get SeDream v4 specific enhancement text from the JSON config
+ * Returns the sedream_enhancement_text if available, otherwise falls back to enhancement_text
+ */
+export async function getSedreamEnhancementText(): Promise<string | null> {
+  try {
+    const config = await loadEnhancementConfig()
+    return config?.sedream_enhancement_text || config?.enhancement_text || null
+  } catch (error) {
+    console.error('[JSON Enhancement] Failed to get SeDream enhancement text:', error)
     return null
   }
 }

@@ -19,7 +19,7 @@ import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
 import { useRAGStore } from "@/lib/rag-store"
 import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, type HybridEnhancementOptions } from "@/lib/hybrid-enhancement"
-import { getEnhancementText, getEditEnhancementText } from "@/lib/json-enhancement"
+import { getEnhancementText, getEditEnhancementText, getSedreamEnhancementText } from "@/lib/json-enhancement"
 import { EnhancementPreview } from "@/components/enhancement-preview"
 
 export default function ImageEditor() {
@@ -203,6 +203,35 @@ export default function ImageEditor() {
     }
   }
 
+  // SeDream v4 Enhancement Preview Function
+  const generateSedreamEnhancementPreview = async (prompt: string) => {
+    if (!prompt.trim() || !useSedreamJSONEnhancement) {
+      setSedreamEnhancementPreview("")
+      setSedreamEnhancementMeta(null)
+      return
+    }
+
+    const hybridOptions: HybridEnhancementOptions = {
+      useRAG: false, // Only JSON for SeDream
+      useJSONEnhancement: true,
+      jsonOptions: {
+        useDefaults: !sedreamCustomEnhancementText || sedreamCustomEnhancementText === sedreamDefaultEnhancementText,
+        customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : undefined,
+        intensity: sedreamJsonIntensity
+      }
+    }
+
+    try {
+      const result = await enhancePromptHybrid(prompt, hybridOptions)
+      setSedreamEnhancementPreview(result.enhancedPrompt)
+      setSedreamEnhancementMeta(result.metadata)
+    } catch (error) {
+      console.warn('SeDream v4 enhancement preview failed:', error)
+      setSedreamEnhancementPreview(prompt)
+      setSedreamEnhancementMeta(null)
+    }
+  }
+
   // Flux LoRA States
   const [useFluxProLoRA, setUseFluxProLoRA] = useState(true)
   const [fluxProLoraUrl, setFluxProLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
@@ -282,6 +311,22 @@ export default function ImageEditor() {
   const [editImageSize, setEditImageSize] = useState("square_hd") // Image size for edit
   const [customWidth, setCustomWidth] = useState("1024") // Custom width for edit
   const [customHeight, setCustomHeight] = useState("1024") // Custom height for edit
+
+  // SeDream v4 Edit States
+  const [sedreamImage, setSedreamImage] = useState<File | null>(null)
+  const [sedreamPreviewUrl, setSedreamPreviewUrl] = useState<string>("")
+  const [sedreamPrompt, setSedreamPrompt] = useState("") // Optional prompt
+  const [sedreamResult, setSedreamResult] = useState<string>("")
+  const [isSedreamLoading, setIsSedreamLoading] = useState(false)
+  const [sedreamError, setSedreamError] = useState<string>("")
+
+  // SeDream v4 JSON Enhancement States
+  const [useSedreamJSONEnhancement, setUseSedreamJSONEnhancement] = useState(true) // Enabled by default
+  const [sedreamJsonIntensity, setSedreamJsonIntensity] = useState(1.0) // Max intensity
+  const [sedreamEnhancementPreview, setSedreamEnhancementPreview] = useState<string>("")
+  const [sedreamEnhancementMeta, setSedreamEnhancementMeta] = useState<any>(null)
+  const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
+  const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
 
   // Qwen Image-to-Image States
   const [img2imgFile, setImg2imgFile] = useState<File | null>(null)
@@ -424,6 +469,13 @@ export default function ImageEditor() {
         if (editText) {
           setEditDefaultEnhancementText(editText)
           setEditCustomEnhancementText(editText)
+        }
+
+        // Load specific text for SeDream v4
+        const sedreamText = await getSedreamEnhancementText()
+        if (sedreamText) {
+          setSedreamDefaultEnhancementText(sedreamText)
+          setSedreamCustomEnhancementText(sedreamText)
         }
       } catch (error) {
         console.warn('Failed to load default enhancement text:', error)
@@ -1138,6 +1190,90 @@ export default function ImageEditor() {
     }
   }
 
+  // SeDream v4 Edit handlers
+  const handleSedreamImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setSedreamError("Please select a valid image file")
+        return
+      }
+
+      setSedreamImage(file)
+      const url = URL.createObjectURL(file)
+      setSedreamPreviewUrl(url)
+      setSedreamResult("") // Clear previous result
+      setSedreamError("")
+    }
+  }
+
+  const handleSedreamSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!sedreamImage) {
+      setSedreamError("Please select an image")
+      return
+    }
+
+    setIsSedreamLoading(true)
+    setSedreamError("")
+
+    try {
+      // Apply JSON Enhancement if enabled and prompt provided
+      let finalPrompt = sedreamPrompt
+      if (useSedreamJSONEnhancement && sedreamPrompt.trim()) {
+        const hybridOptions: HybridEnhancementOptions = {
+          useRAG: false, // Only JSON for SeDream
+          useJSONEnhancement: true,
+          jsonOptions: {
+            useDefaults: !sedreamCustomEnhancementText || sedreamCustomEnhancementText === sedreamDefaultEnhancementText,
+            customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : undefined,
+            intensity: sedreamJsonIntensity
+          }
+        }
+        
+        try {
+          const result = await enhancePromptHybrid(sedreamPrompt, hybridOptions)
+          finalPrompt = result.enhancedPrompt
+        } catch (error) {
+          console.warn('SeDream JSON Enhancement failed, using original prompt:', error)
+          // Continue with original prompt if enhancement fails
+        }
+      }
+
+      const formData = new FormData()
+      formData.append("image", sedreamImage)
+      if (finalPrompt.trim()) {
+        formData.append("prompt", finalPrompt)
+      }
+      formData.append("useJSONEnhancement", useSedreamJSONEnhancement.toString())
+      formData.append("jsonIntensity", sedreamJsonIntensity.toString())
+      formData.append("customEnhancementText", sedreamCustomEnhancementText)
+
+      const response = await fetch("/api/seedream-v4-edit", {
+        method: "POST",
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || `Server error: ${response.status}`)
+      }
+      
+      if (result.images && result.images.length > 0) {
+        setSedreamResult(result.images[0].url)
+      } else {
+        throw new Error("No images received from SeDream API")
+      }
+    } catch (err) {
+      setSedreamError(err instanceof Error ? err.message : "Failed to process image with style transfer")
+    } finally {
+      setIsSedreamLoading(false)
+    }
+  }
+
   // Image-to-Image handlers
   const handleImg2imgFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -1420,7 +1556,8 @@ export default function ImageEditor() {
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           {/* <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger> */}
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
-          <TabsTrigger value="flux-pro-text-to-image">Flux Lora</TabsTrigger>
+          <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
+          <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
           {/* <TabsTrigger value="upload-branding" style={{ display: 'none' }}>Upload Branding</TabsTrigger>
           <TabsTrigger value="qwen-train-lora" style={{ display: 'none' }}>Train LoRA</TabsTrigger> */}
         </TabsList>
@@ -1750,6 +1887,217 @@ export default function ImageEditor() {
                         <Zap className="h-12 w-12 mx-auto mb-2" />
                         <p>No image generated yet</p>
                       </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* SeDream v4 Edit Tab */}
+          <TabsContent value="sedream-v4-edit" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Upload and Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Style Transfer
+                  </CardTitle>
+                  <CardDescription>Transform your image with AI-powered style transfer</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleSedreamSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sedream-image">Select Image</Label>
+                      <Input
+                        id="sedream-image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleSedreamImageUpload}
+                        className="cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sedream-custom-enhancement" className="font-medium text-red-600">
+                        Style Enhancement Description *
+                      </Label>
+                      <Textarea
+                        id="sedream-custom-enhancement"
+                        placeholder="Describe the style transformation you want (e.g., 'Transform into an oil painting with vibrant colors and impressionist brushstrokes')"
+                        value={sedreamCustomEnhancementText}
+                        onChange={(e) => setSedreamCustomEnhancementText(e.target.value)}
+                        rows={3}
+                        className="text-sm border-red-200 focus:border-red-400"
+                        required
+                      />
+                      <p className="text-xs text-red-600">
+                        * Required: This description defines how your image will be transformed.
+                      </p>
+                    </div>
+
+                    {/* JSON Enhancement Toggle */}
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-background to-purple-50/50 dark:to-purple-900/20">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${useSedreamJSONEnhancement ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                        <div>
+                          <Label htmlFor="use-sedream-json-enhancement" className="font-medium cursor-pointer">
+                            JSON Enhancement
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {useSedreamJSONEnhancement ? 'Active - Advanced prompt structuring enabled' : 'Inactive - Using original prompts only'}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch 
+                        id="use-sedream-json-enhancement" 
+                        checked={useSedreamJSONEnhancement}
+                        onCheckedChange={setUseSedreamJSONEnhancement}
+                      />
+                    </div>
+
+                    {/* JSON Enhancement Controls */}
+                    {useSedreamJSONEnhancement && (
+                      <div className="space-y-4 p-4 bg-gradient-to-r from-purple-50/50 to-background dark:from-purple-900/20 dark:to-background rounded-lg border border-purple-200/50 dark:border-purple-700/50">
+                        {/* Intensity Slider */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="sedream-json-intensity" className="text-sm font-medium">
+                              Enhancement Intensity
+                            </Label>
+                            <span className="text-xs text-muted-foreground bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
+                              {sedreamJsonIntensity.toFixed(1)}
+                            </span>
+                          </div>
+                          <Slider
+                            id="sedream-json-intensity"
+                            min={0.1}
+                            max={1.0}
+                            step={0.1}
+                            value={[sedreamJsonIntensity]}
+                            onValueChange={(value) => setSedreamJsonIntensity(value[0])}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Subtle</span>
+                            <span>Moderate</span>
+                            <span>Strong</span>
+                          </div>
+                        </div>
+
+
+
+                        {/* Preview Button */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          disabled={!sedreamCustomEnhancementText.trim() || !useSedreamJSONEnhancement}
+                          onClick={() => generateSedreamEnhancementPreview(sedreamCustomEnhancementText)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Preview Enhancement
+                        </Button>
+
+                        {/* Enhancement Preview Display */}
+                        {sedreamEnhancementPreview && sedreamEnhancementMeta && (
+                          <EnhancementPreview
+                            strategy="json-only"
+                            ragApplied={sedreamEnhancementMeta.ragApplied}
+                            jsonApplied={sedreamEnhancementMeta.jsonApplied}
+                            totalEnhancements={sedreamEnhancementMeta.totalEnhancements}
+                            processingTime={sedreamEnhancementMeta.processingTime}
+                            enhancementSources={sedreamEnhancementMeta.enhancementSources}
+                            previewText={sedreamEnhancementPreview}
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    <Button type="submit" className="w-full" disabled={!sedreamImage || !sedreamCustomEnhancementText.trim() || isSedreamLoading}>
+                      {isSedreamLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing style transfer...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Transform Image
+                        </>
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* Display errors */}
+                  {sedreamError && (
+                    <Alert className="border-red-200 bg-red-50 text-red-800">
+                      <AlertDescription>
+                        {sedreamError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Preview and Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Preview & Result</CardTitle>
+                  <CardDescription>Original image and style transfer result</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Image Preview */}
+                  {sedreamPreviewUrl && (
+                    <div className="space-y-2">
+                      <Label>Original Image</Label>
+                      <div className="border rounded-lg p-4 bg-muted/50">
+                        <img
+                          src={sedreamPreviewUrl}
+                          alt="Original image"
+                          className="max-w-full h-auto rounded-lg shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Result Display */}
+                  {sedreamResult && (
+                    <div className="space-y-2">
+                      <Label>Style Transfer Result</Label>
+                      <div className="border rounded-lg p-4 bg-muted/50">
+                        <img
+                          src={sedreamResult}
+                          alt="Style transfer result"
+                          className="max-w-full h-auto rounded-lg shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Loading State */}
+                  {isSedreamLoading && (
+                    <div className="flex items-center justify-center p-8 border rounded-lg bg-muted/30">
+                      <div className="text-center space-y-2">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Transforming your image with style transfer...
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Information */}
+                  {!sedreamPreviewUrl && !isSedreamLoading && (
+                    <div className="text-center p-8 border rounded-lg bg-muted/30">
+                      <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Style Transfer</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Upload an image to transform it with AI-powered style transfer. 
+                        A reference style will be applied automatically to create stunning visual transformations.
+                      </p>
                     </div>
                   )}
                 </CardContent>
