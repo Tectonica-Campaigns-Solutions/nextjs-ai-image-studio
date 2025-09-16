@@ -103,7 +103,7 @@ export default function ImageEditor() {
   // Hybrid Enhancement States
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
   const [hybridStrategy, setHybridStrategy] = useState<'rag-only' | 'json-only' | 'hybrid' | 'none'>('json-only')
-  const [jsonIntensity, setJsonIntensity] = useState(0.8)
+  const [jsonIntensity, setJsonIntensity] = useState(1.0)
   const [enhancementPreview, setEnhancementPreview] = useState<string>("")
   const [enhancementMeta, setEnhancementMeta] = useState<any>(null)
   const [customEnhancementText, setCustomEnhancementText] = useState<string>("")
@@ -284,8 +284,8 @@ export default function ImageEditor() {
   const [showFluxCombineAdvanced, setShowFluxCombineAdvanced] = useState(false)
 
   // Flux Combine JSON Enhancement States
-  const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(false) // Disabled by default
-  const [fluxCombineJsonIntensity, setFluxCombineJsonIntensity] = useState(0.8)
+  const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(true) // Enabled by default
+  const [fluxCombineJsonIntensity, setFluxCombineJsonIntensity] = useState(1.0)
   const [fluxCombineEnhancementPreview, setFluxCombineEnhancementPreview] = useState<string>("")
   const [fluxCombineEnhancementMeta, setFluxCombineEnhancementMeta] = useState<any>(null)
   const [fluxCombineCustomEnhancementText, setFluxCombineCustomEnhancementText] = useState<string>("")
@@ -458,10 +458,6 @@ export default function ImageEditor() {
         if (text) {
           setDefaultEnhancementText(text)
           setCustomEnhancementText(text) // Initialize with default
-          
-          // Also initialize for Combine Images
-          setFluxCombineDefaultEnhancementText(text)
-          setFluxCombineCustomEnhancementText(text)
         }
         
         // Load specific text for Edit Image
@@ -469,6 +465,10 @@ export default function ImageEditor() {
         if (editText) {
           setEditDefaultEnhancementText(editText)
           setEditCustomEnhancementText(editText)
+          
+          // Also use edit enhancement text for Combine Images
+          setFluxCombineDefaultEnhancementText(editText)
+          setFluxCombineCustomEnhancementText(editText)
         }
 
         // Load specific text for SeDream v4
