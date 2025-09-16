@@ -16,10 +16,10 @@ import { fal } from "@fal-ai/client"
  * - prompt (required): Text description for how to combine the images
  * - imageUrls (required): Array of image URLs to combine (minimum 2 images)
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false - disabled for combination)
- * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: false)
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
  * - jsonOptions (optional): JSON enhancement configuration
- *   - customText: Custom enhancement description (if not provided, uses defaults)
- *   - intensity: Enhancement intensity (0.1-1.0, default: 0.8)
+ *   - customText: Custom enhancement description (if not provided, uses edit_enhancement_text)
+ *   - intensity: Enhancement intensity (0.1-1.0, default: 1.0)
  * - settings (optional): Advanced generation settings
  * 
  * Form Data parameters:
@@ -27,7 +27,7 @@ import { fal } from "@fal-ai/client"
  * - image0, image1, image2... (optional): Image files to upload and combine
  * - imageUrl0, imageUrl1, imageUrl2... (optional): Image URLs to combine
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false)
- * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: false)
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
  * - jsonOptions (optional): JSON string with enhancement configuration
  * - settings (optional): JSON string with advanced generation settings
  * 
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       useRAG = false, // RAG disabled for image combination
-      useJSONEnhancement = false, // JSON enhancement disabled by default
+      useJSONEnhancement = true, // JSON enhancement enabled by default
       jsonOptions = {},
       settings = {}
     } = body
@@ -233,6 +233,21 @@ export async function POST(request: NextRequest) {
     let finalPrompt = prompt
     if (useJSONEnhancement) {
       try {
+        // Load edit enhancement text if no custom text provided
+        let enhancementText = jsonOptions.customText
+        if (!enhancementText) {
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+            const { success, config } = await response.json()
+            if (success && config?.edit_enhancement_text) {
+              enhancementText = config.edit_enhancement_text
+              console.log("[External Flux Combine] Using edit_enhancement_text:", enhancementText)
+            }
+          } catch (error) {
+            console.warn("[External Flux Combine] Could not load edit_enhancement_text:", error)
+          }
+        }
+
         // Import the hybrid enhancement system
         const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
         
@@ -240,9 +255,9 @@ export async function POST(request: NextRequest) {
           useRAG: false, // RAG disabled for image combination
           useJSONEnhancement: true,
           jsonOptions: {
-            useDefaults: !jsonOptions.customText,
-            customText: jsonOptions.customText,
-            intensity: jsonOptions.intensity || 0.8
+            useDefaults: !enhancementText,
+            customText: enhancementText,
+            intensity: jsonOptions.intensity || 1.0
           }
         }
 
