@@ -11,14 +11,12 @@ import { fal } from "@fal-ai/client"
  * Body parameters (multipart/form-data):
  * - image (required): Image file to edit (PNG, JPG, JPEG, WEBP)
  * - prompt (required): Description of desired edits
- * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
- * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
- * - customText (optional): Custom enhancement text to use instead of enhancement_text
+ * - customText (optional): Custom enhancement text to use instead of edit_enhancement_text (default: "Keep style of the image. Same color palette and same background.")
  * - intensity (optional): Enhancement intensity from 0.0 to 1.0 (default: 1.0)
  * - image_size (optional): Output image size - one of: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9 (default: square_hd)
  * 
- * When useJSONEnhancement is true and no customText is provided, automatically uses 
- * enhancement_text: "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
+ * JSON Enhancement is always enabled and automatically appends edit_enhancement_text to the user prompt.
+ * RAG enhancement has been disabled for simplicity - focuses on consistent style preservation.
  * 
  * The endpoint automatically reads RAG and JSON enhancement configuration from the main app state.
  */
@@ -29,8 +27,8 @@ export async function POST(request: NextRequest) {
     // Extract and validate required parameters
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
-    const useRAG = formData.get('useRAG') === 'true' || formData.get('useRAG') === undefined // default true
-    const useJSONEnhancement = formData.get('useJSONEnhancement') === 'true' || formData.get('useJSONEnhancement') === undefined // default true
+    const useRAG = false // Disabled for simplicity - focus on JSON enhancement only
+    const useJSONEnhancement = true // Always enabled by default
     const customText = formData.get('customText') as string
     const intensity = parseFloat(formData.get('intensity') as string) || 1.0 // default 1.0
     const imageSize = formData.get('image_size') as string || 'square_hd' // default to square_hd
@@ -163,124 +161,48 @@ export async function POST(request: NextRequest) {
     internalFormData.append("prompt", prompt.trim())
     internalFormData.append("useRAG", useRAG.toString())
     
-    // Enhance prompt with Advanced RAG if enabled
+    // Start with original prompt - skip RAG for simplicity
     let finalPrompt = prompt.trim()
     let ragMetadata = null
     let jsonMetadata = null
-    if (useRAG) {
-      try {
-        // Use the new advanced RAG system for better enhancement
-        const { enhancePromptWithBranding } = await import("../../../../lib/rag-system")
-        const enhancement = await enhancePromptWithBranding(prompt.trim())
-        
-        // Ensure we get a string from the enhancement
-        if (typeof enhancement === 'string') {
-          finalPrompt = enhancement
-        } else if (enhancement && typeof enhancement.enhancedPrompt === 'string') {
-          finalPrompt = enhancement.enhancedPrompt
-        } else {
-          console.warn("[External Edit-Image] Enhancement returned unexpected format:", typeof enhancement)
-          finalPrompt = prompt.trim() // fallback to original
-        }
-        
-        ragMetadata = {
-          originalPrompt: prompt.trim(),
-          enhancedPrompt: finalPrompt,
-          ragMethod: 'advanced-rag',
-          enhancementsApplied: enhancement?.brandingElements?.length || 0
-        }
-        console.log("[External Edit-Image] Advanced RAG enhanced prompt:", finalPrompt)
-      } catch (ragError) {
-        console.warn("[External Edit-Image] Advanced RAG enhancement failed, trying fallback:", ragError)
-        try {
-          // Fallback to simple RAG if advanced fails (currently disabled due to missing module)
-          // const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-          // const enhancement = enhanceWithEGPBranding(prompt.trim())
-          const enhancement = prompt.trim() // Simple fallback
-          
-          // Simple fallback - just use original prompt
-          finalPrompt = enhancement
-          
-          ragMetadata = {
-            originalPrompt: prompt.trim(),
-            enhancedPrompt: finalPrompt,
-            ragMethod: 'simple-rag-fallback',
-            enhancementsApplied: 1
-          }
-          console.log("[External Edit-Image] Fallback RAG enhanced prompt:", finalPrompt)
-        } catch (fallbackError) {
-          console.warn("[External Edit-Image] All RAG enhancement failed:", fallbackError)
-          finalPrompt = prompt.trim() // ensure we have a string fallback
-        }
-      }
-    }
     
-    // Apply JSON enhancement if enabled (after RAG enhancement)
+    // Apply JSON enhancement with edit_enhancement_text
     if (useJSONEnhancement) {
       try {
-        // Load edit enhancement text if no custom text provided
+        // Load edit_enhancement_text directly or use custom text
         let enhancementText = customText
-        let usingDefaultText = false
         
         if (!enhancementText) {
+          // Try to load from config first
           try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
             const { success, config } = await response.json()
-            if (success && config?.enhancement_text) {
-              enhancementText = config.enhancement_text
-              usingDefaultText = true
-              console.log("[External Edit-Image] Using enhancement_text:", enhancementText)
-            } else {
-              console.warn("[External Edit-Image] enhancement_text not found in config")
+            if (success && config?.edit_enhancement_text) {
+              enhancementText = config.edit_enhancement_text
+              console.log("[External Edit-Image] Loaded edit_enhancement_text:", enhancementText)
             }
           } catch (error) {
-            console.warn("[External Edit-Image] Could not load enhancement_text:", error)
+            console.warn("[External Edit-Image] Could not load from API:", error)
           }
           
-          // Fallback to hardcoded enhancement_text if API call failed
+          // Fallback to hardcoded value if API failed
           if (!enhancementText) {
-            enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
-            usingDefaultText = true
-            console.log("[External Edit-Image] Using hardcoded fallback enhancement_text")
-          }
-        } else {
-          console.log("[External Edit-Image] Using custom enhancement text:", enhancementText)
-        }
-
-        // Import the hybrid enhancement system
-        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
-        
-        const hybridOptions = {
-          useRAG: false, // RAG already processed above
-          useJSONEnhancement: true,
-          jsonOptions: {
-            useDefaults: false, // Always use our specific text (either custom or edit_enhancement_text)
-            customText: enhancementText,
-            intensity: intensity
+            enhancementText = "Keep style of the image. Same color palette and same background."
+            console.log("[External Edit-Image] Using hardcoded edit_enhancement_text")
           }
         }
 
-        console.log("[External Edit-Image] JSON Enhancement options:", {
-          useDefaults: !enhancementText,
-          customText: enhancementText,
-          intensity: intensity,
-          originalPrompt: finalPrompt
-        })
-
-        const enhancementResult = await enhancePromptHybrid(finalPrompt, hybridOptions)
+        // Apply enhancement text directly to the prompt
+        const originalPrompt = finalPrompt
+        finalPrompt = `${originalPrompt}, ${enhancementText}`
         
-        // Capture JSON enhancement metadata
         jsonMetadata = {
-          originalPrompt: finalPrompt,
-          enhancedPrompt: enhancementResult.enhancedPrompt,
-          appliedText: enhancementResult.jsonResult?.appliedText,
-          wasEnhanced: !!enhancementResult.jsonResult?.appliedText,
+          originalPrompt: originalPrompt,
+          enhancedPrompt: finalPrompt,
+          appliedText: enhancementText,
+          wasEnhanced: true,
           intensity: intensity
         }
-        
-        console.log("[External Edit-Image] JSON Enhancement result:", jsonMetadata)
-        
-        finalPrompt = enhancementResult.enhancedPrompt
         
         console.log("[External Edit-Image] Final enhanced prompt:", finalPrompt)
       } catch (error) {
@@ -291,7 +213,7 @@ export async function POST(request: NextRequest) {
           appliedText: null,
           wasEnhanced: false,
           intensity: intensity,
-          error: error.message
+          error: String(error)
         }
       }
     } else {
@@ -470,16 +392,14 @@ export async function POST(request: NextRequest) {
           prompt: {
             original: prompt,
             final: finalPrompt,
-            enhanced: useRAG || (jsonMetadata?.wasEnhanced || false),
-            ragMetadata: ragMetadata,
+            enhanced: jsonMetadata?.wasEnhanced || false,
             jsonMetadata: jsonMetadata
           },
           processing: {
             model: "qwen-image-edit",
             timestamp: new Date().toISOString(),
-            ragSystem: ragMetadata?.ragMethod || 'none',
             jsonEnhancement: jsonMetadata?.wasEnhanced ? 'applied' : 'none',
-            enhancementsApplied: (ragMetadata?.enhancementsApplied || 0) + (jsonMetadata?.wasEnhanced ? 1 : 0)
+            enhancementsApplied: jsonMetadata?.wasEnhanced ? 1 : 0
           }
         }
 
