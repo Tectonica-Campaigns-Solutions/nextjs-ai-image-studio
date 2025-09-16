@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
     const activeRAGName = formData.get("activeRAGName") as string
     const orgType = formData.get("orgType") as string || "general" // Organization type for moderation
     
-    // JSON Enhancement parameters
-    const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
+    // JSON Enhancement parameters - always enabled by default
+    const useJSONEnhancement = true // Always enabled for consistent enhancement
     const jsonOptionsStr = formData.get("jsonOptions") as string
     let jsonOptions = {}
     if (jsonOptionsStr) {

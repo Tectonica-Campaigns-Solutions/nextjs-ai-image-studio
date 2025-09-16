@@ -15,11 +15,12 @@ import { fal } from "@fal-ai/client"
  * JSON Body parameters:
  * - prompt (required): Text description for how to combine the images
  * - imageUrls (required): Array of image URLs to combine (minimum 2 images)
- * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false - disabled for combination)
- * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
- * - jsonOptions (optional): JSON enhancement configuration
- *   - customText: Custom enhancement description (if not provided, uses edit_enhancement_text)
+ * - jsonOptions (optional): JSON enhancement configuration  
+ *   - customText: Custom enhancement description (if not provided, uses edit_enhancement_text: "Keep style of the image. Same color palette and same background.")
  *   - intensity: Enhancement intensity (0.1-1.0, default: 1.0)
+ * 
+ * JSON Enhancement is always enabled and automatically appends edit_enhancement_text to the user prompt.
+ * RAG enhancement has been disabled for simplicity.
  * - settings (optional): Advanced generation settings
  * 
  * Form Data parameters:
@@ -67,8 +68,8 @@ export async function POST(request: NextRequest) {
       
       // Extract basic parameters
       body.prompt = formData.get("prompt") as string
-      body.useRAG = formData.get("useRAG") === "true"
-      body.useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
+      body.useRAG = false // Disabled for simplicity
+      body.useJSONEnhancement = true // Always enabled by default
       
       // Parse JSON options if provided
       const jsonOptionsStr = formData.get("jsonOptions") as string
@@ -115,6 +116,11 @@ export async function POST(request: NextRequest) {
       // Handle JSON requests (existing functionality)
       body = await request.json()
       imageUrls = body.imageUrls || []
+      
+      // Set defaults for JSON requests
+      body.useRAG = false // Disabled for simplicity  
+      body.useJSONEnhancement = true // Always enabled
+      body.jsonOptions = body.jsonOptions || {}
     }
     
     // Validate required parameters
@@ -229,49 +235,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apply JSON enhancement if enabled
+    // Apply JSON enhancement with edit_enhancement_text (always enabled)
     let finalPrompt = prompt
-    if (useJSONEnhancement) {
+    let enhancementText = jsonOptions.customText
+    
+    if (!enhancementText) {
+      // Try to load from config first
       try {
-        // Load edit enhancement text if no custom text provided
-        let enhancementText = jsonOptions.customText
-        if (!enhancementText) {
-          try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
-            const { success, config } = await response.json()
-            if (success && config?.edit_enhancement_text) {
-              enhancementText = config.edit_enhancement_text
-              console.log("[External Flux Combine] Using edit_enhancement_text:", enhancementText)
-            }
-          } catch (error) {
-            console.warn("[External Flux Combine] Could not load edit_enhancement_text:", error)
-          }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+        const { success, config } = await response.json()
+        if (success && config?.edit_enhancement_text) {
+          enhancementText = config.edit_enhancement_text
+          console.log("[External Flux Combine] Loaded edit_enhancement_text:", enhancementText)
         }
-
-        // Import the hybrid enhancement system
-        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
-        
-        const hybridOptions = {
-          useRAG: false, // RAG disabled for image combination
-          useJSONEnhancement: true,
-          jsonOptions: {
-            useDefaults: !enhancementText,
-            customText: enhancementText,
-            intensity: jsonOptions.intensity || 1.0
-          }
-        }
-
-        const enhancementResult = await enhancePromptHybrid(prompt, hybridOptions)
-        finalPrompt = enhancementResult.enhancedPrompt
-        
-        console.log("[External Flux Combine] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
       } catch (error) {
-        console.warn("[External Flux Combine] JSON enhancement failed, using original prompt:", error)
-        finalPrompt = prompt
+        console.warn("[External Flux Combine] Could not load from API:", error)
       }
-    } else {
-      console.log("[External Flux Combine] Using original prompt without enhancement")
+      
+      // Fallback to hardcoded value if API failed
+      if (!enhancementText) {
+        enhancementText = "Keep style of the image. Same color palette and same background."
+        console.log("[External Flux Combine] Using hardcoded edit_enhancement_text")
+      }
     }
+
+    // Apply enhancement text directly to the prompt
+    finalPrompt = `${prompt}, ${enhancementText}`
+    console.log("[External Flux Combine] Enhanced prompt:", finalPrompt)
 
     // Configure Fal.ai client
     fal.config({
