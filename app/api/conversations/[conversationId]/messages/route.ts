@@ -221,6 +221,27 @@ export async function POST(
         },
         {
           type: "function",
+          name: "apply_branding_to_image",
+          description: `
+          Apply predefined branding styles to an existing image.
+          Trigger only when the user provides an image URL and explicitly requests to apply branding.
+          The user does not need to specify which branding style — it is handled internally.
+          Do not use this tool for generating new images, combining multiple images, or performing general edits.`,
+          parameters: {
+            type: "object",
+            properties: {
+              image_url: {
+                type: "string",
+                format: "uri",
+                description:
+                  "Publicly accessible URL of the image where branding should be applied.",
+              },
+            },
+            required: ["image_url"],
+          },
+        },
+        {
+          type: "function",
           name: "combine_image_request",
           description:
             "Combine multiple images into one based on user instructions. Only run this tool if the user has uploaded images, otherwise ask for them.",
@@ -369,11 +390,18 @@ export async function POST(
         item.name === "image_action_disambiguation" &&
         item.status === "completed"
     );
+    const imageBrandingTool = response?.output?.find(
+      (item) =>
+        item.type === "function_call" &&
+        item.name === "apply_branding_to_image" &&
+        item.status === "completed"
+    );
 
     console.log({
       imageGenerationTool,
       imageEditTool,
       imageCombineTool,
+      imageBrandingTool,
       // imageDisambiguationTool,
       finalMessage,
     });
@@ -529,6 +557,57 @@ export async function POST(
         imageDisambiguationTool: true,
         options,
       });
+    } else if (imageBrandingTool) {
+      const lastImageUrl = await getLastImageUrl(conversationId);
+      console.log({ lastImageUrl });
+
+      if (!lastImageUrl) {
+        finalMessage = "Upload a valid image.";
+        return;
+      }
+
+      // @ts-ignore
+      const parameters = JSON.parse(imageBrandingTool.arguments);
+      console.log({ parameters });
+
+      const imageResponse = await fetch(lastImageUrl);
+      const blob = await imageResponse.blob();
+
+      const formData = new FormData();
+      formData.append("image", blob);
+
+      try {
+        const imageResp = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/seedream-v4-edit`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!imageResp.ok) {
+          throw new Error(
+            `Image branding generation failed: ${imageResp.status}`
+          );
+        }
+
+        const imageData = await imageResp.json();
+        const imageGeneratedUrl = imageData?.images[0]?.url;
+
+        if (imageGeneratedUrl) {
+          if (response?.output_text) {
+            finalMessage = `${response.output_text}\n\n${imageGeneratedUrl}`;
+          } else {
+            finalMessage = imageGeneratedUrl;
+          }
+        } else {
+          finalMessage =
+            response?.output_text || "Image branding generation failed";
+        }
+      } catch (error) {
+        console.error("Error generating branding image:", error);
+        finalMessage = "Error generating branding image.";
+      }
     }
 
     // Save assistant message
@@ -639,4 +718,45 @@ function normalizeArgs(userPrompt: string, args: string) {
   }
 
   return parsed;
+}
+
+async function getLastImageUrl(conversationId: string): Promise<string | null> {
+  const supabase = await createClient();
+
+  // Find the last message that has an attached image file
+  const { data: messages, error } = await supabase
+    .from("messages")
+    .select(
+      `
+        id,
+        created_at,
+        message_files (
+          files (
+            file_url,
+            file_name
+          )
+        )
+      `
+    )
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error fetching last image:", error);
+    return null;
+  }
+
+  if (!messages || messages.length === 0) return null;
+
+  // Extract image URL if file is an image
+  const lastMessage = messages[0];
+  const file = lastMessage.message_files?.[0]?.files;
+
+  if (!file?.file_url) return null;
+
+  const ext = file.file_name?.split(".").pop()?.toLowerCase();
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
+
+  return isImage ? file.file_url : null;
 }
