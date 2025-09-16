@@ -19,7 +19,7 @@ import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
 import { useRAGStore } from "@/lib/rag-store"
 import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, type HybridEnhancementOptions } from "@/lib/hybrid-enhancement"
-import { getEnhancementText } from "@/lib/json-enhancement"
+import { getEnhancementText, getEditEnhancementText } from "@/lib/json-enhancement"
 import { EnhancementPreview } from "@/components/enhancement-preview"
 
 export default function ImageEditor() {
@@ -417,10 +417,13 @@ export default function ImageEditor() {
           // Also initialize for Combine Images
           setFluxCombineDefaultEnhancementText(text)
           setFluxCombineCustomEnhancementText(text)
-          
-          // Also initialize for Edit Image
-          setEditDefaultEnhancementText(text)
-          setEditCustomEnhancementText(text)
+        }
+        
+        // Load specific text for Edit Image
+        const editText = await getEditEnhancementText()
+        if (editText) {
+          setEditDefaultEnhancementText(editText)
+          setEditCustomEnhancementText(editText)
         }
       } catch (error) {
         console.warn('Failed to load default enhancement text:', error)

@@ -6,6 +6,7 @@ interface JSONEnhancementConfig {
   kit: string
   description: string
   enhancement_text: string
+  edit_enhancement_text?: string // Optional specific text for Edit Image
   defaults: {
     intensity: number
     join_string: string
@@ -186,6 +187,17 @@ export async function getEnhancementText(): Promise<string | null> {
     return config?.enhancement_text || null
   } catch (error) {
     console.error('[JSON Enhancement] Error getting enhancement text:', error)
+    return null
+  }
+}
+
+// Function to get Edit Image specific enhancement text
+export async function getEditEnhancementText(): Promise<string | null> {
+  try {
+    const config = await loadEnhancementConfig()
+    return config?.edit_enhancement_text || null
+  } catch (error) {
+    console.error('[JSON Enhancement] Error getting edit enhancement text:', error)
     return null
   }
 }
