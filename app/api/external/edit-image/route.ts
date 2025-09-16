@@ -166,6 +166,7 @@ export async function POST(request: NextRequest) {
     // Enhance prompt with Advanced RAG if enabled
     let finalPrompt = prompt.trim()
     let ragMetadata = null
+    let jsonMetadata = null
     if (useRAG) {
       try {
         // Use the new advanced RAG system for better enhancement
@@ -268,20 +269,41 @@ export async function POST(request: NextRequest) {
 
         const enhancementResult = await enhancePromptHybrid(finalPrompt, hybridOptions)
         
-        console.log("[External Edit-Image] JSON Enhancement result:", {
-          originalPrompt: enhancementResult.originalPrompt,
+        // Capture JSON enhancement metadata
+        jsonMetadata = {
+          originalPrompt: finalPrompt,
           enhancedPrompt: enhancementResult.enhancedPrompt,
-          appliedText: enhancementResult.jsonResult?.appliedText
-        })
+          appliedText: enhancementResult.jsonResult?.appliedText,
+          wasEnhanced: !!enhancementResult.jsonResult?.appliedText,
+          intensity: intensity
+        }
+        
+        console.log("[External Edit-Image] JSON Enhancement result:", jsonMetadata)
         
         finalPrompt = enhancementResult.enhancedPrompt
         
         console.log("[External Edit-Image] Final enhanced prompt:", finalPrompt)
       } catch (error) {
         console.warn("[External Edit-Image] JSON enhancement failed, using current prompt:", error)
+        jsonMetadata = {
+          originalPrompt: finalPrompt,
+          enhancedPrompt: finalPrompt,
+          appliedText: null,
+          wasEnhanced: false,
+          intensity: intensity,
+          error: error.message
+        }
       }
     } else {
       console.log("[External Edit-Image] Using prompt without JSON enhancement")
+      jsonMetadata = {
+        originalPrompt: finalPrompt,
+        enhancedPrompt: finalPrompt,
+        appliedText: null,
+        wasEnhanced: false,
+        intensity: 0,
+        disabled: true
+      }
     }
     
     // Add RAG information (will be dynamic when app state is accessible)
@@ -448,14 +470,16 @@ export async function POST(request: NextRequest) {
           prompt: {
             original: prompt,
             final: finalPrompt,
-            enhanced: useRAG,
-            ragMetadata: ragMetadata
+            enhanced: useRAG || (jsonMetadata?.wasEnhanced || false),
+            ragMetadata: ragMetadata,
+            jsonMetadata: jsonMetadata
           },
           processing: {
             model: "qwen-image-edit",
             timestamp: new Date().toISOString(),
             ragSystem: ragMetadata?.ragMethod || 'none',
-            enhancementsApplied: ragMetadata?.enhancementsApplied || 0
+            jsonEnhancement: jsonMetadata?.wasEnhanced ? 'applied' : 'none',
+            enhancementsApplied: (ragMetadata?.enhancementsApplied || 0) + (jsonMetadata?.wasEnhanced ? 1 : 0)
           }
         }
 
