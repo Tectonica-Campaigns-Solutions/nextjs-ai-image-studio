@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
           jsonOptions: {
             useDefaults: !jsonOptions.customText,
             customText: jsonOptions.customText,
-            intensity: jsonOptions.intensity || 0.8
+            intensity: jsonOptions.intensity || 1
           }
         }
 

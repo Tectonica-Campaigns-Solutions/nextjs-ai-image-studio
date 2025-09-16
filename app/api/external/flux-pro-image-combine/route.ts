@@ -16,10 +16,10 @@ import { fal } from "@fal-ai/client"
  * - prompt (required): Text description for how to combine the images
  * - imageUrls (required): Array of image URLs to combine (minimum 2 images)
  * - jsonOptions (optional): JSON enhancement configuration  
- *   - customText: Custom enhancement description (if not provided, uses edit_enhancement_text: "Keep style of the image. Same color palette and same background.")
+ *   - customText: Custom enhancement description (if not provided, uses enhancement_text: "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel.")
  *   - intensity: Enhancement intensity (0.1-1.0, default: 1.0)
  * 
- * JSON Enhancement is always enabled and automatically appends edit_enhancement_text to the user prompt.
+ * JSON Enhancement is always enabled and automatically appends enhancement_text to the user prompt.
  * RAG enhancement has been disabled for simplicity.
  * - settings (optional): Advanced generation settings
  * 
@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apply JSON enhancement with edit_enhancement_text (always enabled)
+    // Apply JSON enhancement with enhancement_text (always enabled)
     let finalPrompt = prompt
     let enhancementText = jsonOptions.customText
     
@@ -244,9 +244,9 @@ export async function POST(request: NextRequest) {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
         const { success, config } = await response.json()
-        if (success && config?.edit_enhancement_text) {
-          enhancementText = config.edit_enhancement_text
-          console.log("[External Flux Combine] Loaded edit_enhancement_text:", enhancementText)
+        if (success && config?.enhancement_text) {
+          enhancementText = config.enhancement_text
+          console.log("[External Flux Combine] Loaded enhancement_text:", enhancementText)
         }
       } catch (error) {
         console.warn("[External Flux Combine] Could not load from API:", error)
@@ -254,8 +254,8 @@ export async function POST(request: NextRequest) {
       
       // Fallback to hardcoded value if API failed
       if (!enhancementText) {
-        enhancementText = "Keep style of the image. Same color palette and same background."
-        console.log("[External Flux Combine] Using hardcoded edit_enhancement_text")
+        enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
+        console.log("[External Flux Combine] Using hardcoded enhancement_text")
       }
     }
 
