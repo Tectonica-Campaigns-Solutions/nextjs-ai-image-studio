@@ -13,12 +13,12 @@ import { fal } from "@fal-ai/client"
  * - prompt (required): Description of desired edits
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
  * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
- * - customText (optional): Custom enhancement text to use instead of edit_enhancement_text
+ * - customText (optional): Custom enhancement text to use instead of enhancement_text
  * - intensity (optional): Enhancement intensity from 0.0 to 1.0 (default: 1.0)
  * - image_size (optional): Output image size - one of: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9 (default: square_hd)
  * 
  * When useJSONEnhancement is true and no customText is provided, automatically uses 
- * edit_enhancement_text: "Keep style of the image. Same color palette and same background."
+ * enhancement_text: "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
  * 
  * The endpoint automatically reads RAG and JSON enhancement configuration from the main app state.
  */
@@ -225,22 +225,22 @@ export async function POST(request: NextRequest) {
           try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
             const { success, config } = await response.json()
-            if (success && config?.edit_enhancement_text) {
-              enhancementText = config.edit_enhancement_text
+            if (success && config?.enhancement_text) {
+              enhancementText = config.enhancement_text
               usingDefaultText = true
-              console.log("[External Edit-Image] Using edit_enhancement_text:", enhancementText)
+              console.log("[External Edit-Image] Using enhancement_text:", enhancementText)
             } else {
-              console.warn("[External Edit-Image] edit_enhancement_text not found in config")
+              console.warn("[External Edit-Image] enhancement_text not found in config")
             }
           } catch (error) {
-            console.warn("[External Edit-Image] Could not load edit_enhancement_text:", error)
+            console.warn("[External Edit-Image] Could not load enhancement_text:", error)
           }
           
-          // Fallback to hardcoded edit_enhancement_text if API call failed
+          // Fallback to hardcoded enhancement_text if API call failed
           if (!enhancementText) {
-            enhancementText = "Keep style of the image. Same color palette and same background."
+            enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
             usingDefaultText = true
-            console.log("[External Edit-Image] Using hardcoded fallback edit_enhancement_text")
+            console.log("[External Edit-Image] Using hardcoded fallback enhancement_text")
           }
         } else {
           console.log("[External Edit-Image] Using custom enhancement text:", enhancementText)
