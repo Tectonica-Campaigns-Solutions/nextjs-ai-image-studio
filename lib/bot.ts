@@ -32,7 +32,7 @@ export const bots: SidebarBotType[] = [
   },
   {
     id: "visual_assistant",
-    name: "Visual",
+    name: "Visual RAG",
     description: "Assistant for visual generation",
     icon: Zap,
     color: "text-amber-500",
@@ -44,18 +44,18 @@ export const bots: SidebarBotType[] = [
       "I need to create an image for an event",
     ],
   },
-  // {
-  //   id: "image_testing_assistant",
-  //   name: "Image Testing",
-  //   description: "Assistant for image generation and testing",
-  //   icon: Zap,
-  //   color: "text-rose-500",
-  //   bgColor: "bg-rose-500/10",
-  //   hoverColor: "hover:bg-rose-500/20",
-  //   suggestions: [
-  //     "Generate a test image",
-  //     "Analyze image quality",
-  //     "Suggest improvements",
-  //   ],
-  // },
+  {
+    id: "visual_no_rag_assistant",
+    name: "Visual NO RAG",
+    description: "Assistant for image generation with NO RAG",
+    icon: Zap,
+    color: "text-rose-500",
+    bgColor: "bg-rose-500/10",
+    hoverColor: "hover:bg-rose-500/20",
+    suggestions: [
+      "I need to generate a new image",
+      "I need to edit an existing image",
+      "I need to combine several images",
+    ],
+  },
 ];
