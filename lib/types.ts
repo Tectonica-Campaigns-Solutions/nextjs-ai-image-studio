@@ -51,3 +51,11 @@ export type Conversation = {
   created_at: string;
   updated_at: string;
 };
+
+export type FileAttachment = {
+  file: File;
+  fileId?: string;
+  fileUrl?: string;
+  uploading: boolean;
+  error?: string;
+};

@@ -32,7 +32,21 @@ export async function POST(
     const { conversationId } = await params;
 
     const body = await request.json();
-    const { content, promptId, fileIds } = body;
+    const {
+      content,
+      role,
+      botType,
+      promptId,
+      fileIds,
+      noTriggerTools = false,
+    } = body;
+
+    console.log(
+      `[CONVERSATION] Bot type: ${botType}. Content: ${content}. Prompt ID: ${promptId}`
+    );
+
+    const withImageTools =
+      botType === "visual_no_rag_assistant" || botType === "visual_assistant";
 
     if (!content && fileIds.length === 0) {
       return NextResponse.json(
@@ -60,7 +74,7 @@ export async function POST(
       )
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true })
-      .limit(10);
+      .limit(15);
 
     const conversationHistory = (previousMessages ?? []).map((msg) => {
       const baseContent = [
@@ -90,7 +104,7 @@ export async function POST(
       .from("messages")
       .insert({
         conversation_id: conversationId,
-        role: "user",
+        role: role,
         content: content,
         created_at: new Date().toISOString(),
       })
@@ -133,6 +147,13 @@ export async function POST(
       }
     }
 
+    if (noTriggerTools) {
+      return NextResponse.json({
+        message: "Message stored successfully",
+        activateEditImage: null,
+      });
+    }
+
     const inputMessage = {
       role: "user",
       content: [
@@ -148,215 +169,131 @@ export async function POST(
       ],
     };
 
-    // @ts-ignore
-    const response = await client?.responses.create({
-      prompt: { id: promptId },
-      model: "gpt-4-turbo",
-      input: [...conversationHistory, inputMessage],
-      tools: [
-        {
-          type: "file_search",
-          vector_store_ids: ["vs_68af2b3491e08191b2701410fed7e56f"],
-        },
-        {
-          type: "function",
-          name: "generate_image_request",
-          description:
-            "Generate an image based on user requirements. IMPORTANT: If the user does not specify an aspect ratio, ALWAYS use 3:4",
-          parameters: {
-            type: "object",
-            properties: {
-              details: {
-                type: "string",
-                description: "Description of what should appear in the image",
-              },
-              aspect_ratio: {
-                type: "string",
-                enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
-                description:
-                  "Aspect ratio of the image. If the user does not specify one, ALWAYS use 3:4.",
-                default: "3:4",
-              },
-              num_images: {
-                type: "integer",
-                description: "Number of images to render (max 2, default: 1)",
-                minimum: 1,
-                maximum: 2,
-                default: 1,
-              },
-              output_format: {
-                type: "string",
-                enum: ["jpeg", "png", "webp"],
-                description: "Output image format (default: jpeg)",
-                default: "jpeg",
-              },
+    // Tools
+    const fileTools = [
+      {
+        type: "file_search",
+        vector_store_ids: ["vs_68af2b3491e08191b2701410fed7e56f"],
+      },
+    ];
+
+    const imageTools = [
+      {
+        type: "function",
+        name: "generate_image_request",
+        description:
+          "Generate an image based on user requirements. IMPORTANT: If the user does not specify an aspect ratio, ALWAYS use 3:4",
+        parameters: {
+          type: "object",
+          properties: {
+            details: {
+              type: "string",
+              description: "Description of what should appear in the image",
             },
-            required: ["details"],
+            aspect_ratio: {
+              type: "string",
+              enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
+              description:
+                "Aspect ratio of the image. If the user does not specify one, ALWAYS use 3:4.",
+              default: "3:4",
+            },
+            num_images: {
+              type: "integer",
+              description: "Number of images to render (max 2, default: 1)",
+              minimum: 1,
+              maximum: 2,
+              default: 1,
+            },
+            output_format: {
+              type: "string",
+              enum: ["jpeg", "png", "webp"],
+              description: "Output image format (default: jpeg)",
+              default: "jpeg",
+            },
           },
+          required: ["details"],
         },
-        {
-          type: "function",
-          name: "edit_image_request",
-          description: `
+      },
+      {
+        type: "function",
+        name: "edit_image_request",
+        description: `
             Edit a single existing image based on user instructions.
             Only use this function when there is exactly one image to edit.
             If the user mentions multiple images, combining elements, or merging,
             do NOT use this tool—use combine_image_request instead. Only run this tool if the user has uploaded images, otherwise ask for them.
           `,
-          parameters: {
-            type: "object",
-            properties: {
-              image_url: {
-                type: "string",
-                description: "URL of the image to edit",
-              },
-              instructions: {
-                type: "string",
-                description:
-                  "What changes to make: add, remove, modify elements",
-              },
+        parameters: {
+          type: "object",
+          properties: {
+            image_url: {
+              type: "string",
+              description: "URL of the image to edit",
             },
-            required: ["image_url", "instructions"],
+            instructions: {
+              type: "string",
+              description: "What changes to make: add, remove, modify elements",
+            },
           },
+          required: ["image_url", "instructions"],
         },
-        {
-          type: "function",
-          name: "apply_branding_to_image",
-          description: `
+      },
+      {
+        type: "function",
+        name: "apply_branding_to_image",
+        description: `
           Apply predefined branding styles to an existing image.
           Trigger only when the user provides an image URL and explicitly requests to apply branding.
           The user does not need to specify which branding style — it is handled internally.
           Do not use this tool for generating new images, combining multiple images, or performing general edits.`,
-          parameters: {
-            type: "object",
-            properties: {
-              image_url: {
-                type: "string",
-                format: "uri",
-                description:
-                  "Publicly accessible URL of the image where branding should be applied.",
-              },
+        parameters: {
+          type: "object",
+          properties: {
+            image_url: {
+              type: "string",
+              format: "uri",
+              description:
+                "Publicly accessible URL of the image where branding should be applied.",
             },
-            required: ["image_url"],
           },
+          required: ["image_url"],
         },
-        {
-          type: "function",
-          name: "combine_image_request",
-          description:
-            "Combine multiple images into one based on user instructions. Only run this tool if the user has uploaded images, otherwise ask for them.",
-          parameters: {
-            type: "object",
-            properties: {
-              image_urls: {
-                type: "array",
-                items: { type: "string" },
-                description: "List of image URLs to combine",
-              },
-              instructions: {
-                type: "string",
-                description: "Instructions on how to combine the images",
-              },
-              aspect_ratio: {
-                type: "string",
-                enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
-                description: "Aspect ratio of the image (default: 1:1)",
-                default: "1:1",
-              },
+      },
+      {
+        type: "function",
+        name: "combine_image_request",
+        description:
+          "Combine multiple images into one based on user instructions. Only run this tool if the user has uploaded images, otherwise ask for them.",
+        parameters: {
+          type: "object",
+          properties: {
+            image_urls: {
+              type: "array",
+              items: { type: "string" },
+              description: "List of image URLs to combine",
             },
-            required: ["image_urls", "instructions"],
+            instructions: {
+              type: "string",
+              description: "Instructions on how to combine the images",
+            },
+            aspect_ratio: {
+              type: "string",
+              enum: ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9"],
+              description: "Aspect ratio of the image (default: 1:1)",
+              default: "1:1",
+            },
           },
+          required: ["image_urls", "instructions"],
         },
-        // {
-        //   type: "function",
-        //   name: "image_action_disambiguation",
-        //   description:
-        //     "Use this tool whenever it is unclear if the user wants to create a new image, edit an uploaded image, or combine multiple images. This tool asks clarifying questions to help the user decide the right path.",
-        //   strict: true,
-        //   parameters: {
-        //     type: "object",
-        //     properties: {
-        //       question: {
-        //         type: "string",
-        //         description:
-        //           "The clarifying question to ask the user (e.g., 'Do you want to create a new image, edit an existing one, or combine images?').",
-        //       },
-        //       options: {
-        //         type: "array",
-        //         description:
-        //           "List of possible user choices to clarify intent. These will be shown as buttons in the UI.",
-        //         items: {
-        //           type: "string",
-        //         },
-        //       },
-        //     },
-        //     required: ["question", "options"],
-        //     additionalProperties: false,
-        //   },
-        // },
-        // {
-        //   type: "function",
-        //   name: "generate_image_post_request",
-        //   description:
-        //     "ONLY use this function when the user EXPLICITLY asks for an image generation. DO NOT use for greetings, general questions, or casual conversation. The user must specifically request an image, picture, drawing, or visual creation.",
-        //   strict: true,
-        //   parameters: {
-        //     type: "object",
-        //     properties: {
-        //       prompt: {
-        //         type: "string",
-        //         description:
-        //           "Description or instructions for the desired image",
-        //       },
-        //     },
-        //     required: ["prompt"],
-        //     additionalProperties: false,
-        //   },
-        // },
-        // {
-        //   type: "function",
-        //   name: "on_image_edit_request",
-        //   description:
-        //     "Always call this function immediately whenever the user says they want to edit, modify, or change an image. Do not ask questions and do not respond with text.",
-        //   strict: true,
-        //   parameters: {
-        //     type: "object",
-        //     properties: {
-        //       image_url: {
-        //         type: "string",
-        //         description: "URL or reference to the uploaded image.",
-        //       },
-        //     },
-        //     required: ["image_url"],
-        //     additionalProperties: false,
-        //   },
-        // },
-        // {
-        //   type: "function",
-        //   name: "combine_images",
-        //   description:
-        //     "Use this function when the user uploads multiple images and explicitly asks to combine them. You must return the SAME file_ids that were provided in the user input. Never invent or generate new IDs.",
-        //   strict: true,
-        //   parameters: {
-        //     type: "object",
-        //     properties: {
-        //       prompt: {
-        //         type: "string",
-        //         description:
-        //           "Instructions on how to arrange or combine the uploaded images.",
-        //       },
-        //       file_ids: {
-        //         type: "array",
-        //         description:
-        //           "List of OpenAI file_ids provided in the user input. Use exactly these values, do not generate or guess.",
-        //         items: { type: "string" },
-        //       },
-        //     },
-        //     required: ["prompt", "file_ids"],
-        //     additionalProperties: false,
-        //   },
-        // },
-      ],
+      },
+    ];
+
+    // @ts-ignore
+    const response = await client?.responses.create({
+      prompt: { id: promptId },
+      model: "gpt-4-turbo",
+      input: [...conversationHistory, inputMessage],
+      tools: withImageTools ? imageTools : fileTools,
     });
 
     // Flags
@@ -502,12 +439,6 @@ export async function POST(
         console.error("Error generating image:", error);
         finalMessage = "Error generating image.";
       }
-
-      // finalMessage =
-      //   fileIds?.find((f: any) => f.fileUrl)?.fileUrl ||
-      //   response?.output_text ||
-      //   "";
-      // activateEditImage = true;
     } else if (imageCombineTool) {
       try {
         const params = JSON.parse((imageCombineTool as any)?.arguments);
@@ -521,7 +452,7 @@ export async function POST(
           ? prevFileUrls
           : [];
 
-        console.log({ params, instructions, imageUrls });
+        // console.log({ params, instructions, imageUrls });
 
         const combineResp = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-image-combine`,
@@ -567,8 +498,8 @@ export async function POST(
       }
 
       // @ts-ignore
-      const parameters = JSON.parse(imageBrandingTool.arguments);
-      console.log({ parameters });
+      // const parameters = JSON.parse(imageBrandingTool.arguments);
+      // console.log({ parameters });
 
       const imageResponse = await fetch(lastImageUrl);
       const blob = await imageResponse.blob();

@@ -7,7 +7,7 @@ type ModalProps = {
   onClose: () => void;
   imageUrl: string;
   handleDownloadImage: (image: string) => void;
-  handleAddImageToConversation: (image: string) => void;
+  handleAddImageToConversation: (image: string, userPrompt: string) => void;
   handleEditCurrentImage: (image: string) => void;
 };
 
@@ -157,7 +157,10 @@ export default function Modal({
                       className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
                       onClick={async () => {
                         setIsLoading(true);
-                        await handleAddImageToConversation(imageUrl);
+                        await handleAddImageToConversation(
+                          imageUrl,
+                          promptValue
+                        );
                       }}
                     >
                       Add image to conversation
@@ -188,7 +191,10 @@ export default function Modal({
                         className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
                         onClick={async () => {
                           setIsLoading(true);
-                          await handleAddImageToConversation(responseImage);
+                          await handleAddImageToConversation(
+                            responseImage,
+                            promptValue
+                          );
                         }}
                       >
                         Add image to conversation

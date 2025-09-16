@@ -30,7 +30,13 @@ import { useToast } from "@/hooks/use-toast";
 import Markdown from "react-markdown";
 import { bots } from "@/lib/bot";
 import { clients } from "@/lib/clients";
-import type { ChatMessage, ClientType, Conversation } from "@/lib/types";
+import type {
+  ChatMessage,
+  ClientType,
+  Conversation,
+  FileAttachment,
+} from "@/lib/types";
+import CombineModal from "@/components/ui/combine-modal";
 
 const THRESHOLD = 20 * 1024 * 1024;
 
@@ -59,17 +65,10 @@ function DashboardContent() {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [attachedFiles, setAttachedFiles] = useState<
-    Array<{
-      file: File;
-      fileId?: string;
-      fileUrl?: string;
-      uploading: boolean;
-      error?: string;
-    }>
-  >([]);
+  const [attachedFiles, setAttachedFiles] = useState<Array<FileAttachment>>([]);
   const [showInputConversation, setShowInputConversation] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showCombineModal, setShowCombineModal] = useState(false);
   const [imageModal, setImageModal] = useState<string | null>(null);
 
   const selectedBotData = bots.find((bot) => bot.id === selectedBot);
@@ -493,6 +492,7 @@ function DashboardContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             content: promptToUse,
+            role: "user",
             promptId: promptConfigId,
             botType: selectedBot,
             fileIds: fileIds.length > 0 ? fileIds : undefined,
@@ -600,6 +600,15 @@ function DashboardContent() {
     setShowModal(true);
   };
 
+  const handleCombine = async (imageUrl: string) => {
+    setImageModal(imageUrl);
+    setShowCombineModal(true);
+  };
+
+  const closeCombine = () => {
+    setShowCombineModal(false);
+  };
+
   const handleContinueConversation = async () => {
     setShowInputConversation(true);
     scrollToBottom();
@@ -609,17 +618,12 @@ function DashboardContent() {
     setImageModal(newImageUrl);
   };
 
-  const handleAddImageToConversation = async (imageUrl: string) => {
+  const handleAddImageToConversation = async (
+    imageUrl: string,
+    userPrompt?: string,
+    attachedFiles?: FileAttachment[]
+  ) => {
     if (!currentConversationId) return;
-
-    const tempUserMessageId = `assistant-${Date.now()}`;
-    const newMessage: ChatMessage = {
-      role: "assistant",
-      text: imageUrl,
-      timestamp: new Date(),
-      id: tempUserMessageId,
-      attachedFiles: [],
-    };
 
     // @ts-ignore
     const promptId = client?.bots[`${selectedBot}_id`];
@@ -632,6 +636,52 @@ function DashboardContent() {
       return;
     }
 
+    if (userPrompt) {
+      const tempUserMessageId = `user-${Date.now()}`;
+
+      const fileIds = attachedFiles
+        ? attachedFiles
+            .filter((f) => f.fileId && !f.error)
+            .map((f) => ({
+              name: f.file.name,
+              fileId: f.fileId!,
+              fileUrl: f.fileUrl,
+            }))
+        : null;
+
+      const newMessage: ChatMessage = {
+        role: "user",
+        text: userPrompt,
+        timestamp: new Date(),
+        id: tempUserMessageId,
+        attachedFiles: fileIds ?? [],
+      };
+
+      await fetch(`/api/conversations/${currentConversationId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: userPrompt,
+          role: "user",
+          promptId,
+          botType: selectedBot,
+          noTriggerTools: true,
+          fileIds: fileIds && fileIds.length > 0 ? fileIds : undefined,
+        }),
+      });
+
+      setMessages((prev) => [...prev, newMessage]);
+    }
+
+    const tempUserMessageId = `assistant-${Date.now()}`;
+    const newMessage: ChatMessage = {
+      role: "assistant",
+      text: imageUrl,
+      timestamp: new Date(),
+      id: tempUserMessageId,
+      attachedFiles: [],
+    };
+
     // Save to Supabase via your API
     const response = await fetch(
       `/api/conversations/${currentConversationId}/messages`,
@@ -643,12 +693,14 @@ function DashboardContent() {
           role: "assistant",
           promptId,
           botType: selectedBot,
+          noTriggerTools: true,
         }),
       }
     );
 
     if (response.ok) {
       setShowModal(false);
+      setShowCombineModal(false);
       setMessages((prev) => [...prev, newMessage]);
       scrollToBottom();
     }
@@ -684,10 +736,21 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {imageModal && (
+      {imageModal && showModal && (
         <Modal
           isOpen={showModal}
           onClose={closeEditor}
+          imageUrl={imageModal}
+          handleDownloadImage={handleDownloadImage}
+          handleAddImageToConversation={handleAddImageToConversation}
+          handleEditCurrentImage={handleEditCurrentImageFromModal}
+        />
+      )}
+
+      {imageModal && showCombineModal && (
+        <CombineModal
+          isOpen={showCombineModal}
+          onClose={closeCombine}
           imageUrl={imageModal}
           handleDownloadImage={handleDownloadImage}
           handleAddImageToConversation={handleAddImageToConversation}
@@ -1045,7 +1108,7 @@ function DashboardContent() {
                                 <img
                                   src={message.text}
                                   alt="Generated image"
-                                  className="max-w-[800px] rounded-lg shadow"
+                                  className="max-w-[800px] w-full rounded-lg shadow"
                                 />
                               ) : message.text.startsWith("http") &&
                                 /\.(png|jpg|jpeg|gif|webp)$/i.test(
@@ -1055,7 +1118,7 @@ function DashboardContent() {
                                   <img
                                     src={message.text}
                                     alt="Generated image"
-                                    className="max-w-[800px] rounded-lg shadow"
+                                    className="max-w-[800px] w-full rounded-lg shadow"
                                   />
                                   <div className="flex gap-2 mt-2">
                                     <button
@@ -1071,6 +1134,14 @@ function DashboardContent() {
                                       onClick={() => handleEditor(message.text)}
                                     >
                                       Edit
+                                    </button>
+                                    <button
+                                      className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
+                                      onClick={() =>
+                                        handleCombine(message.text)
+                                      }
+                                    >
+                                      Combine
                                     </button>
                                     <button
                                       className="px-3 py-1 rounded-lg border border-black bg-white text-black hover:bg-gray-100 text-sm"
