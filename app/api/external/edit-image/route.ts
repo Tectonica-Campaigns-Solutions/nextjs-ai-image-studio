@@ -12,9 +12,15 @@ import { fal } from "@fal-ai/client"
  * - image (required): Image file to edit (PNG, JPG, JPEG, WEBP)
  * - prompt (required): Description of desired edits
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: true)
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
+ * - customText (optional): Custom enhancement text to use instead of edit_enhancement_text
+ * - intensity (optional): Enhancement intensity from 0.0 to 1.0 (default: 1.0)
  * - image_size (optional): Output image size - one of: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9 (default: square_hd)
  * 
- * The endpoint automatically reads RAG configuration from the main app state.
+ * When useJSONEnhancement is true and no customText is provided, automatically uses 
+ * edit_enhancement_text: "Keep style of the image. Same color palette and same background."
+ * 
+ * The endpoint automatically reads RAG and JSON enhancement configuration from the main app state.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +30,9 @@ export async function POST(request: NextRequest) {
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
     const useRAG = formData.get('useRAG') === 'true' || formData.get('useRAG') === undefined // default true
+    const useJSONEnhancement = formData.get('useJSONEnhancement') === 'true' || formData.get('useJSONEnhancement') === undefined // default true
+    const customText = formData.get('customText') as string
+    const intensity = parseFloat(formData.get('intensity') as string) || 1.0 // default 1.0
     const imageSize = formData.get('image_size') as string || 'square_hd' // default to square_hd
     const customWidth = formData.get('width') as string
     const customHeight = formData.get('height') as string
@@ -183,19 +192,13 @@ export async function POST(request: NextRequest) {
       } catch (ragError) {
         console.warn("[External Edit-Image] Advanced RAG enhancement failed, trying fallback:", ragError)
         try {
-          // Fallback to simple RAG if advanced fails
-          const { enhanceWithEGPBranding } = await import("../simple-rag/route")
-          const enhancement = enhanceWithEGPBranding(prompt.trim())
+          // Fallback to simple RAG if advanced fails (currently disabled due to missing module)
+          // const { enhanceWithEGPBranding } = await import("../simple-rag/route")
+          // const enhancement = enhanceWithEGPBranding(prompt.trim())
+          const enhancement = prompt.trim() // Simple fallback
           
-          // Ensure we get a string from the fallback enhancement
-          if (typeof enhancement === 'string') {
-            finalPrompt = enhancement
-          } else if (enhancement && typeof enhancement.enhancedPrompt === 'string') {
-            finalPrompt = enhancement.enhancedPrompt
-          } else {
-            console.warn("[External Edit-Image] Fallback enhancement returned unexpected format:", typeof enhancement)
-            finalPrompt = prompt.trim() // fallback to original
-          }
+          // Simple fallback - just use original prompt
+          finalPrompt = enhancement
           
           ragMetadata = {
             originalPrompt: prompt.trim(),
@@ -209,6 +212,48 @@ export async function POST(request: NextRequest) {
           finalPrompt = prompt.trim() // ensure we have a string fallback
         }
       }
+    }
+    
+    // Apply JSON enhancement if enabled (after RAG enhancement)
+    if (useJSONEnhancement) {
+      try {
+        // Load edit enhancement text if no custom text provided
+        let enhancementText = customText
+        if (!enhancementText) {
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+            const { success, config } = await response.json()
+            if (success && config?.edit_enhancement_text) {
+              enhancementText = config.edit_enhancement_text
+              console.log("[External Edit-Image] Using edit_enhancement_text:", enhancementText)
+            }
+          } catch (error) {
+            console.warn("[External Edit-Image] Could not load edit_enhancement_text:", error)
+          }
+        }
+
+        // Import the hybrid enhancement system
+        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
+        
+        const hybridOptions = {
+          useRAG: false, // RAG already processed above
+          useJSONEnhancement: true,
+          jsonOptions: {
+            useDefaults: !enhancementText,
+            customText: enhancementText,
+            intensity: intensity
+          }
+        }
+
+        const enhancementResult = await enhancePromptHybrid(finalPrompt, hybridOptions)
+        finalPrompt = enhancementResult.enhancedPrompt
+        
+        console.log("[External Edit-Image] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
+      } catch (error) {
+        console.warn("[External Edit-Image] JSON enhancement failed, using current prompt:", error)
+      }
+    } else {
+      console.log("[External Edit-Image] Using prompt without JSON enhancement")
     }
     
     // Add RAG information (will be dynamic when app state is accessible)
