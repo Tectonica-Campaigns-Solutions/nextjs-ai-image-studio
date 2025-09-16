@@ -54,7 +54,8 @@ export const bots: SidebarBotType[] = [
     hoverColor: "hover:bg-rose-500/20",
     suggestions: [
       "I need to generate a new image",
-      "I need to edit an existing image",
+      // "I need to edit an existing image",
+      "I want to apply branding to an existing image",
       "I need to combine several images",
     ],
   },
