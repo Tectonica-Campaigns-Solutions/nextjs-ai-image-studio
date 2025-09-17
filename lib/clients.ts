@@ -3,7 +3,7 @@ import { ClientType } from "./types";
 export const clients: ClientType[] = [
   {
     id: "client-example",
-    name: "Client RAG",
+    name: "Client Demo",
     description: "",
     bots: {
       copy_assistant_id:
