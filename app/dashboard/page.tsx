@@ -95,6 +95,7 @@ function DashboardContent() {
       const lastAssistantMsg = [...messages]
         .reverse()
         .find((m) => m.role === "assistant");
+
       if (
         lastAssistantMsg &&
         (lastAssistantMsg.text.startsWith("data:image/") ||
@@ -106,7 +107,7 @@ function DashboardContent() {
     } else {
       setShowInputConversation(true);
     }
-  }, [messages]);
+  }, [currentConversationId, messages]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -187,6 +188,7 @@ function DashboardContent() {
         currentConversationIdRef.current = conversationId;
 
         setAttachedFiles([]);
+        setShowInputConversation(true);
       }
     } catch (error) {
       console.error("Error loading messages:", error);
