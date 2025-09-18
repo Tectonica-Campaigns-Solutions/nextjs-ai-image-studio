@@ -24,6 +24,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Set default values for jsonOptions if not provided
+    const defaultJsonOptions = {
+      intensity: 1.0, // Default intensity at 100% for Combine Images
+      customText: '', // Will use enhancement_text if empty
+      ...jsonOptions
+    }
+
     // Extract multiple image files
     const imageFiles: File[] = []
     const imageUrls: string[] = []
@@ -61,6 +68,7 @@ export async function POST(request: NextRequest) {
     console.log("[FLUX-COMBINE] Image URLs count:", imageUrls.length)
     console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length)
     console.log("[FLUX-COMBINE] Use JSON Enhancement:", useJSONEnhancement)
+    console.log("[FLUX-COMBINE] JSON Options:", defaultJsonOptions)
     console.log("[FLUX-COMBINE] JSON Options:", jsonOptions)
     console.log("[FLUX-COMBINE] RAG enhancement: disabled for image combination")
     console.log("[FLUX-COMBINE] Settings JSON:", settingsJson)
@@ -108,7 +116,7 @@ export async function POST(request: NextRequest) {
     let ragMetadata = null
 
     // Apply JSON enhancement with enhancement_text (always enabled)
-    let enhancementText = jsonOptions.customText
+    let enhancementText = defaultJsonOptions.customText
     
     if (!enhancementText) {
       // Try to load from config first
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
       
       // Fallback to hardcoded value if API failed
       if (!enhancementText) {
-        enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
+        enhancementText = "Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
         console.log("[FLUX-COMBINE] Using hardcoded enhancement_text")
       }
     }

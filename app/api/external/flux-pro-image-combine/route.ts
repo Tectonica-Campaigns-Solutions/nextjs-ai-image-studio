@@ -262,7 +262,7 @@ export async function POST(request: NextRequest) {
       
       // Fallback to hardcoded enhancement_text if API failed
       if (!enhancementText) {
-        enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
+        enhancementText = "Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
         console.log("[External Flux Combine] Using hardcoded enhancement_text")
       }
     }
