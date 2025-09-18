@@ -187,8 +187,12 @@ export async function POST(
       {
         type: "function",
         name: "generate_image_request",
-        description:
-          "Generate an image based on user requirements. IMPORTANT: If the user does not specify an aspect ratio, ALWAYS use 3:4",
+        description: `
+          Generate a new image from scratch based on user description.
+          Only use this if the user did not provide any image in the conversation.
+          If an image already exists, prefer edit, combine, or branding tools instead.
+          IMPORTANT: If the user does not specify an aspect ratio, ALWAYS use 3:4
+        `,
         parameters: {
           type: "object",
           properties: {
@@ -437,10 +441,44 @@ export async function POST(
         if (imageData?.image) {
           const imageUrl = imageData.image;
 
-          if (response?.output_text) {
-            finalMessage = `${response.output_text}\n\n${imageUrl}`;
-          } else {
-            finalMessage = imageUrl;
+          // Apply branding to edited image
+          const imageResponse = await fetch(imageUrl);
+          const blob = await imageResponse.blob();
+
+          const formData = new FormData();
+          formData.append("image", blob);
+
+          try {
+            const imageResp = await fetch(
+              `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/seedream-v4-edit`,
+              {
+                method: "POST",
+                body: formData,
+              }
+            );
+
+            if (!imageResp.ok) {
+              throw new Error(
+                `Image branding generation failed: ${imageResp.status}`
+              );
+            }
+
+            const imageData = await imageResp.json();
+            const imageGeneratedUrl = imageData?.images[0]?.url;
+
+            if (imageGeneratedUrl) {
+              if (response?.output_text) {
+                finalMessage = `${response.output_text}\n\n${imageGeneratedUrl}`;
+              } else {
+                finalMessage = imageGeneratedUrl;
+              }
+            } else {
+              finalMessage =
+                response?.output_text || "Image branding generation failed";
+            }
+          } catch (error) {
+            console.error("Error generating branding image:", error);
+            finalMessage = "Error generating branding image.";
           }
         } else {
           finalMessage =
