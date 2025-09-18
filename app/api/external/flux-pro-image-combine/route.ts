@@ -243,27 +243,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apply JSON enhancement with edit_enhancement_text (always enabled for Combine Images)
+    // Apply JSON enhancement with enhancement_text (always enabled for Combine Images)
     let finalPrompt = prompt
     let enhancementText = defaultJsonOptions.customText
     
     if (!enhancementText) {
-      // Try to load edit_enhancement_text from config first
+      // Try to load enhancement_text from config first
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
         const { success, config } = await response.json()
-        if (success && config?.edit_enhancement_text) {
-          enhancementText = config.edit_enhancement_text
-          console.log("[External Flux Combine] Loaded edit_enhancement_text:", enhancementText)
+        if (success && config?.enhancement_text) {
+          enhancementText = config.enhancement_text
+          console.log("[External Flux Combine] Loaded enhancement_text:", enhancementText)
         }
       } catch (error) {
         console.warn("[External Flux Combine] Could not load from API:", error)
       }
       
-      // Fallback to hardcoded edit_enhancement_text if API failed
+      // Fallback to hardcoded enhancement_text if API failed
       if (!enhancementText) {
-        enhancementText = "Keep style of the image. Same color palette and same background."
-        console.log("[External Flux Combine] Using hardcoded edit_enhancement_text")
+        enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
+        console.log("[External Flux Combine] Using hardcoded enhancement_text")
       }
     }
 

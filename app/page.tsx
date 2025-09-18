@@ -465,10 +465,12 @@ export default function ImageEditor() {
         if (editText) {
           setEditDefaultEnhancementText(editText)
           setEditCustomEnhancementText(editText)
-          
-          // Also use edit enhancement text for Combine Images
-          setFluxCombineDefaultEnhancementText(editText)
-          setFluxCombineCustomEnhancementText(editText)
+        }
+
+        // Use general enhancement text for Combine Images
+        if (text) {
+          setFluxCombineDefaultEnhancementText(text)
+          setFluxCombineCustomEnhancementText(text)
         }
 
         // Load specific text for SeDream v4
