@@ -259,12 +259,6 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.warn("[External Flux Combine] Could not load from API:", error)
       }
-      
-      // Fallback to hardcoded enhancement_text if API failed
-      if (!enhancementText) {
-        enhancementText = "Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
-        console.log("[External Flux Combine] Using hardcoded enhancement_text")
-      }
     }
 
     // Apply enhancement text directly to the prompt
