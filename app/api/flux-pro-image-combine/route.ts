@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     // JSON Enhancement parameters - always enabled by default
     const useJSONEnhancement = true // Always enabled for consistent enhancement
     const jsonOptionsStr = formData.get("jsonOptions") as string
-    let jsonOptions = {}
+    let jsonOptions: any = {}
     if (jsonOptionsStr) {
       try {
         jsonOptions = JSON.parse(jsonOptionsStr)
@@ -107,33 +107,32 @@ export async function POST(request: NextRequest) {
     let finalPrompt = prompt
     let ragMetadata = null
 
-    // Apply JSON enhancement if enabled
-    if (useJSONEnhancement) {
+    // Apply JSON enhancement with enhancement_text (always enabled)
+    let enhancementText = jsonOptions.customText
+    
+    if (!enhancementText) {
+      // Try to load from config first
       try {
-        // Import the hybrid enhancement system
-        const { enhancePromptHybrid } = await import("@/lib/hybrid-enhancement")
-        
-        const hybridOptions = {
-          useRAG: false, // RAG disabled for image combination
-          useJSONEnhancement: true,
-          jsonOptions: {
-            useDefaults: !jsonOptions.customText,
-            customText: jsonOptions.customText,
-            intensity: jsonOptions.intensity || 1
-          }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+        const { success, config } = await response.json()
+        if (success && config?.enhancement_text) {
+          enhancementText = config.enhancement_text
+          console.log("[FLUX-COMBINE] Loaded enhancement_text:", enhancementText)
         }
-
-        const enhancementResult = await enhancePromptHybrid(prompt, hybridOptions)
-        finalPrompt = enhancementResult.enhancedPrompt
-        
-        console.log("[FLUX-COMBINE] Enhanced prompt with JSON:", finalPrompt.substring(0, 100) + "...")
       } catch (error) {
-        console.warn("[FLUX-COMBINE] JSON enhancement failed, using original prompt:", error)
-        finalPrompt = prompt
+        console.warn("[FLUX-COMBINE] Could not load from API:", error)
       }
-    } else {
-      console.log("[FLUX-COMBINE] Using original prompt without enhancement")
+      
+      // Fallback to hardcoded value if API failed
+      if (!enhancementText) {
+        enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
+        console.log("[FLUX-COMBINE] Using hardcoded enhancement_text")
+      }
     }
+
+    // Apply enhancement text directly to the prompt
+    finalPrompt = `${prompt}, ${enhancementText}`
+    console.log("[FLUX-COMBINE] Enhanced prompt:", finalPrompt)
 
     console.log("[FLUX-COMBINE] Final prompt:", finalPrompt)
 
