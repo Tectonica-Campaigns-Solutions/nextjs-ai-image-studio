@@ -198,6 +198,13 @@ export async function POST(request: NextRequest) {
       settings = {}
     } = body
 
+    // Set default values for jsonOptions if not provided
+    const defaultJsonOptions = {
+      intensity: 1.0, // Default intensity at 100% for Combine Images
+      customText: '', // Will use edit_enhancement_text if empty
+      ...jsonOptions
+    }
+
     console.log("[External Flux Combine] Request received:")
     console.log("  - Prompt:", prompt.substring(0, 100) + "...")
     console.log("  - Image files count:", imageFiles.length)
@@ -205,6 +212,7 @@ export async function POST(request: NextRequest) {
     console.log("  - Total images:", totalImages)
     console.log("  - Use RAG:", useRAG, "(disabled for combination)")
     console.log("  - Use JSON Enhancement:", useJSONEnhancement)
+    console.log("  - JSON Options:", defaultJsonOptions)
     console.log("  - Settings:", settings)
 
     // Basic content moderation
@@ -235,27 +243,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apply JSON enhancement with enhancement_text (always enabled)
+    // Apply JSON enhancement with edit_enhancement_text (always enabled for Combine Images)
     let finalPrompt = prompt
-    let enhancementText = jsonOptions.customText
+    let enhancementText = defaultJsonOptions.customText
     
     if (!enhancementText) {
-      // Try to load from config first
+      // Try to load edit_enhancement_text from config first
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
         const { success, config } = await response.json()
-        if (success && config?.enhancement_text) {
-          enhancementText = config.enhancement_text
-          console.log("[External Flux Combine] Loaded enhancement_text:", enhancementText)
+        if (success && config?.edit_enhancement_text) {
+          enhancementText = config.edit_enhancement_text
+          console.log("[External Flux Combine] Loaded edit_enhancement_text:", enhancementText)
         }
       } catch (error) {
         console.warn("[External Flux Combine] Could not load from API:", error)
       }
       
-      // Fallback to hardcoded value if API failed
+      // Fallback to hardcoded edit_enhancement_text if API failed
       if (!enhancementText) {
-        enhancementText = "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel."
-        console.log("[External Flux Combine] Using hardcoded enhancement_text")
+        enhancementText = "Keep style of the image. Same color palette and same background."
+        console.log("[External Flux Combine] Using hardcoded edit_enhancement_text")
       }
     }
 
