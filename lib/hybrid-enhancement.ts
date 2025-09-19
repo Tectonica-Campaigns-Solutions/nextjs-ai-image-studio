@@ -37,6 +37,7 @@ export interface HybridEnhancementOptions {
     useDefaults?: boolean
     customText?: string
     intensity?: number
+    enhancementType?: 'default' | 'edit' | 'sedream'
   }
 }
 
@@ -106,7 +107,8 @@ export async function enhancePromptHybrid(
       const jsonOptions: JSONEnhancementOptions = {
         useDefaults: options.jsonOptions?.useDefaults ?? true,
         customText: options.jsonOptions?.customText,
-        intensity: options.jsonOptions?.intensity ?? 0.8
+        intensity: options.jsonOptions?.intensity ?? 0.8,
+        enhancementType: options.jsonOptions?.enhancementType ?? 'default'
       }
       
       jsonResult = await enhancePromptWithJSON(currentPrompt, jsonOptions);

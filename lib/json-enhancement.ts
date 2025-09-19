@@ -20,6 +20,7 @@ export interface JSONEnhancementOptions {
   useDefaults?: boolean
   customText?: string // Allow custom override of enhancement text
   intensity?: number // 0.0 to 1.0
+  enhancementType?: 'default' | 'edit' | 'sedream' // Specify which enhancement text to use
 }
 
 export interface JSONEnhancementResult {
@@ -108,11 +109,25 @@ export async function enhancePromptWithJSON(
     const {
       useDefaults = true,
       customText,
-      intensity = 1.0
+      intensity = 1.0,
+      enhancementType = 'default'
     } = options
 
-    // Determine enhancement text to use
-    const enhancementText = customText || config.enhancement_text
+    // Determine enhancement text to use based on type
+    let enhancementText = customText
+    if (!enhancementText) {
+      switch (enhancementType) {
+        case 'edit':
+          enhancementText = config.edit_enhancement_text || config.enhancement_text
+          break
+        case 'sedream':
+          enhancementText = config.sedream_enhancement_text || config.enhancement_text
+          break
+        default:
+          enhancementText = config.enhancement_text
+          break
+      }
+    }
     
     // Apply intensity - if less than 1.0, truncate the enhancement text
     let appliedText = enhancementText

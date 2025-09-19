@@ -217,7 +217,8 @@ export default function ImageEditor() {
       jsonOptions: {
         useDefaults: !sedreamCustomEnhancementText || sedreamCustomEnhancementText === sedreamDefaultEnhancementText,
         customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : undefined,
-        intensity: sedreamJsonIntensity
+        intensity: sedreamJsonIntensity,
+        enhancementType: 'sedream'
       }
     }
 
@@ -1222,7 +1223,8 @@ export default function ImageEditor() {
           jsonOptions: {
             useDefaults: !sedreamCustomEnhancementText || sedreamCustomEnhancementText === sedreamDefaultEnhancementText,
             customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : undefined,
-            intensity: sedreamJsonIntensity
+            intensity: sedreamJsonIntensity,
+            enhancementType: 'sedream'
           }
         }
         

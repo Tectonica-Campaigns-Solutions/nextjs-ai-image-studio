@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
         const enhancementResult = await enhancePromptWithJSON(
           customEnhancementText,
           { 
-            intensity: jsonIntensity
+            intensity: jsonIntensity,
+            enhancementType: 'sedream'
           }
         )
         
