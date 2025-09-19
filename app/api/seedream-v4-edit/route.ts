@@ -70,15 +70,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Use customEnhancementText as the main prompt (it's mandatory now)
-    let finalPrompt = customEnhancementText.trim()
-
-    // Apply JSON Enhancement if requested
-    if (useJSONEnhancement) {
+    // Use the prompt if provided (already enhanced by frontend), otherwise use customEnhancementText
+    let finalPrompt = prompt.trim() || customEnhancementText.trim()
+    
+    // Only apply JSON Enhancement if no prompt provided (fallback case)
+    if (!prompt.trim() && useJSONEnhancement && customEnhancementText.trim()) {
       try {
         const { enhancePromptWithJSON } = await import("@/lib/json-enhancement")
         
-        console.log("[SeDream v4 Edit] Applying JSON enhancement to custom enhancement text...")
+        console.log("[SeDream v4 Edit] No enhanced prompt provided, applying JSON enhancement to custom text...")
         
         const enhancementResult = await enhancePromptWithJSON(
           customEnhancementText,
@@ -93,14 +93,14 @@ export async function POST(request: NextRequest) {
           console.log("[SeDream v4 Edit] Enhancement applied successfully")
         } else {
           console.warn("[SeDream v4 Edit] Enhancement failed, using original custom text")
-          // Continue with original custom text if enhancement fails
           finalPrompt = customEnhancementText.trim()
         }
       } catch (enhancementError) {
         console.error("[SeDream v4 Edit] Enhancement error:", enhancementError)
-        // Continue with original custom text if enhancement fails
         finalPrompt = customEnhancementText.trim()
       }
+    } else if (prompt.trim()) {
+      console.log("[SeDream v4 Edit] Using enhanced prompt from frontend")
     }
 
     console.log("[SeDream v4 Edit] Final prompt:", finalPrompt || "(no prompt)")
