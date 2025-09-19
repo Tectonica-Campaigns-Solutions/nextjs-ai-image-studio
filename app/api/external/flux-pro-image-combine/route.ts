@@ -261,9 +261,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Apply enhancement text directly to the prompt
-    finalPrompt = `${prompt}, ${enhancementText}`
-    console.log("[External Flux Combine] Enhanced prompt:", finalPrompt)
+    // Apply enhancement text directly to the prompt if available
+    if (enhancementText) {
+      finalPrompt = `${prompt}, ${enhancementText}`
+      console.log("[External Flux Combine] Enhanced prompt:", finalPrompt)
+    } else {
+      console.log("[External Flux Combine] No enhancement text available, using original prompt")
+    }
 
     // Configure Fal.ai client
     fal.config({

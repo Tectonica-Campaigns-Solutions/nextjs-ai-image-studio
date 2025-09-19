@@ -132,9 +132,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Apply enhancement text directly to the prompt
-    finalPrompt = `${prompt}, ${enhancementText}`
-    console.log("[FLUX-COMBINE] Enhanced prompt:", finalPrompt)
+    // Apply enhancement text directly to the prompt if available
+    if (enhancementText) {
+      finalPrompt = `${prompt}, ${enhancementText}`
+      console.log("[FLUX-COMBINE] Enhanced prompt:", finalPrompt)
+    } else {
+      console.log("[FLUX-COMBINE] No enhancement text available, using original prompt")
+    }
 
     console.log("[FLUX-COMBINE] Final prompt:", finalPrompt)
 
