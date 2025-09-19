@@ -980,34 +980,21 @@ export default function ImageEditor() {
     setFluxCombineError("")
 
     try {
-      // Apply JSON enhancement if enabled
+      // For Combine Images, enhancement is handled by the backend
+      // Send original prompt and JSON options to avoid double enhancement
       let finalPrompt = fluxCombinePrompt
-      if (fluxCombineUseJSONEnhancement) {
-        try {
-          const hybridOptions: HybridEnhancementOptions = {
-            useRAG: false, // Only JSON for Combine Images
-            useJSONEnhancement: true,
-            jsonOptions: {
-              useDefaults: !fluxCombineCustomEnhancementText || fluxCombineCustomEnhancementText === fluxCombineDefaultEnhancementText,
-              customText: fluxCombineCustomEnhancementText !== fluxCombineDefaultEnhancementText ? fluxCombineCustomEnhancementText : undefined,
-              intensity: fluxCombineJsonIntensity
-            }
-          }
-
-          const enhancementResult = await enhancePromptHybrid(fluxCombinePrompt, hybridOptions)
-          finalPrompt = enhancementResult.enhancedPrompt
-          
-          console.log("[COMBINE] Enhanced prompt:", finalPrompt)
-        } catch (error) {
-          console.warn("[COMBINE] Enhancement failed, using original prompt:", error)
-          finalPrompt = fluxCombinePrompt
-        }
-      }
 
       const formData = new FormData()
       
       formData.append("prompt", finalPrompt)
       formData.append("useRag", "false")
+      
+      // Add JSON enhancement options for backend processing
+      const jsonOptions = {
+        customText: fluxCombineCustomEnhancementText !== fluxCombineDefaultEnhancementText ? fluxCombineCustomEnhancementText : '',
+        intensity: fluxCombineJsonIntensity
+      }
+      formData.append("jsonOptions", JSON.stringify(jsonOptions))
       
       // Add uploaded image files
       fluxCombineImages.forEach((file, index) => {
@@ -1054,8 +1041,12 @@ export default function ImageEditor() {
 
       const result = await response.json()
       
-      // Capture generated prompt (use the enhanced prompt we sent)
-      setFluxCombineGeneratedPrompt(finalPrompt)
+      // Capture generated prompt (use the enhanced prompt from backend)
+      if (result.prompt) {
+        setFluxCombineGeneratedPrompt(result.prompt)
+      } else {
+        setFluxCombineGeneratedPrompt(finalPrompt)
+      }
       
       if (result.success && result.image) {
         setFluxCombineResult(result.image)
