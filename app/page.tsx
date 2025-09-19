@@ -1214,28 +1214,9 @@ export default function ImageEditor() {
     setSedreamError("")
 
     try {
-      // Apply JSON Enhancement if enabled and prompt provided
+      // For SeDream v4, enhancement is handled by the backend
+      // Send original prompt and JSON options to avoid double enhancement
       let finalPrompt = sedreamPrompt
-      if (useSedreamJSONEnhancement && sedreamPrompt.trim()) {
-        const hybridOptions: HybridEnhancementOptions = {
-          useRAG: false, // Only JSON for SeDream
-          useJSONEnhancement: true,
-          jsonOptions: {
-            useDefaults: !sedreamCustomEnhancementText || sedreamCustomEnhancementText === sedreamDefaultEnhancementText,
-            customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : undefined,
-            intensity: sedreamJsonIntensity,
-            enhancementType: 'sedream'
-          }
-        }
-        
-        try {
-          const result = await enhancePromptHybrid(sedreamPrompt, hybridOptions)
-          finalPrompt = result.enhancedPrompt
-        } catch (error) {
-          console.warn('SeDream JSON Enhancement failed, using original prompt:', error)
-          // Continue with original prompt if enhancement fails
-        }
-      }
 
       const formData = new FormData()
       formData.append("image", sedreamImage)
@@ -1245,6 +1226,13 @@ export default function ImageEditor() {
       formData.append("useJSONEnhancement", useSedreamJSONEnhancement.toString())
       formData.append("jsonIntensity", sedreamJsonIntensity.toString())
       formData.append("customEnhancementText", sedreamCustomEnhancementText)
+      
+      // Add JSON enhancement options for backend processing
+      const jsonOptions = {
+        customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : '',
+        intensity: sedreamJsonIntensity
+      }
+      formData.append("jsonOptions", JSON.stringify(jsonOptions))
 
       const response = await fetch("/api/seedream-v4-edit", {
         method: "POST",

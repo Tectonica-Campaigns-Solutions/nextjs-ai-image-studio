@@ -45,6 +45,24 @@ export async function POST(request: NextRequest) {
     const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
     const jsonIntensity = parseFloat(formData.get("jsonIntensity") as string) || 1.0
     const customEnhancementText = (formData.get("customEnhancementText") as string) || ""
+    
+    // Parse JSON options from frontend
+    const jsonOptionsStr = formData.get("jsonOptions") as string
+    let jsonOptions: any = {}
+    if (jsonOptionsStr) {
+      try {
+        jsonOptions = JSON.parse(jsonOptionsStr)
+      } catch (error) {
+        console.warn("[SeDream v4 Edit] Failed to parse JSON options:", error)
+      }
+    }
+
+    // Set default values for jsonOptions if not provided
+    const defaultJsonOptions = {
+      intensity: jsonIntensity,
+      customText: jsonOptions.customText || '',
+      ...jsonOptions
+    }
 
     console.log("[SeDream v4 Edit] Request parameters:", {
       hasImage: !!image,
@@ -70,37 +88,38 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Use the prompt if provided (already enhanced by frontend), otherwise use customEnhancementText
-    let finalPrompt = prompt.trim() || customEnhancementText.trim()
+    console.log("[SeDream v4 Edit] Debug - received parameters:")
+    console.log("  - prompt:", prompt ? `"${prompt.substring(0, 100)}..."` : "empty")
+    console.log("  - useJSONEnhancement:", useJSONEnhancement)
+    console.log("  - defaultJsonOptions:", defaultJsonOptions)
+
+    // Use original prompt and apply SeDream enhancement (always enabled)
+    let finalPrompt = prompt
+    let enhancementText = defaultJsonOptions.customText
     
-    // Only apply JSON Enhancement if no prompt provided (fallback case)
-    if (!prompt.trim() && useJSONEnhancement && customEnhancementText.trim()) {
+    if (!enhancementText) {
+      // Try to load sedream_enhancement_text from config first
       try {
-        const { enhancePromptWithJSON } = await import("@/lib/json-enhancement")
-        
-        console.log("[SeDream v4 Edit] No enhanced prompt provided, applying JSON enhancement to custom text...")
-        
-        const enhancementResult = await enhancePromptWithJSON(
-          customEnhancementText,
-          { 
-            intensity: jsonIntensity,
-            enhancementType: 'sedream'
-          }
-        )
-        
-        if (enhancementResult && enhancementResult.enhancedPrompt) {
-          finalPrompt = enhancementResult.enhancedPrompt
-          console.log("[SeDream v4 Edit] Enhancement applied successfully")
-        } else {
-          console.warn("[SeDream v4 Edit] Enhancement failed, using original custom text")
-          finalPrompt = customEnhancementText.trim()
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+        const { success, config } = await response.json()
+        if (success && config?.sedream_enhancement_text) {
+          enhancementText = config.sedream_enhancement_text
+          console.log("[SeDream v4 Edit] Loaded sedream_enhancement_text:", enhancementText.substring(0, 100) + "...")
         }
-      } catch (enhancementError) {
-        console.error("[SeDream v4 Edit] Enhancement error:", enhancementError)
-        finalPrompt = customEnhancementText.trim()
+      } catch (error) {
+        console.warn("[SeDream v4 Edit] Could not load from API:", error)
       }
-    } else if (prompt.trim()) {
-      console.log("[SeDream v4 Edit] Using enhanced prompt from frontend")
+    }
+
+    // Apply enhancement text directly to the prompt if available
+    if (enhancementText && prompt.trim()) {
+      finalPrompt = `${prompt}, ${enhancementText}`
+      console.log("[SeDream v4 Edit] Enhanced prompt:", finalPrompt.substring(0, 100) + "...")
+    } else if (!prompt.trim()) {
+      console.log("[SeDream v4 Edit] No prompt provided, using enhancement text only")
+      finalPrompt = enhancementText || ""
+    } else {
+      console.log("[SeDream v4 Edit] No enhancement text available, using original prompt")
     }
 
     console.log("[SeDream v4 Edit] Final prompt:", finalPrompt || "(no prompt)")
