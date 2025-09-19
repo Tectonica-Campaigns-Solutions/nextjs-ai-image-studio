@@ -94,7 +94,7 @@ export default function CombineModal({
           prompt: promptValue,
           imageUrls: [imageUrl, ...uploadedImages.map((f) => f.fileUrl)],
           settings: {
-            aspect_ratio: imageSize || "3:4",
+            aspect_ratio: imageSize || "1:1",
           },
         }),
       });
