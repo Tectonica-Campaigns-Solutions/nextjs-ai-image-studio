@@ -4,8 +4,8 @@ import { SidebarBotType } from "./types";
 export const bots: SidebarBotType[] = [
   {
     id: "copy_assistant",
-    name: "Copy",
-    description: "Assistant for document analysis and information extraction",
+    name: "Written Content Bot",
+    description: "Creates aligned written campaign communications",
     icon: FileText,
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
@@ -18,8 +18,8 @@ export const bots: SidebarBotType[] = [
   },
   {
     id: "strategy_assistant",
-    name: "Strategy",
-    description: "Assistant for strategic planning and decision making",
+    name: " Strategy Planning Bot",
+    description: "Guides local campaign plans, aligned organizing and mobilizing tactics",
     icon: Brain,
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
