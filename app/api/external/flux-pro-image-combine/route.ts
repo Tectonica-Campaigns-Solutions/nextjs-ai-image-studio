@@ -281,6 +281,7 @@ export async function POST(request: NextRequest) {
       num_images: 1, // Always 1 for combination
       safety_tolerance: 2,
       output_format: "jpeg",
+      seed: 1234, // Default seed for consistent results
       enhance_prompt: false
     }
 

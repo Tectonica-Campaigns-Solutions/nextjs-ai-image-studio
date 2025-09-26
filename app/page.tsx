@@ -35,7 +35,7 @@ export default function ImageEditor() {
     acceleration: "none",
     enable_safety_checker: true,
     sync_mode: false,
-    seed: "",
+    seed: "1234",
     width: "",
     height: ""
   })
@@ -69,7 +69,7 @@ export default function ImageEditor() {
     output_format: "png",
     enable_safety_checker: true,
     negative_prompt: "",
-    seed: "",
+    seed: "1234",
     width: "",
     height: ""
   })
@@ -89,7 +89,7 @@ export default function ImageEditor() {
     output_format: "jpeg",
     enable_safety_checker: true,
     raw: false, // Raw mode setting
-    seed: ""
+    seed: "1234"
   })
   const [fluxUltraFinetuneId, setFluxUltraFinetuneId] = useState("a4bd761c-0f90-41cc-be78-c7b6cf22285a")
   const [fluxUltraFinetuneStrength, setFluxUltraFinetuneStrength] = useState(1.0)
@@ -248,7 +248,7 @@ export default function ImageEditor() {
     num_images: 4, // Default for multi generation
     output_format: "jpg",
     safety_tolerance: 2,
-    seed: "",
+    seed: "1234",
     width: "",
     height: ""
   })
@@ -275,7 +275,7 @@ export default function ImageEditor() {
     num_images: 1,
     output_format: "jpeg",
     safety_tolerance: 2,
-    seed: "",
+    seed: "1234",
     enhance_prompt: false
   })
   const [fluxCombineResult, setFluxCombineResult] = useState<string>("")
@@ -359,7 +359,7 @@ export default function ImageEditor() {
     acceleration: "none",
     enable_safety_checker: true,
     sync_mode: false,
-    seed: "",
+    seed: "1234",
     width: "",
     height: ""
   })

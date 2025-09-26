@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       num_images: 4, // Multi generation default
       safety_tolerance: 2,
       output_format: "jpg",
-      seed: undefined
+      seed: 1234 // Default seed for consistent results
     }
 
     const mergedSettings = { ...defaultSettings, ...settings }

@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       num_images: 1,
       enable_safety_checker: true,
       output_format: "png",
-      seed: undefined
+      seed: 1234 // Default seed for consistent results
     }
 
     // Merge with user settings

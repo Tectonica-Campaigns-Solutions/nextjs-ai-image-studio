@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       num_images: 1, // Single combined image output
       safety_tolerance: 2,
       output_format: "jpeg",
-      seed: undefined,
+      seed: 1234, // Default seed for consistent results
       enhance_prompt: false
     }
 

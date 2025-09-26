@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
         prompt: finalPrompt, // Use RAG-enhanced prompt
         image_size: settings.image_size || "landscape_4_3",
         num_inference_steps: settings.num_inference_steps || 30,
-        seed: settings.seed || undefined,
+        seed: settings.seed || 1234, // Default seed for consistent results
         guidance_scale: settings.guidance_scale || 2.5,
         sync_mode: settings.sync_mode || false,
         num_images: settings.num_images || 1,

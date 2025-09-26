@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       loras: settings.loras || [],
       
       // Optional settings
-      ...(settings.seed && { seed: parseInt(settings.seed as string) }),
+      seed: settings.seed ? parseInt(settings.seed as string) : 1234, // Default seed for consistent results
       ...(settings.width && { width: Math.min(Math.max(parseInt(settings.width as string), 256), 2048) }),
       ...(settings.height && { height: Math.min(Math.max(parseInt(settings.height as string), 256), 2048) }),
     }
