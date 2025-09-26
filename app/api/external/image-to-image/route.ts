@@ -146,7 +146,8 @@ export async function POST(request: NextRequest) {
       negative_prompt: "",
       acceleration: "none",
       enable_safety_checker: true,
-      sync_mode: false
+      sync_mode: false,
+      seed: 1234 // Default seed for consistent results
     }
     
     const mergedSettings = { ...defaultSettings, ...settings }

@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         prompt: finalPrompt,
         image_size: mergedSettings.image_size || "landscape_4_3",
         num_inference_steps: mergedSettings.num_inference_steps || 30,
-        seed: mergedSettings.seed || undefined,
+        seed: mergedSettings.seed || 1234, // Default seed for consistent results
         guidance_scale: mergedSettings.guidance_scale || 2.5,
         sync_mode: mergedSettings.sync_mode || false,
         num_images: mergedSettings.num_images || 1,
