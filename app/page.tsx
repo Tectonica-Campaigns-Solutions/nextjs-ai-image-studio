@@ -329,51 +329,6 @@ export default function ImageEditor() {
   const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
   const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
 
-  // Qwen Image-to-Image States
-  const [img2imgFile, setImg2imgFile] = useState<File | null>(null)
-  const [img2imgPreviewUrl, setImg2imgPreviewUrl] = useState<string>("")
-  const [img2imgPrompt, setImg2imgPrompt] = useState("")
-  const [img2imgSettings, setImg2imgSettings] = useState<{
-    image_size: string;
-    num_inference_steps: number;
-    guidance_scale: number;
-    strength: number;
-    num_images: number;
-    output_format: string;
-    negative_prompt: string;
-    acceleration: string;
-    enable_safety_checker: boolean;
-    sync_mode: boolean;
-    seed: string;
-    width: string;
-    height: string;
-    loras?: Array<{ path: string; scale: number }>;
-  }>({
-    image_size: "landscape_4_3",
-    num_inference_steps: 30,
-    guidance_scale: 2.5,
-    strength: 0.8,
-    num_images: 1,
-    output_format: "png",
-    negative_prompt: "",
-    acceleration: "none",
-    enable_safety_checker: true,
-    sync_mode: false,
-    seed: "1234",
-    width: "",
-    height: ""
-  })
-  const [img2imgResult, setImg2imgResult] = useState<string[]>([])
-  const [isImg2imgGenerating, setIsImg2imgGenerating] = useState(false)
-  const [img2imgError, setImg2imgError] = useState<string>("")
-  const [useRagImg2img, setUseRagImg2img] = useState(true)
-  const [img2imgGeneratedPrompt, setImg2imgGeneratedPrompt] = useState<string>("")
-  const [showImg2imgAdvanced, setShowImg2imgAdvanced] = useState(false)
-  const [useImg2imgLoRA, setUseImg2imgLoRA] = useState(true)
-  const [img2imgLoraUrl, setImg2imgLoraUrl] = useState("https://v3.fal.media/files/elephant/YOSyiUVvNDHBF-V3pLTM1_pytorch_lora_weights.safetensors")
-  const [img2imgTriggerPhrase, setImg2imgTriggerPhrase] = useState("MDF-9-9-2025B")
-  const [img2imgLoraScale, setImg2imgLoraScale] = useState(1.3)
-
   // Qwen LoRA Training States
   const [trainingFile, setTrainingFile] = useState<File | null>(null)
   const [trainingSettings, setTrainingSettings] = useState({
@@ -1257,110 +1212,6 @@ export default function ImageEditor() {
     }
   }
 
-  // Image-to-Image handlers
-  const handleImg2imgFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setImg2imgError("Please select a valid image file")
-        return
-      }
-
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setImg2imgError("Image file must be smaller than 10MB")
-        return
-      }
-
-      setImg2imgFile(file)
-      setImg2imgError("")
-
-      // Create preview URL
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImg2imgPreviewUrl(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleImg2imgSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-
-    if (!img2imgFile || !img2imgPrompt.trim()) {
-      setImg2imgError("Please select an image and enter a prompt")
-      return
-    }
-
-    setIsImg2imgGenerating(true)
-    setImg2imgError("")
-
-    try {
-      const formData = new FormData()
-      
-      // Enhance prompt with trigger phrase if using custom LoRA
-      let finalPrompt = img2imgPrompt
-      if (useImg2imgLoRA && img2imgTriggerPhrase.trim()) {
-        finalPrompt = `${img2imgTriggerPhrase}, ${img2imgPrompt}`
-      }
-      
-      formData.append("image", img2imgFile)
-      formData.append("prompt", finalPrompt)
-      formData.append("useRAG", useRagImg2img.toString())
-      
-      // Add active RAG information
-      const activeRAG = getActiveRAG()
-      if (useRagImg2img && activeRAG) {
-        formData.append("activeRAGId", activeRAG.id)
-        formData.append("activeRAGName", activeRAG.name)
-      }
-
-      // Prepare settings object with LoRA if enabled
-      const settingsWithLora = { ...img2imgSettings }
-      if (useImg2imgLoRA && img2imgLoraUrl.trim()) {
-        settingsWithLora.loras = [{
-          path: img2imgLoraUrl,
-          scale: img2imgLoraScale
-        }]
-      }
-
-      formData.append("settings", JSON.stringify(settingsWithLora))
-
-      const response = await fetch("/api/qwen-image-to-image", {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        if (errorData.blocked) {
-          throw new Error(handleModerationError(errorData))
-        }
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      
-      // Capture generated prompt if available
-      if (result.finalPrompt) {
-        setImg2imgGeneratedPrompt(result.finalPrompt)
-      } else {
-        setImg2imgGeneratedPrompt(finalPrompt)
-      }
-      
-      if (result.success && result.images && result.images.length > 0) {
-        setImg2imgResult(result.images)
-      } else {
-        throw new Error("No images received from server")
-      }
-    } catch (err) {
-      setImg2imgError(err instanceof Error ? err.message : "Failed to generate image-to-image")
-    } finally {
-      setIsImg2imgGenerating(false)
-    }
-  }
-
   // Training handlers
   const handleTrainingFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -1537,7 +1388,6 @@ export default function ImageEditor() {
           <TabsTrigger value="qwen-text-to-image" style={{ display: 'none' }}>Generate Image</TabsTrigger>
           <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
-          {/* <TabsTrigger value="qwen-image-to-image">Image to Image</TabsTrigger> */}
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
@@ -2865,27 +2715,6 @@ export default function ImageEditor() {
               </Card>
             </div>
           </TabsContent>
-
-          {/* Image-to-Image Tab - HIDDEN
-          <TabsContent value="qwen-image-to-image" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              Upload and Form Section
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ImageIcon className="h-5 w-5" />
-                    Transform Image
-                  </CardTitle>
-                  <CardDescription>
-                    Upload an image and transform it using AI with Qwen Image-to-Image
-                  </CardDescription>
-                </CardHeader>
-                ... rest of content hidden ...
-              </Card>
-            </div>
-            Generated Prompt Display hidden...
-          </TabsContent>
-          */}
 
           {/* Edit Image Tab */}
           <TabsContent value="edit-image" className="space-y-6">
