@@ -139,7 +139,7 @@ export class CanonicalPromptProcessor {
     // Build all sections
     const keepSection = `KEEP (do not change): ${this.buildKeepSection(config.keepOptions)}.`;
     const applySection = `APPLY (style): ${this.buildApplySection(config.applyStyle)}.`;
-    const styleSection = `STYLE: ${this.buildStyleSection(config.styleBackground)}.`;
+    const styleSection = `STYLE (background): ${this.buildStyleSection(config.styleBackground)}.`;
     const subjectSection = `SUBJECT: ${this.buildSubjectSection(config.subjectFraming, config.subjectComposition)}.`;
     const qualitySection = `QUALITY: ${this.buildQualitySection()}.`;
     const negativeSection = `NEGATIVE: ${this.buildNegativeSection()}.`;
