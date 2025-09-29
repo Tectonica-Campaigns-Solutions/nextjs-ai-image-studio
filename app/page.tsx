@@ -21,6 +21,7 @@ import { useRAGStore } from "@/lib/rag-store"
 import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, type HybridEnhancementOptions } from "@/lib/hybrid-enhancement"
 import { getEnhancementText, getEditEnhancementText, getSedreamEnhancementText } from "@/lib/json-enhancement"
 import { EnhancementPreview } from "@/components/enhancement-preview"
+import type { CanonicalPromptConfig } from "@/lib/canonical-prompt"
 
 export default function ImageEditor() {
   // Flux LoRA Text-to-Image States
@@ -138,6 +139,64 @@ export default function ImageEditor() {
     }
   }
 
+  // Load canonical prompt options
+  const loadCanonicalOptions = async () => {
+    try {
+      const response = await fetch('/api/canonical-prompt-options')
+      const data = await response.json()
+      if (data.success) {
+        setCanonicalOptions(data.data)
+        console.log('Loaded canonical options:', data.data)
+      }
+    } catch (error) {
+      console.warn('Failed to load canonical options:', error)
+    }
+  }
+
+  // Generate canonical prompt preview
+  const generateCanonicalPreview = async () => {
+    if (!useCanonicalPrompt) {
+      setCanonicalPreview("")
+      return
+    }
+
+    try {
+      const response = await fetch('/api/canonical-prompt-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          config: {
+            ...canonicalConfig,
+            userInput: fluxCombinePrompt
+          }
+        })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setCanonicalPreview(data.data.canonicalPrompt)
+        console.log('Generated canonical preview:', data.data.canonicalPrompt)
+      }
+    } catch (error) {
+      console.warn('Failed to generate canonical preview:', error)
+      setCanonicalPreview("")
+    }
+  }
+
+  // Load canonical options on component mount
+  useEffect(() => {
+    loadCanonicalOptions()
+  }, [])
+
+  // Update canonical preview when config or prompt changes
+  useEffect(() => {
+    if (useCanonicalPrompt) {
+      generateCanonicalPreview()
+    }
+  }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
+
   // Edit Image Enhancement Preview Function
   const generateEditEnhancementPreview = async (prompt: string) => {
     if (!prompt.trim() || !useEditJSONEnhancement) {
@@ -247,6 +306,29 @@ export default function ImageEditor() {
   const [fluxCombineError, setFluxCombineError] = useState<string>("")
   const [fluxCombineGeneratedPrompt, setFluxCombineGeneratedPrompt] = useState<string>("")
   const [showFluxCombineAdvanced, setShowFluxCombineAdvanced] = useState(false)
+
+  // Canonical Prompt States
+  const [useCanonicalPrompt, setUseCanonicalPrompt] = useState(false)
+  const [canonicalConfig, setCanonicalConfig] = useState<CanonicalPromptConfig>({
+    userInput: "",
+    keepOptions: {
+      identity: true,
+      pose: true,
+      layout: true,
+      text: false
+    },
+    applyStyle: {
+      materials: "screen-printed poster",
+      lighting: "high contrast", 
+      texture: "diagonal halftone lines",
+      contrast: "bold duotone"
+    },
+    styleBackground: "smooth gradient, no texture overlay, clean background",
+    subjectFraming: "medium shot",
+    subjectComposition: "centered"
+  })
+  const [canonicalOptions, setCanonicalOptions] = useState<any>(null)
+  const [canonicalPreview, setCanonicalPreview] = useState<string>("")
 
   // Flux Combine JSON Enhancement States
   const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(true) // Enabled by default
@@ -835,6 +917,12 @@ export default function ImageEditor() {
       
       formData.append("settings", JSON.stringify(settings))
       formData.append("orgType", "general")
+
+      // Add canonical prompt parameters
+      formData.append("useCanonicalPrompt", useCanonicalPrompt.toString())
+      if (useCanonicalPrompt) {
+        formData.append("canonicalConfig", JSON.stringify(canonicalConfig))
+      }
 
       const response = await fetch("/api/flux-pro-image-combine", {
         method: "POST",
@@ -1848,6 +1936,264 @@ export default function ImageEditor() {
                         onChange={(e) => setFluxCombinePrompt(e.target.value)}
                         className="min-h-[100px]"
                       />
+                    </div>
+
+                    {/* Canonical Prompt Section */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="use-canonical-prompt"
+                              checked={useCanonicalPrompt}
+                              onCheckedChange={setUseCanonicalPrompt}
+                              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                            />
+                            <Label htmlFor="use-canonical-prompt" className="font-medium">
+                              Structured Canonical Prompt
+                            </Label>
+                          </div>
+                          <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                            BETA
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {useCanonicalPrompt && (
+                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                          <div className="text-sm text-muted-foreground">
+                            Configure advanced style transfer options with structured prompting
+                          </div>
+
+                          {/* Keep Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Elements to Keep (unchanged)</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {canonicalOptions?.keepOptions && Object.entries(canonicalOptions.keepOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`keep-${key}`}
+                                    checked={canonicalConfig.keepOptions?.[key as keyof typeof canonicalConfig.keepOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setCanonicalConfig(prev => ({
+                                        ...prev,
+                                        keepOptions: {
+                                          ...prev.keepOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`keep-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Apply Style Options */}
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Materials */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Materials</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.materials}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      materials: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.materials?.map((material: string) => (
+                                    <SelectItem key={material} value={material} className="text-xs">
+                                      {material}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Lighting */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Lighting</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.lighting}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      lighting: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.lighting?.map((lighting: string) => (
+                                    <SelectItem key={lighting} value={lighting} className="text-xs">
+                                      {lighting}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Texture */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Texture</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.texture}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      texture: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.texture?.map((texture: string) => (
+                                    <SelectItem key={texture} value={texture} className="text-xs">
+                                      {texture}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Contrast */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Contrast</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.contrast}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      contrast: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.contrast?.map((contrast: string) => (
+                                    <SelectItem key={contrast} value={contrast} className="text-xs">
+                                      {contrast}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Style Background */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Background Style</Label>
+                            <Select
+                              value={canonicalConfig.styleBackground}
+                              onValueChange={(value) => 
+                                setCanonicalConfig(prev => ({
+                                  ...prev,
+                                  styleBackground: value
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {canonicalOptions?.styleBackgrounds?.map((bg: string) => (
+                                  <SelectItem key={bg} value={bg} className="text-xs">
+                                    {bg.substring(0, 50)}...
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Subject Options */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Framing</Label>
+                              <Select
+                                value={canonicalConfig.subjectFraming}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subjectFraming: value
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.framing?.map((framing: string) => (
+                                    <SelectItem key={framing} value={framing} className="text-xs">
+                                      {framing}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Composition</Label>
+                              <Select
+                                value={canonicalConfig.subjectComposition}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subjectComposition: value
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.composition?.map((composition: string) => (
+                                    <SelectItem key={composition} value={composition} className="text-xs">
+                                      {composition}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Preview */}
+                          {canonicalPreview && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Generated Prompt Preview</Label>
+                              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
+                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                  {canonicalPreview}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* JSON Enhancement Section */}
