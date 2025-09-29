@@ -185,18 +185,6 @@ export default function ImageEditor() {
     }
   }
 
-  // Load canonical options on component mount
-  useEffect(() => {
-    loadCanonicalOptions()
-  }, [])
-
-  // Update canonical preview when config or prompt changes
-  useEffect(() => {
-    if (useCanonicalPrompt) {
-      generateCanonicalPreview()
-    }
-  }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
-
   // Edit Image Enhancement Preview Function
   const generateEditEnhancementPreview = async (prompt: string) => {
     if (!prompt.trim() || !useEditJSONEnhancement) {
@@ -377,6 +365,18 @@ export default function ImageEditor() {
   const [sedreamEnhancementMeta, setSedreamEnhancementMeta] = useState<any>(null)
   const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
   const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
+
+  // Load canonical options on component mount
+  useEffect(() => {
+    loadCanonicalOptions()
+  }, [])
+
+  // Update canonical preview when config or prompt changes
+  useEffect(() => {
+    if (useCanonicalPrompt) {
+      generateCanonicalPreview()
+    }
+  }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
 
   // Helper component to display generated prompt
   const GeneratedPromptDisplay = ({ prompt, title }: { prompt: string; title: string }) => {
