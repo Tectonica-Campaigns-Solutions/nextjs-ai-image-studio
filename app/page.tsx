@@ -1969,7 +1969,7 @@ export default function ImageEditor() {
                           <div className="space-y-3">
                             <Label className="text-sm font-medium">Elements to Keep (unchanged)</Label>
                             <div className="grid grid-cols-2 gap-3">
-                              {canonicalOptions?.keepOptions && Object.entries(canonicalOptions.keepOptions).map(([key, option]: [string, any]) => (
+                              {canonicalOptions?.availableOptions?.keepOptions && Object.entries(canonicalOptions.availableOptions.keepOptions).map(([key, option]: [string, any]) => (
                                 <div key={key} className="flex items-center space-x-2">
                                   <Checkbox
                                     id={`keep-${key}`}
@@ -2011,7 +2011,7 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.materials?.map((material: string) => (
+                                  {canonicalOptions?.availableOptions?.materials?.map((material: string) => (
                                     <SelectItem key={material} value={material} className="text-xs">
                                       {material}
                                     </SelectItem>
@@ -2039,7 +2039,7 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.lighting?.map((lighting: string) => (
+                                  {canonicalOptions?.availableOptions?.lighting?.map((lighting: string) => (
                                     <SelectItem key={lighting} value={lighting} className="text-xs">
                                       {lighting}
                                     </SelectItem>
@@ -2067,7 +2067,7 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.texture?.map((texture: string) => (
+                                  {canonicalOptions?.availableOptions?.texture?.map((texture: string) => (
                                     <SelectItem key={texture} value={texture} className="text-xs">
                                       {texture}
                                     </SelectItem>
@@ -2095,7 +2095,7 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.contrast?.map((contrast: string) => (
+                                  {canonicalOptions?.availableOptions?.contrast?.map((contrast: string) => (
                                     <SelectItem key={contrast} value={contrast} className="text-xs">
                                       {contrast}
                                     </SelectItem>
@@ -2121,7 +2121,7 @@ export default function ImageEditor() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {canonicalOptions?.styleBackgrounds?.map((bg: string) => (
+                                {canonicalOptions?.availableOptions?.styleBackgrounds?.map((bg: string) => (
                                   <SelectItem key={bg} value={bg} className="text-xs">
                                     {bg.substring(0, 50)}...
                                   </SelectItem>
@@ -2147,7 +2147,7 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.framing?.map((framing: string) => (
+                                  {canonicalOptions?.availableOptions?.framing?.map((framing: string) => (
                                     <SelectItem key={framing} value={framing} className="text-xs">
                                       {framing}
                                     </SelectItem>
@@ -2171,7 +2171,7 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.composition?.map((composition: string) => (
+                                  {canonicalOptions?.availableOptions?.composition?.map((composition: string) => (
                                     <SelectItem key={composition} value={composition} className="text-xs">
                                       {composition}
                                     </SelectItem>
