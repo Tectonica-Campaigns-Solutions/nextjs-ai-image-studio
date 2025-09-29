@@ -1989,6 +1989,23 @@ export default function ImageEditor() {
                           </div>
 
                           <div className="space-y-2">
+                            <Label htmlFor="flux-combine-safety">
+                              Safety Tolerance: {fluxCombineSettings.safety_tolerance}
+                            </Label>
+                            <Slider
+                              id="flux-combine-safety"
+                              min={1}
+                              max={5}
+                              step={1}
+                              value={[fluxCombineSettings.safety_tolerance]}
+                              onValueChange={(value) => setFluxCombineSettings(prev => ({ ...prev, safety_tolerance: value[0] }))}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              1: Strictest • 2: Strict • 3: Balanced • 4: Permissive • 5: Most Permissive
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
                             <Label htmlFor="flux-combine-output-format">Output Format</Label>
                             <Select
                               value={fluxCombineSettings.output_format}
