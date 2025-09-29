@@ -239,7 +239,7 @@ export default function ImageEditor() {
     num_images: 1,
     output_format: "jpeg",
     safety_tolerance: 2,
-    seed: "1234",
+    seed: "",
     enhance_prompt: false
   })
   const [fluxCombineResult, setFluxCombineResult] = useState<string>("")
