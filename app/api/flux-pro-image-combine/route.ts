@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,18 @@ export async function POST(request: NextRequest) {
         jsonOptions = JSON.parse(jsonOptionsStr)
       } catch (error) {
         console.warn("[FLUX-COMBINE] Failed to parse JSON options:", error)
+      }
+    }
+
+    // Canonical Prompt parameters
+    const useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
+    const canonicalConfigStr = formData.get("canonicalConfig") as string
+    let canonicalConfig: CanonicalPromptConfig = {}
+    if (canonicalConfigStr) {
+      try {
+        canonicalConfig = JSON.parse(canonicalConfigStr)
+      } catch (error) {
+        console.warn("[FLUX-COMBINE] Failed to parse canonical config:", error)
       }
     }
 
@@ -68,8 +81,10 @@ export async function POST(request: NextRequest) {
     console.log("[FLUX-COMBINE] Image URLs count:", imageUrls.length)
     console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length)
     console.log("[FLUX-COMBINE] Use JSON Enhancement:", useJSONEnhancement)
+    console.log("[FLUX-COMBINE] Use Canonical Prompt:", useCanonicalPrompt)
     console.log("[FLUX-COMBINE] JSON Options:", defaultJsonOptions)
     console.log("[FLUX-COMBINE] JSON Options:", jsonOptions)
+    console.log("[FLUX-COMBINE] Canonical Config:", canonicalConfig)
     console.log("[FLUX-COMBINE] RAG enhancement: disabled for image combination")
     console.log("[FLUX-COMBINE] Settings JSON:", settingsJson)
 
@@ -115,29 +130,46 @@ export async function POST(request: NextRequest) {
     let finalPrompt = prompt
     let ragMetadata = null
 
-    // Apply JSON enhancement with enhancement_text (always enabled)
-    let enhancementText = defaultJsonOptions.customText
-    
-    if (!enhancementText) {
-      // Try to load from config first
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
-        const { success, config } = await response.json()
-        if (success && config?.enhancement_text) {
-          enhancementText = config.enhancement_text
-          console.log("[FLUX-COMBINE] Loaded enhancement_text:", enhancementText)
-        }
-      } catch (error) {
-        console.warn("[FLUX-COMBINE] Could not load from API:", error)
-      }
-    }
-
-    // Apply enhancement text directly to the prompt if available
-    if (enhancementText) {
-      finalPrompt = `${prompt}, ${enhancementText}`
-      console.log("[FLUX-COMBINE] Enhanced prompt:", finalPrompt)
+    // Check if canonical prompt should be used
+    if (useCanonicalPrompt) {
+      // Use canonical prompt processor
+      console.log("[FLUX-COMBINE] Using canonical prompt structure")
+      console.log("[FLUX-COMBINE] Canonical config:", canonicalConfig)
+      
+      // Set user input from original prompt
+      canonicalConfig.userInput = prompt
+      
+      // Generate canonical prompt
+      const result = canonicalPromptProcessor.generateCanonicalPrompt(canonicalConfig)
+      finalPrompt = result.canonicalPrompt
+      
+      console.log("[FLUX-COMBINE] Generated canonical prompt:", finalPrompt)
+      console.log("[FLUX-COMBINE] Processed user input:", result.processedUserInput)
     } else {
-      console.log("[FLUX-COMBINE] No enhancement text available, using original prompt")
+      // Apply JSON enhancement with enhancement_text (legacy method)
+      let enhancementText = defaultJsonOptions.customText
+      
+      if (!enhancementText) {
+        // Try to load from config first
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+          const { success, config } = await response.json()
+          if (success && config?.enhancement_text) {
+            enhancementText = config.enhancement_text
+            console.log("[FLUX-COMBINE] Loaded enhancement_text:", enhancementText)
+          }
+        } catch (error) {
+          console.warn("[FLUX-COMBINE] Could not load from API:", error)
+        }
+      }
+
+      // Apply enhancement text directly to the prompt if available
+      if (enhancementText) {
+        finalPrompt = `${prompt}, ${enhancementText}`
+        console.log("[FLUX-COMBINE] Enhanced prompt (legacy):", finalPrompt)
+      } else {
+        console.log("[FLUX-COMBINE] No enhancement text available, using original prompt")
+      }
     }
 
     console.log("[FLUX-COMBINE] Final prompt:", finalPrompt)
