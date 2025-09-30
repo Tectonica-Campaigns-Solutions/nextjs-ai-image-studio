@@ -187,29 +187,83 @@ export async function POST(request: NextRequest) {
       const url = imageUrls[i]
       try {
         console.log(`[FLUX-COMBINE] Testing existing URL ${i + 1}: ${url.substring(0, 100)}...`)
-        const response = await fetch(url, { method: 'HEAD' })
-        if (response.ok) {
-          uploadedImageUrls.push(url)
-          console.log(`[FLUX-COMBINE] URL ${i + 1} is accessible, using directly`)
-        } else {
-          console.warn(`[FLUX-COMBINE] URL ${i + 1} not directly accessible (${response.status}), will re-upload through fal.ai`)
-          // Download and re-upload through fal.ai
-          const imageResponse = await fetch(url)
-          if (imageResponse.ok) {
-            const imageBlob = await imageResponse.blob()
-            const reuploadedUrl = await fal.storage.upload(imageBlob)
-            uploadedImageUrls.push(reuploadedUrl)
-            console.log(`[FLUX-COMBINE] URL ${i + 1} re-uploaded successfully: ${reuploadedUrl}`)
+        
+        // Basic URL validation first
+        let parsedUrl
+        try {
+          parsedUrl = new URL(url)
+        } catch (urlParseError) {
+          console.error(`[FLUX-COMBINE] Invalid URL format ${i + 1}:`, url)
+          return NextResponse.json({ 
+            error: `Invalid URL format for image ${i + 1}`,
+            details: `The URL is not properly formatted: ${url}`,
+            problematicUrl: url
+          }, { status: 400 })
+        }
+        
+        // Test accessibility with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        
+        try {
+          const response = await fetch(url, { 
+            method: 'HEAD',
+            signal: controller.signal
+          })
+          clearTimeout(timeoutId)
+          
+          if (response.ok) {
+            uploadedImageUrls.push(url)
+            console.log(`[FLUX-COMBINE] URL ${i + 1} is accessible, using directly`)
           } else {
-            throw new Error(`Cannot download image from URL: ${response.status}`)
+            console.warn(`[FLUX-COMBINE] URL ${i + 1} returned ${response.status}, attempting re-upload`)
+            
+            // Try to download and re-upload
+            const imageResponse = await fetch(url, { signal: controller.signal })
+            if (imageResponse.ok) {
+              const imageBlob = await imageResponse.blob()
+              const reuploadedUrl = await fal.storage.upload(imageBlob)
+              uploadedImageUrls.push(reuploadedUrl)
+              console.log(`[FLUX-COMBINE] URL ${i + 1} re-uploaded successfully: ${reuploadedUrl}`)
+            } else {
+              throw new Error(`Cannot download image: HTTP ${imageResponse.status}`)
+            }
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId)
+          
+          // Handle specific network errors
+          if (fetchError instanceof Error) {
+            if (fetchError.name === 'AbortError') {
+              console.error(`[FLUX-COMBINE] URL ${i + 1} timed out`)
+              return NextResponse.json({ 
+                error: `Image URL ${i + 1} timed out`,
+                details: "The URL took too long to respond (>10 seconds)",
+                problematicUrl: url
+              }, { status: 400 })
+            } else if (fetchError.message.includes('ENOTFOUND') || fetchError.message.includes('fetch failed')) {
+              console.error(`[FLUX-COMBINE] URL ${i + 1} domain not found or network error:`, fetchError.message)
+              return NextResponse.json({ 
+                error: `Image URL ${i + 1} is not accessible`,
+                details: `Domain not found or network error: ${parsedUrl.hostname}. Please check if the URL is correct and accessible.`,
+                problematicUrl: url,
+                networkError: true
+              }, { status: 400 })
+            } else {
+              throw fetchError // Re-throw other errors to be handled by outer catch
+            }
+          } else {
+            throw fetchError
           }
         }
+        
       } catch (urlError) {
         console.error(`[FLUX-COMBINE] Failed to process URL ${i + 1}:`, urlError)
         return NextResponse.json({ 
           error: `Failed to process image URL ${i + 1}`,
-          details: urlError instanceof Error ? urlError.message : "Network error",
-          problematicUrl: url
+          details: urlError instanceof Error ? urlError.message : "Unknown network error",
+          problematicUrl: url,
+          suggestion: "Please verify the URL is correct and accessible from the internet"
         }, { status: 400 })
       }
     }
