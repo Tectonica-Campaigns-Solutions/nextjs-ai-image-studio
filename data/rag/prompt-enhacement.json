@@ -80,11 +80,11 @@
       "models": "group of three adults"
     },
     "hardcoded_palette": {
-      "primary": "#6B46C1",
-      "secondary": "#FFFFFF", 
-      "accent": "#EC4899",
-      "highlight": "#F97316",
-      "description": "deep violet, white, bright pink, orange"
+      "primary": "#6E3CCB deep violet",
+      "secondary": "#D8C8F0 light violet", 
+      "accent": "#5C38F2 blue",
+      "highlight": "#F79533 orange",
+      "description": "#6E3CCB, #D8C8F0, #5C38F2, #F79533"
     },
     "keep_options": {
       "identity": {
@@ -105,6 +105,20 @@
       "text": {
         "label": "Keep Text",
         "description": "Maintain any text or typography elements",
+        "default": false
+      }
+    },
+    "preserve_options": {
+      "preserve_primary": {
+        "label": "Preserve Primary Subject",
+        "description": "Keep original colors, textures and details of the main subject intact",
+        "default": false
+      }
+    },
+    "combine_options": {
+      "force_integration": {
+        "label": "Force Secondary Integration",
+        "description": "Ensure secondary image elements are visibly combined",
         "default": false
       }
     },

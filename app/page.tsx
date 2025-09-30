@@ -305,6 +305,12 @@ export default function ImageEditor() {
       layout: true,
       text: false
     },
+    preserveOptions: {
+      preserve_primary: false
+    },
+    combineOptions: {
+      force_integration: false
+    },
     applyStyle: {
       materials: "screen-printed poster",
       lighting: "high contrast", 
@@ -1985,6 +1991,56 @@ export default function ImageEditor() {
                                     }
                                   />
                                   <Label htmlFor={`keep-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Preserve Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Advanced Preservation</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                              {canonicalOptions?.availableOptions?.preserveOptions && Object.entries(canonicalOptions.availableOptions.preserveOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`preserve-${key}`}
+                                    checked={canonicalConfig.preserveOptions?.[key as keyof typeof canonicalConfig.preserveOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setCanonicalConfig(prev => ({
+                                        ...prev,
+                                        preserveOptions: {
+                                          ...prev.preserveOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`preserve-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Combine Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Integration Control</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                              {canonicalOptions?.availableOptions?.combineOptions && Object.entries(canonicalOptions.availableOptions.combineOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`combine-${key}`}
+                                    checked={canonicalConfig.combineOptions?.[key as keyof typeof canonicalConfig.combineOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setCanonicalConfig(prev => ({
+                                        ...prev,
+                                        combineOptions: {
+                                          ...prev.combineOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`combine-${key}`} className="text-sm">{option.label}</Label>
                                 </div>
                               ))}
                             </div>

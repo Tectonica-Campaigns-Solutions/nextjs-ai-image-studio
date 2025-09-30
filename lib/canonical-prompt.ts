@@ -8,6 +8,12 @@ interface CanonicalPromptConfig {
     layout?: boolean;
     text?: boolean;
   };
+  preserveOptions?: {
+    preserve_primary?: boolean;
+  };
+  combineOptions?: {
+    force_integration?: boolean;
+  };
   applyStyle?: {
     materials?: string;
     lighting?: string;
@@ -76,6 +82,38 @@ export class CanonicalPromptProcessor {
   }
 
   /**
+   * Build the PRESERVE section of the prompt
+   */
+  private buildPreserveSection(preserveOptions: CanonicalPromptConfig['preserveOptions'] = {}): string {
+    const defaults = this.canonicalConfig.preserve_options;
+    
+    const preservePrimary = preserveOptions.preserve_primary !== undefined ? 
+      preserveOptions.preserve_primary : defaults.preserve_primary.default;
+
+    if (preservePrimary) {
+      return 'primary subject original colors, textures, and details';
+    }
+    
+    return '';
+  }
+
+  /**
+   * Build the COMBINE section of the prompt
+   */
+  private buildCombineSection(combineOptions: CanonicalPromptConfig['combineOptions'] = {}): string {
+    const defaults = this.canonicalConfig.combine_options;
+    
+    const forceIntegration = combineOptions.force_integration !== undefined ? 
+      combineOptions.force_integration : defaults.force_integration.default;
+
+    if (forceIntegration) {
+      return 'ensure visible integration of secondary image elements';
+    }
+    
+    return '';
+  }
+
+  /**
    * Build the APPLY section of the prompt
    */
   private buildApplySection(applyStyle: CanonicalPromptConfig['applyStyle'] = {}): string {
@@ -137,25 +175,31 @@ export class CanonicalPromptProcessor {
     const taskSection = `TASK: ${taskPrefix}${this.canonicalConfig.base_task}`;
 
     // Build all sections
+    const preserveSection = this.buildPreserveSection(config.preserveOptions);
     const keepSection = `KEEP (do not change): ${this.buildKeepSection(config.keepOptions)}.`;
     const applySection = `APPLY (style): ${this.buildApplySection(config.applyStyle)}.`;
+    const combineSection = this.buildCombineSection(config.combineOptions);
     const styleSection = `STYLE (background): ${this.buildStyleSection(config.styleBackground)}.`;
     const subjectSection = `SUBJECT: ${this.buildSubjectSection(config.subjectFraming, config.subjectComposition)}.`;
     const qualitySection = `QUALITY: ${this.buildQualitySection()}.`;
     const negativeSection = `NEGATIVE: ${this.buildNegativeSection()}.`;
 
-    // Combine all sections
-    const canonicalPrompt = [
-      taskSection,
-      '',
-      keepSection,
-      applySection,
-      '',
-      styleSection,
-      subjectSection,
-      qualitySection,
-      negativeSection
-    ].join('\n');
+    // Combine all sections (only include non-empty optional sections)
+    const sections = [taskSection];
+    
+    if (preserveSection) {
+      sections.push('', `PRESERVE (keep exactly): ${preserveSection}.`);
+    }
+    
+    sections.push('', keepSection, applySection);
+    
+    if (combineSection) {
+      sections.push(`COMBINE (mandatory): ${combineSection}.`);
+    }
+    
+    sections.push('', styleSection, subjectSection, qualitySection, negativeSection);
+
+    const canonicalPrompt = sections.join('\n');
 
     return {
       canonicalPrompt,
@@ -175,7 +219,9 @@ export class CanonicalPromptProcessor {
       styleBackgrounds: this.canonicalConfig.style_backgrounds.options,
       framing: this.canonicalConfig.subject_templates.framing.options,
       composition: this.canonicalConfig.subject_templates.composition.options,
-      keepOptions: this.canonicalConfig.keep_options
+      keepOptions: this.canonicalConfig.keep_options,
+      preserveOptions: this.canonicalConfig.preserve_options,
+      combineOptions: this.canonicalConfig.combine_options
     };
   }
 
@@ -190,6 +236,12 @@ export class CanonicalPromptProcessor {
         pose: this.canonicalConfig.keep_options.pose.default,
         layout: this.canonicalConfig.keep_options.layout.default,
         text: this.canonicalConfig.keep_options.text.default,
+      },
+      preserveOptions: {
+        preserve_primary: this.canonicalConfig.preserve_options.preserve_primary.default,
+      },
+      combineOptions: {
+        force_integration: this.canonicalConfig.combine_options.force_integration.default,
       },
       applyStyle: {
         materials: this.canonicalConfig.apply_style.materials.default,
