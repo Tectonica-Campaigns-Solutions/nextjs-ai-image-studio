@@ -296,7 +296,7 @@ export default function ImageEditor() {
   const [showFluxCombineAdvanced, setShowFluxCombineAdvanced] = useState(false)
 
   // Canonical Prompt States
-  const [useCanonicalPrompt, setUseCanonicalPrompt] = useState(false)
+  const [useCanonicalPrompt, setUseCanonicalPrompt] = useState(true) // Enabled by default
   const [canonicalConfig, setCanonicalConfig] = useState<CanonicalPromptConfig>({
     userInput: "",
     keepOptions: {
@@ -319,7 +319,7 @@ export default function ImageEditor() {
   const [canonicalPreview, setCanonicalPreview] = useState<string>("")
 
   // Flux Combine JSON Enhancement States
-  const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(true) // Enabled by default
+  const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(false) // Disabled by default (Canonical Prompt is preferred)
   const [fluxCombineJsonIntensity, setFluxCombineJsonIntensity] = useState(1.0)
   const [fluxCombineEnhancementPreview, setFluxCombineEnhancementPreview] = useState<string>("")
   const [fluxCombineEnhancementMeta, setFluxCombineEnhancementMeta] = useState<any>(null)
