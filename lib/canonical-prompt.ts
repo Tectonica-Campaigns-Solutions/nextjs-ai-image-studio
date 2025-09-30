@@ -137,9 +137,10 @@ export class CanonicalPromptProcessor {
     const activeOptions: string[] = [];
     
     Object.entries(preserveSecondaryOptions).forEach(([key, value]) => {
-      const isActive = value !== undefined ? value : defaults[key as keyof typeof defaults]?.default;
+      const defaultValue = (defaults as any)[key]?.default;
+      const isActive = value !== undefined ? value : defaultValue;
       if (isActive) {
-        const optionConfig = defaults[key as keyof typeof defaults];
+        const optionConfig = (defaults as any)[key];
         if (optionConfig) {
           // Convert key to readable format
           const readableKey = key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
