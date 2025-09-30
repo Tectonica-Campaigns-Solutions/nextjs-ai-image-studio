@@ -42,7 +42,7 @@ interface ProcessedPromptResult {
 }
 
 export class CanonicalPromptProcessor {
-  private canonicalConfig = promptEnhancement.canonical_prompt;
+  private canonicalConfig = (promptEnhancement as any).canonical_prompt;
 
   /**
    * Process synonyms and cardinality mapping in user input
@@ -55,13 +55,13 @@ export class CanonicalPromptProcessor {
     // Apply synonyms mapping
     Object.entries(this.canonicalConfig.synonyms).forEach(([key, value]) => {
       const regex = new RegExp(`\\b${key}\\b`, 'gi');
-      processed = processed.replace(regex, value);
+      processed = processed.replace(regex, String(value));
     });
 
     // Apply cardinality mapping
     Object.entries(this.canonicalConfig.cardinality_mapping).forEach(([key, value]) => {
       const regex = new RegExp(`\\b${key}\\b`, 'gi');
-      processed = processed.replace(regex, value);
+      processed = processed.replace(regex, String(value));
     });
 
     return processed;

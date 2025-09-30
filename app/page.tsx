@@ -145,8 +145,10 @@ export default function ImageEditor() {
       const response = await fetch('/api/canonical-prompt-options')
       const data = await response.json()
       if (data.success) {
-        setCanonicalOptions(data.data)
         console.log('Loaded canonical options:', data.data)
+        console.log('Secondary fidelity levels:', data.data?.availableOptions?.secondaryFidelityLevels)
+        console.log('Preserve secondary options:', data.data?.availableOptions?.preserveSecondaryOptions)
+        setCanonicalOptions(data.data)
       }
     } catch (error) {
       console.warn('Failed to load canonical options:', error)
@@ -2078,11 +2080,8 @@ export default function ImageEditor() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {canonicalOptions?.availableOptions?.secondaryFidelityLevels && Object.entries(canonicalOptions.availableOptions.secondaryFidelityLevels).map(([key, level]: [string, any]) => (
-                                    <SelectItem key={key} value={key} className="text-xs">
-                                      <div>
-                                        <div className="font-medium">{level.label}</div>
-                                        <div className="text-xs text-muted-foreground">{level.description}</div>
-                                      </div>
+                                    <SelectItem key={key} value={key} className="text-xs" title={level.description}>
+                                      {level.label}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
