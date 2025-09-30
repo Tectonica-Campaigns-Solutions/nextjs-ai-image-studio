@@ -218,21 +218,13 @@ export async function POST(request: NextRequest) {
     // Prepare input for Flux Pro Multi with image combination
     const input: any = {
       prompt: finalPrompt,
-      image_url_1: uploadedImageUrls[0], // First image
-      image_url_2: uploadedImageUrls[1], // Second image
+      image_urls: uploadedImageUrls, // Array of image URLs as expected by the model
       aspect_ratio: mergedSettings.aspect_ratio,
       guidance_scale: mergedSettings.guidance_scale,
       num_images: mergedSettings.num_images,
       safety_tolerance: mergedSettings.safety_tolerance,
       output_format: mergedSettings.output_format,
       enhance_prompt: mergedSettings.enhance_prompt
-    }
-
-    // Add additional images if provided (up to the model's limit)
-    if (uploadedImageUrls.length > 2) {
-      for (let i = 2; i < Math.min(uploadedImageUrls.length, 4); i++) {
-        input[`image_url_${i + 1}`] = uploadedImageUrls[i]
-      }
     }
 
     // Add seed if provided and not empty
@@ -259,9 +251,10 @@ export async function POST(request: NextRequest) {
     console.log("=====================================")
     console.log("Model: fal-ai/flux-pro/kontext/max/multi")
     console.log("Input images count:", uploadedImageUrls.length)
+    console.log("Image URLs:", uploadedImageUrls)
     console.log("Input:", JSON.stringify({
       ...input,
-      image_urls: `[${uploadedImageUrls.length} image URLs]` // Don't log full URLs for privacy
+      image_urls: `[${uploadedImageUrls.length} URLs: ${uploadedImageUrls.map(url => url.substring(0, 50) + '...').join(', ')}]`
     }, null, 2))
     console.log("=====================================")
 
