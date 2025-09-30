@@ -311,6 +311,17 @@ export default function ImageEditor() {
     combineOptions: {
       force_integration: false
     },
+    preserveSecondaryOptions: {
+      architectural_elements: false,
+      statues_sculptures: false,
+      furniture_objects: false,
+      decorative_items: false,
+      structural_features: false,
+      text_signs: false,
+      natural_elements: false,
+      vehicles_machinery: false
+    },
+    secondaryFidelityLevel: 'moderate' as const,
     applyStyle: {
       materials: "screen-printed poster",
       lighting: "high contrast", 
@@ -2043,6 +2054,64 @@ export default function ImageEditor() {
                                   <Label htmlFor={`combine-${key}`} className="text-sm">{option.label}</Label>
                                 </div>
                               ))}
+                            </div>
+                          </div>
+
+                          {/* Secondary Image Preservation */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Secondary Image Preservation</Label>
+                            
+                            {/* Fidelity Level */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Fidelity Level</Label>
+                              <Select
+                                value={canonicalConfig.secondaryFidelityLevel}
+                                onValueChange={(value: 'strict' | 'moderate' | 'adaptive') => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    secondaryFidelityLevel: value
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.secondaryFidelityLevels && Object.entries(canonicalOptions.availableOptions.secondaryFidelityLevels).map(([key, level]: [string, any]) => (
+                                    <SelectItem key={key} value={key} className="text-xs">
+                                      <div>
+                                        <div className="font-medium">{level.label}</div>
+                                        <div className="text-xs text-muted-foreground">{level.description}</div>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Preserve Secondary Elements */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Preserve Specific Elements</Label>
+                              <div className="grid grid-cols-2 gap-2">
+                                {canonicalOptions?.availableOptions?.preserveSecondaryOptions && Object.entries(canonicalOptions.availableOptions.preserveSecondaryOptions).map(([key, option]: [string, any]) => (
+                                  <div key={key} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`preserve-secondary-${key}`}
+                                      checked={canonicalConfig.preserveSecondaryOptions?.[key as keyof typeof canonicalConfig.preserveSecondaryOptions] || false}
+                                      onCheckedChange={(checked) => 
+                                        setCanonicalConfig(prev => ({
+                                          ...prev,
+                                          preserveSecondaryOptions: {
+                                            ...prev.preserveSecondaryOptions,
+                                            [key]: checked
+                                          }
+                                        }))
+                                      }
+                                    />
+                                    <Label htmlFor={`preserve-secondary-${key}`} className="text-xs">{option.label}</Label>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
 

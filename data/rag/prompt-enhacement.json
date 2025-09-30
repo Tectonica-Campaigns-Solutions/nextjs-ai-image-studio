@@ -122,6 +122,62 @@
         "default": false
       }
     },
+    "preserve_secondary_options": {
+      "architectural_elements": {
+        "label": "Architectural Elements",
+        "description": "Preserve columns, arches, and structural features",
+        "default": false
+      },
+      "statues_sculptures": {
+        "label": "Statues & Sculptures",
+        "description": "Keep statues, sculptures, and artistic figures intact",
+        "default": false
+      },
+      "furniture_objects": {
+        "label": "Furniture & Objects",
+        "description": "Preserve furniture and decorative objects",
+        "default": false
+      },
+      "decorative_items": {
+        "label": "Decorative Items",
+        "description": "Keep ornaments and decorative details",
+        "default": false
+      },
+      "structural_features": {
+        "label": "Structural Features",
+        "description": "Preserve windows, doors, and frames",
+        "default": false
+      },
+      "text_signs": {
+        "label": "Text & Signs",
+        "description": "Keep text, signs, and inscriptions",
+        "default": false
+      },
+      "natural_elements": {
+        "label": "Natural Elements",
+        "description": "Preserve specific plants, trees, and natural features",
+        "default": false
+      },
+      "vehicles_machinery": {
+        "label": "Vehicles & Machinery",
+        "description": "Keep vehicles, machines, and equipment intact",
+        "default": false
+      }
+    },
+    "secondary_fidelity_levels": {
+      "strict": {
+        "label": "Strict Fidelity",
+        "description": "Preserve all secondary elements exactly as they appear"
+      },
+      "moderate": {
+        "label": "Moderate Fidelity",
+        "description": "Preserve main elements, allow minor stylistic adjustments"
+      },
+      "adaptive": {
+        "label": "Adaptive Fidelity",
+        "description": "Preserve key elements while adapting to primary image style"
+      }
+    },
     "apply_style": {
       "materials": {
         "options": [

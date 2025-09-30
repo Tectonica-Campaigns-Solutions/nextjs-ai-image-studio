@@ -14,6 +14,17 @@ interface CanonicalPromptConfig {
   combineOptions?: {
     force_integration?: boolean;
   };
+  preserveSecondaryOptions?: {
+    architectural_elements?: boolean;
+    statues_sculptures?: boolean;
+    furniture_objects?: boolean;
+    decorative_items?: boolean;
+    structural_features?: boolean;
+    text_signs?: boolean;
+    natural_elements?: boolean;
+    vehicles_machinery?: boolean;
+  };
+  secondaryFidelityLevel?: 'strict' | 'moderate' | 'adaptive';
   applyStyle?: {
     materials?: string;
     lighting?: string;
@@ -114,6 +125,55 @@ export class CanonicalPromptProcessor {
   }
 
   /**
+   * Build the PRESERVE_SECONDARY section of the prompt
+   */
+  private buildPreserveSecondarySection(
+    preserveSecondaryOptions: CanonicalPromptConfig['preserveSecondaryOptions'] = {},
+    fidelityLevel: CanonicalPromptConfig['secondaryFidelityLevel'] = 'moderate'
+  ): string {
+    const defaults = this.canonicalConfig.preserve_secondary_options;
+    
+    // Collect active preservation options
+    const activeOptions: string[] = [];
+    
+    Object.entries(preserveSecondaryOptions).forEach(([key, value]) => {
+      const isActive = value !== undefined ? value : defaults[key as keyof typeof defaults]?.default;
+      if (isActive) {
+        const optionConfig = defaults[key as keyof typeof defaults];
+        if (optionConfig) {
+          // Convert key to readable format
+          const readableKey = key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+          activeOptions.push(readableKey);
+        }
+      }
+    });
+
+    if (activeOptions.length === 0) {
+      return '';
+    }
+
+    // Build fidelity instruction based on level
+    const fidelityConfig = this.canonicalConfig.secondary_fidelity_levels;
+    let fidelityInstruction = '';
+    
+    switch (fidelityLevel) {
+      case 'strict':
+        fidelityInstruction = 'exactly as they appear in the secondary image. Maintain their original proportions, materials, and details without any modifications';
+        break;
+      case 'moderate':
+        fidelityInstruction = 'as they appear in the secondary image while allowing minor stylistic adjustments to match the overall aesthetic';
+        break;
+      case 'adaptive':
+        fidelityInstruction = 'while adapting their style to match the primary image aesthetic, but keeping their essential characteristics and recognizable features';
+        break;
+      default:
+        fidelityInstruction = 'as they appear in the secondary image while allowing minor stylistic adjustments';
+    }
+
+    return `Keep all existing ${activeOptions.join(', ')} ${fidelityInstruction}`;
+  }
+
+  /**
    * Build the APPLY section of the prompt
    */
   private buildApplySection(applyStyle: CanonicalPromptConfig['applyStyle'] = {}): string {
@@ -176,6 +236,10 @@ export class CanonicalPromptProcessor {
 
     // Build all sections
     const preserveSection = this.buildPreserveSection(config.preserveOptions);
+    const preserveSecondarySection = this.buildPreserveSecondarySection(
+      config.preserveSecondaryOptions, 
+      config.secondaryFidelityLevel
+    );
     const keepSection = `KEEP (do not change): ${this.buildKeepSection(config.keepOptions)}.`;
     const applySection = `APPLY (style): ${this.buildApplySection(config.applyStyle)}.`;
     const combineSection = this.buildCombineSection(config.combineOptions);
@@ -189,6 +253,10 @@ export class CanonicalPromptProcessor {
     
     if (preserveSection) {
       sections.push('', `PRESERVE (keep exactly): ${preserveSection}.`);
+    }
+    
+    if (preserveSecondarySection) {
+      sections.push('', `PRESERVE_SECONDARY: ${preserveSecondarySection}.`);
     }
     
     sections.push('', keepSection, applySection);
@@ -221,7 +289,9 @@ export class CanonicalPromptProcessor {
       composition: this.canonicalConfig.subject_templates.composition.options,
       keepOptions: this.canonicalConfig.keep_options,
       preserveOptions: this.canonicalConfig.preserve_options,
-      combineOptions: this.canonicalConfig.combine_options
+      combineOptions: this.canonicalConfig.combine_options,
+      preserveSecondaryOptions: this.canonicalConfig.preserve_secondary_options,
+      secondaryFidelityLevels: this.canonicalConfig.secondary_fidelity_levels
     };
   }
 
@@ -243,6 +313,17 @@ export class CanonicalPromptProcessor {
       combineOptions: {
         force_integration: this.canonicalConfig.combine_options.force_integration.default,
       },
+      preserveSecondaryOptions: {
+        architectural_elements: this.canonicalConfig.preserve_secondary_options.architectural_elements.default,
+        statues_sculptures: this.canonicalConfig.preserve_secondary_options.statues_sculptures.default,
+        furniture_objects: this.canonicalConfig.preserve_secondary_options.furniture_objects.default,
+        decorative_items: this.canonicalConfig.preserve_secondary_options.decorative_items.default,
+        structural_features: this.canonicalConfig.preserve_secondary_options.structural_features.default,
+        text_signs: this.canonicalConfig.preserve_secondary_options.text_signs.default,
+        natural_elements: this.canonicalConfig.preserve_secondary_options.natural_elements.default,
+        vehicles_machinery: this.canonicalConfig.preserve_secondary_options.vehicles_machinery.default,
+      },
+      secondaryFidelityLevel: 'moderate' as const,
       applyStyle: {
         materials: this.canonicalConfig.apply_style.materials.default,
         lighting: this.canonicalConfig.apply_style.lighting.default,
