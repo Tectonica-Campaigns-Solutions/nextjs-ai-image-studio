@@ -218,7 +218,8 @@ export async function POST(request: NextRequest) {
     // Prepare input for Flux Pro Multi with image combination
     const input: any = {
       prompt: finalPrompt,
-      image_urls: uploadedImageUrls, // Multiple input images
+      image_url_1: uploadedImageUrls[0], // First image
+      image_url_2: uploadedImageUrls[1], // Second image
       aspect_ratio: mergedSettings.aspect_ratio,
       guidance_scale: mergedSettings.guidance_scale,
       num_images: mergedSettings.num_images,
@@ -227,9 +228,31 @@ export async function POST(request: NextRequest) {
       enhance_prompt: mergedSettings.enhance_prompt
     }
 
-    // Add seed if provided
-    if (mergedSettings.seed !== undefined) {
-      input.seed = mergedSettings.seed
+    // Add additional images if provided (up to the model's limit)
+    if (uploadedImageUrls.length > 2) {
+      for (let i = 2; i < Math.min(uploadedImageUrls.length, 4); i++) {
+        input[`image_url_${i + 1}`] = uploadedImageUrls[i]
+      }
+    }
+
+    // Add seed if provided and not empty
+    if (mergedSettings.seed !== undefined && mergedSettings.seed !== "" && mergedSettings.seed !== null) {
+      input.seed = parseInt(mergedSettings.seed.toString())
+    }
+
+    // Validate required parameters
+    if (!uploadedImageUrls || uploadedImageUrls.length < 2) {
+      console.error("[FLUX-COMBINE] Invalid image URLs:", uploadedImageUrls)
+      return NextResponse.json({ 
+        error: "At least 2 images are required for combination" 
+      }, { status: 400 })
+    }
+
+    if (!finalPrompt || finalPrompt.trim() === "") {
+      console.error("[FLUX-COMBINE] Empty prompt")
+      return NextResponse.json({ 
+        error: "Prompt is required" 
+      }, { status: 400 })
     }
 
     console.log("[FLUX-COMBINE] Final input object being sent to fal.ai:")
@@ -292,10 +315,51 @@ export async function POST(request: NextRequest) {
       }
     } catch (falError) {
       console.error("[FLUX-COMBINE] Fal.ai error:", falError)
+      
+      // Enhanced error logging for debugging
+      if (falError && typeof falError === 'object') {
+        console.error("[FLUX-COMBINE] Error details:")
+        console.error("  - Status:", (falError as any).status)
+        console.error("  - Message:", (falError as any).message)
+        
+        // Log the full error body for ValidationError
+        if ((falError as any).body) {
+          console.error("  - Full Error Body:", JSON.stringify((falError as any).body, null, 2))
+          
+          // Try to extract validation details
+          if ((falError as any).body.detail) {
+            console.error("  - Validation Details:", (falError as any).body.detail)
+          }
+          
+          if ((falError as any).body.errors) {
+            console.error("  - Validation Errors:", (falError as any).body.errors)
+          }
+        }
+        
+        // Log the input that caused the error
+        console.error("[FLUX-COMBINE] Input that caused error:")
+        console.error(JSON.stringify(input, null, 2))
+      }
+      
+      // Return more detailed error information
+      let errorMessage = "Failed to combine images with Flux Pro Multi"
+      let errorDetails = falError instanceof Error ? falError.message : "Unknown error"
+      
+      // Extract specific validation errors if available
+      if ((falError as any)?.body?.detail) {
+        errorDetails = (falError as any).body.detail
+      } else if ((falError as any)?.body?.errors) {
+        errorDetails = JSON.stringify((falError as any).body.errors)
+      }
+      
       return NextResponse.json({ 
-        error: "Failed to combine images with Flux Pro Multi",
-        details: falError instanceof Error ? falError.message : "Unknown error",
-        model: "flux-pro/kontext/max/multi"
+        error: errorMessage,
+        details: errorDetails,
+        model: "flux-pro/kontext/max/multi",
+        status: (falError as any)?.status,
+        validationError: (falError as any)?.status === 422,
+        inputParameters: Object.keys(input),
+        errorBody: (falError as any)?.body
       }, { status: 500 })
     }
 
