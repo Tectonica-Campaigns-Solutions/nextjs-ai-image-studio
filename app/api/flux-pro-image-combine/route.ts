@@ -180,7 +180,39 @@ export async function POST(request: NextRequest) {
     })
 
     // Upload image files to fal.ai storage if any
-    const uploadedImageUrls: string[] = [...imageUrls]
+    const uploadedImageUrls: string[] = []
+    
+    // First, add existing image URLs and test their accessibility
+    for (let i = 0; i < imageUrls.length; i++) {
+      const url = imageUrls[i]
+      try {
+        console.log(`[FLUX-COMBINE] Testing existing URL ${i + 1}: ${url.substring(0, 100)}...`)
+        const response = await fetch(url, { method: 'HEAD' })
+        if (response.ok) {
+          uploadedImageUrls.push(url)
+          console.log(`[FLUX-COMBINE] URL ${i + 1} is accessible, using directly`)
+        } else {
+          console.warn(`[FLUX-COMBINE] URL ${i + 1} not directly accessible (${response.status}), will re-upload through fal.ai`)
+          // Download and re-upload through fal.ai
+          const imageResponse = await fetch(url)
+          if (imageResponse.ok) {
+            const imageBlob = await imageResponse.blob()
+            const reuploadedUrl = await fal.storage.upload(imageBlob)
+            uploadedImageUrls.push(reuploadedUrl)
+            console.log(`[FLUX-COMBINE] URL ${i + 1} re-uploaded successfully: ${reuploadedUrl}`)
+          } else {
+            throw new Error(`Cannot download image from URL: ${response.status}`)
+          }
+        }
+      } catch (urlError) {
+        console.error(`[FLUX-COMBINE] Failed to process URL ${i + 1}:`, urlError)
+        return NextResponse.json({ 
+          error: `Failed to process image URL ${i + 1}`,
+          details: urlError instanceof Error ? urlError.message : "Network error",
+          problematicUrl: url
+        }, { status: 400 })
+      }
+    }
     
     if (imageFiles.length > 0) {
       console.log("[FLUX-COMBINE] Uploading image files to fal.ai storage...")
@@ -340,7 +372,25 @@ export async function POST(request: NextRequest) {
       
       // Extract specific validation errors if available
       if ((falError as any)?.body?.detail) {
-        errorDetails = (falError as any).body.detail
+        const details = (falError as any).body.detail
+        if (Array.isArray(details) && details.length > 0) {
+          const firstError = details[0]
+          
+          // Handle file download errors specifically
+          if (firstError.type === 'file_download_error') {
+            errorMessage = "Image URL download failed"
+            errorDetails = `One or more image URLs cannot be accessed by fal.ai. ${firstError.msg}`
+            
+            if (firstError.input && Array.isArray(firstError.input)) {
+              console.error("[FLUX-COMBINE] Problematic URLs:", firstError.input)
+              errorDetails += `\n\nProblematic URLs:\n${firstError.input.join('\n')}`
+            }
+          } else {
+            errorDetails = firstError.msg || JSON.stringify(details)
+          }
+        } else {
+          errorDetails = (falError as any).body.detail
+        }
       } else if ((falError as any)?.body?.errors) {
         errorDetails = JSON.stringify((falError as any).body.errors)
       }
@@ -351,7 +401,9 @@ export async function POST(request: NextRequest) {
         model: "flux-pro/kontext/max/multi",
         status: (falError as any)?.status,
         validationError: (falError as any)?.status === 422,
+        fileDownloadError: (falError as any)?.body?.detail?.[0]?.type === 'file_download_error',
         inputParameters: Object.keys(input),
+        problematicUrls: (falError as any)?.body?.detail?.[0]?.input,
         errorBody: (falError as any)?.body
       }, { status: 500 })
     }
