@@ -11,6 +11,7 @@ import { fal } from "@fal-ai/client"
  * Body parameters (multipart/form-data):
  * - image (required): Image file to transform (PNG, JPG, JPEG, WEBP)
  * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
+ *   Note: aspect_ratio is mapped to image_size parameter for the SeDream model
  * 
  * The endpoint automatically uses:
  * - A pre-configured style prompt from sedream_enhancement_text configuration
@@ -133,30 +134,25 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream v4] Calling fal.ai API...")
 
-      // Calculate width and height from aspect ratio
-      let width = 1024, height = 1024 // Default square
+      // Calculate image_size from aspect ratio selection
+      let imageSize: string | { width: number; height: number }
       
       switch (aspectRatio) {
         case "16:9":
-          width = 1344
-          height = 768
+          imageSize = "landscape_16_9"
           break
         case "9:16":
-          width = 768
-          height = 1344
+          imageSize = "portrait_16_9"
           break
         case "4:3":
-          width = 1152
-          height = 896
+          imageSize = "landscape_4_3"
           break
         case "3:4":
-          width = 896
-          height = 1152
+          imageSize = "portrait_4_3"
           break
         case "1:1":
         default:
-          width = 1024
-          height = 1024
+          imageSize = "square_hd"
           break
       }
 
@@ -166,18 +162,15 @@ export async function POST(request: NextRequest) {
         image_urls: [imageUrl, referenceImageUrl],
         num_images: 1,
         enable_safety_checker: true,
-        aspect_ratio: aspectRatio,
-        width: width,
-        height: height
+        image_size: imageSize
       }
 
       console.log("[External SeDream v4] API Input:", {
         prompt: input.prompt,
         imageUrls: input.image_urls,
         numImages: input.num_images,
-        aspectRatio: input.aspect_ratio,
-        width: input.width,
-        height: input.height
+        aspectRatio: aspectRatio,
+        imageSize: input.image_size
       })
 
       // Call SeDream v4 Edit API

@@ -177,30 +177,25 @@ export async function POST(request: NextRequest) {
 
     console.log("[SeDream v4 Edit] Calling fal.ai API...")
 
-    // Calculate width and height from aspect ratio
-    let width = 1024, height = 1024 // Default square
+    // Calculate image_size from aspect ratio selection
+    let imageSize: string | { width: number; height: number }
     
     switch (aspectRatio) {
       case "16:9":
-        width = 1344
-        height = 768
+        imageSize = "landscape_16_9"
         break
       case "9:16":
-        width = 768
-        height = 1344
+        imageSize = "portrait_16_9"
         break
       case "4:3":
-        width = 1152
-        height = 896
+        imageSize = "landscape_4_3"
         break
       case "3:4":
-        width = 896
-        height = 1152
+        imageSize = "portrait_4_3"
         break
       case "1:1":
       default:
-        width = 1024
-        height = 1024
+        imageSize = "square_hd"
         break
     }
 
@@ -210,17 +205,16 @@ export async function POST(request: NextRequest) {
       image_urls: [imageUrl, referenceImageUrl],
       num_images: 1,
       enable_safety_checker: true,
-      aspect_ratio: aspectRatio,
-      width: width,
-      height: height
+      image_size: imageSize
     }
 
     console.log("[SeDream v4 Edit] API Input:", {
       prompt: input.prompt,
       imageUrls: input.image_urls,
       numImages: input.num_images,
-      aspectRatio: input.aspect_ratio,
-      imageSize: `${imageBuffer.length} bytes`
+      aspectRatio: aspectRatio,
+      imageSize: input.image_size,
+      imageBufferSize: `${imageBuffer.length} bytes`
     })
     
     console.log("[SeDream v4 Edit] Full input object being sent to fal.ai:")
