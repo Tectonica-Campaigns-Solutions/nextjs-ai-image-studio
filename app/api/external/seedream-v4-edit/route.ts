@@ -133,20 +133,51 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream v4] Calling fal.ai API...")
 
+      // Calculate width and height from aspect ratio
+      let width = 1024, height = 1024 // Default square
+      
+      switch (aspectRatio) {
+        case "16:9":
+          width = 1344
+          height = 768
+          break
+        case "9:16":
+          width = 768
+          height = 1344
+          break
+        case "4:3":
+          width = 1152
+          height = 896
+          break
+        case "3:4":
+          width = 896
+          height = 1152
+          break
+        case "1:1":
+        default:
+          width = 1024
+          height = 1024
+          break
+      }
+
       // Prepare input for SeDream v4 Edit (uses image_urls array, not single image)
       const input = {
         prompt: finalPrompt,
         image_urls: [imageUrl, referenceImageUrl],
         num_images: 1,
         enable_safety_checker: true,
-        aspect_ratio: aspectRatio
+        aspect_ratio: aspectRatio,
+        width: width,
+        height: height
       }
 
       console.log("[External SeDream v4] API Input:", {
         prompt: input.prompt,
         imageUrls: input.image_urls,
         numImages: input.num_images,
-        aspectRatio: input.aspect_ratio
+        aspectRatio: input.aspect_ratio,
+        width: input.width,
+        height: input.height
       })
 
       // Call SeDream v4 Edit API

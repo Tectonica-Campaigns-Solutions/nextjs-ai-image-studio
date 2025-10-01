@@ -1145,6 +1145,15 @@ export default function ImageEditor() {
       formData.append("customEnhancementText", sedreamCustomEnhancementText)
       formData.append("aspect_ratio", sedreamAspectRatio)
       
+      // Debug logging
+      console.log("[Frontend] SeDream submission - aspect_ratio:", sedreamAspectRatio)
+      console.log("[Frontend] All FormData entries:")
+      for (const [key, value] of formData.entries()) {
+        if (key !== "image") {
+          console.log(`  ${key}: "${value}"`)
+        }
+      }
+      
       // Add JSON enhancement options for backend processing
       const jsonOptions = {
         customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : '',
