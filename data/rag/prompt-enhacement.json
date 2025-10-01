@@ -29,7 +29,6 @@
     "extra limbs",
     "malformed hands",
     "photorealistic",
-    "naturalistic shadows",
     "film grain",
     "noisy background",
     "realistic textures",
@@ -37,7 +36,6 @@
     "soft shading",
     "gradient shading",
     "airbrushed",
-    "smooth gradients",
     "text",
     "typography",
     "letters",
@@ -54,5 +52,208 @@
     "low contrast",
     "washed out",
     "faded colors"
-  ]
+  ],
+  "canonical_prompt": {
+    "version": "1.0",
+    "description": "Structured canonical prompt system for precise image combination",
+    "base_task": "Apply the visual style from the FIRST image to the SECOND image.",
+    "synonyms": {
+      "person": "one adult",
+      "model": "one adult",
+      "human": "one adult",
+      "photo": "photorealistic",
+      "photograph": "photorealistic",
+      "picture": "photorealistic",
+      "man": "one adult male",
+      "woman": "one adult female",
+      "guy": "one adult male",
+      "girl": "one adult female"
+    },
+    "cardinality_mapping": {
+      "people": "group of three adults",
+      "crowd": "group of five+ adults",
+      "individuals": "group of two adults",
+      "persons": "group of three adults",
+      "humans": "group of three adults",
+      "models": "group of three adults"
+    },
+    "hardcoded_palette": {
+      "primary": "#6E3CCB deep violet",
+      "secondary": "#D8C8F0 light violet", 
+      "accent": "#5C38F2 blue",
+      "highlight": "#F79533 orange",
+      "description": "#6E3CCB, #D8C8F0, #5C38F2, #F79533"
+    },
+    "keep_options": {
+      "identity": {
+        "label": "Keep Identity",
+        "description": "Preserve facial features and person identity",
+        "default": true
+      },
+      "pose": {
+        "label": "Keep Pose", 
+        "description": "Maintain body position and gestures",
+        "default": true
+      },
+      "layout": {
+        "label": "Keep Layout",
+        "description": "Preserve composition and element positioning", 
+        "default": true
+      },
+      "text": {
+        "label": "Keep Text",
+        "description": "Maintain any text or typography elements",
+        "default": false
+      }
+    },
+    "preserve_options": {
+      "preserve_primary": {
+        "label": "Preserve Primary Subject",
+        "description": "Keep original colors, textures and details of the main subject intact",
+        "default": false
+      }
+    },
+    "combine_options": {
+      "force_integration": {
+        "label": "Force Secondary Integration",
+        "description": "Ensure secondary image elements are visibly combined",
+        "default": false
+      }
+    },
+    "preserve_secondary_options": {
+      "architectural_elements": {
+        "label": "Architectural Elements",
+        "description": "Preserve columns, arches, and structural features",
+        "default": false
+      },
+      "statues_sculptures": {
+        "label": "Statues & Sculptures",
+        "description": "Keep statues, sculptures, and artistic figures intact",
+        "default": false
+      },
+      "furniture_objects": {
+        "label": "Furniture & Objects",
+        "description": "Preserve furniture and decorative objects",
+        "default": false
+      },
+      "decorative_items": {
+        "label": "Decorative Items",
+        "description": "Keep ornaments and decorative details",
+        "default": false
+      },
+      "structural_features": {
+        "label": "Structural Features",
+        "description": "Preserve windows, doors, and frames",
+        "default": false
+      },
+      "text_signs": {
+        "label": "Text & Signs",
+        "description": "Keep text, signs, and inscriptions",
+        "default": false
+      },
+      "natural_elements": {
+        "label": "Natural Elements",
+        "description": "Preserve specific plants, trees, and natural features",
+        "default": false
+      },
+      "vehicles_machinery": {
+        "label": "Vehicles & Machinery",
+        "description": "Keep vehicles, machines, and equipment intact",
+        "default": false
+      }
+    },
+    "secondary_fidelity_levels": {
+      "strict": {
+        "label": "Strict Fidelity",
+        "description": "Preserve all secondary elements exactly as they appear"
+      },
+      "moderate": {
+        "label": "Moderate Fidelity",
+        "description": "Preserve main elements, allow minor stylistic adjustments"
+      },
+      "adaptive": {
+        "label": "Adaptive Fidelity",
+        "description": "Preserve key elements while adapting to primary image style"
+      }
+    },
+    "apply_style": {
+      "materials": {
+        "options": [
+          "screen-printed poster",
+          "halftone illustration", 
+          "duotone graphic",
+          "vector art style",
+          "retro poster design"
+        ],
+        "default": "screen-printed poster"
+      },
+      "lighting": {
+        "options": [
+          "high contrast",
+          "soft even lighting",
+          "dramatic shadows",
+          "flat lighting"
+        ],
+        "default": "high contrast"
+      },
+      "texture": {
+        "options": [
+          "diagonal halftone lines",
+          "curved line textures", 
+          "smooth gradients",
+          "geometric patterns",
+          "minimal flat fills"
+        ],
+        "default": "diagonal halftone lines"
+      },
+      "contrast": {
+        "options": [
+          "bold duotone",
+          "high contrast",
+          "soft contrast", 
+          "balanced tones"
+        ],
+        "default": "bold duotone"
+      }
+    },
+    "style_backgrounds": {
+      "options": [
+        "monochrome line-art rendering, simplified detail, no halftone on background",
+        "smooth gradient, no texture overlay, clean background",
+        "solid color fill, minimal geometry, flat background",
+        "radial gradient with simple geometric shapes",
+        "clean vector background, no realistic textures"
+      ],
+      "default": "smooth gradient, no texture overlay, clean background"
+    },
+    "subject_templates": {
+      "framing": {
+        "options": [
+          "medium shot",
+          "close-up", 
+          "full body",
+          "portrait view",
+          "wide shot"
+        ],
+        "default": "medium shot"
+      },
+      "composition": {
+        "options": [
+          "centered",
+          "rule of thirds",
+          "dynamic positioning",
+          "balanced layout"
+        ],
+        "default": "centered"
+      }
+    },
+    "quality_standards": [
+      "high detail",
+      "clean edges", 
+      "natural skin",
+      "correct anatomy",
+      "crisp vector-like precision",
+      "balanced use of negative space"
+    ]
+  }
 }

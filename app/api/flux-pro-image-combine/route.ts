@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,18 @@ export async function POST(request: NextRequest) {
         jsonOptions = JSON.parse(jsonOptionsStr)
       } catch (error) {
         console.warn("[FLUX-COMBINE] Failed to parse JSON options:", error)
+      }
+    }
+
+    // Canonical Prompt parameters
+    const useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
+    const canonicalConfigStr = formData.get("canonicalConfig") as string
+    let canonicalConfig: CanonicalPromptConfig = {}
+    if (canonicalConfigStr) {
+      try {
+        canonicalConfig = JSON.parse(canonicalConfigStr)
+      } catch (error) {
+        console.warn("[FLUX-COMBINE] Failed to parse canonical config:", error)
       }
     }
 
@@ -68,8 +81,10 @@ export async function POST(request: NextRequest) {
     console.log("[FLUX-COMBINE] Image URLs count:", imageUrls.length)
     console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length)
     console.log("[FLUX-COMBINE] Use JSON Enhancement:", useJSONEnhancement)
+    console.log("[FLUX-COMBINE] Use Canonical Prompt:", useCanonicalPrompt)
     console.log("[FLUX-COMBINE] JSON Options:", defaultJsonOptions)
     console.log("[FLUX-COMBINE] JSON Options:", jsonOptions)
+    console.log("[FLUX-COMBINE] Canonical Config:", canonicalConfig)
     console.log("[FLUX-COMBINE] RAG enhancement: disabled for image combination")
     console.log("[FLUX-COMBINE] Settings JSON:", settingsJson)
 
@@ -115,29 +130,46 @@ export async function POST(request: NextRequest) {
     let finalPrompt = prompt
     let ragMetadata = null
 
-    // Apply JSON enhancement with enhancement_text (always enabled)
-    let enhancementText = defaultJsonOptions.customText
-    
-    if (!enhancementText) {
-      // Try to load from config first
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
-        const { success, config } = await response.json()
-        if (success && config?.enhancement_text) {
-          enhancementText = config.enhancement_text
-          console.log("[FLUX-COMBINE] Loaded enhancement_text:", enhancementText)
-        }
-      } catch (error) {
-        console.warn("[FLUX-COMBINE] Could not load from API:", error)
-      }
-    }
-
-    // Apply enhancement text directly to the prompt if available
-    if (enhancementText) {
-      finalPrompt = `${prompt}, ${enhancementText}`
-      console.log("[FLUX-COMBINE] Enhanced prompt:", finalPrompt)
+    // Check if canonical prompt should be used
+    if (useCanonicalPrompt) {
+      // Use canonical prompt processor
+      console.log("[FLUX-COMBINE] Using canonical prompt structure")
+      console.log("[FLUX-COMBINE] Canonical config:", canonicalConfig)
+      
+      // Set user input from original prompt
+      canonicalConfig.userInput = prompt
+      
+      // Generate canonical prompt
+      const result = canonicalPromptProcessor.generateCanonicalPrompt(canonicalConfig)
+      finalPrompt = result.canonicalPrompt
+      
+      console.log("[FLUX-COMBINE] Generated canonical prompt:", finalPrompt)
+      console.log("[FLUX-COMBINE] Processed user input:", result.processedUserInput)
     } else {
-      console.log("[FLUX-COMBINE] No enhancement text available, using original prompt")
+      // Apply JSON enhancement with enhancement_text (legacy method)
+      let enhancementText = defaultJsonOptions.customText
+      
+      if (!enhancementText) {
+        // Try to load from config first
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+          const { success, config } = await response.json()
+          if (success && config?.enhancement_text) {
+            enhancementText = config.enhancement_text
+            console.log("[FLUX-COMBINE] Loaded enhancement_text:", enhancementText)
+          }
+        } catch (error) {
+          console.warn("[FLUX-COMBINE] Could not load from API:", error)
+        }
+      }
+
+      // Apply enhancement text directly to the prompt if available
+      if (enhancementText) {
+        finalPrompt = `${prompt}, ${enhancementText}`
+        console.log("[FLUX-COMBINE] Enhanced prompt (legacy):", finalPrompt)
+      } else {
+        console.log("[FLUX-COMBINE] No enhancement text available, using original prompt")
+      }
     }
 
     console.log("[FLUX-COMBINE] Final prompt:", finalPrompt)
@@ -148,7 +180,93 @@ export async function POST(request: NextRequest) {
     })
 
     // Upload image files to fal.ai storage if any
-    const uploadedImageUrls: string[] = [...imageUrls]
+    const uploadedImageUrls: string[] = []
+    
+    // First, add existing image URLs and test their accessibility
+    for (let i = 0; i < imageUrls.length; i++) {
+      const url = imageUrls[i]
+      try {
+        console.log(`[FLUX-COMBINE] Testing existing URL ${i + 1}: ${url.substring(0, 100)}...`)
+        
+        // Basic URL validation first
+        let parsedUrl
+        try {
+          parsedUrl = new URL(url)
+        } catch (urlParseError) {
+          console.error(`[FLUX-COMBINE] Invalid URL format ${i + 1}:`, url)
+          return NextResponse.json({ 
+            error: `Invalid URL format for image ${i + 1}`,
+            details: `The URL is not properly formatted: ${url}`,
+            problematicUrl: url
+          }, { status: 400 })
+        }
+        
+        // Test accessibility with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        
+        try {
+          const response = await fetch(url, { 
+            method: 'HEAD',
+            signal: controller.signal
+          })
+          clearTimeout(timeoutId)
+          
+          if (response.ok) {
+            uploadedImageUrls.push(url)
+            console.log(`[FLUX-COMBINE] URL ${i + 1} is accessible, using directly`)
+          } else {
+            console.warn(`[FLUX-COMBINE] URL ${i + 1} returned ${response.status}, attempting re-upload`)
+            
+            // Try to download and re-upload
+            const imageResponse = await fetch(url, { signal: controller.signal })
+            if (imageResponse.ok) {
+              const imageBlob = await imageResponse.blob()
+              const reuploadedUrl = await fal.storage.upload(imageBlob)
+              uploadedImageUrls.push(reuploadedUrl)
+              console.log(`[FLUX-COMBINE] URL ${i + 1} re-uploaded successfully: ${reuploadedUrl}`)
+            } else {
+              throw new Error(`Cannot download image: HTTP ${imageResponse.status}`)
+            }
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId)
+          
+          // Handle specific network errors
+          if (fetchError instanceof Error) {
+            if (fetchError.name === 'AbortError') {
+              console.error(`[FLUX-COMBINE] URL ${i + 1} timed out`)
+              return NextResponse.json({ 
+                error: `Image URL ${i + 1} timed out`,
+                details: "The URL took too long to respond (>10 seconds)",
+                problematicUrl: url
+              }, { status: 400 })
+            } else if (fetchError.message.includes('ENOTFOUND') || fetchError.message.includes('fetch failed')) {
+              console.error(`[FLUX-COMBINE] URL ${i + 1} domain not found or network error:`, fetchError.message)
+              return NextResponse.json({ 
+                error: `Image URL ${i + 1} is not accessible`,
+                details: `Domain not found or network error: ${parsedUrl.hostname}. Please check if the URL is correct and accessible.`,
+                problematicUrl: url,
+                networkError: true
+              }, { status: 400 })
+            } else {
+              throw fetchError // Re-throw other errors to be handled by outer catch
+            }
+          } else {
+            throw fetchError
+          }
+        }
+        
+      } catch (urlError) {
+        console.error(`[FLUX-COMBINE] Failed to process URL ${i + 1}:`, urlError)
+        return NextResponse.json({ 
+          error: `Failed to process image URL ${i + 1}`,
+          details: urlError instanceof Error ? urlError.message : "Unknown network error",
+          problematicUrl: url,
+          suggestion: "Please verify the URL is correct and accessible from the internet"
+        }, { status: 400 })
+      }
+    }
     
     if (imageFiles.length > 0) {
       console.log("[FLUX-COMBINE] Uploading image files to fal.ai storage...")
@@ -186,7 +304,7 @@ export async function POST(request: NextRequest) {
     // Prepare input for Flux Pro Multi with image combination
     const input: any = {
       prompt: finalPrompt,
-      image_urls: uploadedImageUrls, // Multiple input images
+      image_urls: uploadedImageUrls, // Array of image URLs as expected by the model
       aspect_ratio: mergedSettings.aspect_ratio,
       guidance_scale: mergedSettings.guidance_scale,
       num_images: mergedSettings.num_images,
@@ -195,18 +313,34 @@ export async function POST(request: NextRequest) {
       enhance_prompt: mergedSettings.enhance_prompt
     }
 
-    // Add seed if provided
-    if (mergedSettings.seed !== undefined) {
-      input.seed = mergedSettings.seed
+    // Add seed if provided and not empty
+    if (mergedSettings.seed !== undefined && mergedSettings.seed !== "" && mergedSettings.seed !== null) {
+      input.seed = parseInt(mergedSettings.seed.toString())
+    }
+
+    // Validate required parameters
+    if (!uploadedImageUrls || uploadedImageUrls.length < 2) {
+      console.error("[FLUX-COMBINE] Invalid image URLs:", uploadedImageUrls)
+      return NextResponse.json({ 
+        error: "At least 2 images are required for combination" 
+      }, { status: 400 })
+    }
+
+    if (!finalPrompt || finalPrompt.trim() === "") {
+      console.error("[FLUX-COMBINE] Empty prompt")
+      return NextResponse.json({ 
+        error: "Prompt is required" 
+      }, { status: 400 })
     }
 
     console.log("[FLUX-COMBINE] Final input object being sent to fal.ai:")
     console.log("=====================================")
     console.log("Model: fal-ai/flux-pro/kontext/max/multi")
     console.log("Input images count:", uploadedImageUrls.length)
+    console.log("Image URLs:", uploadedImageUrls)
     console.log("Input:", JSON.stringify({
       ...input,
-      image_urls: `[${uploadedImageUrls.length} image URLs]` // Don't log full URLs for privacy
+      image_urls: `[${uploadedImageUrls.length} URLs: ${uploadedImageUrls.map(url => url.substring(0, 50) + '...').join(', ')}]`
     }, null, 2))
     console.log("=====================================")
 
@@ -260,10 +394,71 @@ export async function POST(request: NextRequest) {
       }
     } catch (falError) {
       console.error("[FLUX-COMBINE] Fal.ai error:", falError)
+      
+      // Enhanced error logging for debugging
+      if (falError && typeof falError === 'object') {
+        console.error("[FLUX-COMBINE] Error details:")
+        console.error("  - Status:", (falError as any).status)
+        console.error("  - Message:", (falError as any).message)
+        
+        // Log the full error body for ValidationError
+        if ((falError as any).body) {
+          console.error("  - Full Error Body:", JSON.stringify((falError as any).body, null, 2))
+          
+          // Try to extract validation details
+          if ((falError as any).body.detail) {
+            console.error("  - Validation Details:", (falError as any).body.detail)
+          }
+          
+          if ((falError as any).body.errors) {
+            console.error("  - Validation Errors:", (falError as any).body.errors)
+          }
+        }
+        
+        // Log the input that caused the error
+        console.error("[FLUX-COMBINE] Input that caused error:")
+        console.error(JSON.stringify(input, null, 2))
+      }
+      
+      // Return more detailed error information
+      let errorMessage = "Failed to combine images with Flux Pro Multi"
+      let errorDetails = falError instanceof Error ? falError.message : "Unknown error"
+      
+      // Extract specific validation errors if available
+      if ((falError as any)?.body?.detail) {
+        const details = (falError as any).body.detail
+        if (Array.isArray(details) && details.length > 0) {
+          const firstError = details[0]
+          
+          // Handle file download errors specifically
+          if (firstError.type === 'file_download_error') {
+            errorMessage = "Image URL download failed"
+            errorDetails = `One or more image URLs cannot be accessed by fal.ai. ${firstError.msg}`
+            
+            if (firstError.input && Array.isArray(firstError.input)) {
+              console.error("[FLUX-COMBINE] Problematic URLs:", firstError.input)
+              errorDetails += `\n\nProblematic URLs:\n${firstError.input.join('\n')}`
+            }
+          } else {
+            errorDetails = firstError.msg || JSON.stringify(details)
+          }
+        } else {
+          errorDetails = (falError as any).body.detail
+        }
+      } else if ((falError as any)?.body?.errors) {
+        errorDetails = JSON.stringify((falError as any).body.errors)
+      }
+      
       return NextResponse.json({ 
-        error: "Failed to combine images with Flux Pro Multi",
-        details: falError instanceof Error ? falError.message : "Unknown error",
-        model: "flux-pro/kontext/max/multi"
+        error: errorMessage,
+        details: errorDetails,
+        model: "flux-pro/kontext/max/multi",
+        status: (falError as any)?.status,
+        validationError: (falError as any)?.status === 422,
+        fileDownloadError: (falError as any)?.body?.detail?.[0]?.type === 'file_download_error',
+        inputParameters: Object.keys(input),
+        problematicUrls: (falError as any)?.body?.detail?.[0]?.input,
+        errorBody: (falError as any)?.body
       }, { status: 500 })
     }
 

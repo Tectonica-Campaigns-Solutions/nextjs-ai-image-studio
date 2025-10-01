@@ -10,6 +10,8 @@ import { fal } from "@fal-ai/client"
  * 
  * Body parameters (multipart/form-data):
  * - image (required): Image file to transform (PNG, JPG, JPEG, WEBP)
+ * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
+ *   Note: aspect_ratio is mapped to image_size parameter for the SeDream model
  * 
  * The endpoint automatically uses:
  * - A pre-configured style prompt from sedream_enhancement_text configuration
@@ -44,10 +46,22 @@ export async function POST(request: NextRequest) {
     
     // Extract and validate required parameters
     const image = formData.get('image') as File
+    const aspectRatio = (formData.get('aspect_ratio') as string) || '1:1'
+    
+    // Validate aspect_ratio parameter
+    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4']
+    if (!validAspectRatios.includes(aspectRatio)) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Invalid aspect_ratio parameter",
+        details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
+      }, { status: 400 })
+    }
     
     console.log("[External SeDream v4] Request parameters:", {
       hasImage: !!image,
-      imageSize: image ? `${image.size} bytes` : "N/A"
+      imageSize: image ? `${image.size} bytes` : "N/A",
+      aspectRatio
     })
 
     // Validate required parameters
@@ -120,18 +134,43 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream v4] Calling fal.ai API...")
 
+      // Calculate image_size from aspect ratio selection
+      let imageSize: string | { width: number; height: number }
+      
+      switch (aspectRatio) {
+        case "16:9":
+          imageSize = "landscape_16_9"
+          break
+        case "9:16":
+          imageSize = "portrait_16_9"
+          break
+        case "4:3":
+          imageSize = "landscape_4_3"
+          break
+        case "3:4":
+          imageSize = "portrait_4_3"
+          break
+        case "1:1":
+        default:
+          imageSize = "square_hd"
+          break
+      }
+
       // Prepare input for SeDream v4 Edit (uses image_urls array, not single image)
       const input = {
         prompt: finalPrompt,
         image_urls: [imageUrl, referenceImageUrl],
         num_images: 1,
-        enable_safety_checker: true
+        enable_safety_checker: true,
+        image_size: imageSize
       }
 
       console.log("[External SeDream v4] API Input:", {
         prompt: input.prompt,
         imageUrls: input.image_urls,
-        numImages: input.num_images
+        numImages: input.num_images,
+        aspectRatio: aspectRatio,
+        imageSize: input.image_size
       })
 
       // Call SeDream v4 Edit API
@@ -235,6 +274,13 @@ export async function GET() {
         required: true,
         description: "Image file to transform (PNG, JPG, JPEG, WEBP)",
         maxSize: "10MB"
+      },
+      aspect_ratio: {
+        type: "string",
+        required: false,
+        description: "Output aspect ratio",
+        options: ["1:1", "16:9", "9:16", "4:3", "3:4"],
+        default: "1:1"
       }
     },
     response: {
@@ -258,7 +304,8 @@ export async function GET() {
     },
     examples: {
       curl: `curl -X POST https://your-domain.com/api/external/seedream-v4-edit \\
-  -F "image=@/path/to/your/image.jpg"`
+  -F "image=@/path/to/your/image.jpg" \\
+  -F "aspect_ratio=16:9"`
     },
     notes: [
       "Uses a pre-configured style prompt from sedream_enhancement_text configuration",

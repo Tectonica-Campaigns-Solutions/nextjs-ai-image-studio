@@ -45,6 +45,26 @@ export async function POST(request: NextRequest) {
     const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
     const jsonIntensity = parseFloat(formData.get("jsonIntensity") as string) || 1.0
     const customEnhancementText = (formData.get("customEnhancementText") as string) || ""
+    const aspectRatio = (formData.get("aspect_ratio") as string) || "1:1"
+    
+    // Debug logging for aspect_ratio
+    console.log("[SeDream v4 Edit] Raw FormData entries:")
+    for (const [key, value] of formData.entries()) {
+      if (key !== "image") {
+        console.log(`  ${key}: "${value}"`)
+      }
+    }
+    console.log("[SeDream v4 Edit] Extracted aspect_ratio:", aspectRatio)
+    
+    // Validate aspect_ratio parameter
+    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"]
+    if (!validAspectRatios.includes(aspectRatio)) {
+      console.error("[SeDream v4 Edit] Invalid aspect_ratio received:", aspectRatio)
+      return NextResponse.json({ 
+        error: "Invalid aspect_ratio parameter",
+        details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
+      }, { status: 400 })
+    }
     
     // Parse JSON options from frontend
     const jsonOptionsStr = formData.get("jsonOptions") as string
@@ -69,7 +89,8 @@ export async function POST(request: NextRequest) {
       prompt: prompt || "(empty)",
       useJSONEnhancement,
       jsonIntensity,
-      hasCustomText: !!customEnhancementText
+      hasCustomText: !!customEnhancementText,
+      aspectRatio
     })
 
     // Validate required parameters
@@ -156,20 +177,48 @@ export async function POST(request: NextRequest) {
 
     console.log("[SeDream v4 Edit] Calling fal.ai API...")
 
+    // Calculate image_size from aspect ratio selection
+    let imageSize: string | { width: number; height: number }
+    
+    switch (aspectRatio) {
+      case "16:9":
+        imageSize = "landscape_16_9"
+        break
+      case "9:16":
+        imageSize = "portrait_16_9"
+        break
+      case "4:3":
+        imageSize = "landscape_4_3"
+        break
+      case "3:4":
+        imageSize = "portrait_4_3"
+        break
+      case "1:1":
+      default:
+        imageSize = "square_hd"
+        break
+    }
+
     // Prepare input for SeDream v4 Edit (uses image_urls array, not single image)
     const input = {
       prompt: finalPrompt,
       image_urls: [imageUrl, referenceImageUrl],
       num_images: 1,
-      enable_safety_checker: true
+      enable_safety_checker: true,
+      image_size: imageSize
     }
 
     console.log("[SeDream v4 Edit] API Input:", {
       prompt: input.prompt,
       imageUrls: input.image_urls,
       numImages: input.num_images,
-      imageSize: `${imageBuffer.length} bytes`
+      aspectRatio: aspectRatio,
+      imageSize: input.image_size,
+      imageBufferSize: `${imageBuffer.length} bytes`
     })
+    
+    console.log("[SeDream v4 Edit] Full input object being sent to fal.ai:")
+    console.log(JSON.stringify(input, null, 2))
 
     // Call SeDream v4 Edit API
     const result = await fal.subscribe("fal-ai/bytedance/seedream/v4/edit", {
