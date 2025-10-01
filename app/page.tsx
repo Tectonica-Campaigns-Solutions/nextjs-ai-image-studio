@@ -383,6 +383,7 @@ export default function ImageEditor() {
   const [sedreamEnhancementPreview, setSedreamEnhancementPreview] = useState<string>("")
   const [sedreamEnhancementMeta, setSedreamEnhancementMeta] = useState<any>(null)
   const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
+  const [sedreamAspectRatio, setSedreamAspectRatio] = useState<string>("1:1")
   const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
 
   // Load canonical options on component mount
@@ -1142,6 +1143,7 @@ export default function ImageEditor() {
       formData.append("useJSONEnhancement", useSedreamJSONEnhancement.toString())
       formData.append("jsonIntensity", sedreamJsonIntensity.toString())
       formData.append("customEnhancementText", sedreamCustomEnhancementText)
+      formData.append("aspect_ratio", sedreamAspectRatio)
       
       // Add JSON enhancement options for backend processing
       const jsonOptions = {
@@ -1249,6 +1251,24 @@ export default function ImageEditor() {
                       <p className="text-xs text-red-600">
                         * Required: This description defines how your image will be transformed.
                       </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sedream-aspect-ratio" className="font-medium">
+                        Aspect Ratio
+                      </Label>
+                      <Select value={sedreamAspectRatio} onValueChange={setSedreamAspectRatio}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1:1">Square (1:1)</SelectItem>
+                          <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                          <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                          <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                          <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* JSON Enhancement Toggle */}
@@ -1969,7 +1989,7 @@ export default function ImageEditor() {
                               className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
                             />
                             <Label htmlFor="use-canonical-prompt" className="font-medium">
-                              Structured Canonical Prompt
+                              Advanced Image Options
                             </Label>
                           </div>
                           <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
@@ -1981,12 +2001,12 @@ export default function ImageEditor() {
                       {useCanonicalPrompt && (
                         <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
                           <div className="text-sm text-muted-foreground">
-                            Configure advanced style transfer options with structured prompting
+                            Use the options below to further adjust the results of image combination
                           </div>
 
                           {/* Keep Options */}
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">Elements to Keep (unchanged)</Label>
+                            <Label className="text-sm font-medium">Basic Preservation Options</Label>
                             <div className="grid grid-cols-2 gap-3">
                               {canonicalOptions?.availableOptions?.keepOptions && Object.entries(canonicalOptions.availableOptions.keepOptions).map(([key, option]: [string, any]) => (
                                 <div key={key} className="flex items-center space-x-2">

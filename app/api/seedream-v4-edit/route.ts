@@ -45,6 +45,16 @@ export async function POST(request: NextRequest) {
     const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
     const jsonIntensity = parseFloat(formData.get("jsonIntensity") as string) || 1.0
     const customEnhancementText = (formData.get("customEnhancementText") as string) || ""
+    const aspectRatio = (formData.get("aspect_ratio") as string) || "1:1"
+    
+    // Validate aspect_ratio parameter
+    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"]
+    if (!validAspectRatios.includes(aspectRatio)) {
+      return NextResponse.json({ 
+        error: "Invalid aspect_ratio parameter",
+        details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
+      }, { status: 400 })
+    }
     
     // Parse JSON options from frontend
     const jsonOptionsStr = formData.get("jsonOptions") as string
@@ -69,7 +79,8 @@ export async function POST(request: NextRequest) {
       prompt: prompt || "(empty)",
       useJSONEnhancement,
       jsonIntensity,
-      hasCustomText: !!customEnhancementText
+      hasCustomText: !!customEnhancementText,
+      aspectRatio
     })
 
     // Validate required parameters
@@ -161,13 +172,15 @@ export async function POST(request: NextRequest) {
       prompt: finalPrompt,
       image_urls: [imageUrl, referenceImageUrl],
       num_images: 1,
-      enable_safety_checker: true
+      enable_safety_checker: true,
+      aspect_ratio: aspectRatio
     }
 
     console.log("[SeDream v4 Edit] API Input:", {
       prompt: input.prompt,
       imageUrls: input.image_urls,
       numImages: input.num_images,
+      aspectRatio: input.aspect_ratio,
       imageSize: `${imageBuffer.length} bytes`
     })
 
