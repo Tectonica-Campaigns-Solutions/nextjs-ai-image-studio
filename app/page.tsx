@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye } from "lucide-react"
+import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye, X, Plus, Download, AlertCircle } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
 import { useRAGStore } from "@/lib/rag-store"
@@ -344,6 +344,29 @@ export default function ImageEditor() {
   const [fluxCombineEnhancementMeta, setFluxCombineEnhancementMeta] = useState<any>(null)
   const [fluxCombineCustomEnhancementText, setFluxCombineCustomEnhancementText] = useState<string>("")
   const [fluxCombineDefaultEnhancementText, setFluxCombineDefaultEnhancementText] = useState<string>("")
+
+  // External Flux Pro Image Combine States (for testing external endpoint)
+  const [externalFluxCombinePrompt, setExternalFluxCombinePrompt] = useState("")
+  const [externalFluxCombineImages, setExternalFluxCombineImages] = useState<File[]>([])
+  const [externalFluxCombineImageUrls, setExternalFluxCombineImageUrls] = useState<string[]>([])
+  const [externalFluxCombineSettings, setExternalFluxCombineSettings] = useState({
+    aspect_ratio: "1:1",
+    guidance_scale: 3.5,
+    num_images: 1,
+    output_format: "jpeg",
+    safety_tolerance: 2,
+    seed: "",
+    enhance_prompt: false
+  })
+  const [externalFluxCombineResult, setExternalFluxCombineResult] = useState<string>("")
+  const [isExternalFluxCombineGenerating, setIsExternalFluxCombineGenerating] = useState(false)
+  const [externalFluxCombineError, setExternalFluxCombineError] = useState<string>("")
+  const [externalFluxCombineGeneratedPrompt, setExternalFluxCombineGeneratedPrompt] = useState<string>("")
+  const [showExternalFluxCombineAdvanced, setShowExternalFluxCombineAdvanced] = useState(false)
+  
+  // External Flux Combine uses same canonical prompt configuration as internal
+  const [externalUseCanonicalPrompt, setExternalUseCanonicalPrompt] = useState(true) // Enabled by default for external
+  const [externalUseJSONEnhancement, setExternalUseJSONEnhancement] = useState(false) // Disabled by default for external
 
   // Edit Image States
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -978,6 +1001,101 @@ export default function ImageEditor() {
     }
   }
 
+  // Handle External Flux Combine Submit (calls external endpoint)
+  const handleExternalFluxCombineSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!externalFluxCombinePrompt.trim()) {
+      setExternalFluxCombineError("Please enter a prompt")
+      return
+    }
+
+    if (externalFluxCombineImages.length + externalFluxCombineImageUrls.length < 2) {
+      setExternalFluxCombineError("Please upload at least 2 images to combine")
+      return
+    }
+
+    setIsExternalFluxCombineGenerating(true)
+    setExternalFluxCombineError("")
+
+    try {
+      // Prepare form data for external endpoint
+      const formData = new FormData()
+      
+      formData.append("prompt", externalFluxCombinePrompt)
+      
+      // Add canonical prompt configuration (enabled by default for external)
+      formData.append("useCanonicalPrompt", externalUseCanonicalPrompt.toString())
+      if (externalUseCanonicalPrompt) {
+        formData.append("canonicalConfig", JSON.stringify(canonicalConfig))
+      }
+      
+      // Add JSON enhancement configuration (disabled by default for external)
+      formData.append("useJSONEnhancement", externalUseJSONEnhancement.toString())
+      
+      // Add uploaded image files
+      externalFluxCombineImages.forEach((file, index) => {
+        formData.append(`image${index}`, file)
+      })
+      
+      // Add image URLs
+      externalFluxCombineImageUrls.forEach((url, index) => {
+        if (url.trim()) {
+          formData.append(`imageUrl${index}`, url.trim())
+        }
+      })
+      
+      // Prepare settings object
+      const settings: any = { ...externalFluxCombineSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert string numbers to actual numbers
+      if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      console.log("[FRONTEND] External combine settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+
+      // Call external endpoint
+      const response = await fetch("/api/external/flux-pro-image-combine", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || `External API error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      console.log("[FRONTEND] External API result:", result)
+      
+      // Capture generated prompt from external endpoint
+      if (result.prompt) {
+        setExternalFluxCombineGeneratedPrompt(result.prompt)
+      } else {
+        setExternalFluxCombineGeneratedPrompt(externalFluxCombinePrompt)
+      }
+      
+      if (result.success && result.image) {
+        setExternalFluxCombineResult(result.image)
+      } else {
+        throw new Error("No combined image received from external API")
+      }
+    } catch (err) {
+      setExternalFluxCombineError(err instanceof Error ? err.message : "Failed to combine images via external API")
+    } finally {
+      setIsExternalFluxCombineGenerating(false)
+    }
+  }
+
   const handleCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     if (files.length > 0) {
@@ -1003,6 +1121,34 @@ export default function ImageEditor() {
 
   const removeCombineImageUrl = (index: number) => {
     setFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // External Flux Combine image handling functions
+  const handleExternalCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length > 0) {
+      setExternalFluxCombineImages(prev => [...prev, ...files])
+    }
+  }
+
+  const removeExternalCombineImage = (index: number) => {
+    setExternalFluxCombineImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addExternalCombineImageUrl = () => {
+    setExternalFluxCombineImageUrls(prev => [...prev, ""])
+  }
+
+  const updateExternalCombineImageUrl = (index: number, url: string) => {
+    setExternalFluxCombineImageUrls(prev => {
+      const newUrls = [...prev]
+      newUrls[index] = url
+      return newUrls
+    })
+  }
+
+  const removeExternalCombineImageUrl = (index: number) => {
+    setExternalFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1209,9 +1355,10 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
+          <TabsTrigger value="external-flux-combine">External Combine</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
@@ -2599,6 +2746,308 @@ export default function ImageEditor() {
                   ) : (
                     <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
                       <p className="text-gray-500">Combined image will appear here</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* External Flux Pro Image Combine Tab - For Testing External Endpoint */}
+          <TabsContent value="external-flux-combine" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    External Combine Images (Test)
+                  </CardTitle>
+                  <CardDescription>
+                    Test the external endpoint with canonical prompt structure (calls /api/external/flux-pro-image-combine)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleExternalFluxCombineSubmit} className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Upload Images (minimum 2)</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleExternalCombineImageUpload}
+                          className="cursor-pointer"
+                        />
+                        {externalFluxCombineImages.length > 0 && (
+                          <div className="space-y-2">
+                            <Label>Uploaded Files:</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {externalFluxCombineImages.map((file, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                  <span className="text-sm text-gray-600 truncate">{file.name}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeExternalCombineImage(index)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Image URLs Section */}
+                      <div className="space-y-2">
+                        <Label>Or Add Image URLs</Label>
+                        {externalFluxCombineImageUrls.map((url, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              value={url}
+                              onChange={(e) => updateExternalCombineImageUrl(index, e.target.value)}
+                              placeholder="https://example.com/image.jpg"
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => removeExternalCombineImageUrl(index)}
+                              className="px-3"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={addExternalCombineImageUrl}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Image URL
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Prompt Section */}
+                    <div className="space-y-2">
+                      <Label htmlFor="external-flux-combine-prompt">Combination Prompt</Label>
+                      <Textarea
+                        id="external-flux-combine-prompt"
+                        value={externalFluxCombinePrompt}
+                        onChange={(e) => setExternalFluxCombinePrompt(e.target.value)}
+                        placeholder="Describe how you want to combine the images..."
+                        className="min-h-[100px]"
+                        required
+                      />
+                    </div>
+
+                    {/* Canonical Prompt Toggle */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="external-use-canonical"
+                          checked={externalUseCanonicalPrompt}
+                          onCheckedChange={(checked) => setExternalUseCanonicalPrompt(checked as boolean)}
+                        />
+                        <Label htmlFor="external-use-canonical" className="text-sm font-medium">
+                          Use Canonical Prompt Structure (Default: ON)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-blue-600">
+                        ✅ Canonical prompt is enabled by default for the external endpoint. This generates structured prompts with TASK, APPLY, STYLE, etc.
+                      </p>
+                    </div>
+
+                    {/* JSON Enhancement Toggle */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="external-use-json"
+                          checked={externalUseJSONEnhancement}
+                          onCheckedChange={(checked) => setExternalUseJSONEnhancement(checked as boolean)}
+                        />
+                        <Label htmlFor="external-use-json" className="text-sm font-medium">
+                          Use JSON Enhancement (Default: OFF)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        JSON enhancement is disabled by default when canonical prompt is enabled.
+                      </p>
+                    </div>
+
+                    {/* Canonical Preview */}
+                    {externalUseCanonicalPrompt && canonicalPreview && (
+                      <div className="space-y-2">
+                        <Label>Canonical Prompt Preview</Label>
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <pre className="text-xs text-blue-800 whitespace-pre-wrap font-mono">
+                            {canonicalPreview}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advanced Settings */}
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowExternalFluxCombineAdvanced(!showExternalFluxCombineAdvanced)}
+                        className="w-full"
+                      >
+                        {showExternalFluxCombineAdvanced ? "Hide" : "Show"} Advanced Settings
+                      </Button>
+                      
+                      {showExternalFluxCombineAdvanced && (
+                        <div className="space-y-4 p-4 border rounded-lg">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Aspect Ratio</Label>
+                              <Select value={externalFluxCombineSettings.aspect_ratio} onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, aspect_ratio: value }))}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                                  <SelectItem value="4:3">4:3 (Landscape)</SelectItem>
+                                  <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
+                                  <SelectItem value="16:9">16:9 (Wide)</SelectItem>
+                                  <SelectItem value="9:16">9:16 (Tall)</SelectItem>
+                                  <SelectItem value="21:9">21:9 (Ultra Wide)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Output Format</Label>
+                              <Select value={externalFluxCombineSettings.output_format} onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, output_format: value }))}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="jpeg">JPEG</SelectItem>
+                                  <SelectItem value="png">PNG</SelectItem>
+                                  <SelectItem value="webp">WebP</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Guidance Scale: {externalFluxCombineSettings.guidance_scale}</Label>
+                              <Slider
+                                value={[externalFluxCombineSettings.guidance_scale]}
+                                onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, guidance_scale: value[0] }))}
+                                min={1}
+                                max={20}
+                                step={0.1}
+                                className="w-full"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Safety Tolerance: {externalFluxCombineSettings.safety_tolerance}</Label>
+                              <Slider
+                                value={[externalFluxCombineSettings.safety_tolerance]}
+                                onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, safety_tolerance: value[0] }))}
+                                min={1}
+                                max={6}
+                                step={1}
+                                className="w-full"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Seed (optional, for reproducible results)</Label>
+                            <Input
+                              type="number"
+                              value={externalFluxCombineSettings.seed}
+                              onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, seed: e.target.value }))}
+                              placeholder="Leave empty for random"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      disabled={isExternalFluxCombineGenerating || externalFluxCombineImages.length + externalFluxCombineImageUrls.length < 2}
+                      className="w-full"
+                    >
+                      {isExternalFluxCombineGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Combining via External API...
+                        </>
+                      ) : (
+                        "Combine Images (External API)"
+                      )}
+                    </Button>
+
+                    {externalFluxCombineError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{externalFluxCombineError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>External API Result</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {externalFluxCombineResult ? (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <img 
+                          src={externalFluxCombineResult} 
+                          alt="External combined result" 
+                          className="w-full h-auto rounded-lg shadow-lg"
+                        />
+                        <Button
+                          onClick={() => window.open(externalFluxCombineResult, '_blank')}
+                          className="absolute top-2 right-2"
+                          size="sm"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {externalFluxCombineGeneratedPrompt && (
+                        <div className="space-y-2">
+                          <Label>Generated Prompt (External API)</Label>
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                            <pre className="text-xs text-green-800 whitespace-pre-wrap font-mono">
+                              {externalFluxCombineGeneratedPrompt}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>✅ Generated via External API: /api/external/flux-pro-image-combine</p>
+                        <p>🎯 Canonical Prompt: {externalUseCanonicalPrompt ? 'Enabled' : 'Disabled'}</p>
+                        <p>🔧 JSON Enhancement: {externalUseJSONEnhancement ? 'Enabled' : 'Disabled'}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
+                      <p className="text-gray-500">External combined image will appear here</p>
                     </div>
                   )}
                 </CardContent>
