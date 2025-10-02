@@ -351,12 +351,18 @@ export default function ImageEditor() {
   const [externalFluxCombineImageUrls, setExternalFluxCombineImageUrls] = useState<string[]>([])
   const [externalFluxCombineSettings, setExternalFluxCombineSettings] = useState({
     aspect_ratio: "1:1",
+    image_size: "landscape_4_3",
     guidance_scale: 3.5,
     num_images: 1,
+    num_inference_steps: 28,
     output_format: "jpeg",
     safety_tolerance: 2,
+    enable_safety_checker: true,
     seed: "",
-    enhance_prompt: false
+    negative_prompt: "",
+    enhance_prompt: false,
+    width: "",
+    height: ""
   })
   const [externalFluxCombineResult, setExternalFluxCombineResult] = useState<string>("")
   const [isExternalFluxCombineGenerating, setIsExternalFluxCombineGenerating] = useState(false)
@@ -2895,88 +2901,229 @@ export default function ImageEditor() {
                       </div>
                     )}
 
-                    {/* Advanced Settings */}
-                    <div className="space-y-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowExternalFluxCombineAdvanced(!showExternalFluxCombineAdvanced)}
-                        className="w-full"
-                      >
-                        {showExternalFluxCombineAdvanced ? "Hide" : "Show"} Advanced Settings
-                      </Button>
-                      
-                      {showExternalFluxCombineAdvanced && (
-                        <div className="space-y-4 p-4 border rounded-lg">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Aspect Ratio</Label>
-                              <Select value={externalFluxCombineSettings.aspect_ratio} onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, aspect_ratio: value }))}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                                  <SelectItem value="4:3">4:3 (Landscape)</SelectItem>
-                                  <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
-                                  <SelectItem value="16:9">16:9 (Wide)</SelectItem>
-                                  <SelectItem value="9:16">9:16 (Tall)</SelectItem>
-                                  <SelectItem value="21:9">21:9 (Ultra Wide)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Output Format</Label>
-                              <Select value={externalFluxCombineSettings.output_format} onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, output_format: value }))}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="jpeg">JPEG</SelectItem>
-                                  <SelectItem value="png">PNG</SelectItem>
-                                  <SelectItem value="webp">WebP</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Guidance Scale: {externalFluxCombineSettings.guidance_scale}</Label>
-                              <Slider
-                                value={[externalFluxCombineSettings.guidance_scale]}
-                                onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, guidance_scale: value[0] }))}
-                                min={1}
-                                max={20}
-                                step={0.1}
-                                className="w-full"
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Safety Tolerance: {externalFluxCombineSettings.safety_tolerance}</Label>
-                              <Slider
-                                value={[externalFluxCombineSettings.safety_tolerance]}
-                                onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, safety_tolerance: value[0] }))}
-                                min={1}
-                                max={6}
-                                step={1}
-                                className="w-full"
-                              />
-                            </div>
-                          </div>
-                          
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/20 dark:to-slate-950/20">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="external-flux-combine-advanced"
+                          checked={showExternalFluxCombineAdvanced}
+                          onCheckedChange={setShowExternalFluxCombineAdvanced}
+                          className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                        />
+                        <Label htmlFor="external-flux-combine-advanced" className="cursor-pointer font-medium">
+                          Advanced Image Options
+                        </Label>
+                      </div>
+                      <div className={`w-2 h-2 rounded-full ${showExternalFluxCombineAdvanced ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                    </div>
+
+                    {showExternalFluxCombineAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Seed (optional, for reproducible results)</Label>
+                            <Label htmlFor="external-flux-combine-image-size">Image Size</Label>
+                            <Select
+                              value={externalFluxCombineSettings.image_size}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, image_size: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="square_hd">Square HD (1024x1024)</SelectItem>
+                                <SelectItem value="square">Square (512x512)</SelectItem>
+                                <SelectItem value="portrait_4_3">Portrait 4:3 (768x1024)</SelectItem>
+                                <SelectItem value="portrait_16_9">Portrait 16:9 (576x1024)</SelectItem>
+                                <SelectItem value="landscape_4_3">Landscape 4:3 (1024x768)</SelectItem>
+                                <SelectItem value="landscape_16_9">Landscape 16:9 (1024x576)</SelectItem>
+                                <SelectItem value="custom">Custom Size</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-aspect-ratio">Aspect Ratio</Label>
+                            <Select
+                              value={externalFluxCombineSettings.aspect_ratio}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, aspect_ratio: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                                <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                                <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                                <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-inference-steps">
+                              Inference Steps: {externalFluxCombineSettings.num_inference_steps}
+                            </Label>
                             <Input
+                              id="external-flux-combine-inference-steps"
                               type="number"
+                              min="1"
+                              max="50"
+                              value={externalFluxCombineSettings.num_inference_steps}
+                              onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, num_inference_steps: parseInt(e.target.value) || 28 }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-guidance">
+                              Guidance Scale: {externalFluxCombineSettings.guidance_scale}
+                            </Label>
+                            <Slider
+                              id="external-flux-combine-guidance"
+                              min={1}
+                              max={20}
+                              step={0.1}
+                              value={[externalFluxCombineSettings.guidance_scale]}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, guidance_scale: value[0] }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-safety">
+                              Safety Tolerance: {externalFluxCombineSettings.safety_tolerance}
+                            </Label>
+                            <Slider
+                              id="external-flux-combine-safety"
+                              min={1}
+                              max={5}
+                              step={1}
+                              value={[externalFluxCombineSettings.safety_tolerance]}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, safety_tolerance: value[0] }))}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              1: Strictest • 2: Strict • 3: Balanced • 4: Permissive • 5: Most Permissive
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-output-format">Output Format</Label>
+                            <Select
+                              value={externalFluxCombineSettings.output_format}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, output_format: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="jpeg">JPEG</SelectItem>
+                                <SelectItem value="png">PNG</SelectItem>
+                                <SelectItem value="webp">WebP</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-seed">Seed (optional)</Label>
+                            <Input
+                              id="external-flux-combine-seed"
+                              type="number"
+                              placeholder="Random if empty"
                               value={externalFluxCombineSettings.seed}
                               onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, seed: e.target.value }))}
-                              placeholder="Leave empty for random"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-num-images">
+                              Number of Images: {externalFluxCombineSettings.num_images}
+                            </Label>
+                            <Input
+                              id="external-flux-combine-num-images"
+                              type="number"
+                              min="1"
+                              max="4"
+                              value={externalFluxCombineSettings.num_images}
+                              onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, num_images: parseInt(e.target.value) || 1 }))}
                             />
                           </div>
                         </div>
-                      )}
-                    </div>
+
+                        {/* Custom Size Settings */}
+                        {externalFluxCombineSettings.image_size === "custom" && (
+                          <div className="space-y-4 p-3 border rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
+                            <Label className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Custom Dimensions</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="external-flux-combine-width">Width (px)</Label>
+                                <Input
+                                  id="external-flux-combine-width"
+                                  type="number"
+                                  placeholder="1024"
+                                  value={externalFluxCombineSettings.width}
+                                  onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, width: e.target.value }))}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="external-flux-combine-height">Height (px)</Label>
+                                <Input
+                                  id="external-flux-combine-height"
+                                  type="number"
+                                  placeholder="1024"
+                                  value={externalFluxCombineSettings.height}
+                                  onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, height: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Negative Prompt */}
+                        <div className="space-y-2">
+                          <Label htmlFor="external-flux-combine-negative-prompt">Negative Prompt (optional)</Label>
+                          <Textarea
+                            id="external-flux-combine-negative-prompt"
+                            placeholder="Describe what you don't want in the image..."
+                            value={externalFluxCombineSettings.negative_prompt}
+                            onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, negative_prompt: e.target.value }))}
+                            className="min-h-[80px]"
+                          />
+                        </div>
+
+                        {/* Additional Settings */}
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="external-flux-combine-enhance-prompt"
+                                checked={externalFluxCombineSettings.enhance_prompt}
+                                onCheckedChange={(checked) => setExternalFluxCombineSettings(prev => ({ ...prev, enhance_prompt: checked }))}
+                                className="data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                              />
+                              <Label htmlFor="external-flux-combine-enhance-prompt" className="cursor-pointer font-medium">
+                                Enhance Prompt
+                              </Label>
+                            </div>
+                            <div className={`w-2 h-2 rounded-full ${externalFluxCombineSettings.enhance_prompt ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                          </div>
+
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="external-flux-combine-safety-checker"
+                                checked={externalFluxCombineSettings.enable_safety_checker}
+                                onCheckedChange={(checked) => setExternalFluxCombineSettings(prev => ({ ...prev, enable_safety_checker: checked }))}
+                                className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                              />
+                              <Label htmlFor="external-flux-combine-safety-checker" className="cursor-pointer font-medium">
+                                Enable Safety Checker
+                              </Label>
+                            </div>
+                            <div className={`w-2 h-2 rounded-full ${externalFluxCombineSettings.enable_safety_checker ? 'bg-blue-500' : 'bg-gray-400'} transition-colors`}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Submit Button */}
                     <Button
