@@ -351,18 +351,13 @@ export default function ImageEditor() {
   const [externalFluxCombineImageUrls, setExternalFluxCombineImageUrls] = useState<string[]>([])
   const [externalFluxCombineSettings, setExternalFluxCombineSettings] = useState({
     aspect_ratio: "1:1",
-    image_size: "landscape_4_3",
     guidance_scale: 3.5,
     num_images: 1,
-    num_inference_steps: 28,
     output_format: "jpeg",
     safety_tolerance: 2,
     enable_safety_checker: true,
     seed: "",
-    negative_prompt: "",
-    enhance_prompt: false,
-    width: "",
-    height: ""
+    enhance_prompt: false
   })
   const [externalFluxCombineResult, setExternalFluxCombineResult] = useState<string>("")
   const [isExternalFluxCombineGenerating, setIsExternalFluxCombineGenerating] = useState(false)
@@ -3284,27 +3279,6 @@ export default function ImageEditor() {
                       <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="external-flux-combine-image-size">Image Size</Label>
-                            <Select
-                              value={externalFluxCombineSettings.image_size}
-                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, image_size: value }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="square_hd">Square HD (1024x1024)</SelectItem>
-                                <SelectItem value="square">Square (512x512)</SelectItem>
-                                <SelectItem value="portrait_4_3">Portrait 4:3 (768x1024)</SelectItem>
-                                <SelectItem value="portrait_16_9">Portrait 16:9 (576x1024)</SelectItem>
-                                <SelectItem value="landscape_4_3">Landscape 4:3 (1024x768)</SelectItem>
-                                <SelectItem value="landscape_16_9">Landscape 16:9 (1024x576)</SelectItem>
-                                <SelectItem value="custom">Custom Size</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
                             <Label htmlFor="external-flux-combine-aspect-ratio">Aspect Ratio</Label>
                             <Select
                               value={externalFluxCombineSettings.aspect_ratio}
@@ -3322,20 +3296,6 @@ export default function ImageEditor() {
                                 <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
                               </SelectContent>
                             </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="external-flux-combine-inference-steps">
-                              Inference Steps: {externalFluxCombineSettings.num_inference_steps}
-                            </Label>
-                            <Input
-                              id="external-flux-combine-inference-steps"
-                              type="number"
-                              min="1"
-                              max="50"
-                              value={externalFluxCombineSettings.num_inference_steps}
-                              onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, num_inference_steps: parseInt(e.target.value) || 28 }))}
-                            />
                           </div>
 
                           <div className="space-y-2">
@@ -3410,47 +3370,6 @@ export default function ImageEditor() {
                               onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, num_images: parseInt(e.target.value) || 1 }))}
                             />
                           </div>
-                        </div>
-
-                        {/* Custom Size Settings */}
-                        {externalFluxCombineSettings.image_size === "custom" && (
-                          <div className="space-y-4 p-3 border rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
-                            <Label className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Custom Dimensions</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="external-flux-combine-width">Width (px)</Label>
-                                <Input
-                                  id="external-flux-combine-width"
-                                  type="number"
-                                  placeholder="1024"
-                                  value={externalFluxCombineSettings.width}
-                                  onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, width: e.target.value }))}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="external-flux-combine-height">Height (px)</Label>
-                                <Input
-                                  id="external-flux-combine-height"
-                                  type="number"
-                                  placeholder="1024"
-                                  value={externalFluxCombineSettings.height}
-                                  onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, height: e.target.value }))}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Negative Prompt */}
-                        <div className="space-y-2">
-                          <Label htmlFor="external-flux-combine-negative-prompt">Negative Prompt (optional)</Label>
-                          <Textarea
-                            id="external-flux-combine-negative-prompt"
-                            placeholder="Describe what you don't want in the image..."
-                            value={externalFluxCombineSettings.negative_prompt}
-                            onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, negative_prompt: e.target.value }))}
-                            className="min-h-[80px]"
-                          />
                         </div>
 
                         {/* Additional Settings */}
