@@ -903,6 +903,15 @@ export default function ImageEditor() {
     setIsFluxUltraGenerating(true)
     setFluxUltraError("")
 
+    // DEBUG: Force log the current state
+    console.log('[FRONTEND] ===== CANONICAL DEBUG START =====')
+    console.log('[FRONTEND] useGenerationCanonical state:', useGenerationCanonical)
+    console.log('[FRONTEND] Switch element exists:', document.getElementById('use-generation-canonical'))
+    console.log('[FRONTEND] Switch checked:', document.getElementById('use-generation-canonical')?.getAttribute('data-state'))
+    console.log('[FRONTEND] generationCanonicalConfig:', JSON.stringify(generationCanonicalConfig, null, 2))
+    console.log('[FRONTEND] generationCanonicalOptions loaded:', !!generationCanonicalOptions)
+    console.log('[FRONTEND] ===== CANONICAL DEBUG END =====')
+
     try {
       let finalPrompt = fluxUltraPrompt
       console.log('[FRONTEND] Original prompt:', fluxUltraPrompt)
@@ -3924,6 +3933,22 @@ export default function ImageEditor() {
                           <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
                             BETA
                           </div>
+                        </div>
+                      </div>
+                      
+                      {/* Debug Status Indicator */}
+                      <div className="text-xs space-y-1">
+                        <div className={`flex items-center gap-2 ${useGenerationCanonical ? 'text-green-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${useGenerationCanonical ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          Status: {useGenerationCanonical ? 'Active' : 'Inactive'}
+                        </div>
+                        <div className={`flex items-center gap-2 ${generationCanonicalOptions ? 'text-green-600' : 'text-red-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationCanonicalOptions ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          Config: {generationCanonicalOptions ? 'Loaded' : 'Not loaded'}
+                        </div>
+                        <div className={`flex items-center gap-2 ${generationCanonicalPreview ? 'text-green-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationCanonicalPreview ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          Preview: {generationCanonicalPreview ? 'Generated' : 'None'}
                         </div>
                       </div>
                       
