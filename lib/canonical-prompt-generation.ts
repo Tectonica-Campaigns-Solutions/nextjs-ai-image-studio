@@ -31,7 +31,7 @@ export interface GenerationCanonicalConfig {
   
   modifiers: {
     positives: string         // Terms to enhance
-    negatives: string         // Terms to avoid
+    // negatives removed - now handled automatically from enforcedNegatives
   }
 }
 
@@ -55,6 +55,7 @@ export interface GenerationCanonicalOptions {
   }
   cities: string[]
   qualityStandards: string[]
+  enforcedNegatives: string[]
 }
 
 /**
@@ -141,6 +142,13 @@ export class GenerationCanonicalPromptProcessor {
         "professional quality",
         "crisp focus",
         "balanced lighting"
+      ],
+      enforcedNegatives: [
+        "blurry",
+        "low-res", 
+        "oversaturated",
+        "watermark",
+        "jpeg artifacts"
       ]
     }
   }
@@ -208,8 +216,8 @@ export class GenerationCanonicalPromptProcessor {
         sections.push(`ENHANCE: ${enhanceText}`)
       }
 
-      // AVOID section - negative modifiers  
-      const avoidText = this.buildAvoidText(config.modifiers.negatives)
+      // AVOID section - automatically use enforced negatives
+      const avoidText = this.options.enforcedNegatives.join(', ')
       if (avoidText) {
         sections.push(`AVOID: ${avoidText}`)
       }
@@ -309,22 +317,6 @@ export class GenerationCanonicalPromptProcessor {
       .filter(term => term.length > 0)
 
     return enhanceTerms.join(', ')
-  }
-
-  /**
-   * Build avoid text from negative modifiers
-   */
-  private buildAvoidText(negatives: string): string {
-    const terms = negatives?.trim()
-    if (!terms) return ''
-
-    // Split by common delimiters and clean up
-    const avoidTerms = terms
-      .split(/[,;|\n]/)
-      .map(term => term.trim())
-      .filter(term => term.length > 0)
-
-    return avoidTerms.join(', ')
   }
 
   /**

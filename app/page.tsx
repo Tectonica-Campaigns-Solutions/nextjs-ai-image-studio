@@ -67,8 +67,7 @@ export default function ImageEditor() {
       others: ''
     },
     modifiers: {
-      positives: '',
-      negatives: ''
+      positives: ''
     }
   })
   const [generationCanonicalOptions, setGenerationCanonicalOptions] = useState<any>(null)
@@ -3942,7 +3941,7 @@ export default function ImageEditor() {
 
                           {/* Subject Configuration */}
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">👥 Subject</Label>
+                            <Label className="text-sm font-medium">Subject</Label>
                             <div className="grid grid-cols-2 gap-3">
                               <div className="flex items-center space-x-2">
                                 <input
@@ -4038,7 +4037,7 @@ export default function ImageEditor() {
 
                           {/* Appearance Configuration */}
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">🎨 Appearance</Label>
+                            <Label className="text-sm font-medium">Appearance</Label>
                             
                             {/* Color Relevance */}
                             <div className="space-y-2">
@@ -4097,7 +4096,7 @@ export default function ImageEditor() {
 
                           {/* Style Configuration */}
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">🖼️ Style</Label>
+                            <Label className="text-sm font-medium">Style</Label>
                             <div className="flex gap-4">
                               <div className="flex items-center space-x-2">
                                 <input
@@ -4132,7 +4131,7 @@ export default function ImageEditor() {
 
                           {/* Elements Configuration */}
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">🏛️ Elements</Label>
+                            <Label className="text-sm font-medium">Elements</Label>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label className="text-xs text-muted-foreground">Landmark</Label>
@@ -4147,22 +4146,14 @@ export default function ImageEditor() {
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-xs text-muted-foreground">City</Label>
-                                <Select
+                                <Input
+                                  placeholder="e.g., New York, Paris, Tokyo"
                                   value={generationCanonicalConfig.elements.city || ''}
-                                  onValueChange={(value) => setGenerationCanonicalConfig(prev => ({
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
                                     ...prev,
-                                    elements: { ...prev.elements, city: value }
+                                    elements: { ...prev.elements, city: e.target.value }
                                   }))}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select city..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {generationCanonicalOptions?.cities?.map((city: string) => (
-                                      <SelectItem key={city} value={city}>{city}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </div>
                             </div>
                             <div className="space-y-2">
@@ -4180,32 +4171,21 @@ export default function ImageEditor() {
 
                           {/* Modifiers Configuration */}
                           <div className="space-y-3">
-                            <Label className="text-sm font-medium">⚡ Modifiers</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Positives (enhance)</Label>
-                                <Textarea
-                                  placeholder="terms to emphasize..."
-                                  value={generationCanonicalConfig.modifiers.positives}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    modifiers: { ...prev.modifiers, positives: e.target.value }
-                                  }))}
-                                  rows={2}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Negatives (avoid)</Label>
-                                <Textarea
-                                  placeholder="terms to avoid..."
-                                  value={generationCanonicalConfig.modifiers.negatives}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    modifiers: { ...prev.modifiers, negatives: e.target.value }
-                                  }))}
-                                  rows={2}
-                                />
-                              </div>
+                            <Label className="text-sm font-medium">Modifiers</Label>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Positives (enhance)</Label>
+                              <Textarea
+                                placeholder="terms to emphasize..."
+                                value={generationCanonicalConfig.modifiers.positives}
+                                onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                  ...prev,
+                                  modifiers: { ...prev.modifiers, positives: e.target.value }
+                                }))}
+                                rows={2}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Negative terms are automatically applied from backend configuration
+                              </p>
                             </div>
                           </div>
 
