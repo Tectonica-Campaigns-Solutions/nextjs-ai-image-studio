@@ -22,6 +22,7 @@ import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, typ
 import { getEnhancementText, getEditEnhancementText, getSedreamEnhancementText } from "@/lib/json-enhancement"
 import { EnhancementPreview } from "@/components/enhancement-preview"
 import type { CanonicalPromptConfig } from "@/lib/canonical-prompt"
+import { generationCanonicalPromptProcessor, type GenerationCanonicalConfig } from "@/lib/canonical-prompt-generation"
 
 export default function ImageEditor() {
   // Flux LoRA Text-to-Image States
@@ -44,6 +45,34 @@ export default function ImageEditor() {
   const [useRagFluxPro, setUseRagFluxPro] = useState(true)
   const [fluxProGeneratedPrompt, setFluxProGeneratedPrompt] = useState<string>("")
   const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
+
+  // Generation Canonical Prompt States
+  const [useGenerationCanonical, setUseGenerationCanonical] = useState(false)
+  const [generationCanonicalConfig, setGenerationCanonicalConfig] = useState<GenerationCanonicalConfig>({
+    subject: {
+      type: 'individual',
+      groupSize: 3,
+      objectDescription: ''
+    },
+    appearance: {
+      colorRelevance: [],
+      colorIntensity: 'moderate'
+    },
+    style: {
+      type: 'realistic'
+    },
+    elements: {
+      landmark: '',
+      city: '',
+      others: ''
+    },
+    modifiers: {
+      positives: '',
+      negatives: ''
+    }
+  })
+  const [generationCanonicalOptions, setGenerationCanonicalOptions] = useState<any>(null)
+  const [generationCanonicalPreview, setGenerationCanonicalPreview] = useState<string>("")
 
   // Flux Ultra Finetuned States
   const [fluxUltraPrompt, setFluxUltraPrompt] = useState("")
@@ -184,6 +213,37 @@ export default function ImageEditor() {
     } catch (error) {
       console.warn('Failed to generate canonical preview:', error)
       setCanonicalPreview("")
+    }
+  }
+
+  // Load generation canonical prompt options
+  const loadGenerationCanonicalOptions = async () => {
+    try {
+      const options = generationCanonicalPromptProcessor.getAvailableOptions()
+      setGenerationCanonicalOptions(options)
+      console.log('Loaded generation canonical options:', options)
+    } catch (error) {
+      console.warn('Failed to load generation canonical options:', error)
+    }
+  }
+
+  // Generate generation canonical prompt preview
+  const generateGenerationCanonicalPreview = async () => {
+    if (!useGenerationCanonical || !fluxProPrompt.trim()) {
+      setGenerationCanonicalPreview("")
+      return
+    }
+
+    try {
+      const canonicalPrompt = generationCanonicalPromptProcessor.generateCanonicalPrompt(
+        fluxProPrompt,
+        generationCanonicalConfig
+      )
+      setGenerationCanonicalPreview(canonicalPrompt)
+      console.log('Generated generation canonical preview:', canonicalPrompt)
+    } catch (error) {
+      console.warn('Failed to generate generation canonical preview:', error)
+      setGenerationCanonicalPreview("")
     }
   }
 
@@ -413,6 +473,7 @@ export default function ImageEditor() {
   // Load canonical options on component mount
   useEffect(() => {
     loadCanonicalOptions()
+    loadGenerationCanonicalOptions()
   }, [])
 
   // Update canonical preview when config or prompt changes
@@ -421,6 +482,13 @@ export default function ImageEditor() {
       generateCanonicalPreview()
     }
   }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
+
+  // Update generation canonical preview when config or prompt changes
+  useEffect(() => {
+    if (useGenerationCanonical) {
+      generateGenerationCanonicalPreview()
+    }
+  }, [useGenerationCanonical, generationCanonicalConfig, fluxProPrompt])
 
   // Helper component to display generated prompt
   const GeneratedPromptDisplay = ({ prompt, title }: { prompt: string; title: string }) => {

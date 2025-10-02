@@ -1,0 +1,112 @@
+{
+  "generation_canonical": {
+    "version": "1.0",
+    "description": "Canonical prompt system for image generation from text descriptions",
+    
+    "subjects": {
+      "individual": "one person",
+      "group": "group of {count} people",
+      "crowd": "crowd of many people",
+      "object": "{description}"
+    },
+    
+    "brand_colors": [
+      "#6E3CCB deep violet",
+      "#D8C8F0 light violet", 
+      "#5C38F2 blue",
+      "#F79533 orange",
+      "#FFFFFF white",
+      "#000000 black"
+    ],
+    
+    "color_intensity": {
+      "subtle": "with subtle color accents",
+      "moderate": "with balanced color presence", 
+      "prominent": "with bold vibrant colors"
+    },
+    
+    "styles": {
+      "realistic": "photorealistic, high detail, professional photography",
+      "illustrative": "artistic illustration, stylized, digital art"
+    },
+    
+    "cities": [
+      "New York",
+      "London", 
+      "Paris",
+      "Tokyo",
+      "Madrid",
+      "Barcelona",
+      "Rome",
+      "Amsterdam",
+      "Berlin",
+      "Sydney",
+      "Los Angeles",
+      "Chicago",
+      "Toronto",
+      "Mexico City",
+      "São Paulo",
+      "Buenos Aires",
+      "Miami",
+      "Dubai",
+      "Singapore",
+      "Hong Kong",
+      "Seoul",
+      "Mumbai",
+      "Cairo",
+      "Istanbul",
+      "Moscow",
+      "Stockholm",
+      "Copenhagen",
+      "Vienna",
+      "Prague",
+      "Warsaw"
+    ],
+    
+    "quality_standards": [
+      "high detail",
+      "clean composition", 
+      "professional quality",
+      "crisp focus",
+      "balanced lighting",
+      "correct anatomy",
+      "natural proportions"
+    ],
+    
+    "common_landmarks": [
+      "Eiffel Tower",
+      "Statue of Liberty",
+      "Big Ben",
+      "Colosseum",
+      "Taj Mahal",
+      "Great Wall of China",
+      "Machu Picchu",
+      "Sydney Opera House",
+      "Empire State Building",
+      "Golden Gate Bridge",
+      "Christ the Redeemer",
+      "Burj Khalifa",
+      "Sagrada Familia",
+      "Times Square",
+      "Central Park",
+      "Tower Bridge",
+      "Arc de Triomphe",
+      "Brandenburg Gate",
+      "Red Square",
+      "Acropolis"
+    ],
+    
+    "style_modifiers": {
+      "realistic": {
+        "base": "photorealistic, high detail, professional photography",
+        "lighting": ["natural lighting", "studio lighting", "golden hour", "dramatic lighting"],
+        "quality": ["8K resolution", "sharp focus", "professional grade", "cinematic quality"]
+      },
+      "illustrative": {
+        "base": "artistic illustration, stylized, digital art",
+        "styles": ["concept art", "digital painting", "vector illustration", "hand-drawn style"],
+        "quality": ["clean lines", "vibrant colors", "artistic composition", "stylized rendering"]
+      }
+    }
+  }
+}
