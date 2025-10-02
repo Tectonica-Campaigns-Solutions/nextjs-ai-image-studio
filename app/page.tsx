@@ -72,6 +72,7 @@ export default function ImageEditor() {
   })
   const [generationCanonicalOptions, setGenerationCanonicalOptions] = useState<any>(null)
   const [generationCanonicalPreview, setGenerationCanonicalPreview] = useState<string>("")
+  const [isGeneratingCanonicalPreview, setIsGeneratingCanonicalPreview] = useState(false)
 
   // Flux Ultra Finetuned States
   const [fluxUltraPrompt, setFluxUltraPrompt] = useState("")
@@ -230,9 +231,11 @@ export default function ImageEditor() {
   const generateGenerationCanonicalPreview = async () => {
     if (!useGenerationCanonical || !fluxUltraPrompt.trim()) {
       setGenerationCanonicalPreview("")
+      setIsGeneratingCanonicalPreview(false)
       return
     }
 
+    setIsGeneratingCanonicalPreview(true)
     try {
       const canonicalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
         fluxUltraPrompt,
@@ -243,6 +246,8 @@ export default function ImageEditor() {
     } catch (error) {
       console.warn('Failed to generate generation canonical preview:', error)
       setGenerationCanonicalPreview("")
+    } finally {
+      setIsGeneratingCanonicalPreview(false)
     }
   }
 
@@ -482,11 +487,19 @@ export default function ImageEditor() {
     }
   }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
 
-  // Update generation canonical preview when config or prompt changes
+  // Update generation canonical preview when config or prompt changes (debounced)
   useEffect(() => {
-    if (useGenerationCanonical) {
-      generateGenerationCanonicalPreview()
+    if (!useGenerationCanonical) {
+      setGenerationCanonicalPreview("")
+      return
     }
+
+    // Debounce the preview generation to avoid lag while typing
+    const timeoutId = setTimeout(() => {
+      generateGenerationCanonicalPreview()
+    }, 500) // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timeoutId)
   }, [useGenerationCanonical, generationCanonicalConfig, fluxUltraPrompt])
 
   // Helper component to display generated prompt
@@ -3927,9 +3940,9 @@ export default function ImageEditor() {
                           <div className={`w-2 h-2 rounded-full ${generationCanonicalOptions ? 'bg-green-500' : 'bg-red-500'}`}></div>
                           Config: {generationCanonicalOptions ? 'Loaded' : 'Not loaded'}
                         </div>
-                        <div className={`flex items-center gap-2 ${generationCanonicalPreview ? 'text-green-600' : 'text-gray-500'}`}>
-                          <div className={`w-2 h-2 rounded-full ${generationCanonicalPreview ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                          Preview: {generationCanonicalPreview ? 'Generated' : 'None'}
+                        <div className={`flex items-center gap-2 ${generationCanonicalPreview ? 'text-green-600' : isGeneratingCanonicalPreview ? 'text-yellow-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationCanonicalPreview ? 'bg-green-500' : isGeneratingCanonicalPreview ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                          Preview: {isGeneratingCanonicalPreview ? 'Generating...' : generationCanonicalPreview ? 'Generated' : 'None'}
                         </div>
                       </div>
                       
@@ -4190,13 +4203,20 @@ export default function ImageEditor() {
                           </div>
 
                           {/* Generation Preview */}
-                          {generationCanonicalPreview && (
+                          {(generationCanonicalPreview || isGeneratingCanonicalPreview) && (
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">Generated Prompt Preview</Label>
                               <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
-                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-                                  {generationCanonicalPreview}
-                                </pre>
+                                {isGeneratingCanonicalPreview ? (
+                                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                                    <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground border-t-transparent"></div>
+                                    <span>Generating preview...</span>
+                                  </div>
+                                ) : (
+                                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                    {generationCanonicalPreview}
+                                  </pre>
+                                )}
                               </div>
                             </div>
                           )}
