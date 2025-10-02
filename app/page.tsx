@@ -903,20 +903,8 @@ export default function ImageEditor() {
     setIsFluxUltraGenerating(true)
     setFluxUltraError("")
 
-    // DEBUG: Force log the current state
-    console.log('[FRONTEND] ===== CANONICAL DEBUG START =====')
-    console.log('[FRONTEND] useGenerationCanonical state:', useGenerationCanonical)
-    console.log('[FRONTEND] Switch element exists:', document.getElementById('use-generation-canonical'))
-    console.log('[FRONTEND] Switch checked:', document.getElementById('use-generation-canonical')?.getAttribute('data-state'))
-    console.log('[FRONTEND] generationCanonicalConfig:', JSON.stringify(generationCanonicalConfig, null, 2))
-    console.log('[FRONTEND] generationCanonicalOptions loaded:', !!generationCanonicalOptions)
-    console.log('[FRONTEND] ===== CANONICAL DEBUG END =====')
-
     try {
       let finalPrompt = fluxUltraPrompt
-      console.log('[FRONTEND] Original prompt:', fluxUltraPrompt)
-      console.log('[FRONTEND] useGenerationCanonical:', useGenerationCanonical)
-      console.log('[FRONTEND] generationCanonicalConfig:', generationCanonicalConfig)
 
       // Apply canonical prompt processing if enabled
       if (useGenerationCanonical) {
@@ -925,17 +913,11 @@ export default function ImageEditor() {
             fluxUltraPrompt,
             generationCanonicalConfig
           )
-          console.log('[FRONTEND] Generated canonical prompt:', finalPrompt)
-          console.log('[FRONTEND] Canonical prompt length:', finalPrompt.length)
         } catch (canonicalError) {
           console.warn('Failed to generate canonical prompt, using original:', canonicalError)
           // Continue with original prompt if canonical fails
         }
-      } else {
-        console.log('[FRONTEND] Canonical prompt disabled, using original prompt')
       }
-
-      console.log('[FRONTEND] Final prompt being sent to API:', finalPrompt)
 
       const formData = new FormData()
       

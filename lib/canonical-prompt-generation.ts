@@ -160,9 +160,6 @@ export class GenerationCanonicalPromptProcessor {
     basePrompt: string,
     config: GenerationCanonicalConfig
   ): Promise<string> {
-    console.log('[Generation Canonical] Starting generation with config:', config)
-    console.log('[Generation Canonical] Base prompt:', basePrompt)
-    
     await this.ensureOptionsLoaded()
     
     if (!this.options) {
@@ -170,15 +167,12 @@ export class GenerationCanonicalPromptProcessor {
       return basePrompt
     }
 
-    console.log('[Generation Canonical] Options loaded:', this.options)
-
     try {
       const sections: string[] = []
 
       // TASK section - always present
       const styleDetail = this.options.styles[config.style.type] || config.style.type
       sections.push(`TASK: Generate a ${styleDetail} image`)
-      console.log('[Generation Canonical] Added TASK section:', sections[sections.length - 1])
 
       // SUBJECT section
       const subjectText = this.buildSubjectText(config.subject)
@@ -226,7 +220,6 @@ export class GenerationCanonicalPromptProcessor {
 
       const canonicalPrompt = sections.join('.\n\n') + '.'
 
-      console.log('[Generation Canonical] Generated prompt:', canonicalPrompt)
       return canonicalPrompt
 
     } catch (error) {
