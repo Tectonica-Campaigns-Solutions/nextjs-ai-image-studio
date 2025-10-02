@@ -229,14 +229,14 @@ export default function ImageEditor() {
 
   // Generate generation canonical prompt preview
   const generateGenerationCanonicalPreview = async () => {
-    if (!useGenerationCanonical || !fluxProPrompt.trim()) {
+    if (!useGenerationCanonical || !fluxUltraPrompt.trim()) {
       setGenerationCanonicalPreview("")
       return
     }
 
     try {
       const canonicalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
-        fluxProPrompt,
+        fluxUltraPrompt,
         generationCanonicalConfig
       )
       setGenerationCanonicalPreview(canonicalPrompt)
@@ -488,7 +488,7 @@ export default function ImageEditor() {
     if (useGenerationCanonical) {
       generateGenerationCanonicalPreview()
     }
-  }, [useGenerationCanonical, generationCanonicalConfig, fluxProPrompt])
+  }, [useGenerationCanonical, generationCanonicalConfig, fluxUltraPrompt])
 
   // Helper component to display generated prompt
   const GeneratedPromptDisplay = ({ prompt, title }: { prompt: string; title: string }) => {
@@ -904,10 +904,26 @@ export default function ImageEditor() {
     setFluxUltraError("")
 
     try {
+      let finalPrompt = fluxUltraPrompt
+
+      // Apply canonical prompt processing if enabled
+      if (useGenerationCanonical) {
+        try {
+          finalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
+            fluxUltraPrompt,
+            generationCanonicalConfig
+          )
+          console.log('[FRONTEND] Generated canonical prompt:', finalPrompt)
+        } catch (canonicalError) {
+          console.warn('Failed to generate canonical prompt, using original:', canonicalError)
+          // Continue with original prompt if canonical fails
+        }
+      }
+
       const formData = new FormData()
       
       // The API will construct the final prompt with trigger phrase
-      formData.append("prompt", fluxUltraPrompt)
+      formData.append("prompt", finalPrompt)
       formData.append("finetuneId", fluxUltraFinetuneId)
       formData.append("finetuneStrength", fluxUltraFinetuneStrength.toString())
       formData.append("triggerPhrase", fluxUltraTriggerPhrase)
@@ -1691,317 +1707,6 @@ export default function ImageEditor() {
                         rows={3}
                         disabled={isFluxProGenerating}
                       />
-                    </div>
-
-                    {/* GENERATION CANONICAL PROMPT CONTROLS */}
-                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id="use-generation-canonical"
-                              checked={useGenerationCanonical}
-                              onCheckedChange={setUseGenerationCanonical}
-                              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
-                            />
-                            <Label htmlFor="use-generation-canonical" className="font-medium">
-                              Advanced Generation Options
-                            </Label>
-                          </div>
-                          <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
-                            BETA
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {useGenerationCanonical && (
-                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
-                          <div className="text-sm text-muted-foreground">
-                            Configure structured prompt generation for precise image creation
-                          </div>
-
-                          {/* Subject Configuration */}
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">👥 Subject</Label>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="subject-individual"
-                                  name="subject-type"
-                                  value="individual"
-                                  checked={generationCanonicalConfig.subject.type === 'individual'}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    subject: { ...prev.subject, type: e.target.value as any }
-                                  }))}
-                                />
-                                <Label htmlFor="subject-individual" className="text-sm">Individual</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="subject-group"
-                                  name="subject-type"
-                                  value="group"
-                                  checked={generationCanonicalConfig.subject.type === 'group'}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    subject: { ...prev.subject, type: e.target.value as any }
-                                  }))}
-                                />
-                                <Label htmlFor="subject-group" className="text-sm">Group</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="subject-crowd"
-                                  name="subject-type"
-                                  value="crowd"
-                                  checked={generationCanonicalConfig.subject.type === 'crowd'}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    subject: { ...prev.subject, type: e.target.value as any }
-                                  }))}
-                                />
-                                <Label htmlFor="subject-crowd" className="text-sm">Crowd (&gt;5)</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="subject-object"
-                                  name="subject-type"
-                                  value="object"
-                                  checked={generationCanonicalConfig.subject.type === 'object'}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    subject: { ...prev.subject, type: e.target.value as any }
-                                  }))}
-                                />
-                                <Label htmlFor="subject-object" className="text-sm">Object</Label>
-                              </div>
-                            </div>
-                            
-                            {/* Group Size Input */}
-                            {generationCanonicalConfig.subject.type === 'group' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Group Size (2-5 people)</Label>
-                                <Input
-                                  type="number"
-                                  min="2"
-                                  max="5"
-                                  value={generationCanonicalConfig.subject.groupSize || 3}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    subject: { ...prev.subject, groupSize: parseInt(e.target.value) || 3 }
-                                  }))}
-                                  className="w-24"
-                                />
-                              </div>
-                            )}
-                            
-                            {/* Object Description Input */}
-                            {generationCanonicalConfig.subject.type === 'object' && (
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Object Description</Label>
-                                <Input
-                                  placeholder="landmark, animal, building, etc."
-                                  value={generationCanonicalConfig.subject.objectDescription || ''}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    subject: { ...prev.subject, objectDescription: e.target.value }
-                                  }))}
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Appearance Configuration */}
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">🎨 Appearance</Label>
-                            
-                            {/* Color Relevance */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Brand Colors</Label>
-                              <div className="grid grid-cols-3 gap-2">
-                                {generationCanonicalOptions?.brand_colors?.map((color: string, index: number) => {
-                                  const colorName = color.split(' ').slice(-2).join(' ')
-                                  const isSelected = generationCanonicalConfig.appearance.colorRelevance.includes(color)
-                                  return (
-                                    <div key={index} className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id={`color-${index}`}
-                                        checked={isSelected}
-                                        onCheckedChange={(checked) => {
-                                          setGenerationCanonicalConfig(prev => ({
-                                            ...prev,
-                                            appearance: {
-                                              ...prev.appearance,
-                                              colorRelevance: checked 
-                                                ? [...prev.appearance.colorRelevance, color]
-                                                : prev.appearance.colorRelevance.filter(c => c !== color)
-                                            }
-                                          }))
-                                        }}
-                                      />
-                                      <Label htmlFor={`color-${index}`} className="text-xs">{colorName}</Label>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                            
-                            {/* Color Intensity */}
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Color Intensity</Label>
-                              <div className="flex gap-4">
-                                {['subtle', 'moderate', 'prominent'].map((intensity) => (
-                                  <div key={intensity} className="flex items-center space-x-2">
-                                    <input
-                                      type="radio"
-                                      id={`intensity-${intensity}`}
-                                      name="color-intensity"
-                                      value={intensity}
-                                      checked={generationCanonicalConfig.appearance.colorIntensity === intensity}
-                                      onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                        ...prev,
-                                        appearance: { ...prev.appearance, colorIntensity: e.target.value as any }
-                                      }))}
-                                    />
-                                    <Label htmlFor={`intensity-${intensity}`} className="text-xs capitalize">{intensity}</Label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Style Configuration */}
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">🖼️ Style</Label>
-                            <div className="flex gap-4">
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="style-realistic"
-                                  name="generation-style"
-                                  value="realistic"
-                                  checked={generationCanonicalConfig.style.type === 'realistic'}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    style: { ...prev.style, type: e.target.value as any }
-                                  }))}
-                                />
-                                <Label htmlFor="style-realistic" className="text-sm">Realistic</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  id="style-illustrative"
-                                  name="generation-style"
-                                  value="illustrative"
-                                  checked={generationCanonicalConfig.style.type === 'illustrative'}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    style: { ...prev.style, type: e.target.value as any }
-                                  }))}
-                                />
-                                <Label htmlFor="style-illustrative" className="text-sm">Illustrative</Label>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Elements Configuration */}
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">🏛️ Elements</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Landmark</Label>
-                                <Input
-                                  placeholder="e.g., Eiffel Tower, Central Park"
-                                  value={generationCanonicalConfig.elements.landmark || ''}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    elements: { ...prev.elements, landmark: e.target.value }
-                                  }))}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">City</Label>
-                                <Select
-                                  value={generationCanonicalConfig.elements.city || ''}
-                                  onValueChange={(value) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    elements: { ...prev.elements, city: value }
-                                  }))}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select city..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {generationCanonicalOptions?.cities?.map((city: string) => (
-                                      <SelectItem key={city} value={city}>{city}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-xs text-muted-foreground">Other Elements</Label>
-                              <Input
-                                placeholder="Additional elements to include..."
-                                value={generationCanonicalConfig.elements.others || ''}
-                                onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                  ...prev,
-                                  elements: { ...prev.elements, others: e.target.value }
-                                }))}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Modifiers Configuration */}
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">⚡ Modifiers</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Positives (enhance)</Label>
-                                <Textarea
-                                  placeholder="terms to emphasize..."
-                                  value={generationCanonicalConfig.modifiers.positives}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    modifiers: { ...prev.modifiers, positives: e.target.value }
-                                  }))}
-                                  rows={2}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">Negatives (avoid)</Label>
-                                <Textarea
-                                  placeholder="terms to avoid..."
-                                  value={generationCanonicalConfig.modifiers.negatives}
-                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
-                                    ...prev,
-                                    modifiers: { ...prev.modifiers, negatives: e.target.value }
-                                  }))}
-                                  rows={2}
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Generation Preview */}
-                          {generationCanonicalPreview && (
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Generated Prompt Preview</Label>
-                              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
-                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-                                  {generationCanonicalPreview}
-                                </pre>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
 
                     {/* HYBRID ENHANCEMENT CONTROLS */}
@@ -4191,6 +3896,317 @@ export default function ImageEditor() {
                         onChange={(e) => setFluxUltraPrompt(e.target.value)}
                         rows={3}
                       />
+                    </div>
+
+                    {/* GENERATION CANONICAL PROMPT CONTROLS */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="use-generation-canonical"
+                              checked={useGenerationCanonical}
+                              onCheckedChange={setUseGenerationCanonical}
+                              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                            />
+                            <Label htmlFor="use-generation-canonical" className="font-medium">
+                              Advanced Generation Options
+                            </Label>
+                          </div>
+                          <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                            BETA
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {useGenerationCanonical && (
+                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                          <div className="text-sm text-muted-foreground">
+                            Configure structured prompt generation for precise image creation
+                          </div>
+
+                          {/* Subject Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">👥 Subject</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-individual"
+                                  name="subject-type"
+                                  value="individual"
+                                  checked={generationCanonicalConfig.subject.type === 'individual'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-individual" className="text-sm">Individual</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-group"
+                                  name="subject-type"
+                                  value="group"
+                                  checked={generationCanonicalConfig.subject.type === 'group'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-group" className="text-sm">Group</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-crowd"
+                                  name="subject-type"
+                                  value="crowd"
+                                  checked={generationCanonicalConfig.subject.type === 'crowd'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-crowd" className="text-sm">Crowd (&gt;5)</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-object"
+                                  name="subject-type"
+                                  value="object"
+                                  checked={generationCanonicalConfig.subject.type === 'object'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-object" className="text-sm">Object</Label>
+                              </div>
+                            </div>
+                            
+                            {/* Group Size Input */}
+                            {generationCanonicalConfig.subject.type === 'group' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Group Size (2-5 people)</Label>
+                                <Input
+                                  type="number"
+                                  min="2"
+                                  max="5"
+                                  value={generationCanonicalConfig.subject.groupSize || 3}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, groupSize: parseInt(e.target.value) || 3 }
+                                  }))}
+                                  className="w-24"
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Object Description Input */}
+                            {generationCanonicalConfig.subject.type === 'object' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Object Description</Label>
+                                <Input
+                                  placeholder="landmark, animal, building, etc."
+                                  value={generationCanonicalConfig.subject.objectDescription || ''}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, objectDescription: e.target.value }
+                                  }))}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Appearance Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">🎨 Appearance</Label>
+                            
+                            {/* Color Relevance */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Brand Colors</Label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {generationCanonicalOptions?.brand_colors?.map((color: string, index: number) => {
+                                  const colorName = color.split(' ').slice(-2).join(' ')
+                                  const isSelected = generationCanonicalConfig.appearance.colorRelevance.includes(color)
+                                  return (
+                                    <div key={index} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`color-${index}`}
+                                        checked={isSelected}
+                                        onCheckedChange={(checked) => {
+                                          setGenerationCanonicalConfig(prev => ({
+                                            ...prev,
+                                            appearance: {
+                                              ...prev.appearance,
+                                              colorRelevance: checked 
+                                                ? [...prev.appearance.colorRelevance, color]
+                                                : prev.appearance.colorRelevance.filter(c => c !== color)
+                                            }
+                                          }))
+                                        }}
+                                      />
+                                      <Label htmlFor={`color-${index}`} className="text-xs">{colorName}</Label>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Color Intensity */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Color Intensity</Label>
+                              <div className="flex gap-4">
+                                {['subtle', 'moderate', 'prominent'].map((intensity) => (
+                                  <div key={intensity} className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id={`intensity-${intensity}`}
+                                      name="color-intensity"
+                                      value={intensity}
+                                      checked={generationCanonicalConfig.appearance.colorIntensity === intensity}
+                                      onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                        ...prev,
+                                        appearance: { ...prev.appearance, colorIntensity: e.target.value as any }
+                                      }))}
+                                    />
+                                    <Label htmlFor={`intensity-${intensity}`} className="text-xs capitalize">{intensity}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Style Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">🖼️ Style</Label>
+                            <div className="flex gap-4">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="style-realistic"
+                                  name="generation-style"
+                                  value="realistic"
+                                  checked={generationCanonicalConfig.style.type === 'realistic'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    style: { ...prev.style, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="style-realistic" className="text-sm">Realistic</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="style-illustrative"
+                                  name="generation-style"
+                                  value="illustrative"
+                                  checked={generationCanonicalConfig.style.type === 'illustrative'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    style: { ...prev.style, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="style-illustrative" className="text-sm">Illustrative</Label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Elements Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">🏛️ Elements</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Landmark</Label>
+                                <Input
+                                  placeholder="e.g., Eiffel Tower, Central Park"
+                                  value={generationCanonicalConfig.elements.landmark || ''}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    elements: { ...prev.elements, landmark: e.target.value }
+                                  }))}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">City</Label>
+                                <Select
+                                  value={generationCanonicalConfig.elements.city || ''}
+                                  onValueChange={(value) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    elements: { ...prev.elements, city: value }
+                                  }))}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select city..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {generationCanonicalOptions?.cities?.map((city: string) => (
+                                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Other Elements</Label>
+                              <Input
+                                placeholder="Additional elements to include..."
+                                value={generationCanonicalConfig.elements.others || ''}
+                                onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                  ...prev,
+                                  elements: { ...prev.elements, others: e.target.value }
+                                }))}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Modifiers Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">⚡ Modifiers</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Positives (enhance)</Label>
+                                <Textarea
+                                  placeholder="terms to emphasize..."
+                                  value={generationCanonicalConfig.modifiers.positives}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    modifiers: { ...prev.modifiers, positives: e.target.value }
+                                  }))}
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Negatives (avoid)</Label>
+                                <Textarea
+                                  placeholder="terms to avoid..."
+                                  value={generationCanonicalConfig.modifiers.negatives}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    modifiers: { ...prev.modifiers, negatives: e.target.value }
+                                  }))}
+                                  rows={2}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Generation Preview */}
+                          {generationCanonicalPreview && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Generated Prompt Preview</Label>
+                              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
+                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                  {generationCanonicalPreview}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
