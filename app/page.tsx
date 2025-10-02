@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye } from "lucide-react"
+import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye, X, Plus, Download, AlertCircle } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { BrandingUploader } from "@/components/branding-uploader"
 import RAGSelector from "@/components/rag-selector"
 import { useRAGStore } from "@/lib/rag-store"
@@ -344,6 +344,30 @@ export default function ImageEditor() {
   const [fluxCombineEnhancementMeta, setFluxCombineEnhancementMeta] = useState<any>(null)
   const [fluxCombineCustomEnhancementText, setFluxCombineCustomEnhancementText] = useState<string>("")
   const [fluxCombineDefaultEnhancementText, setFluxCombineDefaultEnhancementText] = useState<string>("")
+
+  // External Flux Pro Image Combine States (for testing external endpoint)
+  const [externalFluxCombinePrompt, setExternalFluxCombinePrompt] = useState("")
+  const [externalFluxCombineImages, setExternalFluxCombineImages] = useState<File[]>([])
+  const [externalFluxCombineImageUrls, setExternalFluxCombineImageUrls] = useState<string[]>([])
+  const [externalFluxCombineSettings, setExternalFluxCombineSettings] = useState({
+    aspect_ratio: "1:1",
+    guidance_scale: 3.5,
+    num_images: 1,
+    output_format: "jpeg",
+    safety_tolerance: 2,
+    enable_safety_checker: true,
+    seed: "",
+    enhance_prompt: false
+  })
+  const [externalFluxCombineResult, setExternalFluxCombineResult] = useState<string>("")
+  const [isExternalFluxCombineGenerating, setIsExternalFluxCombineGenerating] = useState(false)
+  const [externalFluxCombineError, setExternalFluxCombineError] = useState<string>("")
+  const [externalFluxCombineGeneratedPrompt, setExternalFluxCombineGeneratedPrompt] = useState<string>("")
+  const [showExternalFluxCombineAdvanced, setShowExternalFluxCombineAdvanced] = useState(false)
+  
+  // External Flux Combine uses same canonical prompt configuration as internal
+  const [externalUseCanonicalPrompt, setExternalUseCanonicalPrompt] = useState(true) // Enabled by default for external
+  const [externalUseJSONEnhancement, setExternalUseJSONEnhancement] = useState(false) // Disabled by default for external
 
   // Edit Image States
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -978,6 +1002,101 @@ export default function ImageEditor() {
     }
   }
 
+  // Handle External Flux Combine Submit (calls external endpoint)
+  const handleExternalFluxCombineSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!externalFluxCombinePrompt.trim()) {
+      setExternalFluxCombineError("Please enter a prompt")
+      return
+    }
+
+    if (externalFluxCombineImages.length + externalFluxCombineImageUrls.length < 2) {
+      setExternalFluxCombineError("Please upload at least 2 images to combine")
+      return
+    }
+
+    setIsExternalFluxCombineGenerating(true)
+    setExternalFluxCombineError("")
+
+    try {
+      // Prepare form data for external endpoint
+      const formData = new FormData()
+      
+      formData.append("prompt", externalFluxCombinePrompt)
+      
+      // Add canonical prompt configuration (enabled by default for external)
+      formData.append("useCanonicalPrompt", externalUseCanonicalPrompt.toString())
+      if (externalUseCanonicalPrompt) {
+        formData.append("canonicalConfig", JSON.stringify(canonicalConfig))
+      }
+      
+      // Add JSON enhancement configuration (disabled by default for external)
+      formData.append("useJSONEnhancement", externalUseJSONEnhancement.toString())
+      
+      // Add uploaded image files
+      externalFluxCombineImages.forEach((file, index) => {
+        formData.append(`image${index}`, file)
+      })
+      
+      // Add image URLs
+      externalFluxCombineImageUrls.forEach((url, index) => {
+        if (url.trim()) {
+          formData.append(`imageUrl${index}`, url.trim())
+        }
+      })
+      
+      // Prepare settings object
+      const settings: any = { ...externalFluxCombineSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert string numbers to actual numbers
+      if (settings.seed) settings.seed = parseInt(settings.seed as string)
+      
+      console.log("[FRONTEND] External combine settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+
+      // Call external endpoint
+      const response = await fetch("/api/external/flux-pro-image-combine", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || `External API error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      console.log("[FRONTEND] External API result:", result)
+      
+      // Capture generated prompt from external endpoint
+      if (result.prompt) {
+        setExternalFluxCombineGeneratedPrompt(result.prompt)
+      } else {
+        setExternalFluxCombineGeneratedPrompt(externalFluxCombinePrompt)
+      }
+      
+      if (result.success && result.image) {
+        setExternalFluxCombineResult(result.image)
+      } else {
+        throw new Error("No combined image received from external API")
+      }
+    } catch (err) {
+      setExternalFluxCombineError(err instanceof Error ? err.message : "Failed to combine images via external API")
+    } finally {
+      setIsExternalFluxCombineGenerating(false)
+    }
+  }
+
   const handleCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     if (files.length > 0) {
@@ -1003,6 +1122,34 @@ export default function ImageEditor() {
 
   const removeCombineImageUrl = (index: number) => {
     setFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // External Flux Combine image handling functions
+  const handleExternalCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length > 0) {
+      setExternalFluxCombineImages(prev => [...prev, ...files])
+    }
+  }
+
+  const removeExternalCombineImage = (index: number) => {
+    setExternalFluxCombineImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addExternalCombineImageUrl = () => {
+    setExternalFluxCombineImageUrls(prev => [...prev, ""])
+  }
+
+  const updateExternalCombineImageUrl = (index: number, url: string) => {
+    setExternalFluxCombineImageUrls(prev => {
+      const newUrls = [...prev]
+      newUrls[index] = url
+      return newUrls
+    })
+  }
+
+  const removeExternalCombineImageUrl = (index: number) => {
+    setExternalFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1209,9 +1356,10 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
+          <TabsTrigger value="external-flux-combine">External Combine</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
@@ -2599,6 +2747,736 @@ export default function ImageEditor() {
                   ) : (
                     <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
                       <p className="text-gray-500">Combined image will appear here</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* External Flux Pro Image Combine Tab - For Testing External Endpoint */}
+          <TabsContent value="external-flux-combine" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5" />
+                    External Combine Images (Test)
+                  </CardTitle>
+                  <CardDescription>
+                    Test the external endpoint with canonical prompt structure (calls /api/external/flux-pro-image-combine)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleExternalFluxCombineSubmit} className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Upload Images (minimum 2)</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleExternalCombineImageUpload}
+                          className="cursor-pointer"
+                        />
+                        {externalFluxCombineImages.length > 0 && (
+                          <div className="space-y-2">
+                            <Label>Uploaded Files:</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {externalFluxCombineImages.map((file, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                  <span className="text-sm text-gray-600 truncate">{file.name}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeExternalCombineImage(index)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Image URLs Section */}
+                      <div className="space-y-2">
+                        <Label>Or Add Image URLs</Label>
+                        {externalFluxCombineImageUrls.map((url, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              value={url}
+                              onChange={(e) => updateExternalCombineImageUrl(index, e.target.value)}
+                              placeholder="https://example.com/image.jpg"
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => removeExternalCombineImageUrl(index)}
+                              className="px-3"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={addExternalCombineImageUrl}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Image URL
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Prompt Section */}
+                    <div className="space-y-2">
+                      <Label htmlFor="external-flux-combine-prompt">Combination Prompt</Label>
+                      <Textarea
+                        id="external-flux-combine-prompt"
+                        value={externalFluxCombinePrompt}
+                        onChange={(e) => setExternalFluxCombinePrompt(e.target.value)}
+                        placeholder="Describe how you want to combine the images..."
+                        className="min-h-[100px]"
+                        required
+                      />
+                    </div>
+
+                    {/* Canonical Prompt Toggle */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="external-use-canonical"
+                          checked={externalUseCanonicalPrompt}
+                          onCheckedChange={(checked) => setExternalUseCanonicalPrompt(checked as boolean)}
+                        />
+                        <Label htmlFor="external-use-canonical" className="text-sm font-medium">
+                          Use Canonical Prompt Structure (Default: ON)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-blue-600">
+                        ✅ Canonical prompt is enabled by default for the external endpoint. This generates structured prompts with TASK, APPLY, STYLE, etc.
+                      </p>
+                    </div>
+
+                    {/* JSON Enhancement Toggle */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="external-use-json"
+                          checked={externalUseJSONEnhancement}
+                          onCheckedChange={(checked) => setExternalUseJSONEnhancement(checked as boolean)}
+                        />
+                        <Label htmlFor="external-use-json" className="text-sm font-medium">
+                          Use JSON Enhancement (Default: OFF)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        JSON enhancement is disabled by default when canonical prompt is enabled.
+                      </p>
+                    </div>
+
+                    {/* External Advanced Image Options - Canonical Prompt Configuration */}
+                    {externalUseCanonicalPrompt && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="external-advanced-options"
+                                checked={true}
+                                disabled
+                                className="data-[state=checked]:bg-emerald-500"
+                              />
+                              <Label htmlFor="external-advanced-options" className="font-medium">
+                                Advanced Image Options
+                              </Label>
+                            </div>
+                            <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                              BETA
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                          <div className="text-sm text-muted-foreground">
+                            Use the options below to further adjust the results of image combination
+                          </div>
+
+                          {/* Keep Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Basic Preservation Options</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {canonicalOptions?.availableOptions?.keepOptions && Object.entries(canonicalOptions.availableOptions.keepOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`external-keep-${key}`}
+                                    checked={canonicalConfig.keepOptions?.[key as keyof typeof canonicalConfig.keepOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setCanonicalConfig(prev => ({
+                                        ...prev,
+                                        keepOptions: {
+                                          ...prev.keepOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`external-keep-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Preserve Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Advanced Preservation</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                              {canonicalOptions?.availableOptions?.preserveOptions && Object.entries(canonicalOptions.availableOptions.preserveOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`external-preserve-${key}`}
+                                    checked={canonicalConfig.preserveOptions?.[key as keyof typeof canonicalConfig.preserveOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setCanonicalConfig(prev => ({
+                                        ...prev,
+                                        preserveOptions: {
+                                          ...prev.preserveOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`external-preserve-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Combine Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Integration Control</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                              {canonicalOptions?.availableOptions?.combineOptions && Object.entries(canonicalOptions.availableOptions.combineOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`external-combine-${key}`}
+                                    checked={canonicalConfig.combineOptions?.[key as keyof typeof canonicalConfig.combineOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setCanonicalConfig(prev => ({
+                                        ...prev,
+                                        combineOptions: {
+                                          ...prev.combineOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`external-combine-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Secondary Image Preservation */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Secondary Image Preservation</Label>
+                            
+                            {/* Fidelity Level */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Fidelity Level</Label>
+                              <Select
+                                value={canonicalConfig.secondaryFidelityLevel}
+                                onValueChange={(value: 'strict' | 'moderate' | 'adaptive') => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    secondaryFidelityLevel: value
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.secondaryFidelityLevels && Object.entries(canonicalOptions.availableOptions.secondaryFidelityLevels).map(([key, level]: [string, any]) => (
+                                    <SelectItem key={key} value={key} className="text-xs" title={level.description}>
+                                      {level.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Preserve Secondary Elements */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Preserve Specific Elements</Label>
+                              <div className="grid grid-cols-2 gap-2">
+                                {canonicalOptions?.availableOptions?.preserveSecondaryOptions && Object.entries(canonicalOptions.availableOptions.preserveSecondaryOptions).map(([key, option]: [string, any]) => (
+                                  <div key={key} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`external-preserve-secondary-${key}`}
+                                      checked={canonicalConfig.preserveSecondaryOptions?.[key as keyof typeof canonicalConfig.preserveSecondaryOptions] || false}
+                                      onCheckedChange={(checked) => 
+                                        setCanonicalConfig(prev => ({
+                                          ...prev,
+                                          preserveSecondaryOptions: {
+                                            ...prev.preserveSecondaryOptions,
+                                            [key]: checked
+                                          }
+                                        }))
+                                      }
+                                    />
+                                    <Label htmlFor={`external-preserve-secondary-${key}`} className="text-xs">{option.label}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Apply Style Options */}
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Materials */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Materials</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.materials}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      materials: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.materials?.map((material: string) => (
+                                    <SelectItem key={material} value={material} className="text-xs">
+                                      {material}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Lighting */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Lighting</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.lighting}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      lighting: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.lighting?.map((lighting: string) => (
+                                    <SelectItem key={lighting} value={lighting} className="text-xs">
+                                      {lighting}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Texture */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Texture</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.texture}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      texture: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.texture?.map((texture: string) => (
+                                    <SelectItem key={texture} value={texture} className="text-xs">
+                                      {texture}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Contrast */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Contrast</Label>
+                              <Select
+                                value={canonicalConfig.applyStyle?.contrast}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    applyStyle: {
+                                      ...prev.applyStyle,
+                                      contrast: value
+                                    }
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.contrast?.map((contrast: string) => (
+                                    <SelectItem key={contrast} value={contrast} className="text-xs">
+                                      {contrast}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* Style Background */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Background Style</Label>
+                            <Select
+                              value={canonicalConfig.styleBackground}
+                              onValueChange={(value) => 
+                                setCanonicalConfig(prev => ({
+                                  ...prev,
+                                  styleBackground: value
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {canonicalOptions?.availableOptions?.styleBackgrounds?.map((bg: string) => (
+                                  <SelectItem key={bg} value={bg} className="text-xs">
+                                    {bg.substring(0, 50)}...
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Subject Options */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Framing</Label>
+                              <Select
+                                value={canonicalConfig.subjectFraming}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subjectFraming: value
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.framing?.map((framing: string) => (
+                                    <SelectItem key={framing} value={framing} className="text-xs">
+                                      {framing}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Composition</Label>
+                              <Select
+                                value={canonicalConfig.subjectComposition}
+                                onValueChange={(value) => 
+                                  setCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subjectComposition: value
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {canonicalOptions?.availableOptions?.composition?.map((composition: string) => (
+                                    <SelectItem key={composition} value={composition} className="text-xs">
+                                      {composition}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          {/* External Preview */}
+                          {canonicalPreview && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Generated Prompt Preview</Label>
+                              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
+                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                  {canonicalPreview}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Canonical Preview */}
+                    {externalUseCanonicalPrompt && canonicalPreview && (
+                      <div className="space-y-2">
+                        <Label>Canonical Prompt Preview</Label>
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <pre className="text-xs text-blue-800 whitespace-pre-wrap font-mono">
+                            {canonicalPreview}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/20 dark:to-slate-950/20">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="external-flux-combine-advanced"
+                          checked={showExternalFluxCombineAdvanced}
+                          onCheckedChange={setShowExternalFluxCombineAdvanced}
+                          className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                        />
+                        <Label htmlFor="external-flux-combine-advanced" className="cursor-pointer font-medium">
+                          Advanced Image Options
+                        </Label>
+                      </div>
+                      <div className={`w-2 h-2 rounded-full ${showExternalFluxCombineAdvanced ? 'bg-green-500' : 'bg-gray-400'} transition-colors`}></div>
+                    </div>
+
+                    {showExternalFluxCombineAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-aspect-ratio">Aspect Ratio</Label>
+                            <Select
+                              value={externalFluxCombineSettings.aspect_ratio}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, aspect_ratio: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                                <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                                <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                                <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-guidance">
+                              Guidance Scale: {externalFluxCombineSettings.guidance_scale}
+                            </Label>
+                            <Slider
+                              id="external-flux-combine-guidance"
+                              min={1}
+                              max={20}
+                              step={0.1}
+                              value={[externalFluxCombineSettings.guidance_scale]}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, guidance_scale: value[0] }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-safety">
+                              Safety Tolerance: {externalFluxCombineSettings.safety_tolerance}
+                            </Label>
+                            <Slider
+                              id="external-flux-combine-safety"
+                              min={1}
+                              max={5}
+                              step={1}
+                              value={[externalFluxCombineSettings.safety_tolerance]}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, safety_tolerance: value[0] }))}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              1: Strictest • 2: Strict • 3: Balanced • 4: Permissive • 5: Most Permissive
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-output-format">Output Format</Label>
+                            <Select
+                              value={externalFluxCombineSettings.output_format}
+                              onValueChange={(value) => setExternalFluxCombineSettings(prev => ({ ...prev, output_format: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="jpeg">JPEG</SelectItem>
+                                <SelectItem value="png">PNG</SelectItem>
+                                <SelectItem value="webp">WebP</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-seed">Seed (optional)</Label>
+                            <Input
+                              id="external-flux-combine-seed"
+                              type="number"
+                              placeholder="Random if empty"
+                              value={externalFluxCombineSettings.seed}
+                              onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, seed: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="external-flux-combine-num-images">
+                              Number of Images: {externalFluxCombineSettings.num_images}
+                            </Label>
+                            <Input
+                              id="external-flux-combine-num-images"
+                              type="number"
+                              min="1"
+                              max="4"
+                              value={externalFluxCombineSettings.num_images}
+                              onChange={(e) => setExternalFluxCombineSettings(prev => ({ ...prev, num_images: parseInt(e.target.value) || 1 }))}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Additional Settings */}
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="external-flux-combine-enhance-prompt"
+                                checked={externalFluxCombineSettings.enhance_prompt}
+                                onCheckedChange={(checked) => setExternalFluxCombineSettings(prev => ({ ...prev, enhance_prompt: checked }))}
+                                className="data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                              />
+                              <Label htmlFor="external-flux-combine-enhance-prompt" className="cursor-pointer font-medium">
+                                Enhance Prompt
+                              </Label>
+                            </div>
+                            <div className={`w-2 h-2 rounded-full ${externalFluxCombineSettings.enhance_prompt ? 'bg-purple-500' : 'bg-gray-400'} transition-colors`}></div>
+                          </div>
+
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="external-flux-combine-safety-checker"
+                                checked={externalFluxCombineSettings.enable_safety_checker}
+                                onCheckedChange={(checked) => setExternalFluxCombineSettings(prev => ({ ...prev, enable_safety_checker: checked }))}
+                                className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                              />
+                              <Label htmlFor="external-flux-combine-safety-checker" className="cursor-pointer font-medium">
+                                Enable Safety Checker
+                              </Label>
+                            </div>
+                            <div className={`w-2 h-2 rounded-full ${externalFluxCombineSettings.enable_safety_checker ? 'bg-blue-500' : 'bg-gray-400'} transition-colors`}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      disabled={isExternalFluxCombineGenerating || externalFluxCombineImages.length + externalFluxCombineImageUrls.length < 2}
+                      className="w-full"
+                    >
+                      {isExternalFluxCombineGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Combining via External API...
+                        </>
+                      ) : (
+                        "Combine Images (External API)"
+                      )}
+                    </Button>
+
+                    {externalFluxCombineError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{externalFluxCombineError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>External API Result</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {externalFluxCombineResult ? (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <img 
+                          src={externalFluxCombineResult} 
+                          alt="External combined result" 
+                          className="w-full h-auto rounded-lg shadow-lg"
+                        />
+                        <Button
+                          onClick={() => window.open(externalFluxCombineResult, '_blank')}
+                          className="absolute top-2 right-2"
+                          size="sm"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {externalFluxCombineGeneratedPrompt && (
+                        <div className="space-y-2">
+                          <Label>Generated Prompt (External API)</Label>
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                            <pre className="text-xs text-green-800 whitespace-pre-wrap font-mono">
+                              {externalFluxCombineGeneratedPrompt}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>✅ Generated via External API: /api/external/flux-pro-image-combine</p>
+                        <p>🎯 Canonical Prompt: {externalUseCanonicalPrompt ? 'Enabled' : 'Disabled'}</p>
+                        <p>🔧 JSON Enhancement: {externalUseJSONEnhancement ? 'Enabled' : 'Disabled'}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
+                      <p className="text-gray-500">External combined image will appear here</p>
                     </div>
                   )}
                 </CardContent>

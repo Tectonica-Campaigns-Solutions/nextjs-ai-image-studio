@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
+import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 
 /**
  * POST /api/external/flux-pro-image-combine
@@ -19,16 +20,18 @@ import { fal } from "@fal-ai/client"
  *   - customText: Custom enhancement description (if not provided, uses enhancement_text: "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel.")
  *   - intensity: Enhancement intensity (0.1-1.0, default: 1.0)
  * 
- * JSON Enhancement is always enabled and automatically appends enhancement_text to the user prompt.
- * RAG enhancement has been disabled for simplicity.
+ * Canonical Prompt Structure is enabled by default for structured prompt generation.
+ * JSON Enhancement is disabled by default. RAG enhancement has been disabled for simplicity.
  * - settings (optional): Advanced generation settings
  * 
  * Form Data parameters:
  * - prompt (required): Text description for how to combine the images
  * - image0, image1, image2... (optional): Image files to upload and combine
  * - imageUrl0, imageUrl1, imageUrl2... (optional): Image URLs to combine
+ * - useCanonicalPrompt (optional): Whether to use canonical prompt structure (default: true)
+ * - canonicalConfig (optional): JSON string with canonical prompt configuration
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false)
- * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: true)
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: false)
  * - jsonOptions (optional): JSON string with enhancement configuration
  * - settings (optional): JSON string with advanced generation settings
  * 
@@ -69,7 +72,21 @@ export async function POST(request: NextRequest) {
       // Extract basic parameters
       body.prompt = formData.get("prompt") as string
       body.useRAG = false // Disabled for simplicity
-      body.useJSONEnhancement = true // Always enabled by default
+      body.useJSONEnhancement = formData.get("useJSONEnhancement") === "true" || false // Default false
+      body.useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true" || formData.get("useCanonicalPrompt") === null || formData.get("useCanonicalPrompt") === undefined ? true : false // Default true
+      
+      // Parse canonical config if provided
+      const canonicalConfigStr = formData.get("canonicalConfig") as string
+      if (canonicalConfigStr) {
+        try {
+          body.canonicalConfig = JSON.parse(canonicalConfigStr)
+        } catch (error) {
+          console.warn("[External Flux Combine] Failed to parse canonical config:", error)
+          body.canonicalConfig = {}
+        }
+      } else {
+        body.canonicalConfig = {}
+      }
       
       // Parse JSON options if provided
       const jsonOptionsStr = formData.get("jsonOptions") as string
@@ -119,7 +136,9 @@ export async function POST(request: NextRequest) {
       
       // Set defaults for JSON requests
       body.useRAG = false // Disabled for simplicity  
-      body.useJSONEnhancement = true // Always enabled
+      body.useJSONEnhancement = body.useJSONEnhancement !== undefined ? body.useJSONEnhancement : false // Default false
+      body.useCanonicalPrompt = body.useCanonicalPrompt !== undefined ? body.useCanonicalPrompt : true // Default true
+      body.canonicalConfig = body.canonicalConfig || {}
       body.jsonOptions = body.jsonOptions || {}
     }
     
@@ -193,7 +212,9 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       useRAG = false, // RAG disabled for image combination
-      useJSONEnhancement = true, // JSON enhancement enabled by default
+      useJSONEnhancement,
+      useCanonicalPrompt,
+      canonicalConfig,
       jsonOptions = {},
       settings = {}
     } = body
@@ -201,7 +222,7 @@ export async function POST(request: NextRequest) {
     // Set default values for jsonOptions if not provided
     const defaultJsonOptions = {
       intensity: 1.0, // Default intensity at 100% for Combine Images
-      customText: '', // Will use edit_enhancement_text if empty
+      customText: '', // Will use enhancement_text if empty
       ...jsonOptions
     }
 
@@ -212,7 +233,9 @@ export async function POST(request: NextRequest) {
     console.log("  - Total images:", totalImages)
     console.log("  - Use RAG:", useRAG, "(disabled for combination)")
     console.log("  - Use JSON Enhancement:", useJSONEnhancement)
+    console.log("  - Use Canonical Prompt:", useCanonicalPrompt)
     console.log("  - JSON Options:", defaultJsonOptions)
+    console.log("  - Canonical Config:", canonicalConfig)
     console.log("  - Settings:", settings)
 
     // Basic content moderation
@@ -243,31 +266,52 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apply JSON enhancement with enhancement_text (always enabled for Combine Images)
+    // Process prompt using canonical or JSON enhancement
     let finalPrompt = prompt
-    let enhancementText = defaultJsonOptions.customText
-    
-    if (!enhancementText) {
-      // Try to load enhancement_text from config first
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
-        const { success, config } = await response.json()
-        if (success && config?.enhancement_text) {
-          enhancementText = config.enhancement_text
-          console.log("[External Flux Combine] Loaded enhancement_text:", enhancementText)
+
+    // Check if canonical prompt should be used
+    if (useCanonicalPrompt) {
+      // Use canonical prompt processor (same as internal endpoint)
+      console.log("[External Flux Combine] Using canonical prompt structure")
+      console.log("[External Flux Combine] Canonical config:", canonicalConfig)
+      
+      // Set user input from original prompt
+      const completeCanonicalConfig = { ...canonicalConfig, userInput: prompt }
+      
+      // Generate canonical prompt
+      const result = canonicalPromptProcessor.generateCanonicalPrompt(completeCanonicalConfig)
+      finalPrompt = result.canonicalPrompt
+      
+      console.log("[External Flux Combine] Generated canonical prompt:", finalPrompt)
+      console.log("[External Flux Combine] Processed user input:", result.processedUserInput)
+    } else if (useJSONEnhancement) {
+      // Apply JSON enhancement with enhancement_text (legacy method)
+      let enhancementText = defaultJsonOptions.customText
+      
+      if (!enhancementText) {
+        // Try to load enhancement_text from config first
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+          const { success, config } = await response.json()
+          if (success && config?.enhancement_text) {
+            enhancementText = config.enhancement_text
+            console.log("[External Flux Combine] Loaded enhancement_text:", enhancementText)
+          }
+        } catch (error) {
+          console.warn("[External Flux Combine] Could not load from API:", error)
         }
-      } catch (error) {
-        console.warn("[External Flux Combine] Could not load from API:", error)
+      }
+
+      // Apply enhancement text directly to the prompt if available
+      if (enhancementText) {
+        finalPrompt = `${prompt}, ${enhancementText}`
+        console.log("[External Flux Combine] Enhanced prompt (legacy):", finalPrompt)
+      } else {
+        console.log("[External Flux Combine] No enhancement text available, using original prompt")
       }
     }
 
-    // Apply enhancement text directly to the prompt if available
-    if (enhancementText) {
-      finalPrompt = `${prompt}, ${enhancementText}`
-      console.log("[External Flux Combine] Enhanced prompt:", finalPrompt)
-    } else {
-      console.log("[External Flux Combine] No enhancement text available, using original prompt")
-    }
+    console.log("[External Flux Combine] Final prompt:", finalPrompt)
 
     // Configure Fal.ai client
     fal.config({
@@ -365,6 +409,10 @@ export async function POST(request: NextRequest) {
           inputImages: allImageUrls.length,
           uploadedFiles: imageFiles.length,
           directUrls: imageUrls.length,
+          canonicalPromptUsed: useCanonicalPrompt,
+          canonicalConfig: useCanonicalPrompt ? canonicalConfig : undefined,
+          jsonEnhancementUsed: useJSONEnhancement,
+          jsonOptions: useJSONEnhancement ? defaultJsonOptions : undefined,
           settings: mergedSettings,
           model: "flux-pro/kontext/max/multi",
           timestamp: new Date().toISOString(),
@@ -389,6 +437,18 @@ export async function POST(request: NextRequest) {
         fallbackFormData.append("activeRAGId", "none")
         fallbackFormData.append("activeRAGName", "None")
         fallbackFormData.append("orgType", "general")
+        
+        // Add canonical prompt parameters
+        fallbackFormData.append("useCanonicalPrompt", useCanonicalPrompt.toString())
+        if (useCanonicalPrompt && canonicalConfig) {
+          fallbackFormData.append("canonicalConfig", JSON.stringify(canonicalConfig))
+        }
+        
+        // Add JSON enhancement parameters
+        fallbackFormData.append("useJSONEnhancement", useJSONEnhancement.toString())
+        if (useJSONEnhancement) {
+          fallbackFormData.append("jsonOptions", JSON.stringify(defaultJsonOptions))
+        }
         
         // Add image URLs to form data
         allImageUrls.forEach((url: string, index: number) => {
@@ -418,6 +478,10 @@ export async function POST(request: NextRequest) {
               inputImages: allImageUrls.length,
               uploadedFiles: imageFiles.length,
               directUrls: imageUrls.length,
+              canonicalPromptUsed: useCanonicalPrompt,
+              canonicalConfig: useCanonicalPrompt ? canonicalConfig : undefined,
+              jsonEnhancementUsed: useJSONEnhancement,
+              jsonOptions: useJSONEnhancement ? defaultJsonOptions : undefined,
               settings: internalResult.settings || mergedSettings,
               model: "flux-pro/kontext/max/multi",
               timestamp: new Date().toISOString(),
