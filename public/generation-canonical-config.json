@@ -10,7 +10,7 @@
       "object": "{description}"
     },
     
-    "brand_colors": [
+    "brandColors": [
       "#6E3CCB deep violet",
       "#D8C8F0 light violet", 
       "#5C38F2 blue",
@@ -19,7 +19,7 @@
       "#000000 black"
     ],
     
-    "color_intensity": {
+    "colorIntensity": {
       "subtle": "with subtle color accents",
       "moderate": "with balanced color presence", 
       "prominent": "with bold vibrant colors"
@@ -63,7 +63,7 @@
       "Warsaw"
     ],
     
-    "quality_standards": [
+    "qualityStandards": [
       "high detail",
       "clean composition", 
       "professional quality",

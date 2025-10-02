@@ -4062,7 +4062,7 @@ export default function ImageEditor() {
                             <div className="space-y-2">
                               <Label className="text-xs text-muted-foreground">Brand Colors</Label>
                               <div className="grid grid-cols-3 gap-2">
-                                {generationCanonicalOptions?.brand_colors?.map((color: string, index: number) => {
+                                {generationCanonicalOptions?.brandColors?.map((color: string, index: number) => {
                                   const colorName = color.split(' ').slice(-2).join(' ')
                                   const isSelected = generationCanonicalConfig.appearance.colorRelevance.includes(color)
                                   return (
