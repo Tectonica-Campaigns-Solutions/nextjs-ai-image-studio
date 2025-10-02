@@ -905,6 +905,9 @@ export default function ImageEditor() {
 
     try {
       let finalPrompt = fluxUltraPrompt
+      console.log('[FRONTEND] Original prompt:', fluxUltraPrompt)
+      console.log('[FRONTEND] useGenerationCanonical:', useGenerationCanonical)
+      console.log('[FRONTEND] generationCanonicalConfig:', generationCanonicalConfig)
 
       // Apply canonical prompt processing if enabled
       if (useGenerationCanonical) {
@@ -914,11 +917,16 @@ export default function ImageEditor() {
             generationCanonicalConfig
           )
           console.log('[FRONTEND] Generated canonical prompt:', finalPrompt)
+          console.log('[FRONTEND] Canonical prompt length:', finalPrompt.length)
         } catch (canonicalError) {
           console.warn('Failed to generate canonical prompt, using original:', canonicalError)
           // Continue with original prompt if canonical fails
         }
+      } else {
+        console.log('[FRONTEND] Canonical prompt disabled, using original prompt')
       }
+
+      console.log('[FRONTEND] Final prompt being sent to API:', finalPrompt)
 
       const formData = new FormData()
       
