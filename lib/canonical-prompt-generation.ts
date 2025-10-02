@@ -63,9 +63,11 @@ export interface GenerationCanonicalOptions {
  */
 export class GenerationCanonicalPromptProcessor {
   private options: GenerationCanonicalOptions | null = null
+  private optionsPromise: Promise<void> | null = null
 
   constructor() {
-    this.loadOptions()
+    // Don't load options immediately in constructor
+    // Wait for explicit call to avoid SSR issues
   }
 
   /**
@@ -73,8 +75,8 @@ export class GenerationCanonicalPromptProcessor {
    */
   private async loadOptions(): Promise<void> {
     try {
-      // Load the configuration - using fetch for JSON files
-      const response = await fetch('/data/generation-canonical-config.json')
+      // Load the configuration from public folder
+      const response = await fetch('/generation-canonical-config.json')
       if (!response.ok) {
         throw new Error(`Failed to load config: ${response.status}`)
       }
@@ -85,6 +87,22 @@ export class GenerationCanonicalPromptProcessor {
       console.error('[Generation Canonical] Failed to load options:', error)
       this.options = this.getDefaultOptions()
     }
+  }
+
+  /**
+   * Ensure options are loaded before using them
+   */
+  private async ensureOptionsLoaded(): Promise<void> {
+    if (this.options) {
+      return // Already loaded
+    }
+
+    if (this.optionsPromise) {
+      return this.optionsPromise // Already loading
+    }
+
+    this.optionsPromise = this.loadOptions()
+    return this.optionsPromise
   }
 
   /**
@@ -130,17 +148,20 @@ export class GenerationCanonicalPromptProcessor {
   /**
    * Get available options for UI configuration
    */
-  public getAvailableOptions(): GenerationCanonicalOptions | null {
+  public async getAvailableOptions(): Promise<GenerationCanonicalOptions | null> {
+    await this.ensureOptionsLoaded()
     return this.options
   }
 
   /**
    * Generate canonical prompt for image generation
    */
-  public generateCanonicalPrompt(
+  public async generateCanonicalPrompt(
     basePrompt: string,
     config: GenerationCanonicalConfig
-  ): string {
+  ): Promise<string> {
+    await this.ensureOptionsLoaded()
+    
     if (!this.options) {
       console.warn('[Generation Canonical] Options not loaded, using base prompt')
       return basePrompt
@@ -310,10 +331,10 @@ export class GenerationCanonicalPromptProcessor {
   /**
    * Preview canonical prompt without full generation
    */
-  public previewCanonicalPrompt(
+  public async previewCanonicalPrompt(
     basePrompt: string,
     config: GenerationCanonicalConfig
-  ): string {
+  ): Promise<string> {
     return this.generateCanonicalPrompt(basePrompt, config)
   }
 }

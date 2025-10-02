@@ -219,7 +219,7 @@ export default function ImageEditor() {
   // Load generation canonical prompt options
   const loadGenerationCanonicalOptions = async () => {
     try {
-      const options = generationCanonicalPromptProcessor.getAvailableOptions()
+      const options = await generationCanonicalPromptProcessor.getAvailableOptions()
       setGenerationCanonicalOptions(options)
       console.log('Loaded generation canonical options:', options)
     } catch (error) {
@@ -235,7 +235,7 @@ export default function ImageEditor() {
     }
 
     try {
-      const canonicalPrompt = generationCanonicalPromptProcessor.generateCanonicalPrompt(
+      const canonicalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
         fluxProPrompt,
         generationCanonicalConfig
       )
