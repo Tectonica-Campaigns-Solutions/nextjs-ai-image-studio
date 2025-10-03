@@ -178,9 +178,14 @@ export class GenerationCanonicalPromptProcessor {
     try {
       const sections: string[] = []
 
-      // TASK section - always present
+      // TASK section - user's original request
+      if (basePrompt?.trim()) {
+        sections.push(`TASK: ${basePrompt.trim()}`)
+      }
+
+      // STYLE section - image generation style
       const styleDetail = this.options.styles[config.style.type] || config.style.type
-      sections.push(`TASK: Generate a ${styleDetail} image`)
+      sections.push(`STYLE: ${styleDetail}`)
 
       // SUBJECT section
       const subjectText = this.buildSubjectText(config.subject)
@@ -205,21 +210,16 @@ export class GenerationCanonicalPromptProcessor {
         sections.push(`ELEMENTS: ${config.elements.others.trim()}`)
       }
 
-      // USER PROMPT section - original user input
-      if (basePrompt?.trim()) {
-        sections.push(`PROMPT: ${basePrompt.trim()}`)
-      }
-
       // ENHANCE section - positive modifiers
       const enhanceText = this.buildEnhanceText(config.modifiers.positives)
       if (enhanceText) {
         sections.push(`ENHANCE: ${enhanceText}`)
       }
 
-      // AVOID section - automatically use enforced negatives
+      // NEGATIVE section - automatically use enforced negatives
       const avoidText = this.options.enforcedNegatives.join(', ')
       if (avoidText) {
-        sections.push(`AVOID: ${avoidText}`)
+        sections.push(`NEGATIVE: ${avoidText}`)
       }
 
       // QUALITY section - always include quality standards

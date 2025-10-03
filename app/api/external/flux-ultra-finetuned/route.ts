@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
+import { generationCanonicalPromptProcessor } from '@/lib/canonical-prompt-generation'
 
 /**
  * Content Moderation Helper
@@ -71,6 +72,8 @@ function handleModerationError(errorData: any): string {
  * - triggerPhrase (optional): Trigger phrase for the fine-tuned model (default: "TCT-AI-8")
  * - finetuneStrength (optional): Fine-tune strength (0.1-2.0, default: 1.0)
  * - settings (optional): Advanced generation settings
+ * - useGenerationCanonical (optional): Enable canonical prompt processing (default: false)
+ * - canonicalConfig (optional): Configuration object for canonical prompt generation
  * 
  * Advanced settings include:
  * - aspect_ratio: Image dimensions (1:1, 4:3, 3:4, 16:9, 9:16, 21:9, default: 1:1)
@@ -110,11 +113,30 @@ export async function POST(request: NextRequest) {
       finetuneId = "a4bd761c-0f90-41cc-be78-c7b6cf22285a", // Default fine-tune ID
       triggerPhrase = "TCT-AI-8", // Default trigger phrase
       finetuneStrength = 1.0, // Default strength 1.0
-      settings = {}
+      settings = {},
+      useGenerationCanonical = false, // New parameter for canonical prompt
+      canonicalConfig = null // New parameter for canonical config
     } = body
 
+    let processedPrompt = prompt.trim()
+
+    // Apply canonical prompt processing if enabled
+    if (useGenerationCanonical && canonicalConfig) {
+      try {
+        processedPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
+          prompt.trim(),
+          canonicalConfig
+        )
+        console.log("[External Flux Ultra] Generated canonical prompt:", processedPrompt)
+      } catch (canonicalError) {
+        console.warn("[External Flux Ultra] Failed to generate canonical prompt, using original:", canonicalError)
+        // Continue with original prompt if canonical fails
+        processedPrompt = prompt.trim()
+      }
+    }
+
     // Construct final prompt with trigger phrase at the beginning (same as internal API)
-    const finalPrompt = `${triggerPhrase.trim()}, ${prompt.trim()}`
+    const finalPrompt = `${triggerPhrase.trim()}, ${processedPrompt}`
 
     console.log("[External Flux Ultra] Processing request:")
     console.log("  - Original prompt:", prompt.trim())
@@ -240,6 +262,8 @@ export async function POST(request: NextRequest) {
           content_type: generatedImage.content_type || "image/jpeg",
           finalPrompt: finalPrompt,
           originalPrompt: prompt.trim(),
+          canonicalApplied: useGenerationCanonical && canonicalConfig !== null,
+          canonicalPrompt: useGenerationCanonical && canonicalConfig !== null ? processedPrompt : null,
           triggerPhrase: triggerPhrase.trim(),
           finetuneId: finetuneId.trim(),
           finetuneStrength: clampedFinetuneStrength,
