@@ -181,7 +181,18 @@ export class CanonicalPromptProcessor {
     const texture = applyStyle.texture || styleConfig.texture.default;
     const overlay = applyStyle.overlay || styleConfig.overlay.default;
 
-    return `palette ${paletteConfig.description}, texture ${texture}, overlay ${overlay}`;
+    // Build parts array and only include non-'none' values
+    const parts = [`palette ${paletteConfig.description}`];
+    
+    if (texture && texture !== 'none') {
+      parts.push(`texture ${texture}`);
+    }
+    
+    if (overlay && overlay !== 'none') {
+      parts.push(`overlay ${overlay}`);
+    }
+
+    return parts.join(', ');
   }
 
   /**
@@ -315,8 +326,8 @@ export class CanonicalPromptProcessor {
       },
       secondaryFidelityLevel: 'moderate' as const,
       applyStyle: {
-        texture: this.canonicalConfig.apply_style.texture.default,
-        overlay: this.canonicalConfig.apply_style.overlay.default,
+        texture: this.canonicalConfig.apply_style?.texture?.default || "none",
+        overlay: this.canonicalConfig.apply_style?.overlay?.default || "none",
       },
       subjectFraming: this.canonicalConfig.subject_templates.framing.default,
       subjectComposition: this.canonicalConfig.subject_templates.composition.default,

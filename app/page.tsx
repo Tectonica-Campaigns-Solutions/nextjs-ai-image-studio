@@ -445,8 +445,8 @@ export default function ImageEditor() {
     },
     secondaryFidelityLevel: 'moderate' as const,
     applyStyle: {
-      texture: "Halftone lines",
-      overlay: "Purple #6E3CCB to Orange #F79533 Gradient"
+      texture: "none",
+      overlay: "none"
     },
     subjectFraming: "medium shot",
     subjectComposition: "centered"
@@ -2729,6 +2729,7 @@ export default function ImageEditor() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {(canonicalOptions?.availableOptions?.texture || [
+                                    "none",
                                     "Halftone dots",
                                     "Halftone lines",
                                     "Crosshatching",
@@ -2764,6 +2765,7 @@ export default function ImageEditor() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {(canonicalOptions?.availableOptions?.overlay || [
+                                    "none",
                                     "Purple #6E3CCB to Orange #F79533 Gradient",
                                     "Purple #6E3CCB to Magenta / Pink Gradient",
                                     "Purple #6E3CCB Shades Monochrome gradient",
@@ -3412,6 +3414,7 @@ export default function ImageEditor() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {(canonicalOptions?.availableOptions?.texture || [
+                                    "none",
                                     "Halftone dots",
                                     "Halftone lines",
                                     "Crosshatching",
@@ -3447,6 +3450,7 @@ export default function ImageEditor() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {(canonicalOptions?.availableOptions?.overlay || [
+                                    "none",
                                     "Purple #6E3CCB to Orange #F79533 Gradient",
                                     "Purple #6E3CCB to Magenta / Pink Gradient",
                                     "Purple #6E3CCB Shades Monochrome gradient",

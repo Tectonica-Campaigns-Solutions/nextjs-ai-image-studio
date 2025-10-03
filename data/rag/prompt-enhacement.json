@@ -179,6 +179,7 @@
     "apply_style": {
       "texture": {
         "options": [
+          "none",
           "Halftone dots",
           "Halftone lines",
           "Crosshatching",
@@ -186,10 +187,11 @@
           "Lithographic grain",
           "Risograph-style overprint"
         ],
-        "default": "Halftone lines"
+        "default": "none"
       },
       "overlay": {
         "options": [
+          "none",
           "Purple #6E3CCB to Orange #F79533 Gradient",
           "Purple #6E3CCB to Magenta / Pink Gradient",
           "Purple #6E3CCB Shades Monochrome gradient",
@@ -197,7 +199,7 @@
           "Light Violet #D8C8F0 Shades Monochrome gradient",
           "Grayscale Monochrome gradient"
         ],
-        "default": "Purple #6E3CCB to Orange #F79533 Gradient"
+        "default": "none"
       }
     },
     "subject_templates": {
