@@ -26,12 +26,9 @@ interface CanonicalPromptConfig {
   };
   secondaryFidelityLevel?: 'strict' | 'moderate' | 'adaptive';
   applyStyle?: {
-    materials?: string;
-    lighting?: string;
     texture?: string;
-    contrast?: string;
+    overlay?: string;
   };
-  styleBackground?: string;
   subjectFraming?: string;
   subjectComposition?: string;
 }
@@ -181,22 +178,21 @@ export class CanonicalPromptProcessor {
     const styleConfig = this.canonicalConfig.apply_style;
     const paletteConfig = this.canonicalConfig.hardcoded_palette;
 
-    const materials = applyStyle.materials || styleConfig.materials.default;
-    const lighting = applyStyle.lighting || styleConfig.lighting.default;
     const texture = applyStyle.texture || styleConfig.texture.default;
-    const contrast = applyStyle.contrast || styleConfig.contrast.default;
+    const overlay = applyStyle.overlay || styleConfig.overlay.default;
 
-    return `palette ${paletteConfig.description}, materials ${materials}, lighting ${lighting}, texture ${texture}, contrast ${contrast}`;
-  }
-
-  /**
-   * Build the STYLE section for background
-   */
-  private buildStyleSection(styleBackground?: string): string {
-    const backgroundOptions = this.canonicalConfig.style_backgrounds;
-    const selectedBackground = styleBackground || backgroundOptions.default;
+    // Build parts array and only include non-'none' values
+    const parts = [`palette ${paletteConfig.description}`];
     
-    return selectedBackground;
+    if (texture && texture !== 'none') {
+      parts.push(`texture ${texture}`);
+    }
+    
+    if (overlay && overlay !== 'none') {
+      parts.push(`overlay ${overlay}`);
+    }
+
+    return parts.join(', ');
   }
 
   /**
@@ -244,7 +240,6 @@ export class CanonicalPromptProcessor {
     const keepSection = `KEEP (do not change): ${this.buildKeepSection(config.keepOptions)}.`;
     const applySection = `APPLY (style): ${this.buildApplySection(config.applyStyle)}.`;
     const combineSection = this.buildCombineSection(config.combineOptions);
-    const styleSection = `STYLE (background): ${this.buildStyleSection(config.styleBackground)}.`;
     const subjectSection = `SUBJECT: ${this.buildSubjectSection(config.subjectFraming, config.subjectComposition)}.`;
     const qualitySection = `QUALITY: ${this.buildQualitySection()}.`;
     const negativeSection = `NEGATIVE: ${this.buildNegativeSection()}.`;
@@ -266,7 +261,7 @@ export class CanonicalPromptProcessor {
       sections.push(`COMBINE (mandatory): ${combineSection}.`);
     }
     
-    sections.push('', styleSection, subjectSection, qualitySection, negativeSection);
+    sections.push('', subjectSection, qualitySection, negativeSection);
 
     const canonicalPrompt = sections.join('\n');
 
@@ -280,20 +275,25 @@ export class CanonicalPromptProcessor {
    * Get available options for UI components
    */
   public getAvailableOptions() {
-    return {
-      materials: this.canonicalConfig.apply_style.materials.options,
-      lighting: this.canonicalConfig.apply_style.lighting.options,
-      texture: this.canonicalConfig.apply_style.texture.options,
-      contrast: this.canonicalConfig.apply_style.contrast.options,
-      styleBackgrounds: this.canonicalConfig.style_backgrounds.options,
-      framing: this.canonicalConfig.subject_templates.framing.options,
-      composition: this.canonicalConfig.subject_templates.composition.options,
-      keepOptions: this.canonicalConfig.keep_options,
-      preserveOptions: this.canonicalConfig.preserve_options,
-      combineOptions: this.canonicalConfig.combine_options,
-      preserveSecondaryOptions: this.canonicalConfig.preserve_secondary_options,
-      secondaryFidelityLevels: this.canonicalConfig.secondary_fidelity_levels
+    console.log('[CANONICAL-DEBUG] Loading options from config...');
+    console.log('[CANONICAL-DEBUG] Apply style config:', this.canonicalConfig.apply_style);
+    console.log('[CANONICAL-DEBUG] Texture options:', this.canonicalConfig.apply_style?.texture?.options);
+    console.log('[CANONICAL-DEBUG] Overlay options:', this.canonicalConfig.apply_style?.overlay?.options);
+    
+    const options = {
+      texture: this.canonicalConfig.apply_style?.texture?.options || [],
+      overlay: this.canonicalConfig.apply_style?.overlay?.options || [],
+      framing: this.canonicalConfig.subject_templates?.framing?.options || [],
+      composition: this.canonicalConfig.subject_templates?.composition?.options || [],
+      keepOptions: this.canonicalConfig.keep_options || {},
+      preserveOptions: this.canonicalConfig.preserve_options || {},
+      combineOptions: this.canonicalConfig.combine_options || {},
+      preserveSecondaryOptions: this.canonicalConfig.preserve_secondary_options || {},
+      secondaryFidelityLevels: this.canonicalConfig.secondary_fidelity_levels || {}
     };
+    
+    console.log('[CANONICAL-DEBUG] Final options object:', options);
+    return options;
   }
 
   /**
@@ -326,12 +326,9 @@ export class CanonicalPromptProcessor {
       },
       secondaryFidelityLevel: 'moderate' as const,
       applyStyle: {
-        materials: this.canonicalConfig.apply_style.materials.default,
-        lighting: this.canonicalConfig.apply_style.lighting.default,
-        texture: this.canonicalConfig.apply_style.texture.default,
-        contrast: this.canonicalConfig.apply_style.contrast.default,
+        texture: this.canonicalConfig.apply_style?.texture?.default || "none",
+        overlay: this.canonicalConfig.apply_style?.overlay?.default || "none",
       },
-      styleBackground: this.canonicalConfig.style_backgrounds.default,
       subjectFraming: this.canonicalConfig.subject_templates.framing.default,
       subjectComposition: this.canonicalConfig.subject_templates.composition.default,
     };

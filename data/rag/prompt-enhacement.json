@@ -177,54 +177,30 @@
       }
     },
     "apply_style": {
-      "materials": {
-        "options": [
-          "screen-printed poster",
-          "halftone illustration", 
-          "duotone graphic",
-          "vector art style",
-          "retro poster design"
-        ],
-        "default": "screen-printed poster"
-      },
-      "lighting": {
-        "options": [
-          "high contrast",
-          "soft even lighting",
-          "dramatic shadows",
-          "flat lighting"
-        ],
-        "default": "high contrast"
-      },
       "texture": {
         "options": [
-          "diagonal halftone lines",
-          "curved line textures", 
-          "smooth gradients",
-          "geometric patterns",
-          "minimal flat fills"
+          "none",
+          "Halftone dots",
+          "Halftone lines",
+          "Crosshatching",
+          "Stippled dots",
+          "Lithographic grain",
+          "Risograph-style overprint"
         ],
-        "default": "diagonal halftone lines"
+        "default": "none"
       },
-      "contrast": {
+      "overlay": {
         "options": [
-          "bold duotone",
-          "high contrast",
-          "soft contrast", 
-          "balanced tones"
+          "none",
+          "Purple #6E3CCB to Orange #F79533 Gradient",
+          "Purple #6E3CCB to Magenta / Pink Gradient",
+          "Purple #6E3CCB Shades Monochrome gradient",
+          "Orange #F79533 Shades Monochrome gradient",
+          "Light Violet #D8C8F0 Shades Monochrome gradient",
+          "Grayscale Monochrome gradient"
         ],
-        "default": "bold duotone"
+        "default": "none"
       }
-    },
-    "style_backgrounds": {
-      "options": [
-        "monochrome line-art rendering, simplified detail, no halftone on background",
-        "smooth gradient, no texture overlay, clean background",
-        "solid color fill, minimal geometry, flat background",
-        "radial gradient with simple geometric shapes",
-        "clean vector background, no realistic textures"
-      ],
-      "default": "smooth gradient, no texture overlay, clean background"
     },
     "subject_templates": {
       "framing": {

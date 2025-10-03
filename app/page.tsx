@@ -183,13 +183,16 @@ export default function ImageEditor() {
       const response = await fetch('/api/canonical-prompt-options')
       const data = await response.json()
       if (data.success) {
-        console.log('Loaded canonical options:', data.data)
-        console.log('Secondary fidelity levels:', data.data?.availableOptions?.secondaryFidelityLevels)
-        console.log('Preserve secondary options:', data.data?.availableOptions?.preserveSecondaryOptions)
+        console.log('[UI-DEBUG] Loaded canonical options:', data.data)
+        console.log('[UI-DEBUG] Available options:', data.data?.availableOptions)
+        console.log('[UI-DEBUG] Texture options:', data.data?.availableOptions?.texture)
+        console.log('[UI-DEBUG] Overlay options:', data.data?.availableOptions?.overlay)
         setCanonicalOptions(data.data)
+      } else {
+        console.error('[UI-DEBUG] Failed to load canonical options - API returned error:', data)
       }
     } catch (error) {
-      console.warn('Failed to load canonical options:', error)
+      console.warn('[UI-DEBUG] Failed to load canonical options - Network error:', error)
     }
   }
 
@@ -442,12 +445,9 @@ export default function ImageEditor() {
     },
     secondaryFidelityLevel: 'moderate' as const,
     applyStyle: {
-      materials: "screen-printed poster",
-      lighting: "high contrast", 
-      texture: "diagonal halftone lines",
-      contrast: "bold duotone"
+      texture: "none",
+      overlay: "none"
     },
-    styleBackground: "smooth gradient, no texture overlay, clean background",
     subjectFraming: "medium shot",
     subjectComposition: "centered"
   })
@@ -2707,64 +2707,8 @@ export default function ImageEditor() {
                             </div>
                           </div>
 
-                          {/* Apply Style Options */}
+                          {/* Apply Style Options - Simplified to Texture and Overlay */}
                           <div className="grid grid-cols-2 gap-4">
-                            {/* Materials */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Materials</Label>
-                              <Select
-                                value={canonicalConfig.applyStyle?.materials}
-                                onValueChange={(value) => 
-                                  setCanonicalConfig(prev => ({
-                                    ...prev,
-                                    applyStyle: {
-                                      ...prev.applyStyle,
-                                      materials: value
-                                    }
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {canonicalOptions?.availableOptions?.materials?.map((material: string) => (
-                                    <SelectItem key={material} value={material} className="text-xs">
-                                      {material}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Lighting */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Lighting</Label>
-                              <Select
-                                value={canonicalConfig.applyStyle?.lighting}
-                                onValueChange={(value) => 
-                                  setCanonicalConfig(prev => ({
-                                    ...prev,
-                                    applyStyle: {
-                                      ...prev.applyStyle,
-                                      lighting: value
-                                    }
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {canonicalOptions?.availableOptions?.lighting?.map((lighting: string) => (
-                                    <SelectItem key={lighting} value={lighting} className="text-xs">
-                                      {lighting}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
                             {/* Texture */}
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">Texture</Label>
@@ -2784,7 +2728,15 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.texture?.map((texture: string) => (
+                                  {(canonicalOptions?.availableOptions?.texture || [
+                                    "none",
+                                    "Halftone dots",
+                                    "Halftone lines",
+                                    "Crosshatching",
+                                    "Stippled dots",
+                                    "Lithographic grain",
+                                    "Risograph-style overprint"
+                                  ]).map((texture: string) => (
                                     <SelectItem key={texture} value={texture} className="text-xs">
                                       {texture}
                                     </SelectItem>
@@ -2793,17 +2745,17 @@ export default function ImageEditor() {
                               </Select>
                             </div>
 
-                            {/* Contrast */}
+                            {/* Overlay */}
                             <div className="space-y-2">
-                              <Label className="text-sm font-medium">Contrast</Label>
+                              <Label className="text-sm font-medium">Overlay</Label>
                               <Select
-                                value={canonicalConfig.applyStyle?.contrast}
+                                value={canonicalConfig.applyStyle?.overlay}
                                 onValueChange={(value) => 
                                   setCanonicalConfig(prev => ({
                                     ...prev,
                                     applyStyle: {
                                       ...prev.applyStyle,
-                                      contrast: value
+                                      overlay: value
                                     }
                                   }))
                                 }
@@ -2812,39 +2764,22 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.contrast?.map((contrast: string) => (
-                                    <SelectItem key={contrast} value={contrast} className="text-xs">
-                                      {contrast}
+                                  {(canonicalOptions?.availableOptions?.overlay || [
+                                    "none",
+                                    "Purple #6E3CCB to Orange #F79533 Gradient",
+                                    "Purple #6E3CCB to Magenta / Pink Gradient",
+                                    "Purple #6E3CCB Shades Monochrome gradient",
+                                    "Orange #F79533 Shades Monochrome gradient",
+                                    "Light Violet #D8C8F0 Shades Monochrome gradient",
+                                    "Grayscale Monochrome gradient"
+                                  ]).map((overlay: string) => (
+                                    <SelectItem key={overlay} value={overlay} className="text-xs">
+                                      {overlay}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>
-                          </div>
-
-                          {/* Style Background */}
-                          <div className="space-y-2">
-                            <Label className="text-sm font-medium">Background Style</Label>
-                            <Select
-                              value={canonicalConfig.styleBackground}
-                              onValueChange={(value) => 
-                                setCanonicalConfig(prev => ({
-                                  ...prev,
-                                  styleBackground: value
-                                }))
-                              }
-                            >
-                              <SelectTrigger className="text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {canonicalOptions?.availableOptions?.styleBackgrounds?.map((bg: string) => (
-                                  <SelectItem key={bg} value={bg} className="text-xs">
-                                    {bg.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                           </div>
 
                           {/* Subject Options */}
@@ -3457,64 +3392,8 @@ export default function ImageEditor() {
                             </div>
                           </div>
 
-                          {/* Apply Style Options */}
+                          {/* Apply Style Options - Simplified to Texture and Overlay */}
                           <div className="grid grid-cols-2 gap-4">
-                            {/* Materials */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Materials</Label>
-                              <Select
-                                value={canonicalConfig.applyStyle?.materials}
-                                onValueChange={(value) => 
-                                  setCanonicalConfig(prev => ({
-                                    ...prev,
-                                    applyStyle: {
-                                      ...prev.applyStyle,
-                                      materials: value
-                                    }
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {canonicalOptions?.availableOptions?.materials?.map((material: string) => (
-                                    <SelectItem key={material} value={material} className="text-xs">
-                                      {material}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Lighting */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">Lighting</Label>
-                              <Select
-                                value={canonicalConfig.applyStyle?.lighting}
-                                onValueChange={(value) => 
-                                  setCanonicalConfig(prev => ({
-                                    ...prev,
-                                    applyStyle: {
-                                      ...prev.applyStyle,
-                                      lighting: value
-                                    }
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {canonicalOptions?.availableOptions?.lighting?.map((lighting: string) => (
-                                    <SelectItem key={lighting} value={lighting} className="text-xs">
-                                      {lighting}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
                             {/* Texture */}
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">Texture</Label>
@@ -3534,7 +3413,15 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.texture?.map((texture: string) => (
+                                  {(canonicalOptions?.availableOptions?.texture || [
+                                    "none",
+                                    "Halftone dots",
+                                    "Halftone lines",
+                                    "Crosshatching",
+                                    "Stippled dots",
+                                    "Lithographic grain",
+                                    "Risograph-style overprint"
+                                  ]).map((texture: string) => (
                                     <SelectItem key={texture} value={texture} className="text-xs">
                                       {texture}
                                     </SelectItem>
@@ -3543,17 +3430,17 @@ export default function ImageEditor() {
                               </Select>
                             </div>
 
-                            {/* Contrast */}
+                            {/* Overlay */}
                             <div className="space-y-2">
-                              <Label className="text-sm font-medium">Contrast</Label>
+                              <Label className="text-sm font-medium">Overlay</Label>
                               <Select
-                                value={canonicalConfig.applyStyle?.contrast}
+                                value={canonicalConfig.applyStyle?.overlay}
                                 onValueChange={(value) => 
                                   setCanonicalConfig(prev => ({
                                     ...prev,
                                     applyStyle: {
                                       ...prev.applyStyle,
-                                      contrast: value
+                                      overlay: value
                                     }
                                   }))
                                 }
@@ -3562,39 +3449,22 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.contrast?.map((contrast: string) => (
-                                    <SelectItem key={contrast} value={contrast} className="text-xs">
-                                      {contrast}
+                                  {(canonicalOptions?.availableOptions?.overlay || [
+                                    "none",
+                                    "Purple #6E3CCB to Orange #F79533 Gradient",
+                                    "Purple #6E3CCB to Magenta / Pink Gradient",
+                                    "Purple #6E3CCB Shades Monochrome gradient",
+                                    "Orange #F79533 Shades Monochrome gradient",
+                                    "Light Violet #D8C8F0 Shades Monochrome gradient",
+                                    "Grayscale Monochrome gradient"
+                                  ]).map((overlay: string) => (
+                                    <SelectItem key={overlay} value={overlay} className="text-xs">
+                                      {overlay}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>
-                          </div>
-
-                          {/* Style Background */}
-                          <div className="space-y-2">
-                            <Label className="text-sm font-medium">Background Style</Label>
-                            <Select
-                              value={canonicalConfig.styleBackground}
-                              onValueChange={(value) => 
-                                setCanonicalConfig(prev => ({
-                                  ...prev,
-                                  styleBackground: value
-                                }))
-                              }
-                            >
-                              <SelectTrigger className="text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {canonicalOptions?.availableOptions?.styleBackgrounds?.map((bg: string) => (
-                                  <SelectItem key={bg} value={bg} className="text-xs">
-                                    {bg.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                           </div>
 
                           {/* Subject Options */}
