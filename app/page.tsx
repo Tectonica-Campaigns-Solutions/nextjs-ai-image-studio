@@ -487,20 +487,16 @@ export default function ImageEditor() {
     }
   }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
 
-  // Update generation canonical preview when config or prompt changes (debounced)
+  // Update generation canonical preview when config or prompt changes (manual only)
+  // Removed automatic useEffect to prevent typing lag - now uses manual Apply button
+  
+  // Clear preview when canonical is disabled
   useEffect(() => {
     if (!useGenerationCanonical) {
       setGenerationCanonicalPreview("")
-      return
+      setIsGeneratingCanonicalPreview(false)
     }
-
-    // Debounce the preview generation to avoid lag while typing
-    const timeoutId = setTimeout(() => {
-      generateGenerationCanonicalPreview()
-    }, 500) // Wait 500ms after user stops typing
-
-    return () => clearTimeout(timeoutId)
-  }, [useGenerationCanonical, generationCanonicalConfig, fluxUltraPrompt])
+  }, [useGenerationCanonical])
 
   // Helper component to display generated prompt
   const GeneratedPromptDisplay = ({ prompt, title }: { prompt: string; title: string }) => {
@@ -3942,7 +3938,7 @@ export default function ImageEditor() {
                         </div>
                         <div className={`flex items-center gap-2 ${generationCanonicalPreview ? 'text-green-600' : isGeneratingCanonicalPreview ? 'text-yellow-600' : 'text-gray-500'}`}>
                           <div className={`w-2 h-2 rounded-full ${generationCanonicalPreview ? 'bg-green-500' : isGeneratingCanonicalPreview ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                          Preview: {isGeneratingCanonicalPreview ? 'Generating...' : generationCanonicalPreview ? 'Generated' : 'None'}
+                          Preview: {isGeneratingCanonicalPreview ? 'Generating...' : generationCanonicalPreview ? 'Ready' : 'Click Apply'}
                         </div>
                       </div>
                       
@@ -4200,6 +4196,31 @@ export default function ImageEditor() {
                                 Negative terms are automatically applied from backend configuration
                               </p>
                             </div>
+                          </div>
+
+                          {/* Apply Button */}
+                          <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                            <Button
+                              type="button"
+                              onClick={generateGenerationCanonicalPreview}
+                              disabled={isGeneratingCanonicalPreview || !fluxUltraPrompt.trim()}
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              {isGeneratingCanonicalPreview ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent mr-2"></div>
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 mr-2" />
+                                  Apply & Generate Preview
+                                </>
+                              )}
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center mt-2">
+                              Apply your settings to generate canonical prompt preview
+                            </p>
                           </div>
 
                           {/* Generation Preview */}
