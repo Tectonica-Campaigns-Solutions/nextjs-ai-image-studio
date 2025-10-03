@@ -22,6 +22,7 @@ import { enhancePromptHybrid, validateHybridOptions, getStrategyDescription, typ
 import { getEnhancementText, getEditEnhancementText, getSedreamEnhancementText } from "@/lib/json-enhancement"
 import { EnhancementPreview } from "@/components/enhancement-preview"
 import type { CanonicalPromptConfig } from "@/lib/canonical-prompt"
+import { generationCanonicalPromptProcessor, type GenerationCanonicalConfig } from "@/lib/canonical-prompt-generation"
 
 export default function ImageEditor() {
   // Flux LoRA Text-to-Image States
@@ -44,6 +45,43 @@ export default function ImageEditor() {
   const [useRagFluxPro, setUseRagFluxPro] = useState(true)
   const [fluxProGeneratedPrompt, setFluxProGeneratedPrompt] = useState<string>("")
   const [showFluxProAdvanced, setShowFluxProAdvanced] = useState(false)
+
+  // Generation Canonical Prompt States
+  const [useGenerationCanonical, setUseGenerationCanonical] = useState(false)
+  const [generationCanonicalConfig, setGenerationCanonicalConfig] = useState<GenerationCanonicalConfig>({
+    subject: {
+      type: 'individual',
+      groupSize: 3,
+      objectDescription: ''
+    },
+    appearance: {
+      colorRelevance: [],
+      colorIntensity: 'moderate'
+    },
+    style: {
+      type: 'realistic'
+    },
+    elements: {
+      landmark: '',
+      city: '',
+      others: ''
+    },
+    modifiers: {
+      positives: ''
+    }
+  })
+  
+  // Local states for text inputs to prevent lag
+  const [localObjectDescription, setLocalObjectDescription] = useState('')
+  const [localLandmark, setLocalLandmark] = useState('')
+  const [localCity, setLocalCity] = useState('')
+  const [localOthers, setLocalOthers] = useState('')
+  const [localPositives, setLocalPositives] = useState('')
+  const [localFluxUltraPrompt, setLocalFluxUltraPrompt] = useState('')
+  
+  const [generationCanonicalOptions, setGenerationCanonicalOptions] = useState<any>(null)
+  const [generationCanonicalPreview, setGenerationCanonicalPreview] = useState<string>("")
+  const [isGeneratingCanonicalPreview, setIsGeneratingCanonicalPreview] = useState(false)
 
   // Flux Ultra Finetuned States
   const [fluxUltraPrompt, setFluxUltraPrompt] = useState("")
@@ -184,6 +222,85 @@ export default function ImageEditor() {
     } catch (error) {
       console.warn('Failed to generate canonical preview:', error)
       setCanonicalPreview("")
+    }
+  }
+
+  // Load generation canonical prompt options
+  const loadGenerationCanonicalOptions = async () => {
+    try {
+      const options = await generationCanonicalPromptProcessor.getAvailableOptions()
+      setGenerationCanonicalOptions(options)
+      console.log('Loaded generation canonical options:', options)
+    } catch (error) {
+      console.warn('Failed to load generation canonical options:', error)
+    }
+  }
+
+  // Sync local text states with main config
+  const syncLocalStatesWithConfig = () => {
+    setFluxUltraPrompt(localFluxUltraPrompt)
+    setGenerationCanonicalConfig(prev => ({
+      ...prev,
+      subject: {
+        ...prev.subject,
+        objectDescription: localObjectDescription
+      },
+      elements: {
+        ...prev.elements,
+        landmark: localLandmark,
+        city: localCity,
+        others: localOthers
+      },
+      modifiers: {
+        ...prev.modifiers,
+        positives: localPositives
+      }
+    }))
+  }
+
+  // Generate generation canonical prompt preview
+  const generateGenerationCanonicalPreview = async () => {
+    if (!useGenerationCanonical || !localFluxUltraPrompt.trim()) {
+      setGenerationCanonicalPreview("")
+      setIsGeneratingCanonicalPreview(false)
+      return
+    }
+
+    // Sync local states before generating
+    syncLocalStatesWithConfig()
+
+    setIsGeneratingCanonicalPreview(true)
+    try {
+      // Create temporary config with current local values
+      const configWithLocalValues = {
+        ...generationCanonicalConfig,
+        subject: {
+          ...generationCanonicalConfig.subject,
+          objectDescription: localObjectDescription
+        },
+        elements: {
+          ...generationCanonicalConfig.elements,
+          landmark: localLandmark,
+          city: localCity,
+          others: localOthers
+        },
+        modifiers: {
+          ...generationCanonicalConfig.modifiers,
+          positives: localPositives
+        }
+      }
+
+      const canonicalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
+        localFluxUltraPrompt,
+        configWithLocalValues
+      )
+      setGenerationCanonicalPreview(canonicalPrompt)
+      console.log('Generated generation canonical preview:', canonicalPrompt)
+    } catch (error) {
+      console.warn('Failed to generate generation canonical preview:', error)
+      setGenerationCanonicalPreview("")
+    } finally {
+      setIsGeneratingCanonicalPreview(false)
     }
   }
 
@@ -364,6 +481,61 @@ export default function ImageEditor() {
   const [externalFluxCombineError, setExternalFluxCombineError] = useState<string>("")
   const [externalFluxCombineGeneratedPrompt, setExternalFluxCombineGeneratedPrompt] = useState<string>("")
   const [showExternalFluxCombineAdvanced, setShowExternalFluxCombineAdvanced] = useState(false)
+
+  // External Flux Ultra States
+  const [externalFluxUltraPrompt, setExternalFluxUltraPrompt] = useState("")
+  const [externalFluxUltraSettings, setExternalFluxUltraSettings] = useState({
+    aspect_ratio: "1:1",
+    num_images: 1,
+    safety_tolerance: 1,
+    output_format: "jpeg",
+    enable_safety_checker: true,
+    raw: false,
+    seed: "1234"
+  })
+  const [externalFluxUltraFinetuneId, setExternalFluxUltraFinetuneId] = useState("a4bd761c-0f90-41cc-be78-c7b6cf22285a")
+  const [externalFluxUltraFinetuneStrength, setExternalFluxUltraFinetuneStrength] = useState(1.0)
+  const [externalFluxUltraTriggerPhrase, setExternalFluxUltraTriggerPhrase] = useState("TCT-AI-8")
+  const [externalFluxUltraResult, setExternalFluxUltraResult] = useState<string>("")
+  const [isExternalFluxUltraGenerating, setIsExternalFluxUltraGenerating] = useState(false)
+  const [externalFluxUltraError, setExternalFluxUltraError] = useState<string>("")
+  const [externalFluxUltraGeneratedPrompt, setExternalFluxUltraGeneratedPrompt] = useState<string>("")
+  const [showExternalFluxUltraAdvanced, setShowExternalFluxUltraAdvanced] = useState(false)
+  
+  // External Flux Ultra Canonical States
+  const [useExternalFluxUltraCanonical, setUseExternalFluxUltraCanonical] = useState(false)
+  const [externalFluxUltraCanonicalConfig, setExternalFluxUltraCanonicalConfig] = useState<GenerationCanonicalConfig>({
+    subject: {
+      type: 'individual',
+      groupSize: 3,
+      objectDescription: ''
+    },
+    appearance: {
+      colorRelevance: [],
+      colorIntensity: 'moderate'
+    },
+    style: {
+      type: 'realistic'
+    },
+    elements: {
+      landmark: '',
+      city: '',
+      others: ''
+    },
+    modifiers: {
+      positives: ''
+    }
+  })
+  const [externalFluxUltraCanonicalPreview, setExternalFluxUltraCanonicalPreview] = useState<string>("")
+  const [isExternalFluxUltraGeneratingCanonicalPreview, setIsExternalFluxUltraGeneratingCanonicalPreview] = useState(false)
+  
+  // Local states for External Flux Ultra text inputs to prevent lag
+  const [externalLocalFluxUltraPrompt, setExternalLocalFluxUltraPrompt] = useState('')
+  const [externalLocalObjectDescription, setExternalLocalObjectDescription] = useState('')
+  const [externalLocalLandmark, setExternalLocalLandmark] = useState('')
+  const [externalLocalCity, setExternalLocalCity] = useState('')
+  const [externalLocalOthers, setExternalLocalOthers] = useState('')
+  const [externalLocalPositives, setExternalLocalPositives] = useState('')
   
   // External Flux Combine uses same canonical prompt configuration as internal
   const [externalUseCanonicalPrompt, setExternalUseCanonicalPrompt] = useState(true) // Enabled by default for external
@@ -413,6 +585,7 @@ export default function ImageEditor() {
   // Load canonical options on component mount
   useEffect(() => {
     loadCanonicalOptions()
+    loadGenerationCanonicalOptions()
   }, [])
 
   // Update canonical preview when config or prompt changes
@@ -421,6 +594,59 @@ export default function ImageEditor() {
       generateCanonicalPreview()
     }
   }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
+
+  // Update generation canonical preview when config or prompt changes (manual only)
+  // Removed automatic useEffect to prevent typing lag - now uses manual Apply button
+  
+  // Clear preview when canonical is disabled
+  useEffect(() => {
+    if (!useGenerationCanonical) {
+      setGenerationCanonicalPreview("")
+      setIsGeneratingCanonicalPreview(false)
+    }
+  }, [useGenerationCanonical])
+
+  // Sync local states with config when config changes programmatically
+  useEffect(() => {
+    setLocalFluxUltraPrompt(fluxUltraPrompt)
+    setLocalObjectDescription(generationCanonicalConfig.subject.objectDescription || '')
+    setLocalLandmark(generationCanonicalConfig.elements.landmark || '')
+    setLocalCity(generationCanonicalConfig.elements.city || '')
+    setLocalOthers(generationCanonicalConfig.elements.others || '')
+    setLocalPositives(generationCanonicalConfig.modifiers.positives || '')
+  }, [
+    fluxUltraPrompt,
+    generationCanonicalConfig.subject.objectDescription,
+    generationCanonicalConfig.elements.landmark,
+    generationCanonicalConfig.elements.city,
+    generationCanonicalConfig.elements.others,
+    generationCanonicalConfig.modifiers.positives
+  ])
+
+  // Clear External Flux Ultra preview when canonical is disabled
+  useEffect(() => {
+    if (!useExternalFluxUltraCanonical) {
+      setExternalFluxUltraCanonicalPreview("")
+      setIsExternalFluxUltraGeneratingCanonicalPreview(false)
+    }
+  }, [useExternalFluxUltraCanonical])
+
+  // Sync External Flux Ultra local states with config when config changes programmatically
+  useEffect(() => {
+    setExternalLocalFluxUltraPrompt(externalFluxUltraPrompt)
+    setExternalLocalObjectDescription(externalFluxUltraCanonicalConfig.subject.objectDescription || '')
+    setExternalLocalLandmark(externalFluxUltraCanonicalConfig.elements.landmark || '')
+    setExternalLocalCity(externalFluxUltraCanonicalConfig.elements.city || '')
+    setExternalLocalOthers(externalFluxUltraCanonicalConfig.elements.others || '')
+    setExternalLocalPositives(externalFluxUltraCanonicalConfig.modifiers.positives || '')
+  }, [
+    externalFluxUltraPrompt,
+    externalFluxUltraCanonicalConfig.subject.objectDescription,
+    externalFluxUltraCanonicalConfig.elements.landmark,
+    externalFluxUltraCanonicalConfig.elements.city,
+    externalFluxUltraCanonicalConfig.elements.others,
+    externalFluxUltraCanonicalConfig.modifiers.positives
+  ])
 
   // Helper component to display generated prompt
   const GeneratedPromptDisplay = ({ prompt, title }: { prompt: string; title: string }) => {
@@ -817,7 +1043,10 @@ export default function ImageEditor() {
   const handleFluxUltraSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!fluxUltraPrompt.trim()) {
+    // Sync local states before processing
+    syncLocalStatesWithConfig()
+
+    if (!localFluxUltraPrompt.trim()) {
       setFluxUltraError("Please enter a prompt")
       return
     }
@@ -836,10 +1065,44 @@ export default function ImageEditor() {
     setFluxUltraError("")
 
     try {
+      let finalPrompt = localFluxUltraPrompt
+
+      // Apply canonical prompt processing if enabled
+      if (useGenerationCanonical) {
+        try {
+          // Create temporary config with current local values
+          const configWithLocalValues = {
+            ...generationCanonicalConfig,
+            subject: {
+              ...generationCanonicalConfig.subject,
+              objectDescription: localObjectDescription
+            },
+            elements: {
+              ...generationCanonicalConfig.elements,
+              landmark: localLandmark,
+              city: localCity,
+              others: localOthers
+            },
+            modifiers: {
+              ...generationCanonicalConfig.modifiers,
+              positives: localPositives
+            }
+          }
+
+          finalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
+            localFluxUltraPrompt,
+            configWithLocalValues
+          )
+        } catch (canonicalError) {
+          console.warn('Failed to generate canonical prompt, using original:', canonicalError)
+          // Continue with original prompt if canonical fails
+        }
+      }
+
       const formData = new FormData()
       
       // The API will construct the final prompt with trigger phrase
-      formData.append("prompt", fluxUltraPrompt)
+      formData.append("prompt", finalPrompt)
       formData.append("finetuneId", fluxUltraFinetuneId)
       formData.append("finetuneStrength", fluxUltraFinetuneStrength.toString())
       formData.append("triggerPhrase", fluxUltraTriggerPhrase)
@@ -1152,6 +1415,158 @@ export default function ImageEditor() {
     setExternalFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
   }
 
+  // External Flux Ultra helper functions
+  const syncExternalLocalStatesWithConfig = () => {
+    setExternalFluxUltraPrompt(externalLocalFluxUltraPrompt)
+    setExternalFluxUltraCanonicalConfig(prev => ({
+      ...prev,
+      subject: {
+        ...prev.subject,
+        objectDescription: externalLocalObjectDescription
+      },
+      elements: {
+        ...prev.elements,
+        landmark: externalLocalLandmark,
+        city: externalLocalCity,
+        others: externalLocalOthers
+      },
+      modifiers: {
+        ...prev.modifiers,
+        positives: externalLocalPositives
+      }
+    }))
+  }
+
+  const generateExternalFluxUltraCanonicalPreview = async () => {
+    if (!useExternalFluxUltraCanonical || !externalLocalFluxUltraPrompt.trim()) {
+      setExternalFluxUltraCanonicalPreview("")
+      setIsExternalFluxUltraGeneratingCanonicalPreview(false)
+      return
+    }
+
+    setIsExternalFluxUltraGeneratingCanonicalPreview(true)
+    try {
+      // Create temporary config with current local values
+      const configWithLocalValues = {
+        ...externalFluxUltraCanonicalConfig,
+        subject: {
+          ...externalFluxUltraCanonicalConfig.subject,
+          objectDescription: externalLocalObjectDescription
+        },
+        elements: {
+          ...externalFluxUltraCanonicalConfig.elements,
+          landmark: externalLocalLandmark,
+          city: externalLocalCity,
+          others: externalLocalOthers
+        },
+        modifiers: {
+          ...externalFluxUltraCanonicalConfig.modifiers,
+          positives: externalLocalPositives
+        }
+      }
+
+      const canonicalPrompt = await generationCanonicalPromptProcessor.generateCanonicalPrompt(
+        externalLocalFluxUltraPrompt,
+        configWithLocalValues
+      )
+      setExternalFluxUltraCanonicalPreview(canonicalPrompt)
+      console.log('Generated external flux ultra canonical preview:', canonicalPrompt)
+    } catch (error) {
+      console.warn('Failed to generate external flux ultra canonical preview:', error)
+      setExternalFluxUltraCanonicalPreview("")
+    } finally {
+      setIsExternalFluxUltraGeneratingCanonicalPreview(false)
+    }
+  }
+
+  const handleExternalFluxUltraSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    // Sync local states before processing
+    syncExternalLocalStatesWithConfig()
+
+    if (!externalLocalFluxUltraPrompt.trim()) {
+      setExternalFluxUltraError("Please enter a prompt")
+      return
+    }
+
+    if (!externalFluxUltraFinetuneId.trim()) {
+      setExternalFluxUltraError("Please enter a fine-tune ID")
+      return
+    }
+
+    if (!externalFluxUltraTriggerPhrase.trim()) {
+      setExternalFluxUltraError("Please enter a trigger phrase")
+      return
+    }
+
+    setIsExternalFluxUltraGenerating(true)
+    setExternalFluxUltraError("")
+
+    try {
+      // Prepare request body for external endpoint
+      const requestBody: any = {
+        prompt: externalLocalFluxUltraPrompt,
+        finetuneId: externalFluxUltraFinetuneId,
+        triggerPhrase: externalFluxUltraTriggerPhrase,
+        finetuneStrength: externalFluxUltraFinetuneStrength,
+        settings: externalFluxUltraSettings,
+        useGenerationCanonical: useExternalFluxUltraCanonical
+      }
+
+      // Add canonical config if enabled
+      if (useExternalFluxUltraCanonical) {
+        const configWithLocalValues = {
+          ...externalFluxUltraCanonicalConfig,
+          subject: {
+            ...externalFluxUltraCanonicalConfig.subject,
+            objectDescription: externalLocalObjectDescription
+          },
+          elements: {
+            ...externalFluxUltraCanonicalConfig.elements,
+            landmark: externalLocalLandmark,
+            city: externalLocalCity,
+            others: externalLocalOthers
+          },
+          modifiers: {
+            ...externalFluxUltraCanonicalConfig.modifiers,
+            positives: externalLocalPositives
+          }
+        }
+        requestBody.canonicalConfig = configWithLocalValues
+      }
+
+      console.log('[External Flux Ultra] Request body:', JSON.stringify(requestBody, null, 2))
+
+      const response = await fetch('/api/external/flux-ultra-finetuned', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || `Server error: ${response.status}`)
+      }
+
+      if (result.success) {
+        setExternalFluxUltraResult(result.image)
+        setExternalFluxUltraGeneratedPrompt(result.finalPrompt || "")
+        console.log('[External Flux Ultra] Generation successful:', result)
+      } else {
+        throw new Error(result.error || "Unknown error occurred")
+      }
+
+    } catch (err) {
+      setExternalFluxUltraError(err instanceof Error ? err.message : "Failed to generate image via external API")
+    } finally {
+      setIsExternalFluxUltraGenerating(false)
+    }
+  }
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -1356,8 +1771,9 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
+          <TabsTrigger value="external-flux-ultra">External Generate</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           <TabsTrigger value="external-flux-combine">External Combine</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
@@ -1616,8 +2032,8 @@ export default function ImageEditor() {
                       <Label htmlFor="flux-pro-prompt">Image Description</Label>
                       <Textarea
                         id="flux-pro-prompt"
-                        placeholder="Describe the image you want to generate..."
-                        value={fluxProPrompt}
+                        placeholder="Describe the image you want to generate. You can start with 'Create a poster of...' for example."
+º                        value={fluxProPrompt}
                         onChange={(e) => setFluxProPrompt(e.target.value)}
                         required
                         rows={3}
@@ -3807,11 +4223,336 @@ export default function ImageEditor() {
                       <Label htmlFor="fluxUltraPrompt">Prompt</Label>
                       <Textarea
                         id="fluxUltraPrompt"
-                        placeholder="Describe the image you want to generate"
-                        value={fluxUltraPrompt}
-                        onChange={(e) => setFluxUltraPrompt(e.target.value)}
+                        placeholder="Describe the image you want to generate. You can start with 'Create a poster of...' for example."
+                        value={localFluxUltraPrompt}
+                        onChange={(e) => setLocalFluxUltraPrompt(e.target.value)}
                         rows={3}
                       />
+                    </div>
+
+                    {/* GENERATION CANONICAL PROMPT CONTROLS */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="use-generation-canonical"
+                              checked={useGenerationCanonical}
+                              onCheckedChange={setUseGenerationCanonical}
+                              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                            />
+                            <Label htmlFor="use-generation-canonical" className="font-medium">
+                              Advanced Generation Options
+                            </Label>
+                          </div>
+                          <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                            BETA
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Debug Status Indicator */}
+                      <div className="text-xs space-y-1">
+                        <div className={`flex items-center gap-2 ${useGenerationCanonical ? 'text-green-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${useGenerationCanonical ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          Status: {useGenerationCanonical ? 'Active' : 'Inactive'}
+                        </div>
+                        <div className={`flex items-center gap-2 ${generationCanonicalOptions ? 'text-green-600' : 'text-red-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationCanonicalOptions ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          Config: {generationCanonicalOptions ? 'Loaded' : 'Not loaded'}
+                        </div>
+                        <div className={`flex items-center gap-2 ${generationCanonicalPreview ? 'text-green-600' : isGeneratingCanonicalPreview ? 'text-yellow-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationCanonicalPreview ? 'bg-green-500' : isGeneratingCanonicalPreview ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                          Preview: {isGeneratingCanonicalPreview ? 'Generating...' : generationCanonicalPreview ? 'Ready' : 'Click Apply'}
+                        </div>
+                      </div>
+                      
+                      {useGenerationCanonical && (
+                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                          <div className="text-sm text-muted-foreground">
+                            Configure structured prompt generation for precise image creation
+                          </div>
+
+                          {/* Subject Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Subject</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-individual"
+                                  name="subject-type"
+                                  value="individual"
+                                  checked={generationCanonicalConfig.subject.type === 'individual'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-individual" className="text-sm">Individual</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-group"
+                                  name="subject-type"
+                                  value="group"
+                                  checked={generationCanonicalConfig.subject.type === 'group'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-group" className="text-sm">Group</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-crowd"
+                                  name="subject-type"
+                                  value="crowd"
+                                  checked={generationCanonicalConfig.subject.type === 'crowd'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-crowd" className="text-sm">Crowd (&gt;5)</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="subject-object"
+                                  name="subject-type"
+                                  value="object"
+                                  checked={generationCanonicalConfig.subject.type === 'object'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="subject-object" className="text-sm">Object</Label>
+                              </div>
+                            </div>
+                            
+                            {/* Group Size Input */}
+                            {generationCanonicalConfig.subject.type === 'group' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Group Size (2-5 people)</Label>
+                                <Input
+                                  type="number"
+                                  min="2"
+                                  max="5"
+                                  value={generationCanonicalConfig.subject.groupSize || 3}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, groupSize: parseInt(e.target.value) || 3 }
+                                  }))}
+                                  className="w-24"
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Object Description Input */}
+                            {generationCanonicalConfig.subject.type === 'object' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Object Description</Label>
+                                <Input
+                                  placeholder="landmark, animal, building, etc."
+                                  value={localObjectDescription}
+                                  onChange={(e) => setLocalObjectDescription(e.target.value)}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Appearance Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Appearance</Label>
+                            
+                            {/* Color Relevance */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Brand Colors</Label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {generationCanonicalOptions?.brandColors?.map((color: string, index: number) => {
+                                  const colorName = color.split(' ').slice(-2).join(' ')
+                                  const isSelected = generationCanonicalConfig.appearance.colorRelevance.includes(color)
+                                  return (
+                                    <div key={index} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`color-${index}`}
+                                        checked={isSelected}
+                                        onCheckedChange={(checked) => {
+                                          setGenerationCanonicalConfig(prev => ({
+                                            ...prev,
+                                            appearance: {
+                                              ...prev.appearance,
+                                              colorRelevance: checked 
+                                                ? [...prev.appearance.colorRelevance, color]
+                                                : prev.appearance.colorRelevance.filter(c => c !== color)
+                                            }
+                                          }))
+                                        }}
+                                      />
+                                      <Label htmlFor={`color-${index}`} className="text-xs">{colorName}</Label>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Color Intensity */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Color Intensity</Label>
+                              <div className="flex gap-4">
+                                {['subtle', 'moderate', 'prominent'].map((intensity) => (
+                                  <div key={intensity} className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id={`intensity-${intensity}`}
+                                      name="color-intensity"
+                                      value={intensity}
+                                      checked={generationCanonicalConfig.appearance.colorIntensity === intensity}
+                                      onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                        ...prev,
+                                        appearance: { ...prev.appearance, colorIntensity: e.target.value as any }
+                                      }))}
+                                    />
+                                    <Label htmlFor={`intensity-${intensity}`} className="text-xs capitalize">{intensity}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Style Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Style</Label>
+                            <div className="flex gap-4">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="style-realistic"
+                                  name="generation-style"
+                                  value="realistic"
+                                  checked={generationCanonicalConfig.style.type === 'realistic'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    style: { ...prev.style, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="style-realistic" className="text-sm">Realistic</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="style-illustrative"
+                                  name="generation-style"
+                                  value="illustrative"
+                                  checked={generationCanonicalConfig.style.type === 'illustrative'}
+                                  onChange={(e) => setGenerationCanonicalConfig(prev => ({
+                                    ...prev,
+                                    style: { ...prev.style, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="style-illustrative" className="text-sm">Illustrative</Label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Elements Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Elements</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Landmark</Label>
+                                <Input
+                                  placeholder="e.g., Eiffel Tower, Central Park"
+                                  value={localLandmark}
+                                  onChange={(e) => setLocalLandmark(e.target.value)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">City</Label>
+                                <Input
+                                  placeholder="e.g., New York, Paris, Tokyo"
+                                  value={localCity}
+                                  onChange={(e) => setLocalCity(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Other Elements</Label>
+                              <Input
+                                placeholder="Additional elements to include..."
+                                value={localOthers}
+                                onChange={(e) => setLocalOthers(e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Modifiers Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Modifiers</Label>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Positives (enhance)</Label>
+                              <Textarea
+                                placeholder="terms to emphasize..."
+                                value={localPositives}
+                                onChange={(e) => setLocalPositives(e.target.value)}
+                                rows={2}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Negative terms are automatically applied from backend configuration
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Apply Button */}
+                          <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                            <Button
+                              type="button"
+                              onClick={generateGenerationCanonicalPreview}
+                              disabled={isGeneratingCanonicalPreview || !localFluxUltraPrompt.trim()}
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              {isGeneratingCanonicalPreview ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent mr-2"></div>
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 mr-2" />
+                                  Apply & Generate Preview
+                                </>
+                              )}
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center mt-2">
+                              Apply your settings to generate canonical prompt preview
+                            </p>
+                          </div>
+
+                          {/* Generation Preview */}
+                          {(generationCanonicalPreview || isGeneratingCanonicalPreview) && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Generated Prompt Preview</Label>
+                              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
+                                {isGeneratingCanonicalPreview ? (
+                                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                                    <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground border-t-transparent"></div>
+                                    <span>Generating preview...</span>
+                                  </div>
+                                ) : (
+                                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                    {generationCanonicalPreview}
+                                  </pre>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -3933,7 +4674,7 @@ export default function ImageEditor() {
                       )}
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={!fluxUltraPrompt.trim() || isFluxUltraGenerating}>
+                    <Button type="submit" className="w-full" disabled={!localFluxUltraPrompt.trim() || isFluxUltraGenerating}>
                       {isFluxUltraGenerating ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -4000,6 +4741,565 @@ export default function ImageEditor() {
                         />
                       </div>
                       <OpenInNewTabButton imageUrl={fluxUltraImageUrl} />
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <Sparkles className="h-12 w-12 mx-auto mb-2" />
+                        <p>No image generated yet</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* External Flux Ultra Finetuned Tab */}
+          <TabsContent value="external-flux-ultra" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* External Flux Ultra Generation Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-500" />
+                    External Generate Images (Test)
+                  </CardTitle>
+                  <CardDescription>
+                    Test the external endpoint for image generation with canonical prompt structure (calls /api/external/flux-ultra-finetuned)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleExternalFluxUltraSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="externalFluxUltraPrompt">Prompt</Label>
+                      <Textarea
+                        id="externalFluxUltraPrompt"
+                        placeholder="Describe the image you want to generate. You can start with 'Create a poster of...' for example."
+                        value={externalLocalFluxUltraPrompt}
+                        onChange={(e) => setExternalLocalFluxUltraPrompt(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+
+                    {/* GENERATION CANONICAL PROMPT CONTROLS */}
+                    <div className="space-y-4 p-4 border rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="use-external-generation-canonical"
+                              checked={useExternalFluxUltraCanonical}
+                              onCheckedChange={setUseExternalFluxUltraCanonical}
+                              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                            />
+                            <Label htmlFor="use-external-generation-canonical" className="font-medium">
+                              Advanced Generation Options
+                            </Label>
+                          </div>
+                          <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                            BETA
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Debug Status Indicator */}
+                      <div className="text-xs space-y-1">
+                        <div className={`flex items-center gap-2 ${useExternalFluxUltraCanonical ? 'text-green-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${useExternalFluxUltraCanonical ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          Status: {useExternalFluxUltraCanonical ? 'Active' : 'Inactive'}
+                        </div>
+                        <div className={`flex items-center gap-2 ${generationCanonicalOptions ? 'text-green-600' : 'text-red-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationCanonicalOptions ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          Config: {generationCanonicalOptions ? 'Loaded' : 'Not loaded'}
+                        </div>
+                        <div className={`flex items-center gap-2 ${externalFluxUltraCanonicalPreview ? 'text-green-600' : isExternalFluxUltraGeneratingCanonicalPreview ? 'text-yellow-600' : 'text-gray-500'}`}>
+                          <div className={`w-2 h-2 rounded-full ${externalFluxUltraCanonicalPreview ? 'bg-green-500' : isExternalFluxUltraGeneratingCanonicalPreview ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                          Preview: {isExternalFluxUltraGeneratingCanonicalPreview ? 'Generating...' : externalFluxUltraCanonicalPreview ? 'Ready' : 'Click Apply'}
+                        </div>
+                      </div>
+                      
+                      {useExternalFluxUltraCanonical && (
+                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                          <div className="text-sm text-muted-foreground">
+                            Configure structured prompt generation for precise image creation
+                          </div>
+
+                          {/* Subject Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Subject</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="external-subject-individual"
+                                  name="external-subject-type"
+                                  value="individual"
+                                  checked={externalFluxUltraCanonicalConfig.subject.type === 'individual'}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="external-subject-individual" className="text-sm">Individual</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="external-subject-group"
+                                  name="external-subject-type"
+                                  value="group"
+                                  checked={externalFluxUltraCanonicalConfig.subject.type === 'group'}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="external-subject-group" className="text-sm">Group</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="external-subject-crowd"
+                                  name="external-subject-type"
+                                  value="crowd"
+                                  checked={externalFluxUltraCanonicalConfig.subject.type === 'crowd'}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="external-subject-crowd" className="text-sm">Crowd (&gt;5)</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="external-subject-object"
+                                  name="external-subject-type"
+                                  value="object"
+                                  checked={externalFluxUltraCanonicalConfig.subject.type === 'object'}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="external-subject-object" className="text-sm">Object</Label>
+                              </div>
+                            </div>
+                            
+                            {/* Group Size Input */}
+                            {externalFluxUltraCanonicalConfig.subject.type === 'group' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Group Size (2-5 people)</Label>
+                                <Input
+                                  type="number"
+                                  min="2"
+                                  max="5"
+                                  value={externalFluxUltraCanonicalConfig.subject.groupSize || 3}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    subject: { ...prev.subject, groupSize: parseInt(e.target.value) || 3 }
+                                  }))}
+                                  className="w-24"
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Object Description Input */}
+                            {externalFluxUltraCanonicalConfig.subject.type === 'object' && (
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Object Description</Label>
+                                <Input
+                                  placeholder="landmark, animal, building, etc."
+                                  value={externalLocalObjectDescription}
+                                  onChange={(e) => setExternalLocalObjectDescription(e.target.value)}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Appearance Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Appearance</Label>
+                            
+                            {/* Color Relevance */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Brand Colors</Label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {generationCanonicalOptions?.brandColors?.map((color: string, index: number) => {
+                                  const colorName = color.split(' ').slice(-2).join(' ')
+                                  const isSelected = externalFluxUltraCanonicalConfig.appearance.colorRelevance.includes(color)
+                                  return (
+                                    <div key={index} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`external-color-${index}`}
+                                        checked={isSelected}
+                                        onCheckedChange={(checked) => {
+                                          setExternalFluxUltraCanonicalConfig(prev => ({
+                                            ...prev,
+                                            appearance: {
+                                              ...prev.appearance,
+                                              colorRelevance: checked 
+                                                ? [...prev.appearance.colorRelevance, color]
+                                                : prev.appearance.colorRelevance.filter(c => c !== color)
+                                            }
+                                          }))
+                                        }}
+                                      />
+                                      <Label htmlFor={`external-color-${index}`} className="text-xs">{colorName}</Label>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Color Intensity */}
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Color Intensity</Label>
+                              <div className="flex gap-4">
+                                {['subtle', 'moderate', 'prominent'].map((intensity) => (
+                                  <div key={intensity} className="flex items-center space-x-2">
+                                    <input
+                                      type="radio"
+                                      id={`external-intensity-${intensity}`}
+                                      name="external-color-intensity"
+                                      value={intensity}
+                                      checked={externalFluxUltraCanonicalConfig.appearance.colorIntensity === intensity}
+                                      onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                        ...prev,
+                                        appearance: { ...prev.appearance, colorIntensity: e.target.value as any }
+                                      }))}
+                                    />
+                                    <Label htmlFor={`external-intensity-${intensity}`} className="text-xs capitalize">{intensity}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Style Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Style</Label>
+                            <div className="flex gap-4">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="external-style-realistic"
+                                  name="external-generation-style"
+                                  value="realistic"
+                                  checked={externalFluxUltraCanonicalConfig.style.type === 'realistic'}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    style: { ...prev.style, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="external-style-realistic" className="text-sm">Realistic</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  id="external-style-illustrative"
+                                  name="external-generation-style"
+                                  value="illustrative"
+                                  checked={externalFluxUltraCanonicalConfig.style.type === 'illustrative'}
+                                  onChange={(e) => setExternalFluxUltraCanonicalConfig(prev => ({
+                                    ...prev,
+                                    style: { ...prev.style, type: e.target.value as any }
+                                  }))}
+                                />
+                                <Label htmlFor="external-style-illustrative" className="text-sm">Illustrative</Label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Elements Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Elements</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">Landmark</Label>
+                                <Input
+                                  placeholder="e.g., Eiffel Tower, Central Park"
+                                  value={externalLocalLandmark}
+                                  onChange={(e) => setExternalLocalLandmark(e.target.value)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">City</Label>
+                                <Input
+                                  placeholder="e.g., New York, Paris, Tokyo"
+                                  value={externalLocalCity}
+                                  onChange={(e) => setExternalLocalCity(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Other Elements</Label>
+                              <Input
+                                placeholder="Additional elements to include..."
+                                value={externalLocalOthers}
+                                onChange={(e) => setExternalLocalOthers(e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Modifiers Configuration */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Modifiers</Label>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">Positives (enhance)</Label>
+                              <Textarea
+                                placeholder="terms to emphasize..."
+                                value={externalLocalPositives}
+                                onChange={(e) => setExternalLocalPositives(e.target.value)}
+                                rows={2}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Negative terms are automatically applied from backend configuration
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Apply Button */}
+                          <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                            <Button
+                              type="button"
+                              onClick={generateExternalFluxUltraCanonicalPreview}
+                              disabled={isExternalFluxUltraGeneratingCanonicalPreview || !externalLocalFluxUltraPrompt.trim()}
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              {isExternalFluxUltraGeneratingCanonicalPreview ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent mr-2"></div>
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 mr-2" />
+                                  Apply & Generate Preview
+                                </>
+                              )}
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center mt-2">
+                              Apply your settings to generate canonical prompt preview
+                            </p>
+                          </div>
+
+                          {/* Generation Preview */}
+                          {(externalFluxUltraCanonicalPreview || isExternalFluxUltraGeneratingCanonicalPreview) && (
+                            <div className="space-y-2">
+                              <Label className="text-sm font-medium">Generated Prompt Preview</Label>
+                              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
+                                {isExternalFluxUltraGeneratingCanonicalPreview ? (
+                                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                                    <div className="animate-spin rounded-full h-3 w-3 border border-muted-foreground border-t-transparent"></div>
+                                    <span>Generating preview...</span>
+                                  </div>
+                                ) : (
+                                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                    {externalFluxUltraCanonicalPreview}
+                                  </pre>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="externalFluxUltraFinetuneId">Fine-tune ID</Label>
+                        <Input
+                          id="externalFluxUltraFinetuneId"
+                          value={externalFluxUltraFinetuneId}
+                          onChange={(e) => setExternalFluxUltraFinetuneId(e.target.value)}
+                          placeholder="Fine-tune model ID"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="externalFluxUltraTriggerPhrase">Trigger Phrase</Label>
+                        <Input
+                          id="externalFluxUltraTriggerPhrase"
+                          value={externalFluxUltraTriggerPhrase}
+                          onChange={(e) => setExternalFluxUltraTriggerPhrase(e.target.value)}
+                          placeholder="Model trigger phrase"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="externalFluxUltraFinetuneStrength">Fine-tune Strength: {externalFluxUltraFinetuneStrength}</Label>
+                      <input
+                        id="externalFluxUltraFinetuneStrength"
+                        type="range"
+                        min="0.1"
+                        max="2.0"
+                        step="0.1"
+                        value={externalFluxUltraFinetuneStrength}
+                        onChange={(e) => setExternalFluxUltraFinetuneStrength(parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Subtle (0.1)</span>
+                        <span>Strong (2.0)</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowExternalFluxUltraAdvanced(!showExternalFluxUltraAdvanced)}
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        {showExternalFluxUltraAdvanced ? "Hide" : "Show"} Advanced Settings
+                      </Button>
+
+                      {showExternalFluxUltraAdvanced && (
+                        <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                          <div className="space-y-2">
+                            <Label htmlFor="externalFluxUltraAspectRatio">Aspect Ratio</Label>
+                            <Select
+                              value={externalFluxUltraSettings.aspect_ratio}
+                              onValueChange={(value) => setExternalFluxUltraSettings(prev => ({ ...prev, aspect_ratio: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1:1">Square (1:1)</SelectItem>
+                                <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                                <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                                <SelectItem value="16:9">Widescreen (16:9)</SelectItem>
+                                <SelectItem value="9:16">Vertical (9:16)</SelectItem>
+                                <SelectItem value="21:9">Ultra-wide (21:9)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="externalFluxUltraSafetyTolerance">Safety Tolerance</Label>
+                            <Select
+                              value={externalFluxUltraSettings.safety_tolerance.toString()}
+                              onValueChange={(value) => setExternalFluxUltraSettings(prev => ({ ...prev, safety_tolerance: parseInt(value) }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select safety tolerance" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">Level 1 - Most Strict (Default)</SelectItem>
+                                <SelectItem value="2">Level 2 - Moderate</SelectItem>
+                                <SelectItem value="3">Level 3 - Least Strict</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="externalFluxUltraRaw"
+                                checked={externalFluxUltraSettings.raw}
+                                onCheckedChange={(checked) => setExternalFluxUltraSettings(prev => ({ ...prev, raw: !!checked }))}
+                              />
+                              <Label htmlFor="externalFluxUltraRaw">Raw Mode</Label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Disable prompt enhancement and use raw input
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="externalFluxUltraSeed">Seed (optional)</Label>
+                            <Input
+                              id="externalFluxUltraSeed"
+                              type="number"
+                              placeholder="Random if empty"
+                              value={externalFluxUltraSettings.seed}
+                              onChange={(e) => setExternalFluxUltraSettings(prev => ({ ...prev, seed: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={!externalLocalFluxUltraPrompt.trim() || isExternalFluxUltraGenerating}>
+                      {isExternalFluxUltraGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate Image (External API)
+                        </>
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* Display generated prompt */}
+                  <GeneratedPromptDisplay 
+                    prompt={externalFluxUltraGeneratedPrompt} 
+                    title="Final Prompt (External API)"
+                  />
+
+                  {externalFluxUltraError && (
+                    <div className="p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
+                      <div className="flex items-start space-x-3">
+                        <div className="text-2xl">🚫</div>
+                        <div className="flex-1">
+                          <div className="font-medium mb-2">Content Not Allowed</div>
+                          <div className="text-sm mb-3">{externalFluxUltraError}</div>
+                          <div className="text-xs bg-amber-100 p-2 rounded border border-amber-200">
+                            <div className="font-medium mb-1">💡 Examples of appropriate content:</div>
+                            <ul className="list-disc list-inside space-y-1">
+                              <li>Peaceful environmental demonstration</li>
+                              <li>People working as a team</li>
+                              <li>Educational informational material</li>
+                              <li>Community events</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* External Flux Ultra Result Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generated Image (External API)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isExternalFluxUltraGenerating ? (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-12 w-12 mx-auto mb-2 animate-spin" />
+                        <p className="text-muted-foreground">Generating image via external API...</p>
+                      </div>
+                    </div>
+                  ) : externalFluxUltraResult ? (
+                    <div className="space-y-3">
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={externalFluxUltraResult || "/placeholder.svg"}
+                          alt="External Flux Ultra generated image"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <OpenInNewTabButton imageUrl={externalFluxUltraResult} />
+                      
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>✅ Generated via External API: /api/external/flux-ultra-finetuned</p>
+                        <p>🎯 Canonical Prompt: {useExternalFluxUltraCanonical ? 'Enabled' : 'Disabled'}</p>
+                        <p>🔧 Fine-tune ID: {externalFluxUltraFinetuneId}</p>
+                        <p>⚡ Trigger Phrase: {externalFluxUltraTriggerPhrase}</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
