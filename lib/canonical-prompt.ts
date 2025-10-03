@@ -264,17 +264,25 @@ export class CanonicalPromptProcessor {
    * Get available options for UI components
    */
   public getAvailableOptions() {
-    return {
-      texture: this.canonicalConfig.apply_style.texture.options,
-      overlay: this.canonicalConfig.apply_style.overlay.options,
-      framing: this.canonicalConfig.subject_templates.framing.options,
-      composition: this.canonicalConfig.subject_templates.composition.options,
-      keepOptions: this.canonicalConfig.keep_options,
-      preserveOptions: this.canonicalConfig.preserve_options,
-      combineOptions: this.canonicalConfig.combine_options,
-      preserveSecondaryOptions: this.canonicalConfig.preserve_secondary_options,
-      secondaryFidelityLevels: this.canonicalConfig.secondary_fidelity_levels
+    console.log('[CANONICAL-DEBUG] Loading options from config...');
+    console.log('[CANONICAL-DEBUG] Apply style config:', this.canonicalConfig.apply_style);
+    console.log('[CANONICAL-DEBUG] Texture options:', this.canonicalConfig.apply_style?.texture?.options);
+    console.log('[CANONICAL-DEBUG] Overlay options:', this.canonicalConfig.apply_style?.overlay?.options);
+    
+    const options = {
+      texture: this.canonicalConfig.apply_style?.texture?.options || [],
+      overlay: this.canonicalConfig.apply_style?.overlay?.options || [],
+      framing: this.canonicalConfig.subject_templates?.framing?.options || [],
+      composition: this.canonicalConfig.subject_templates?.composition?.options || [],
+      keepOptions: this.canonicalConfig.keep_options || {},
+      preserveOptions: this.canonicalConfig.preserve_options || {},
+      combineOptions: this.canonicalConfig.combine_options || {},
+      preserveSecondaryOptions: this.canonicalConfig.preserve_secondary_options || {},
+      secondaryFidelityLevels: this.canonicalConfig.secondary_fidelity_levels || {}
     };
+    
+    console.log('[CANONICAL-DEBUG] Final options object:', options);
+    return options;
   }
 
   /**

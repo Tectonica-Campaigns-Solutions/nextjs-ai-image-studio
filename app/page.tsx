@@ -183,13 +183,16 @@ export default function ImageEditor() {
       const response = await fetch('/api/canonical-prompt-options')
       const data = await response.json()
       if (data.success) {
-        console.log('Loaded canonical options:', data.data)
-        console.log('Secondary fidelity levels:', data.data?.availableOptions?.secondaryFidelityLevels)
-        console.log('Preserve secondary options:', data.data?.availableOptions?.preserveSecondaryOptions)
+        console.log('[UI-DEBUG] Loaded canonical options:', data.data)
+        console.log('[UI-DEBUG] Available options:', data.data?.availableOptions)
+        console.log('[UI-DEBUG] Texture options:', data.data?.availableOptions?.texture)
+        console.log('[UI-DEBUG] Overlay options:', data.data?.availableOptions?.overlay)
         setCanonicalOptions(data.data)
+      } else {
+        console.error('[UI-DEBUG] Failed to load canonical options - API returned error:', data)
       }
     } catch (error) {
-      console.warn('Failed to load canonical options:', error)
+      console.warn('[UI-DEBUG] Failed to load canonical options - Network error:', error)
     }
   }
 
@@ -2725,7 +2728,14 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.texture?.map((texture: string) => (
+                                  {(canonicalOptions?.availableOptions?.texture || [
+                                    "Halftone dots",
+                                    "Halftone lines",
+                                    "Crosshatching",
+                                    "Stippled dots",
+                                    "Lithographic grain",
+                                    "Risograph-style overprint"
+                                  ]).map((texture: string) => (
                                     <SelectItem key={texture} value={texture} className="text-xs">
                                       {texture}
                                     </SelectItem>
@@ -2753,7 +2763,14 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.overlay?.map((overlay: string) => (
+                                  {(canonicalOptions?.availableOptions?.overlay || [
+                                    "Purple #6E3CCB to Orange #F79533 Gradient",
+                                    "Purple #6E3CCB to Magenta / Pink Gradient",
+                                    "Purple #6E3CCB Shades Monochrome gradient",
+                                    "Orange #F79533 Shades Monochrome gradient",
+                                    "Light Violet #D8C8F0 Shades Monochrome gradient",
+                                    "Grayscale Monochrome gradient"
+                                  ]).map((overlay: string) => (
                                     <SelectItem key={overlay} value={overlay} className="text-xs">
                                       {overlay}
                                     </SelectItem>
@@ -3394,7 +3411,14 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.texture?.map((texture: string) => (
+                                  {(canonicalOptions?.availableOptions?.texture || [
+                                    "Halftone dots",
+                                    "Halftone lines",
+                                    "Crosshatching",
+                                    "Stippled dots",
+                                    "Lithographic grain",
+                                    "Risograph-style overprint"
+                                  ]).map((texture: string) => (
                                     <SelectItem key={texture} value={texture} className="text-xs">
                                       {texture}
                                     </SelectItem>
@@ -3422,7 +3446,14 @@ export default function ImageEditor() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {canonicalOptions?.availableOptions?.overlay?.map((overlay: string) => (
+                                  {(canonicalOptions?.availableOptions?.overlay || [
+                                    "Purple #6E3CCB to Orange #F79533 Gradient",
+                                    "Purple #6E3CCB to Magenta / Pink Gradient",
+                                    "Purple #6E3CCB Shades Monochrome gradient",
+                                    "Orange #F79533 Shades Monochrome gradient",
+                                    "Light Violet #D8C8F0 Shades Monochrome gradient",
+                                    "Grayscale Monochrome gradient"
+                                  ]).map((overlay: string) => (
                                     <SelectItem key={overlay} value={overlay} className="text-xs">
                                       {overlay}
                                     </SelectItem>
