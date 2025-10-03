@@ -442,12 +442,9 @@ export default function ImageEditor() {
     },
     secondaryFidelityLevel: 'moderate' as const,
     applyStyle: {
-      materials: "screen-printed poster",
-      lighting: "high contrast", 
-      texture: "diagonal halftone lines",
-      contrast: "bold duotone"
+      texture: "Halftone lines",
+      overlay: "Purple #6E3CCB to Orange #F79533 Gradient"
     },
-    styleBackground: "smooth gradient, no texture overlay, clean background",
     subjectFraming: "medium shot",
     subjectComposition: "centered"
   })
