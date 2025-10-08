@@ -148,8 +148,8 @@ export async function POST(request: NextRequest) {
       
       console.log("[FLUX-COMBINE] Generated canonical prompt:", finalPrompt)
       console.log("[FLUX-COMBINE] Processed user input:", result.processedUserInput)
-    } else {
-      // Apply JSON enhancement with enhancement_text (legacy method)
+    } else if (useJSONEnhancement) {
+      // Apply JSON enhancement with enhancement_text (only if explicitly enabled)
       let enhancementText = defaultJsonOptions.customText
       
       if (!enhancementText) {
@@ -169,10 +169,13 @@ export async function POST(request: NextRequest) {
       // Apply enhancement text directly to the prompt if available
       if (enhancementText) {
         finalPrompt = `${prompt}, ${enhancementText}`
-        console.log("[FLUX-COMBINE] Enhanced prompt (legacy):", finalPrompt)
+        console.log("[FLUX-COMBINE] Enhanced prompt (JSON):", finalPrompt)
       } else {
         console.log("[FLUX-COMBINE] No enhancement text available, using original prompt")
       }
+    } else {
+      // No enhancement - use original prompt
+      console.log("[FLUX-COMBINE] Using original prompt without enhancement")
     }
 
     console.log("[FLUX-COMBINE] Final prompt:", finalPrompt)
