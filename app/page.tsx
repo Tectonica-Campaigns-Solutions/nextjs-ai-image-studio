@@ -188,6 +188,19 @@ export default function ImageEditor() {
         console.log('[UI-DEBUG] Texture options:', data.data?.availableOptions?.texture)
         console.log('[UI-DEBUG] Overlay options:', data.data?.availableOptions?.overlay)
         setCanonicalOptions(data.data)
+        
+        // Update canonical config with default values
+        if (data.data?.defaults) {
+          setCanonicalConfig(prev => ({
+            ...prev,
+            preserveOptions: {
+              preserve_primary: data.data.defaults.preserve_primary?.default || false
+            },
+            combineOptions: {
+              force_integration: data.data.defaults.force_integration?.default || false
+            }
+          }))
+        }
       } else {
         console.error('[UI-DEBUG] Failed to load canonical options - API returned error:', data)
       }
