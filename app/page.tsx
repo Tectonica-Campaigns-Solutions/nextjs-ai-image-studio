@@ -194,10 +194,10 @@ export default function ImageEditor() {
           setCanonicalConfig(prev => ({
             ...prev,
             preserveOptions: {
-              preserve_primary: data.data.defaults.preserve_primary?.default || false
+              preserve_primary: data.data.defaults.preserveOptions?.preserve_primary || false
             },
             combineOptions: {
-              force_integration: data.data.defaults.force_integration?.default || false
+              force_integration: data.data.defaults.combineOptions?.force_integration || false
             }
           }))
         }
