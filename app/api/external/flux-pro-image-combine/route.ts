@@ -387,6 +387,15 @@ export async function POST(request: NextRequest) {
     console.log("[External Flux Combine] All image URLs ready:", allImageUrls.length, "total images")
     console.log("[External Flux Combine] Starting enhanced pipeline: seedream → combine")
 
+    // Build base URL for internal API calls - more robust for production environments
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_APP_URL 
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : request.nextUrl.origin || 'http://localhost:3000'
+    
+    console.log("[External Flux Combine] Using base URL for internal calls:", baseUrl)
+
     // ENHANCED PIPELINE: Step 1 - Process image2 (second image) with seedream-v4-edit
     console.log("[External Flux Combine] Pipeline Step 1: Processing image2 with seedream-v4-edit")
     
@@ -435,7 +444,7 @@ export async function POST(request: NextRequest) {
 
       console.log("[External Flux Combine] Calling seedream-v4-edit API...")
       
-      const seedreamResponse = await fetch(`${request.nextUrl.origin}/api/seedream-v4-edit`, {
+      const seedreamResponse = await fetch(`${baseUrl}/api/seedream-v4-edit`, {
         method: 'POST',
         body: seedreamFormData,
       })
@@ -594,7 +603,9 @@ export async function POST(request: NextRequest) {
         
         fallbackFormData.append("settings", JSON.stringify(settings))
 
-        const internalResponse = await fetch(`${request.nextUrl.origin}/api/flux-pro-image-combine`, {
+        console.log("[External Flux Combine] Calling internal flux-pro-image-combine API...")
+
+        const internalResponse = await fetch(`${baseUrl}/api/flux-pro-image-combine`, {
           method: 'POST',
           body: fallbackFormData,
         })
