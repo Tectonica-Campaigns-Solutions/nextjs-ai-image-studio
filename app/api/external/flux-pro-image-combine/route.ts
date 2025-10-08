@@ -5,37 +5,49 @@ import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/cano
 /**
  * POST /api/external/flux-pro-image-combine
  * 
- * External API endpoint for combining multiple images using Flux Pro Multi model.
- * This endpoint allows external applications to combine multiple input images
- * into a single new image without requiring authentication.
+ * Enhanced External API endpoint for combining images using a two-step processing pipeline:
+ * 1. Process image2 with seedream-v4-edit using configured style prompt
+ * 2. Combine image1 with processed image2 using flux-pro-image-combine
+ * 
+ * This endpoint allows external applications to create enhanced image combinations
+ * without requiring authentication.
+ * 
+ * ENHANCED PIPELINE:
+ * Input: [image1, image2] + user_prompt
+ *   ↓
+ * Step 1: seedream-v4-edit(image2, sedream_enhancement_text) → processed_image2
+ *   ↓  
+ * Step 2: flux-pro-image-combine([image1, processed_image2], user_prompt) → final_result
  * 
  * Supports two input methods:
  * 1. JSON with imageUrls array (existing functionality)
  * 2. multipart/form-data with uploaded files and/or URLs (new functionality)
  * 
+ * IMPORTANT: Exactly 2 images are required for the enhanced pipeline.
+ * 
  * JSON Body parameters:
- * - prompt (required): Text description for how to combine the images
- * - imageUrls (required): Array of image URLs to combine (minimum 2 images)
- * - jsonOptions (optional): JSON enhancement configuration  
- *   - customText: Custom enhancement description (if not provided, uses enhancement_text: "Make the first image have the style of the other image. Same color palette and same background. People must be kept realistic but rendered in purple and white, with diagonal or curved line textures giving a screen-printed, retro feel.")
+ * - prompt (required): Text description for final image combination (used in Step 2)
+ * - imageUrls (required): Array with exactly 2 image URLs [image1, image2]
+ * - jsonOptions (optional): JSON enhancement configuration for final combination
+ *   - customText: Custom enhancement description for Step 2
  *   - intensity: Enhancement intensity (0.1-1.0, default: 1.0)
  * 
- * Canonical Prompt Structure is enabled by default for structured prompt generation.
+ * Canonical Prompt Structure is enabled by default for Step 2 (final combination).
  * JSON Enhancement is disabled by default. RAG enhancement has been disabled for simplicity.
- * - settings (optional): Advanced generation settings
+ * - settings (optional): Advanced generation settings for Step 2
  * 
  * Form Data parameters:
- * - prompt (required): Text description for how to combine the images
- * - image0, image1, image2... (optional): Image files to upload and combine
- * - imageUrl0, imageUrl1, imageUrl2... (optional): Image URLs to combine
- * - useCanonicalPrompt (optional): Whether to use canonical prompt structure (default: true)
- * - canonicalConfig (optional): JSON string with canonical prompt configuration
+ * - prompt (required): Text description for final image combination (used in Step 2)
+ * - image0, image1 (required): Exactly 2 image files to upload and process
+ * - imageUrl0, imageUrl1 (optional): Exactly 2 image URLs to process
+ * - useCanonicalPrompt (optional): Whether to use canonical prompt structure in Step 2 (default: true)
+ * - canonicalConfig (optional): JSON string with canonical prompt configuration for Step 2
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false)
- * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement (default: false)
- * - jsonOptions (optional): JSON string with enhancement configuration
- * - settings (optional): JSON string with advanced generation settings
+ * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement in Step 2 (default: false)
+ * - jsonOptions (optional): JSON string with enhancement configuration for Step 2
+ * - settings (optional): JSON string with advanced generation settings for Step 2
  * 
- * Advanced settings include:
+ * Advanced settings include (applied to Step 2):
  * - aspect_ratio: Output aspect ratio (1:1, 4:3, 3:4, 16:9, 9:16, 21:9, default: 1:1)
  * - guidance_scale: Prompt adherence (1-20, default: 3.5)
  * - num_images: Number of combined images to generate (always 1 for combination)
@@ -51,9 +63,27 @@ import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/cano
  *   "width": 1024,
  *   "height": 1024,
  *   "content_type": "image/jpeg",
- *   "prompt": "enhanced prompt used",
+ *   "prompt": "enhanced prompt used in final combination",
+ *   "originalPrompt": "user's original prompt",
  *   "model": "flux-pro/kontext/max/multi",
  *   "inputImages": 2,
+ *   "enhancedPipeline": true,
+ *   "pipelineSteps": [
+ *     {
+ *       "step": 1,
+ *       "operation": "seedream-v4-edit",
+ *       "inputImage": "image2_url",
+ *       "outputImage": "processed_image2_url",
+ *       "prompt": "configured_sedream_enhancement_text"
+ *     },
+ *     {
+ *       "step": 2,
+ *       "operation": "flux-pro-image-combine", 
+ *       "inputImages": ["image1_url", "processed_image2_url"],
+ *       "outputImage": "final_combined_url",
+ *       "prompt": "user_prompt_enhanced"
+ *     }
+ *   ],
  *   "settings": {...}
  * }
  */
@@ -154,14 +184,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate that we have at least 2 images (files + URLs)
+    // Validate that we have exactly 2 images for enhanced pipeline (files + URLs)
     const totalImages = imageFiles.length + imageUrls.length
-    if (totalImages < 2) {
+    if (totalImages !== 2) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing or insufficient images",
-          details: `At least 2 images are required for combination. Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages})`
+          error: "Invalid number of images",
+          details: `Exactly 2 images are required for enhanced combination pipeline. Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages}). The pipeline will process image2 with seedream-v4-edit, then combine image1 with the processed result.`
         },
         { status: 400 }
       )
@@ -313,11 +343,6 @@ export async function POST(request: NextRequest) {
 
     console.log("[External Flux Combine] Final prompt:", finalPrompt)
 
-    // Configure Fal.ai client
-    fal.config({
-      credentials: falApiKey,
-    })
-
     // Prepare default settings
     const defaultSettings = {
       aspect_ratio: "1:1",
@@ -330,6 +355,11 @@ export async function POST(request: NextRequest) {
     }
 
     const mergedSettings = { ...defaultSettings, ...settings }
+
+    // Configure Fal.ai client
+    fal.config({
+      credentials: falApiKey,
+    })
 
     // Upload image files to fal.ai storage if any
     const allImageUrls: string[] = [...imageUrls]
@@ -355,11 +385,100 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[External Flux Combine] All image URLs ready:", allImageUrls.length, "total images")
+    console.log("[External Flux Combine] Starting enhanced pipeline: seedream → combine")
 
-    // Prepare input for Flux Pro Multi
+    // ENHANCED PIPELINE: Step 1 - Process image2 (second image) with seedream-v4-edit
+    console.log("[External Flux Combine] Pipeline Step 1: Processing image2 with seedream-v4-edit")
+    
+    const image1Url = allImageUrls[0] // First image (remains unchanged)
+    const image2Url = allImageUrls[1] // Second image (will be processed with seedream)
+    
+    console.log("[External Flux Combine] Image1 (unchanged):", image1Url)
+    console.log("[External Flux Combine] Image2 (to be processed):", image2Url)
+
+    let processedImage2Url: string
+    let sedreamPrompt: string // Declare sedream prompt variable
+    
+    try {
+      // Get sedream enhancement text from configuration
+      const { getSedreamEnhancementText } = await import("@/lib/json-enhancement")
+      sedreamPrompt = await getSedreamEnhancementText() || ""
+      
+      if (!sedreamPrompt) {
+        console.error("[External Flux Combine] No sedream_enhancement_text configured")
+        return NextResponse.json({
+          success: false,
+          error: "Configuration error",
+          details: "No SeDream enhancement text configured for image processing pipeline"
+        }, { status: 500 })
+      }
+
+      console.log("[External Flux Combine] Using sedream prompt:", sedreamPrompt.substring(0, 100) + "...")
+
+      // Call seedream-v4-edit to process image2
+      const seedreamFormData = new FormData()
+      
+      // Download image2 to create a File object for seedream
+      const image2Response = await fetch(image2Url)
+      if (!image2Response.ok) {
+        throw new Error(`Failed to fetch image2: ${image2Response.status}`)
+      }
+      
+      const image2Blob = await image2Response.blob()
+      const image2File = new File([image2Blob], 'image2.jpg', { type: 'image/jpeg' })
+      
+      seedreamFormData.append("image", image2File)
+      seedreamFormData.append("prompt", sedreamPrompt) // Use configured sedream prompt, NOT user prompt
+      seedreamFormData.append("useJSONEnhancement", "false") // Use prompt as-is
+      seedreamFormData.append("customEnhancementText", sedreamPrompt)
+      seedreamFormData.append("aspect_ratio", mergedSettings.aspect_ratio || "1:1")
+
+      console.log("[External Flux Combine] Calling seedream-v4-edit API...")
+      
+      const seedreamResponse = await fetch(`${request.nextUrl.origin}/api/seedream-v4-edit`, {
+        method: 'POST',
+        body: seedreamFormData,
+      })
+
+      if (!seedreamResponse.ok) {
+        const errorText = await seedreamResponse.text()
+        throw new Error(`SeDream API failed: ${seedreamResponse.status} - ${errorText}`)
+      }
+
+      const seedreamResult = await seedreamResponse.json()
+      
+      if (!seedreamResult.images || !seedreamResult.images[0] || !seedreamResult.images[0].url) {
+        throw new Error("SeDream API returned invalid response")
+      }
+
+      processedImage2Url = seedreamResult.images[0].url
+      console.log("[External Flux Combine] ✅ SeDream processing complete:", processedImage2Url)
+      
+    } catch (seedreamError) {
+      console.error("[External Flux Combine] Pipeline Step 1 failed:", seedreamError)
+      return NextResponse.json({
+        success: false,
+        error: "Pipeline step 1 failed",
+        details: `SeDream processing failed: ${seedreamError instanceof Error ? seedreamError.message : 'Unknown error'}`,
+        step: "seedream-v4-edit",
+        failedImage: image2Url
+      }, { status: 500 })
+    }
+
+    // ENHANCED PIPELINE: Step 2 - Combine image1 with processed image2
+    console.log("[External Flux Combine] Pipeline Step 2: Combining images with flux-pro-image-combine")
+    console.log("[External Flux Combine] Final combination:")
+    console.log("  - Image1 (original):", image1Url)
+    console.log("  - Image2 (processed):", processedImage2Url)
+    console.log("  - User prompt:", finalPrompt)
+
+    // Prepare final image URLs for combination
+    const finalImageUrls = [image1Url, processedImage2Url]
+
+    // Prepare input for Flux Pro Multi (Step 2 of pipeline)
     const input: any = {
-      prompt: finalPrompt,
-      image_urls: allImageUrls, // Combined URLs from uploads and direct URLs
+      prompt: finalPrompt, // Use user's prompt for final combination
+      image_urls: finalImageUrls, // image1 + processed image2
       aspect_ratio: mergedSettings.aspect_ratio,
       guidance_scale: mergedSettings.guidance_scale,
       num_images: mergedSettings.num_images,
@@ -373,15 +492,15 @@ export async function POST(request: NextRequest) {
       input.seed = parseInt(mergedSettings.seed.toString())
     }
 
-    console.log("[External Flux Combine] Calling fal.ai with input:")
+    console.log("[External Flux Combine] Calling fal.ai with enhanced pipeline input:")
     console.log("  - Model: fal-ai/flux-pro/kontext/max/multi")
-    console.log("  - Input images:", allImageUrls.length)
-    console.log("  - Files uploaded:", imageFiles.length)
-    console.log("  - Direct URLs:", imageUrls.length)
+    console.log("  - Input images:", finalImageUrls.length)
+    console.log("  - Original files uploaded:", imageFiles.length)
+    console.log("  - Original direct URLs:", imageUrls.length)
     console.log("  - Settings:", JSON.stringify(mergedSettings, null, 2))
 
     try {
-      // Direct call to fal.ai
+      // Direct call to fal.ai for final combination
       const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/multi", {
         input,
         logs: true,
@@ -397,7 +516,7 @@ export async function POST(request: NextRequest) {
       if (result.data && result.data.images && result.data.images.length > 0) {
         const combinedImage = result.data.images[0] // Single combined result
         
-        // Format response for external API with URLs
+        // Format response for external API with enhanced pipeline metadata
         const externalResponse = {
           success: true,
           image: combinedImage.url,
@@ -406,7 +525,7 @@ export async function POST(request: NextRequest) {
           content_type: combinedImage.content_type || "image/jpeg",
           prompt: finalPrompt,
           originalPrompt: prompt,
-          inputImages: allImageUrls.length,
+          inputImages: 2, // Always 2 for enhanced pipeline
           uploadedFiles: imageFiles.length,
           directUrls: imageUrls.length,
           canonicalPromptUsed: useCanonicalPrompt,
@@ -416,19 +535,37 @@ export async function POST(request: NextRequest) {
           settings: mergedSettings,
           model: "flux-pro/kontext/max/multi",
           timestamp: new Date().toISOString(),
-          ragEnhanced: useRAG
+          ragEnhanced: useRAG,
+          // Enhanced pipeline metadata
+          enhancedPipeline: true,
+          pipelineSteps: [
+            {
+              step: 1,
+              operation: "seedream-v4-edit",
+              inputImage: image2Url,
+              outputImage: processedImage2Url,
+              prompt: sedreamPrompt
+            },
+            {
+              step: 2,
+              operation: "flux-pro-image-combine",
+              inputImages: finalImageUrls,
+              outputImage: combinedImage.url,
+              prompt: finalPrompt
+            }
+          ]
         }
 
-        console.log("[External Flux Combine] ✅ Image combination successful")
+        console.log("[External Flux Combine] ✅ Enhanced pipeline completed successfully")
         return NextResponse.json(externalResponse)
       } else {
         throw new Error("No combined image returned from Flux Pro Multi")
       }
     } catch (falError) {
-      console.error("[External Flux Combine] Direct Fal.ai call failed:", falError)
+      console.error("[External Flux Combine] Pipeline Step 2 failed:", falError)
       
-      // Fallback to internal API
-      console.log("[External Flux Combine] Falling back to internal API...")
+      // Fallback to internal API for step 2
+      console.log("[External Flux Combine] Falling back to internal API for step 2...")
       
       try {
         const fallbackFormData = new FormData()
@@ -450,8 +587,8 @@ export async function POST(request: NextRequest) {
           fallbackFormData.append("jsonOptions", JSON.stringify(defaultJsonOptions))
         }
         
-        // Add image URLs to form data
-        allImageUrls.forEach((url: string, index: number) => {
+        // Add final processed image URLs to form data
+        finalImageUrls.forEach((url: string, index: number) => {
           fallbackFormData.append(`imageUrl${index}`, url)
         })
         
@@ -466,7 +603,7 @@ export async function POST(request: NextRequest) {
           const internalResult = await internalResponse.json()
           
           if (internalResult.success && internalResult.image) {
-            // Format response for external API
+            // Format response for external API with enhanced pipeline metadata
             const externalResponse = {
               success: true,
               image: internalResult.image,
@@ -475,7 +612,7 @@ export async function POST(request: NextRequest) {
               content_type: internalResult.content_type || "image/jpeg",
               prompt: internalResult.finalPrompt || finalPrompt,
               originalPrompt: prompt,
-              inputImages: allImageUrls.length,
+              inputImages: 2, // Always 2 for enhanced pipeline
               uploadedFiles: imageFiles.length,
               directUrls: imageUrls.length,
               canonicalPromptUsed: useCanonicalPrompt,
@@ -486,18 +623,36 @@ export async function POST(request: NextRequest) {
               model: "flux-pro/kontext/max/multi",
               timestamp: new Date().toISOString(),
               ragEnhanced: useRAG,
-              fallback: true
+              fallback: true,
+              // Enhanced pipeline metadata
+              enhancedPipeline: true,
+              pipelineSteps: [
+                {
+                  step: 1,
+                  operation: "seedream-v4-edit",
+                  inputImage: image2Url,
+                  outputImage: processedImage2Url,
+                  prompt: sedreamPrompt
+                },
+                {
+                  step: 2,
+                  operation: "flux-pro-image-combine-fallback",
+                  inputImages: finalImageUrls,
+                  outputImage: internalResult.image,
+                  prompt: internalResult.finalPrompt || finalPrompt
+                }
+              ]
             }
 
-            console.log("[External Flux Combine] ✅ Fallback successful")
+            console.log("[External Flux Combine] ✅ Enhanced pipeline fallback successful")
             return NextResponse.json(externalResponse)
           }
         }
         
         console.error("[External Flux Combine] Fallback also failed:", await internalResponse.text())
-        throw new Error("Both direct and fallback methods failed")
+        throw new Error("Both direct and fallback methods failed for step 2")
       } catch (fallbackError) {
-        console.error("[External Flux Combine] Fallback failed:", fallbackError)
+        console.error("[External Flux Combine] Step 2 fallback failed:", fallbackError)
         throw falError // Re-throw original error
       }
     }

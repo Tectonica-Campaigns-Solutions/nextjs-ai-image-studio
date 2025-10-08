@@ -6,13 +6,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const config: CanonicalPromptConfig = body.config || {}
 
-    console.log("[CANONICAL-TEST] Testing canonical prompt with config:", config)
-
     // Generate the canonical prompt
     const result = canonicalPromptProcessor.generateCanonicalPrompt(config)
-
-    console.log("[CANONICAL-TEST] Generated prompt:", result.canonicalPrompt)
-    console.log("[CANONICAL-TEST] Processed user input:", result.processedUserInput)
 
     return NextResponse.json({
       success: true,
@@ -23,7 +18,6 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error("[CANONICAL-TEST] Error testing canonical prompt:", error)
     return NextResponse.json(
       { 
         success: false, 
@@ -95,7 +89,6 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error("[CANONICAL-TEST] Error fetching test data:", error)
     return NextResponse.json(
       { 
         success: false, 

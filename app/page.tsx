@@ -200,8 +200,11 @@ export default function ImageEditor() {
   const generateCanonicalPreview = async () => {
     if (!useCanonicalPrompt) {
       setCanonicalPreview("")
+      setIsGeneratingCombineCanonicalPreview(false)
       return
     }
+
+    setIsGeneratingCombineCanonicalPreview(true)
 
     try {
       const response = await fetch('/api/canonical-prompt-test', {
@@ -212,7 +215,7 @@ export default function ImageEditor() {
         body: JSON.stringify({
           config: {
             ...canonicalConfig,
-            userInput: fluxCombinePrompt
+            userInput: localFluxCombinePrompt
           }
         })
       })
@@ -225,6 +228,8 @@ export default function ImageEditor() {
     } catch (error) {
       console.warn('Failed to generate canonical preview:', error)
       setCanonicalPreview("")
+    } finally {
+      setIsGeneratingCombineCanonicalPreview(false)
     }
   }
 
@@ -400,6 +405,7 @@ export default function ImageEditor() {
 
   // Flux Pro Image Combine States
   const [fluxCombinePrompt, setFluxCombinePrompt] = useState("")
+  const [localFluxCombinePrompt, setLocalFluxCombinePrompt] = useState("") // Local state for input performance
   const [fluxCombineImages, setFluxCombineImages] = useState<File[]>([])
   const [fluxCombineImageUrls, setFluxCombineImageUrls] = useState<string[]>([])
   const [fluxCombineSettings, setFluxCombineSettings] = useState({
@@ -453,6 +459,7 @@ export default function ImageEditor() {
   })
   const [canonicalOptions, setCanonicalOptions] = useState<any>(null)
   const [canonicalPreview, setCanonicalPreview] = useState<string>("")
+  const [isGeneratingCombineCanonicalPreview, setIsGeneratingCombineCanonicalPreview] = useState(false)
 
   // Flux Combine JSON Enhancement States
   const [fluxCombineUseJSONEnhancement, setFluxCombineUseJSONEnhancement] = useState(false) // Disabled by default (Canonical Prompt is preferred)
@@ -588,13 +595,6 @@ export default function ImageEditor() {
     loadGenerationCanonicalOptions()
   }, [])
 
-  // Update canonical preview when config or prompt changes
-  useEffect(() => {
-    if (useCanonicalPrompt) {
-      generateCanonicalPreview()
-    }
-  }, [useCanonicalPrompt, canonicalConfig, fluxCombinePrompt])
-
   // Update generation canonical preview when config or prompt changes (manual only)
   // Removed automatic useEffect to prevent typing lag - now uses manual Apply button
   
@@ -605,6 +605,14 @@ export default function ImageEditor() {
       setIsGeneratingCanonicalPreview(false)
     }
   }, [useGenerationCanonical])
+
+  // Clear combine preview when canonical is disabled
+  useEffect(() => {
+    if (!useCanonicalPrompt) {
+      setCanonicalPreview("")
+      setIsGeneratingCombineCanonicalPreview(false)
+    }
+  }, [useCanonicalPrompt])
 
   // Sync local states with config when config changes programmatically
   useEffect(() => {
@@ -708,6 +716,11 @@ export default function ImageEditor() {
       </Button>
     )
   }
+
+  // Sync combine local states with config when config changes programmatically
+  useEffect(() => {
+    setLocalFluxCombinePrompt(fluxCombinePrompt)
+  }, [fluxCombinePrompt])
 
   // Load default enhancement text on component mount
   useEffect(() => {
@@ -2544,8 +2557,11 @@ export default function ImageEditor() {
                       <Textarea
                         id="flux-combine-prompt"
                         placeholder="Describe how you want to combine the images..."
-                        value={fluxCombinePrompt}
-                        onChange={(e) => setFluxCombinePrompt(e.target.value)}
+                        value={localFluxCombinePrompt}
+                        onChange={(e) => {
+                          setLocalFluxCombinePrompt(e.target.value)
+                          setFluxCombinePrompt(e.target.value)
+                        }}
                         className="min-h-[100px]"
                       />
                     </div>
@@ -2833,14 +2849,46 @@ export default function ImageEditor() {
                             </div>
                           </div>
 
+                          {/* Apply Button */}
+                          <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                            <Button
+                              type="button"
+                              onClick={generateCanonicalPreview}
+                              disabled={isGeneratingCombineCanonicalPreview || !localFluxCombinePrompt.trim()}
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              {isGeneratingCombineCanonicalPreview ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent mr-2"></div>
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 mr-2" />
+                                  Apply & Generate Preview
+                                </>
+                              )}
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center mt-2">
+                              Apply your settings to generate canonical prompt preview
+                            </p>
+                          </div>
+
                           {/* Preview */}
-                          {canonicalPreview && (
+                          {(canonicalPreview || isGeneratingCombineCanonicalPreview) && (
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">Generated Prompt Preview</Label>
                               <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto">
-                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-                                  {canonicalPreview}
-                                </pre>
+                                {isGeneratingCombineCanonicalPreview ? (
+                                  <div className="flex items-center justify-center p-4">
+                                    <div className="animate-spin rounded-full h-4 w-4 border border-muted-foreground border-t-transparent mr-2"></div>
+                                    <span className="text-xs text-muted-foreground">Generating preview...</span>
+                                  </div>
+                                ) : (
+                                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+                                    {canonicalPreview}
+                                  </pre>
+                                )}
                               </div>
                             </div>
                           )}
@@ -2870,8 +2918,8 @@ export default function ImageEditor() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          disabled={!fluxCombinePrompt.trim() || !fluxCombineUseJSONEnhancement}
-                          onClick={() => generateFluxCombineEnhancementPreview(fluxCombinePrompt)}
+                          disabled={!localFluxCombinePrompt.trim() || !fluxCombineUseJSONEnhancement}
+                          onClick={() => generateFluxCombineEnhancementPreview(localFluxCombinePrompt)}
                           className="text-xs"
                         >
                           Preview Enhancement

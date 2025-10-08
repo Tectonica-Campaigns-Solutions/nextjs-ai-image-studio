@@ -275,11 +275,6 @@ export class CanonicalPromptProcessor {
    * Get available options for UI components
    */
   public getAvailableOptions() {
-    console.log('[CANONICAL-DEBUG] Loading options from config...');
-    console.log('[CANONICAL-DEBUG] Apply style config:', this.canonicalConfig.apply_style);
-    console.log('[CANONICAL-DEBUG] Texture options:', this.canonicalConfig.apply_style?.texture?.options);
-    console.log('[CANONICAL-DEBUG] Overlay options:', this.canonicalConfig.apply_style?.overlay?.options);
-    
     const options = {
       texture: this.canonicalConfig.apply_style?.texture?.options || [],
       overlay: this.canonicalConfig.apply_style?.overlay?.options || [],
@@ -292,7 +287,6 @@ export class CanonicalPromptProcessor {
       secondaryFidelityLevels: this.canonicalConfig.secondary_fidelity_levels || {}
     };
     
-    console.log('[CANONICAL-DEBUG] Final options object:', options);
     return options;
   }
 
