@@ -69,9 +69,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    if (imageFiles.length + imageUrls.length < 2) {
+    // Validate exactly 2 images for enhanced pipeline
+    const totalImages = imageFiles.length + imageUrls.length
+    if (totalImages !== 2) {
       return NextResponse.json({ 
-        error: "At least 2 images are required for combination" 
+        error: "Enhanced pipeline requires exactly 2 images",
+        details: `Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
       }, { status: 400 })
     }
 
@@ -179,94 +182,9 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
 
-    // Upload image files to fal.ai storage if any
-    const uploadedImageUrls: string[] = []
-    
-    // First, add existing image URLs and test their accessibility
-    for (let i = 0; i < imageUrls.length; i++) {
-      const url = imageUrls[i]
-      try {
-        console.log(`[FLUX-COMBINE] Testing existing URL ${i + 1}: ${url.substring(0, 100)}...`)
-        
-        // Basic URL validation first
-        let parsedUrl
-        try {
-          parsedUrl = new URL(url)
-        } catch (urlParseError) {
-          console.error(`[FLUX-COMBINE] Invalid URL format ${i + 1}:`, url)
-          return NextResponse.json({ 
-            error: `Invalid URL format for image ${i + 1}`,
-            details: `The URL is not properly formatted: ${url}`,
-            problematicUrl: url
-          }, { status: 400 })
-        }
-        
-        // Test accessibility with timeout
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-        
-        try {
-          const response = await fetch(url, { 
-            method: 'HEAD',
-            signal: controller.signal
-          })
-          clearTimeout(timeoutId)
-          
-          if (response.ok) {
-            uploadedImageUrls.push(url)
-            console.log(`[FLUX-COMBINE] URL ${i + 1} is accessible, using directly`)
-          } else {
-            console.warn(`[FLUX-COMBINE] URL ${i + 1} returned ${response.status}, attempting re-upload`)
-            
-            // Try to download and re-upload
-            const imageResponse = await fetch(url, { signal: controller.signal })
-            if (imageResponse.ok) {
-              const imageBlob = await imageResponse.blob()
-              const reuploadedUrl = await fal.storage.upload(imageBlob)
-              uploadedImageUrls.push(reuploadedUrl)
-              console.log(`[FLUX-COMBINE] URL ${i + 1} re-uploaded successfully: ${reuploadedUrl}`)
-            } else {
-              throw new Error(`Cannot download image: HTTP ${imageResponse.status}`)
-            }
-          }
-        } catch (fetchError) {
-          clearTimeout(timeoutId)
-          
-          // Handle specific network errors
-          if (fetchError instanceof Error) {
-            if (fetchError.name === 'AbortError') {
-              console.error(`[FLUX-COMBINE] URL ${i + 1} timed out`)
-              return NextResponse.json({ 
-                error: `Image URL ${i + 1} timed out`,
-                details: "The URL took too long to respond (>10 seconds)",
-                problematicUrl: url
-              }, { status: 400 })
-            } else if (fetchError.message.includes('ENOTFOUND') || fetchError.message.includes('fetch failed')) {
-              console.error(`[FLUX-COMBINE] URL ${i + 1} domain not found or network error:`, fetchError.message)
-              return NextResponse.json({ 
-                error: `Image URL ${i + 1} is not accessible`,
-                details: `Domain not found or network error: ${parsedUrl.hostname}. Please check if the URL is correct and accessible.`,
-                problematicUrl: url,
-                networkError: true
-              }, { status: 400 })
-            } else {
-              throw fetchError // Re-throw other errors to be handled by outer catch
-            }
-          } else {
-            throw fetchError
-          }
-        }
-        
-      } catch (urlError) {
-        console.error(`[FLUX-COMBINE] Failed to process URL ${i + 1}:`, urlError)
-        return NextResponse.json({ 
-          error: `Failed to process image URL ${i + 1}`,
-          details: urlError instanceof Error ? urlError.message : "Unknown network error",
-          problematicUrl: url,
-          suggestion: "Please verify the URL is correct and accessible from the internet"
-        }, { status: 400 })
-      }
-    }
+    // ENHANCED PIPELINE IMPLEMENTATION
+    // First, collect all image URLs (from direct URLs and uploads)
+    const allImageUrls: string[] = [...imageUrls]
     
     if (imageFiles.length > 0) {
       console.log("[FLUX-COMBINE] Uploading image files to fal.ai storage...")
@@ -275,7 +193,7 @@ export async function POST(request: NextRequest) {
         try {
           console.log(`[FLUX-COMBINE] Uploading image ${i + 1}/${imageFiles.length}: ${file.name} (${file.size} bytes)`)
           const uploadedUrl = await fal.storage.upload(file)
-          uploadedImageUrls.push(uploadedUrl)
+          allImageUrls.push(uploadedUrl)
           console.log(`[FLUX-COMBINE] Image ${i + 1} uploaded successfully: ${uploadedUrl}`)
         } catch (uploadError) {
           console.error(`[FLUX-COMBINE] Failed to upload image ${i + 1}:`, uploadError)
@@ -286,7 +204,94 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log("[FLUX-COMBINE] All image URLs ready:", uploadedImageUrls)
+    console.log("[FLUX-COMBINE] All image URLs ready:", allImageUrls)
+    console.log("[FLUX-COMBINE] Starting enhanced pipeline: seedream → combine")
+
+    // ENHANCED PIPELINE: Step 1 - Process image2 (second image) with seedream-v4-edit
+    console.log("[FLUX-COMBINE] Pipeline Step 1: Processing image2 with seedream-v4-edit")
+    
+    const image1Url = allImageUrls[0] // First image (remains unchanged)
+    const image2Url = allImageUrls[1] // Second image (will be processed with seedream)
+    
+    console.log("[FLUX-COMBINE] Image1 (unchanged):", image1Url)
+    console.log("[FLUX-COMBINE] Image2 (to be processed):", image2Url)
+
+    let processedImage2Url: string
+    let sedreamPrompt: string // Declare sedream prompt variable
+    
+    try {
+      // Get sedream enhancement text from configuration
+      const { getSedreamEnhancementText } = await import("@/lib/json-enhancement")
+      sedreamPrompt = await getSedreamEnhancementText() || ""
+      
+      if (!sedreamPrompt) {
+        console.error("[FLUX-COMBINE] No sedream_enhancement_text configured")
+        return NextResponse.json({
+          error: "Configuration error",
+          details: "No SeDream enhancement text configured for image processing pipeline"
+        }, { status: 500 })
+      }
+
+      console.log("[FLUX-COMBINE] Using sedream prompt:", sedreamPrompt.substring(0, 100) + "...")
+
+      // Call seedream-v4-edit to process image2
+      const seedreamFormData = new FormData()
+      
+      // Download image2 to create a File object for seedream
+      const image2Response = await fetch(image2Url)
+      if (!image2Response.ok) {
+        throw new Error(`Failed to fetch image2: ${image2Response.status}`)
+      }
+      
+      const image2Blob = await image2Response.blob()
+      const image2File = new File([image2Blob], 'image2.jpg', { type: 'image/jpeg' })
+      
+      seedreamFormData.append("image", image2File)
+      seedreamFormData.append("prompt", sedreamPrompt) // Use configured sedream prompt, NOT user prompt
+      seedreamFormData.append("useJSONEnhancement", "false") // Use prompt as-is
+      seedreamFormData.append("customEnhancementText", sedreamPrompt)
+      seedreamFormData.append("aspect_ratio", settings?.aspect_ratio || "1:1")
+
+      console.log("[FLUX-COMBINE] Calling seedream-v4-edit API...")
+      
+      const seedreamResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/seedream-v4-edit`, {
+        method: 'POST',
+        body: seedreamFormData,
+      })
+
+      if (!seedreamResponse.ok) {
+        const errorText = await seedreamResponse.text()
+        throw new Error(`SeDream API failed: ${seedreamResponse.status} - ${errorText}`)
+      }
+
+      const seedreamResult = await seedreamResponse.json()
+      
+      if (!seedreamResult.images || !seedreamResult.images[0] || !seedreamResult.images[0].url) {
+        throw new Error("SeDream API returned invalid response")
+      }
+
+      processedImage2Url = seedreamResult.images[0].url
+      console.log("[FLUX-COMBINE] ✅ SeDream processing complete:", processedImage2Url)
+      
+    } catch (seedreamError) {
+      console.error("[FLUX-COMBINE] Pipeline Step 1 failed:", seedreamError)
+      return NextResponse.json({
+        error: "Pipeline step 1 failed",
+        details: `SeDream processing failed: ${seedreamError instanceof Error ? seedreamError.message : 'Unknown error'}`,
+        step: "seedream-v4-edit",
+        failedImage: image2Url
+      }, { status: 500 })
+    }
+
+    // ENHANCED PIPELINE: Step 2 - Combine image1 with processed image2
+    console.log("[FLUX-COMBINE] Pipeline Step 2: Combining images with flux-pro-image-combine")
+    console.log("[FLUX-COMBINE] Final combination:")
+    console.log("  - Image1 (original):", image1Url)
+    console.log("  - Image2 (processed):", processedImage2Url)
+    console.log("  - User prompt:", finalPrompt)
+
+    // Update image URLs for final combination (use processed image2)
+    const uploadedImageUrls = [image1Url, processedImage2Url]
 
     // Prepare default settings for Flux Pro Combine
     const defaultSettings = {
@@ -381,13 +386,31 @@ export async function POST(request: NextRequest) {
           content_type: combinedImage.content_type || "image/jpeg",
           prompt: finalPrompt,
           originalPrompt: prompt,
-          inputImages: uploadedImageUrls.length,
+          inputImages: 2, // Always 2 for enhanced pipeline
           ragMetadata: ragMetadata,
           jsonEnhancementUsed: useJSONEnhancement,
           jsonOptions: useJSONEnhancement ? jsonOptions : undefined,
           settings: mergedSettings,
           model: "flux-pro/kontext/max/multi",
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          // Enhanced pipeline metadata
+          enhancedPipeline: true,
+          pipelineSteps: [
+            {
+              step: 1,
+              operation: "seedream-v4-edit",
+              inputImage: image2Url,
+              outputImage: processedImage2Url,
+              prompt: sedreamPrompt
+            },
+            {
+              step: 2,
+              operation: "flux-pro-image-combine",
+              inputImages: uploadedImageUrls,
+              outputImage: combinedImage.url,
+              prompt: finalPrompt
+            }
+          ]
         })
       } else {
         throw new Error("No combined image returned from Flux Pro Multi")
