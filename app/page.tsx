@@ -558,7 +558,7 @@ export default function ImageEditor() {
   const [externalLocalPositives, setExternalLocalPositives] = useState('')
   
   // External Flux Combine uses same canonical prompt configuration as internal
-  const [externalUseCanonicalPrompt, setExternalUseCanonicalPrompt] = useState(true) // Enabled by default for external
+  const [externalUseCanonicalPrompt, setExternalUseCanonicalPrompt] = useState(false) // Disabled by default for external
   const [externalUseJSONEnhancement, setExternalUseJSONEnhancement] = useState(false) // Disabled by default for external
 
   // Edit Image States
@@ -3271,11 +3271,11 @@ export default function ImageEditor() {
                           onCheckedChange={(checked) => setExternalUseCanonicalPrompt(checked as boolean)}
                         />
                         <Label htmlFor="external-use-canonical" className="text-sm font-medium">
-                          Use Canonical Prompt Structure (Default: ON)
+                          Use Canonical Prompt Structure (Default: OFF)
                         </Label>
                       </div>
                       <p className="text-xs text-blue-600">
-                        ✅ Canonical prompt is enabled by default for the external endpoint. This generates structured prompts with TASK, APPLY, STYLE, etc.
+                        ⚙️ Canonical prompt is disabled by default for the external endpoint. Enable to generate structured prompts with TASK, APPLY, STYLE, etc.
                       </p>
                     </div>
 

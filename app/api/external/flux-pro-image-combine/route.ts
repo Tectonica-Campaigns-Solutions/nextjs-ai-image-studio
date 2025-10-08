@@ -40,7 +40,7 @@ import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/cano
  * - prompt (required): Text description for final image combination (used in Step 2)
  * - image0, image1 (required): Exactly 2 image files to upload and process
  * - imageUrl0, imageUrl1 (optional): Exactly 2 image URLs to process
- * - useCanonicalPrompt (optional): Whether to use canonical prompt structure in Step 2 (default: true)
+ * - useCanonicalPrompt (optional): Whether to use canonical prompt structure in Step 2 (default: false)
  * - canonicalConfig (optional): JSON string with canonical prompt configuration for Step 2
  * - useRAG (optional): Whether to enhance prompt with branding guidelines (default: false)
  * - useJSONEnhancement (optional): Whether to apply JSON-based prompt enhancement in Step 2 (default: false)
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       body.prompt = formData.get("prompt") as string
       body.useRAG = false // Disabled for simplicity
       body.useJSONEnhancement = formData.get("useJSONEnhancement") === "true" || false // Default false
-      body.useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true" || formData.get("useCanonicalPrompt") === null || formData.get("useCanonicalPrompt") === undefined ? true : false // Default true
+      body.useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true" // Default false
       
       // Parse canonical config if provided
       const canonicalConfigStr = formData.get("canonicalConfig") as string
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
       // Set defaults for JSON requests
       body.useRAG = false // Disabled for simplicity  
       body.useJSONEnhancement = body.useJSONEnhancement !== undefined ? body.useJSONEnhancement : false // Default false
-      body.useCanonicalPrompt = body.useCanonicalPrompt !== undefined ? body.useCanonicalPrompt : true // Default true
+      body.useCanonicalPrompt = body.useCanonicalPrompt !== undefined ? body.useCanonicalPrompt : false // Default false
       body.canonicalConfig = body.canonicalConfig || {}
       body.jsonOptions = body.jsonOptions || {}
     }
