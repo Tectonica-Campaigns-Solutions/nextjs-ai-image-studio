@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
     const useRAG = false // Disabled for simplicity - focus on JSON enhancement only
-    const useJSONEnhancement = true // Always enabled by default
+    const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
     const customText = formData.get('customText') as string
     const intensity = parseFloat(formData.get('intensity') as string) || 1.0 // default 1.0
     const imageSize = formData.get('image_size') as string || 'square_hd' // default to square_hd
