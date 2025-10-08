@@ -20,21 +20,12 @@
     }
   },
   "enforced_negatives": [
-    "blurry",
-    "low-res",
-    "oversaturated",
     "watermark",
     "jpeg artifacts",
     "extra fingers",
     "extra limbs",
     "malformed hands",
-    "photorealistic",
     "film grain",
-    "noisy background",
-    "realistic textures",
-    "3D rendering",
-    "soft shading",
-    "gradient shading",
     "airbrushed",
     "text",
     "typography",
@@ -47,16 +38,12 @@
     "caption",
     "captions",
     "subtitles",
-    "title",
-    "muddy colors",
-    "low contrast",
-    "washed out",
-    "faded colors"
+    "title"
   ],
   "canonical_prompt": {
     "version": "1.0",
     "description": "Structured canonical prompt system for precise image combination",
-    "base_task": "Apply the visual style from the FIRST image to the SECOND image.",
+    "base_task": "Combine the two images into a single cohesive composition",
     "synonyms": {
       "person": "one adult",
       "model": "one adult",
@@ -110,14 +97,14 @@
       "preserve_primary": {
         "label": "Preserve Primary Subject",
         "description": "Keep original colors, textures and details of the main subject intact",
-        "default": false
+        "default": true
       }
     },
     "combine_options": {
       "force_integration": {
         "label": "Force Secondary Integration",
         "description": "Ensure secondary image elements are visibly combined",
-        "default": false
+        "default": true
       }
     },
     "preserve_secondary_options": {
@@ -226,10 +213,7 @@
     "quality_standards": [
       "high detail",
       "clean edges", 
-      "natural skin",
-      "correct anatomy",
-      "crisp vector-like precision",
-      "balanced use of negative space"
+      "correct anatomy"
     ]
   }
 }
