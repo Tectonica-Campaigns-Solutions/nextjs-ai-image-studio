@@ -38,7 +38,14 @@
     "caption",
     "captions",
     "subtitles",
-    "title"
+    "title",
+    "blurry",
+    "low-res",
+    "oversaturated",
+    "realistic textures",
+    "noisy background",
+    "3D rendering",
+    "soft shading"
   ],
   "canonical_prompt": {
     "version": "1.0",
