@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye, X, Plus, Download, AlertCircle } from "lucide-react"
+import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye, X, Plus, Download, AlertCircle, Shield, ChevronUp, ChevronDown } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
@@ -581,6 +581,8 @@ export default function ImageEditor() {
   const [editImageSize, setEditImageSize] = useState("square_hd") // Image size for edit
   const [customWidth, setCustomWidth] = useState("1024") // Custom width for edit
   const [customHeight, setCustomHeight] = useState("1024") // Custom height for edit
+  const [editNegativePrompts, setEditNegativePrompts] = useState<string[]>([])
+  const [showEditNegativePrompts, setShowEditNegativePrompts] = useState(false)
 
   // RAG Store
   const { getActiveRAG } = useRAGStore()
@@ -601,6 +603,8 @@ export default function ImageEditor() {
   const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
   const [sedreamAspectRatio, setSedreamAspectRatio] = useState<string>("1:1")
   const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
+  const [sedreamNegativePrompts, setSedreamNegativePrompts] = useState<string[]>([])
+  const [showNegativePrompts, setShowNegativePrompts] = useState(false)
 
   // Load canonical options on component mount
   useEffect(() => {
@@ -764,6 +768,10 @@ export default function ImageEditor() {
           setSedreamDefaultEnhancementText(sedreamText)
           setSedreamCustomEnhancementText(sedreamText)
         }
+
+        // Load negative prompts for SeDream v4 and Edit Image
+        await loadSedreamNegativePrompts()
+        await loadEditNegativePrompts()
       } catch (error) {
         console.warn('Failed to load default enhancement text:', error)
       }
@@ -771,6 +779,60 @@ export default function ImageEditor() {
     
     loadDefaultText()
   }, [])
+
+  // Load negative prompts for SeDream v4
+  const loadSedreamNegativePrompts = async () => {
+    try {
+      const response = await fetch('/api/enhancement-config')
+      const data = await response.json()
+      
+      if (data.success && data.config) {
+        const allNegatives = [
+          ...(data.config.enforced_negatives || []),
+          ...(data.config.enforced_negatives_nsfw || []),
+          ...(data.config.enforced_negatives_age || []),
+          ...(data.config.enforced_negatives_human_integrity || [])
+        ]
+        setSedreamNegativePrompts(allNegatives)
+        console.log('[UI] Loaded negative prompts for SeDream:', allNegatives.length, 'terms')
+      }
+    } catch (error) {
+      console.warn('[UI] Failed to load negative prompts:', error)
+      // Fallback to basic safety terms
+      setSedreamNegativePrompts([
+        "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
+        "younger", "child-like", "age regression", "juvenile appearance",
+        "unrealistic proportions", "sexualized", "distorted anatomy"
+      ])
+    }
+  }
+
+  // Load negative prompts for Edit Image
+  const loadEditNegativePrompts = async () => {
+    try {
+      const response = await fetch('/api/enhancement-config')
+      const data = await response.json()
+      
+      if (data.success && data.config) {
+        const allNegatives = [
+          ...(data.config.enforced_negatives || []),
+          ...(data.config.enforced_negatives_nsfw || []),
+          ...(data.config.enforced_negatives_age || []),
+          ...(data.config.enforced_negatives_human_integrity || [])
+        ]
+        setEditNegativePrompts(allNegatives)
+        console.log('[UI] Loaded negative prompts for Edit Image:', allNegatives.length, 'terms')
+      }
+    } catch (error) {
+      console.warn('[UI] Failed to load negative prompts for Edit Image:', error)
+      // Fallback to basic safety terms
+      setEditNegativePrompts([
+        "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
+        "younger", "child-like", "age regression", "juvenile appearance",
+        "unrealistic proportions", "sexualized", "distorted anatomy"
+      ])
+    }
+  }
 
   // Helper function to handle moderation errors with user-friendly messages
   const handleModerationError = (errorData: any): string => {
@@ -1868,6 +1930,84 @@ export default function ImageEditor() {
                           <SelectItem value="3:4">Portrait (3:4)</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {/* Safety Protections Display */}
+                    <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200/50 dark:border-green-700/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <Label className="font-medium text-green-800 dark:text-green-200">
+                            Safety Protections Active
+                          </Label>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowNegativePrompts(!showNegativePrompts)}
+                          className="text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
+                        >
+                          {showNegativePrompts ? (
+                            <>
+                              <ChevronUp className="h-4 w-4 mr-1" />
+                              Hide Details
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4 mr-1" />
+                              Show Details
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-red-600" />
+                          <span className="text-green-700 dark:text-green-300">NSFW Protection</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-blue-600" />
+                          <span className="text-green-700 dark:text-green-300">Age Bias Prevention</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-purple-600" />
+                          <span className="text-green-700 dark:text-green-300">Human Integrity</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-orange-600" />
+                          <span className="text-green-700 dark:text-green-300">Content Moderation</span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/30 p-2 rounded">
+                        ✅ {sedreamNegativePrompts.length} negative terms automatically applied for safe generation
+                      </div>
+
+                      {/* Collapsible Negative Prompts List */}
+                      {showNegativePrompts && (
+                        <div className="mt-3 space-y-2">
+                          <Label className="text-xs font-medium text-green-800 dark:text-green-200">
+                            Active Negative Prompts ({sedreamNegativePrompts.length} terms):
+                          </Label>
+                          <div className="max-h-32 overflow-y-auto bg-white/50 dark:bg-gray-900/50 p-3 rounded border">
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              {sedreamNegativePrompts.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-1">
+                                  {sedreamNegativePrompts.map((term, index) => (
+                                    <span key={index} className="inline-block bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-1 rounded text-xs">
+                                      {term}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">Loading safety terms...</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* JSON Enhancement Toggle */}
@@ -3965,6 +4105,84 @@ export default function ImageEditor() {
                         checked={useEditJSONEnhancement}
                         onCheckedChange={setUseEditJSONEnhancement}
                       />
+                    </div>
+
+                    {/* Safety Protections Display */}
+                    <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200/50 dark:border-green-700/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <Label className="font-medium text-green-800 dark:text-green-200">
+                            Safety Protections Active
+                          </Label>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowEditNegativePrompts(!showEditNegativePrompts)}
+                          className="text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
+                        >
+                          {showEditNegativePrompts ? (
+                            <>
+                              <ChevronUp className="h-4 w-4 mr-1" />
+                              Hide Details
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4 mr-1" />
+                              Show Details
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-red-600" />
+                          <span className="text-green-700 dark:text-green-300">NSFW Protection</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-blue-600" />
+                          <span className="text-green-700 dark:text-green-300">Age Bias Prevention</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-purple-600" />
+                          <span className="text-green-700 dark:text-green-300">Human Integrity</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Shield className="h-4 w-4 text-orange-600" />
+                          <span className="text-green-700 dark:text-green-300">Content Moderation</span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-green-600 dark:text-green-400 bg-green-100/50 dark:bg-green-900/30 p-2 rounded">
+                        ✅ {editNegativePrompts.length} negative terms automatically applied for safe editing
+                      </div>
+
+                      {/* Collapsible Negative Prompts List */}
+                      {showEditNegativePrompts && (
+                        <div className="mt-3 space-y-2">
+                          <Label className="text-xs font-medium text-green-800 dark:text-green-200">
+                            Active Negative Prompts ({editNegativePrompts.length} terms):
+                          </Label>
+                          <div className="max-h-32 overflow-y-auto bg-white/50 dark:bg-gray-900/50 p-3 rounded border">
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              {editNegativePrompts.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-1">
+                                  {editNegativePrompts.map((term, index) => (
+                                    <span key={index} className="inline-block bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-1 rounded text-xs">
+                                      {term}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">Loading safety terms...</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* JSON Enhancement Controls */}

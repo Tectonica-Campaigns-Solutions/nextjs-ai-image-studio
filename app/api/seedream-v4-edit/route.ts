@@ -145,6 +145,40 @@ export async function POST(request: NextRequest) {
 
     console.log("[SeDream v4 Edit] Final prompt:", finalPrompt || "(no prompt)")
 
+    // Load negative prompts from configuration
+    let negativePrompts: string[] = []
+    try {
+      const fs = await import('fs').then(m => m.promises)
+      const path = await import('path')
+      const configPath = path.join(process.cwd(), 'data', 'rag', 'prompt-enhacement.json')
+      const configData = await fs.readFile(configPath, 'utf-8')
+      const config = JSON.parse(configData)
+      
+      // Combine all negative prompt categories for maximum protection
+      const allNegatives = [
+        ...(config.enforced_negatives || []),
+        ...(config.enforced_negatives_nsfw || []),
+        ...(config.enforced_negatives_age || []),
+        ...(config.enforced_negatives_human_integrity || [])
+      ]
+      
+      negativePrompts = allNegatives
+      console.log("[SeDream v4 Edit] Loaded negative prompts:", negativePrompts.length, "terms")
+      console.log("[SeDream v4 Edit] NSFW protection terms:", config.enforced_negatives_nsfw?.length || 0)
+      console.log("[SeDream v4 Edit] Age bias protection terms:", config.enforced_negatives_age?.length || 0)
+      console.log("[SeDream v4 Edit] Human integrity protection terms:", config.enforced_negatives_human_integrity?.length || 0)
+      
+    } catch (error) {
+      console.warn("[SeDream v4 Edit] Could not load negative prompts from config:", error)
+      // Fallback to basic safety terms if config fails
+      negativePrompts = [
+        "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
+        "younger", "child-like", "age regression", "juvenile appearance",
+        "unrealistic proportions", "sexualized", "distorted anatomy"
+      ]
+      console.log("[SeDream v4 Edit] Using fallback negative prompts:", negativePrompts.length, "terms")
+    }
+
     // Content moderation
     if (finalPrompt.trim()) {
       try {
@@ -200,8 +234,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare input for SeDream v4 Edit (uses image_urls array, not single image)
+    const negativePromptString = negativePrompts.join(", ")
     const input = {
       prompt: finalPrompt,
+      negative_prompt: negativePromptString,
       image_urls: [imageUrl, referenceImageUrl],
       num_images: 1,
       enable_safety_checker: true,
@@ -210,6 +246,8 @@ export async function POST(request: NextRequest) {
 
     console.log("[SeDream v4 Edit] API Input:", {
       prompt: input.prompt,
+      negativePrompt: `${negativePromptString.substring(0, 100)}...`,
+      negativePromptTerms: negativePrompts.length,
       imageUrls: input.image_urls,
       numImages: input.num_images,
       aspectRatio: aspectRatio,
@@ -250,6 +288,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       images: result.data.images,
       prompt: finalPrompt,
+      negativePrompt: negativePromptString,
+      safetyProtections: {
+        negativeTermsApplied: negativePrompts.length,
+        nsfwProtection: true,
+        ageBiasProtection: true,
+        humanIntegrityProtection: true,
+        safetyCheckerEnabled: true
+      },
       referenceUsed: referenceImageUrl,
       enhancementApplied: useJSONEnhancement
     })

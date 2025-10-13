@@ -52,9 +52,25 @@ export const defaultModerationConfig: ContentModerationConfig = {
   
   blockedTerms: {
     explicitContent: [
+      // Basic NSFW terms
       'nude', 'naked', 'porn', 'pornographic', 'sexual', 'erotic', 'nsfw',
-      'desnudo', 'desnuda', 'pornografía', 'erótico', 'sexual',
-      'nu', 'érotique', 'pornographique', 'sexuel'
+      
+      // Body parts and exposure
+      'breast', 'breasts', 'nipple', 'nipples', 'cleavage', 'topless', 'bare chest',
+      'underwear', 'lingerie', 'bikini', 'undressed', 'exposed', 'revealing',
+      'bare', 'skin exposed', 'without clothes', 'remove clothes', 'strip',
+      
+      // Sexual actions and poses
+      'seductive', 'sensual', 'provocative', 'suggestive', 'intimate',
+      'sexual pose', 'erotic pose', 'adult content', 'mature content',
+      
+      // Spanish terms
+      'desnudo', 'desnuda', 'pornografía', 'erótico', 'sexual', 'pechos', 'senos',
+      'ropa interior', 'sin ropa', 'desnudez', 'íntimo', 'sugerente',
+      
+      // French terms
+      'nu', 'érotique', 'pornographique', 'sexuel', 'seins', 'poitrine',
+      'sous-vêtements', 'sans vêtements', 'nudité', 'intime', 'suggestif'
     ],
     
     publicFigures: [

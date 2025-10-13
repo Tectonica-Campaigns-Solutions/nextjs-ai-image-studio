@@ -55,6 +55,93 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Image and prompt are required" }, { status: 400 })
     }
 
+    // Enhanced content moderation - critical security check
+    function moderateContent(text: string): { allowed: boolean; reason?: string; flaggedTerms?: string[] } {
+      const lowerText = text.toLowerCase()
+      
+      // Comprehensive NSFW and inappropriate content detection
+      const nsfwTerms = [
+        'naked', 'nude', 'topless', 'undressed', 'bare', 'exposed', 'revealing',
+        'breast', 'breasts', 'nipple', 'nipples', 'cleavage', 'bare chest',
+        'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties',
+        'sexual', 'erotic', 'seductive', 'sensual', 'provocative', 'suggestive',
+        'intimate', 'arousing', 'lustful', 'passionate', 'orgasm', 'climax',
+        'nsfw', 'adult content', 'mature content', 'explicit', 'inappropriate',
+        'sex', 'sexy', 'horny', 'kinky', 'fetish', 'porn', 'pornographic'
+      ]
+      
+      // Violence and harmful content
+      const violenceTerms = [
+        'violence', 'violent', 'kill', 'murder', 'death', 'blood', 'gore',
+        'weapon', 'gun', 'knife', 'sword', 'bomb', 'explosion', 'torture',
+        'harm', 'hurt', 'pain', 'suffering', 'abuse', 'assault'
+      ]
+      
+      // Age-related inappropriate content
+      const ageTerms = [
+        'younger', 'child', 'kid', 'minor', 'underage', 'teen', 'teenager',
+        'juvenile', 'adolescent', 'schoolgirl', 'schoolboy', 'loli', 'shota'
+      ]
+      
+      const allTerms = [...nsfwTerms, ...violenceTerms, ...ageTerms]
+      const flaggedTerms: string[] = []
+      
+      // Check for exact matches and partial matches
+      for (const term of allTerms) {
+        if (lowerText.includes(term)) {
+          flaggedTerms.push(term)
+        }
+      }
+      
+      // Additional pattern-based detection for problematic phrases
+      const problematicPatterns = [
+        /make.*naked/i,
+        /remove.*cloth/i,
+        /without.*cloth/i,
+        /show.*breast/i,
+        /visible.*breast/i,
+        /expose.*body/i,
+        /bare.*skin/i,
+        /strip.*down/i,
+        /undress/i,
+        /sexual.*pose/i,
+        /erotic.*scene/i
+      ]
+      
+      for (const pattern of problematicPatterns) {
+        if (pattern.test(text)) {
+          flaggedTerms.push(`Pattern: ${pattern.source}`)
+        }
+      }
+      
+      if (flaggedTerms.length > 0) {
+        console.warn(`[Edit-Image] Content moderation blocked request. Flagged terms:`, flaggedTerms)
+        return {
+          allowed: false,
+          reason: "Content contains inappropriate or harmful material",
+          flaggedTerms
+        }
+      }
+      
+      return { allowed: true }
+    }
+
+    // Apply content moderation to the prompt
+    const moderationResult = moderateContent(prompt)
+    if (!moderationResult.allowed) {
+      console.warn("[Edit-Image] Request blocked by content moderation:", {
+        prompt: prompt.substring(0, 100),
+        reason: moderationResult.reason,
+        flaggedTerms: moderationResult.flaggedTerms
+      })
+      
+      return NextResponse.json({ 
+        error: "Content policy violation",
+        details: moderationResult.reason,
+        flaggedContent: moderationResult.flaggedTerms
+      }, { status: 400 })
+    }
+
     // Check if Fal.ai API key is available
     const falApiKey = process.env.FAL_API_KEY
     
@@ -180,6 +267,55 @@ export async function POST(request: NextRequest) {
     const base64Image = Buffer.from(imageBuffer).toString("base64");
     console.log("[v0] Base64 image length:", base64Image.length)
 
+    // Load negative prompts from configuration for safety
+    let negativePrompts: string[] = []
+    try {
+      const fs = await import('fs').then(m => m.promises)
+      const path = await import('path')
+      const configPath = path.join(process.cwd(), 'data', 'rag', 'prompt-enhacement.json')
+      const configData = await fs.readFile(configPath, 'utf-8')
+      const config = JSON.parse(configData)
+      
+      // Combine all negative prompt categories for maximum protection
+      const allNegatives = [
+        ...(config.enforced_negatives || []),
+        ...(config.enforced_negatives_nsfw || []),
+        ...(config.enforced_negatives_age || []),
+        ...(config.enforced_negatives_human_integrity || [])
+      ]
+      
+      negativePrompts = allNegatives
+      console.log("[v0] Loaded negative prompts:", negativePrompts.length, "terms")
+      console.log("[v0] NSFW protection terms:", config.enforced_negatives_nsfw?.length || 0)
+      console.log("[v0] Age bias protection terms:", config.enforced_negatives_age?.length || 0)
+      console.log("[v0] Human integrity protection terms:", config.enforced_negatives_human_integrity?.length || 0)
+      
+    } catch (error) {
+      console.warn("[v0] Could not load negative prompts from config:", error)
+      // Fallback to comprehensive safety terms if config fails
+      negativePrompts = [
+        // NSFW and sexual content
+        "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
+        "topless", "undressed", "underwear", "lingerie", "bikini", "exposed",
+        "breast", "breasts", "nipple", "nipples", "cleavage", "bare chest",
+        "seductive", "sensual", "erotic", "provocative", "suggestive",
+        "adult content", "mature content", "intimate", "sexual pose",
+        "remove clothes", "without clothes", "undressing", "stripping",
+        
+        // Age-related protections
+        "younger", "child-like", "age regression", "juvenile appearance",
+        "baby face", "childish", "infantile", "minor", "underage",
+        
+        // Anatomical integrity
+        "unrealistic proportions", "sexualized", "distorted anatomy",
+        "exaggerated features", "artificial enhancement", "body modification",
+        
+        // General inappropriate
+        "violence", "weapon", "harmful", "offensive", "disturbing"
+      ]
+      console.log("[v0] Using comprehensive fallback negative prompts:", negativePrompts.length, "terms")
+    }
+
     // Use Fal.ai for image editing
     console.log("[v0] Using Fal.ai for image editing...");
     
@@ -190,8 +326,10 @@ export async function POST(request: NextRequest) {
       });
 
       // Prepare input for Fal.ai call
+      const negativePromptString = negativePrompts.join(", ")
       const falInput: any = {
         prompt: finalPrompt,
+        negative_prompt: negativePromptString,
         image_url: `data:image/jpeg;base64,${base64Image}`
       }
       
@@ -233,6 +371,8 @@ export async function POST(request: NextRequest) {
       
       console.log("[v0] Fal.ai input parameters:", {
         prompt: finalPrompt.substring(0, 100) + "...",
+        negative_prompt: `${negativePromptString.substring(0, 100)}...`,
+        negative_prompt_terms: negativePrompts.length,
         image_size: falInput.image_size || "custom (using width/height)",
         width: falInput.width || "not set",
         height: falInput.height || "not set",
@@ -282,6 +422,15 @@ export async function POST(request: NextRequest) {
         console.log("[v0] Successfully got edited image from Fal.ai");
         return NextResponse.json({ 
           image: `data:image/jpeg;base64,${base64Result}`,
+          prompt: finalPrompt,
+          negativePrompt: negativePromptString,
+          safetyProtections: {
+            negativeTermsApplied: negativePrompts.length,
+            nsfwProtection: true,
+            ageBiasProtection: true,
+            humanIntegrityProtection: true,
+            contentModerationEnabled: true
+          },
           ragMetadata: ragMetadata,
           debug: {
             requestedSize: imageSize,

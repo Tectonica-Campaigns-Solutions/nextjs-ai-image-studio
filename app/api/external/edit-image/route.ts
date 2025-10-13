@@ -227,6 +227,55 @@ export async function POST(request: NextRequest) {
         disabled: true
       }
     }
+
+    // Load negative prompts from configuration for safety
+    let negativePrompts: string[] = []
+    try {
+      const fs = await import('fs').then(m => m.promises)
+      const path = await import('path')
+      const configPath = path.join(process.cwd(), 'data', 'rag', 'prompt-enhacement.json')
+      const configData = await fs.readFile(configPath, 'utf-8')
+      const config = JSON.parse(configData)
+      
+      // Combine all negative prompt categories for maximum protection
+      const allNegatives = [
+        ...(config.enforced_negatives || []),
+        ...(config.enforced_negatives_nsfw || []),
+        ...(config.enforced_negatives_age || []),
+        ...(config.enforced_negatives_human_integrity || [])
+      ]
+      
+      negativePrompts = allNegatives
+      console.log("[External Edit-Image] Loaded negative prompts:", negativePrompts.length, "terms")
+      console.log("[External Edit-Image] NSFW protection terms:", config.enforced_negatives_nsfw?.length || 0)
+      console.log("[External Edit-Image] Age bias protection terms:", config.enforced_negatives_age?.length || 0)
+      console.log("[External Edit-Image] Human integrity protection terms:", config.enforced_negatives_human_integrity?.length || 0)
+      
+    } catch (error) {
+      console.warn("[External Edit-Image] Could not load negative prompts from config:", error)
+      // Fallback to comprehensive safety terms if config fails
+      negativePrompts = [
+        // NSFW and sexual content
+        "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
+        "topless", "undressed", "underwear", "lingerie", "bikini", "exposed",
+        "breast", "breasts", "nipple", "nipples", "cleavage", "bare chest",
+        "seductive", "sensual", "erotic", "provocative", "suggestive",
+        "adult content", "mature content", "intimate", "sexual pose",
+        "remove clothes", "without clothes", "undressing", "stripping",
+        
+        // Age-related protections
+        "younger", "child-like", "age regression", "juvenile appearance",
+        "baby face", "childish", "infantile", "minor", "underage",
+        
+        // Anatomical integrity
+        "unrealistic proportions", "sexualized", "distorted anatomy",
+        "exaggerated features", "artificial enhancement", "body modification",
+        
+        // General inappropriate
+        "violence", "weapon", "harmful", "offensive", "disturbing"
+      ]
+      console.log("[External Edit-Image] Using comprehensive fallback negative prompts:", negativePrompts.length, "terms")
+    }
     
     // Add RAG information (will be dynamic when app state is accessible)
     if (useRAG) {
@@ -306,8 +355,10 @@ export async function POST(request: NextRequest) {
       console.log("[External Edit-Image] Making Fal.ai call with qwen-image-edit...")
       
       // Prepare input for Fal.ai call
+      const negativePromptString = negativePrompts.join(", ")
       const falInput: any = {
         prompt: cleanPrompt,
+        negative_prompt: negativePromptString,
         image_url: imageDataUrl,
         // Add some common parameters that might help with compatibility
         guidance_scale: 7.5,
@@ -320,6 +371,8 @@ export async function POST(request: NextRequest) {
         model: "fal-ai/qwen-image-edit",
         input: {
           prompt: cleanPrompt.substring(0, 100) + "...",
+          negative_prompt: `${negativePromptString.substring(0, 100)}...`,
+          negative_prompt_terms: negativePrompts.length,
           image_url: imageDataUrl.substring(0, 50) + "... (" + imageDataUrl.length + " chars total)",
           image_size: falInput.image_size || "custom (using width/height)",
           width: falInput.width || "not set",
@@ -394,6 +447,14 @@ export async function POST(request: NextRequest) {
             final: finalPrompt,
             enhanced: jsonMetadata?.wasEnhanced || false,
             jsonMetadata: jsonMetadata
+          },
+          negativePrompt: negativePromptString,
+          safetyProtections: {
+            negativeTermsApplied: negativePrompts.length,
+            nsfwProtection: true,
+            ageBiasProtection: true,
+            humanIntegrityProtection: true,
+            contentModerationEnabled: true
           },
           processing: {
             model: "qwen-image-edit",
@@ -489,19 +550,84 @@ function getBaseUrl(): string {
 }
 
 async function moderateContent(text: string): Promise<{ allowed: boolean; reason?: string }> {
-  // Basic content moderation - can be enhanced with external services
-  const text_lower = text.toLowerCase()
+  // Enhanced content moderation with aggressive NSFW detection
+  const text_lower = text.toLowerCase().trim()
   
-  // Check for explicit content
-  const explicitTerms = ['explicit', 'sexual', 'nude', 'naked']
-  if (explicitTerms.some(term => text_lower.includes(term))) {
-    return { allowed: false, reason: 'explicit content detected' }
+  // NSFW and sexual content detection (comprehensive list)
+  const nsfwTerms = [
+    'naked', 'nude', 'sexual', 'explicit', 'nsfw', 'xxx', 'porn',
+    'breast', 'breasts', 'nipple', 'nipples', 'topless', 'undressed',
+    'underwear', 'lingerie', 'bra', 'panties', 'bikini', 'swimsuit',
+    'revealing', 'exposed', 'bare', 'strip', 'undress', 'remove clothes',
+    'seductive', 'sensual', 'erotic', 'intimate', 'provocative',
+    'cleavage', 'décolletage', 'suggestive', 'sexy', 'hot',
+    'genitals', 'private parts', 'anatomy', 'body parts',
+    'make naked', 'show body', 'visible body', 'expose', 'uncover',
+    'without clothes', 'no clothing', 'skin showing', 'flesh',
+    'adult content', 'mature content', 'inappropriate'
+  ]
+  
+  // Violence and harmful content
+  const violentTerms = [
+    'violence', 'violent', 'weapon', 'kill', 'murder', 'death', 'dead',
+    'blood', 'gore', 'torture', 'harm', 'hurt', 'attack', 'assault',
+    'knife', 'gun', 'weapon', 'shoot', 'stab', 'cut', 'wound'
+  ]
+  
+  // Age-related inappropriate modifications
+  const ageTerms = [
+    'younger', 'child', 'kid', 'baby', 'infant', 'toddler', 'teen',
+    'make younger', 'age down', 'juvenile', 'minor', 'underage',
+    'school uniform', 'childish', 'infantile'
+  ]
+  
+  // Check for NSFW content
+  if (nsfwTerms.some(term => text_lower.includes(term))) {
+    return { 
+      allowed: false, 
+      reason: 'NSFW content detected. This request violates content policy regarding sexual or inappropriate material.' 
+    }
   }
   
   // Check for violence
-  const violentTerms = ['violence', 'violent', 'weapon', 'kill', 'murder']
   if (violentTerms.some(term => text_lower.includes(term))) {
-    return { allowed: false, reason: 'violent content detected' }
+    return { 
+      allowed: false, 
+      reason: 'Violent content detected. This request violates content policy regarding harmful material.' 
+    }
+  }
+  
+  // Check for age-related inappropriate content
+  if (ageTerms.some(term => text_lower.includes(term))) {
+    return { 
+      allowed: false, 
+      reason: 'Age-related inappropriate content detected. This request violates content policy regarding minors.' 
+    }
+  }
+  
+  // Pattern-based detection for common problematic phrases
+  const problematicPatterns = [
+    /make.*naked/i,
+    /remove.*cloth/i,
+    /without.*cloth/i,
+    /show.*breast/i,
+    /visible.*breast/i,
+    /expose.*body/i,
+    /strip.*down/i,
+    /take.*off/i,
+    /undress.*\w+/i,
+    /naked.*\w+/i,
+    /\w+.*naked/i,
+    /sexual.*pose/i,
+    /erotic.*\w+/i,
+    /adult.*content/i
+  ]
+  
+  if (problematicPatterns.some(pattern => pattern.test(text))) {
+    return { 
+      allowed: false, 
+      reason: 'Inappropriate content pattern detected. This request violates content policy.' 
+    }
   }
   
   // Allow by default

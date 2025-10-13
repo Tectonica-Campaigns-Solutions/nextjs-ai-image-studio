@@ -121,6 +121,40 @@ export async function POST(request: NextRequest) {
 
     console.log("[External SeDream v4] Final prompt:", finalPrompt)
 
+    // Load negative prompts from configuration
+    let negativePrompts: string[] = []
+    try {
+      const fs = await import('fs').then(m => m.promises)
+      const path = await import('path')
+      const configPath = path.join(process.cwd(), 'data', 'rag', 'prompt-enhacement.json')
+      const configData = await fs.readFile(configPath, 'utf-8')
+      const config = JSON.parse(configData)
+      
+      // Combine all negative prompt categories for maximum protection
+      const allNegatives = [
+        ...(config.enforced_negatives || []),
+        ...(config.enforced_negatives_nsfw || []),
+        ...(config.enforced_negatives_age || []),
+        ...(config.enforced_negatives_human_integrity || [])
+      ]
+      
+      negativePrompts = allNegatives
+      console.log("[External SeDream v4] Loaded negative prompts:", negativePrompts.length, "terms")
+      console.log("[External SeDream v4] NSFW protection terms:", config.enforced_negatives_nsfw?.length || 0)
+      console.log("[External SeDream v4] Age bias protection terms:", config.enforced_negatives_age?.length || 0)
+      console.log("[External SeDream v4] Human integrity protection terms:", config.enforced_negatives_human_integrity?.length || 0)
+      
+    } catch (error) {
+      console.warn("[External SeDream v4] Could not load negative prompts from config:", error)
+      // Fallback to basic safety terms if config fails
+      negativePrompts = [
+        "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
+        "younger", "child-like", "age regression", "juvenile appearance",
+        "unrealistic proportions", "sexualized", "distorted anatomy"
+      ]
+      console.log("[External SeDream v4] Using fallback negative prompts:", negativePrompts.length, "terms")
+    }
+
     // Upload image to fal.ai storage first
     console.log("[External SeDream v4] Uploading image to fal.ai storage...")
     
@@ -157,8 +191,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Prepare input for SeDream v4 Edit (uses image_urls array, not single image)
+      const negativePromptString = negativePrompts.join(", ")
       const input = {
         prompt: finalPrompt,
+        negative_prompt: negativePromptString,
         image_urls: [imageUrl, referenceImageUrl],
         num_images: 1,
         enable_safety_checker: true,
@@ -167,6 +203,8 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream v4] API Input:", {
         prompt: input.prompt,
+        negativePrompt: `${negativePromptString.substring(0, 100)}...`,
+        negativePromptTerms: negativePrompts.length,
         imageUrls: input.image_urls,
         numImages: input.num_images,
         aspectRatio: aspectRatio,
@@ -207,6 +245,14 @@ export async function POST(request: NextRequest) {
         success: true,
         images: result.data.images,
         prompt: finalPrompt,
+        negativePrompt: negativePromptString,
+        safetyProtections: {
+          negativeTermsApplied: negativePrompts.length,
+          nsfwProtection: true,
+          ageBiasProtection: true,
+          humanIntegrityProtection: true,
+          safetyCheckerEnabled: true
+        },
         referenceUsed: referenceImageUrl
       })
 
@@ -294,6 +340,14 @@ export async function GET() {
           }
         ],
         prompt: "Final prompt used for generation",
+        negativePrompt: "Combined negative prompts for safety",
+        safetyProtections: {
+          negativeTermsApplied: 70,
+          nsfwProtection: true,
+          ageBiasProtection: true,
+          humanIntegrityProtection: true,
+          safetyCheckerEnabled: true
+        },
         referenceUsed: "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg"
       },
       error: {
@@ -312,7 +366,13 @@ export async function GET() {
       "A reference image is automatically used for style transfer",
       "The transformation preserves the main subject while applying the configured style",
       "Processing time varies based on image complexity and server load",
-      "No prompt input required - the style is automatically applied"
+      "No prompt input required - the style is automatically applied",
+      "Advanced safety protections automatically applied:",
+      "  • NSFW content prevention with 25+ negative terms",
+      "  • Age bias prevention to avoid inappropriate age modifications",
+      "  • Human integrity protection to maintain realistic proportions",
+      "  • Built-in content moderation and safety checker",
+      "Multiple layers of protection ensure ethical and appropriate results"
     ]
   })
 }
