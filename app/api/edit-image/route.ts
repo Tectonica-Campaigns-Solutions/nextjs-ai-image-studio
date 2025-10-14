@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
     const imageSize = formData.get("image_size") as string || "square_hd" // default to square_hd
     const customWidth = formData.get("width") as string
     const customHeight = formData.get("height") as string
+    const useJSONEnhancement = formData.get("useJSONEnhancement") === "true" || false // Default to false for precise edits
+    const customText = formData.get("customText") as string
     
     // Validate image_size parameter
     const validImageSizes = ['square_hd', 'square', 'portrait_4_3', 'portrait_16_9', 'landscape_4_3', 'landscape_16_9', 'custom']
@@ -263,6 +265,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Apply JSON enhancement with edit_enhancement_text (similar to external endpoint)
+    if (useJSONEnhancement) {
+      try {
+        // Load edit_enhancement_text directly or use custom text
+        let enhancementText = customText || null
+        
+        if (!enhancementText) {
+          try {
+            const configResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/enhancement-config`)
+            const success = configResponse.ok
+            
+            if (success) {
+              const config = await configResponse.json()
+              if (success && config?.edit_enhancement_text) {
+                enhancementText = config.edit_enhancement_text
+                console.log("[Internal Edit-Image] Loaded edit_enhancement_text:", enhancementText)
+              }
+            }
+          } catch (error) {
+            console.warn("[Internal Edit-Image] Could not load enhancement config:", error)
+          }
+          
+          // Fallback to ultra-conservative enhancement for edits
+          if (!enhancementText) {
+            enhancementText = "Make only the minimal requested change. Do not alter background, lighting, colors, textures, or any other elements"
+            console.log("[Internal Edit-Image] Using ultra-neutral edit_enhancement_text for pinpoint edits")
+          }
+        }
+        
+        // Apply enhancement
+        finalPrompt = `${finalPrompt}. ${enhancementText}`
+        console.log("[Internal Edit-Image] Enhanced prompt with edit_enhancement_text:", finalPrompt)
+        
+      } catch (error) {
+        console.warn("[Internal Edit-Image] JSON Enhancement failed, using original prompt:", error)
+      }
+    } else {
+      console.log("[Internal Edit-Image] JSON Enhancement disabled - using original prompt for precise edits")
+    }
+
     const imageBuffer = await image.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString("base64");
     console.log("[v0] Base64 image length:", base64Image.length)
@@ -330,7 +372,11 @@ export async function POST(request: NextRequest) {
       const falInput: any = {
         prompt: finalPrompt,
         negative_prompt: negativePromptString,
-        image_url: `data:image/jpeg;base64,${base64Image}`
+        image_url: `data:image/jpeg;base64,${base64Image}`,
+        // Ultra-conservative parameters for precision editing (matching external endpoint)
+        strength: 0.2,  // Ultra-low strength for minimal changes
+        guidance_scale: 5.0,  // Moderate guidance for better control
+        num_inference_steps: 15  // Reduced steps for faster, lighter processing
       }
       
       // Handle image_size: if custom, use width/height instead of image_size
@@ -376,7 +422,10 @@ export async function POST(request: NextRequest) {
         image_size: falInput.image_size || "custom (using width/height)",
         width: falInput.width || "not set",
         height: falInput.height || "not set",
-        image_url_length: falInput.image_url.length
+        image_url_length: falInput.image_url.length,
+        strength: falInput.strength,
+        guidance_scale: falInput.guidance_scale,
+        num_inference_steps: falInput.num_inference_steps
       })
 
       const result = await fal.subscribe("fal-ai/qwen-image-edit", {
@@ -432,11 +481,21 @@ export async function POST(request: NextRequest) {
             contentModerationEnabled: true
           },
           ragMetadata: ragMetadata,
+          jsonEnhancement: {
+            enabled: useJSONEnhancement,
+            usingCustomText: !!(customText),
+            enhancementApplied: useJSONEnhancement
+          },
           debug: {
             requestedSize: imageSize,
             requestedWidth: falInput.width,
             requestedHeight: falInput.height,
-            actualImageSize: arrayBuffer.byteLength
+            actualImageSize: arrayBuffer.byteLength,
+            modelParameters: {
+              strength: falInput.strength,
+              guidance_scale: falInput.guidance_scale,
+              num_inference_steps: falInput.num_inference_steps
+            }
           }
         });
       } else {
@@ -499,9 +558,9 @@ export async function POST(request: NextRequest) {
               inputs: prompt,
               parameters: {
                 init_image: `data:image/jpeg;base64,${base64Image}`,
-                strength: 0.6,
-                guidance_scale: 7.5,
-                num_inference_steps: 25,
+                strength: 0.2,   // Much lower for pinpoint edits
+                guidance_scale: 5.0,  // Reduced for less strict adherence
+                num_inference_steps: 15,  // Further reduced for minimal processing
                 width: 512,
                 height: 512,
               }
@@ -545,8 +604,8 @@ export async function POST(request: NextRequest) {
                 body: JSON.stringify({
                   inputs: `${prompt}, photorealistic, high quality`,
                   parameters: {
-                    guidance_scale: 7.5,
-                    num_inference_steps: 20,
+                    guidance_scale: 5.0,  // Reduced for less strict adherence
+                    num_inference_steps: 15,  // Further reduced
                   }
                 }),
               });

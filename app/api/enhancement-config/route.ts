@@ -7,6 +7,7 @@ interface JSONEnhancementConfig {
   kit: string
   description: string
   enhancement_text: string
+  edit_enhancement_text: string  // Added for precise edits
   defaults: {
     intensity: number
     join_string: string
@@ -37,6 +38,7 @@ export async function GET() {
       kit: "fallback_enhancer",
       description: "Basic enhancement when config file is not available",
       enhancement_text: "high quality, professional style, detailed artwork",
+      edit_enhancement_text: "Make only the minimal requested change. Do not alter background, lighting, colors, textures, or any other elements",  // Added fallback for edits
       defaults: {
         intensity: 1.0,
         join_string: ", ",

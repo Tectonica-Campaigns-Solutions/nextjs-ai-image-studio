@@ -15,7 +15,7 @@ import { fal } from "@fal-ai/client"
  * - intensity (optional): Enhancement intensity from 0.0 to 1.0 (default: 1.0)
  * - image_size (optional): Output image size - one of: square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9 (default: square_hd)
  * 
- * JSON Enhancement is always enabled and automatically appends edit_enhancement_text to the user prompt.
+ * JSON Enhancement is disabled by default for precise edits. When enabled, it automatically appends edit_enhancement_text to the user prompt.
  * RAG enhancement has been disabled for simplicity - focuses on consistent style preservation.
  * 
  * The endpoint automatically reads RAG and JSON enhancement configuration from the main app state.
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const image = formData.get('image') as File
     const prompt = formData.get('prompt') as string
     const useRAG = false // Disabled for simplicity - focus on JSON enhancement only
-    const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
+    const useJSONEnhancement = formData.get("useJSONEnhancement") === "true" || false // Default to false for precise edits
     const customText = formData.get('customText') as string
     const intensity = parseFloat(formData.get('intensity') as string) || 1.0 // default 1.0
     const imageSize = formData.get('image_size') as string || 'square_hd' // default to square_hd
@@ -142,17 +142,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Apply content moderation to prompt
-    const moderationResult = await moderateContent(prompt)
+    // Apply content moderation to the prompt
+    const moderationResult = moderateContent(prompt)
     if (!moderationResult.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: handleModerationError({ error: moderationResult.reason }),
-          moderation: true
-        },
-        { status: 400 }
-      )
+      console.warn("[External Edit-Image] Request blocked by content moderation:", {
+        prompt: prompt.substring(0, 100),
+        reason: moderationResult.reason,
+        flaggedTerms: moderationResult.flaggedTerms
+      })
+      
+      return NextResponse.json({ 
+        success: false,
+        error: "Content policy violation",
+        details: moderationResult.reason,
+        flaggedContent: moderationResult.flaggedTerms,
+        moderation: true
+      }, { status: 400 })
     }
 
     // Prepare form data for internal API call
@@ -185,10 +190,10 @@ export async function POST(request: NextRequest) {
             console.warn("[External Edit-Image] Could not load from API:", error)
           }
           
-          // Fallback to hardcoded value if API failed
+          // Fallback to ultra-neutral enhancement for precise edits
           if (!enhancementText) {
-            enhancementText = "Keep style of the image. Same color palette and same background."
-            console.log("[External Edit-Image] Using hardcoded edit_enhancement_text")
+            enhancementText = "Make only the minimal requested change. Do not alter background, lighting, colors, textures, or any other elements"
+            console.log("[External Edit-Image] Using ultra-neutral edit_enhancement_text for pinpoint edits")
           }
         }
 
@@ -224,7 +229,8 @@ export async function POST(request: NextRequest) {
         appliedText: null,
         wasEnhanced: false,
         intensity: 0,
-        disabled: true
+        disabled: true,
+        mode: "precise_edit" // Indicates this is for precise, minimal edits
       }
     }
 
@@ -270,6 +276,13 @@ export async function POST(request: NextRequest) {
         // Anatomical integrity
         "unrealistic proportions", "sexualized", "distorted anatomy",
         "exaggerated features", "artificial enhancement", "body modification",
+        
+        // Style preservation - prevent unwanted changes
+        "different style", "change background", "alter colors", "modify lighting",
+        "different texture", "style transfer", "artistic filter", "color grading",
+        "background change", "lighting change", "texture change", "color shift",
+        "style transformation", "artistic interpretation", "filter effect",
+        "color adjustment", "contrast change", "saturation change",
         
         // General inappropriate
         "violence", "weapon", "harmful", "offensive", "disturbing"
@@ -360,10 +373,10 @@ export async function POST(request: NextRequest) {
         prompt: cleanPrompt,
         negative_prompt: negativePromptString,
         image_url: imageDataUrl,
-        // Add some common parameters that might help with compatibility
-        guidance_scale: 7.5,
-        num_inference_steps: 50,
-        strength: 0.8
+        // Ultra-conservative parameters for pinpoint edits
+        guidance_scale: 5.0,      // Reduced from 7.5 - less strict prompt adherence
+        num_inference_steps: 15,  // Further reduced for minimal processing
+        strength: 0.2             // Much lower - preserve almost everything
       }
 
       // Log detailed request info for debugging
@@ -549,63 +562,44 @@ function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 }
 
-async function moderateContent(text: string): Promise<{ allowed: boolean; reason?: string }> {
-  // Enhanced content moderation with aggressive NSFW detection
-  const text_lower = text.toLowerCase().trim()
+function moderateContent(text: string): { allowed: boolean; reason?: string; flaggedTerms?: string[] } {
+  const lowerText = text.toLowerCase()
   
-  // NSFW and sexual content detection (comprehensive list)
+  // Comprehensive NSFW and inappropriate content detection
   const nsfwTerms = [
-    'naked', 'nude', 'sexual', 'explicit', 'nsfw', 'xxx', 'porn',
-    'breast', 'breasts', 'nipple', 'nipples', 'topless', 'undressed',
-    'underwear', 'lingerie', 'bra', 'panties', 'bikini', 'swimsuit',
-    'revealing', 'exposed', 'bare', 'strip', 'undress', 'remove clothes',
-    'seductive', 'sensual', 'erotic', 'intimate', 'provocative',
-    'cleavage', 'décolletage', 'suggestive', 'sexy', 'hot',
-    'genitals', 'private parts', 'anatomy', 'body parts',
-    'make naked', 'show body', 'visible body', 'expose', 'uncover',
-    'without clothes', 'no clothing', 'skin showing', 'flesh',
-    'adult content', 'mature content', 'inappropriate'
+    'naked', 'nude', 'topless', 'undressed', 'bare', 'exposed', 'revealing',
+    'breast', 'breasts', 'nipple', 'nipples', 'cleavage', 'bare chest',
+    'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties',
+    'sexual', 'erotic', 'seductive', 'sensual', 'provocative', 'suggestive',
+    'intimate', 'arousing', 'lustful', 'passionate', 'orgasm', 'climax',
+    'nsfw', 'adult content', 'mature content', 'explicit', 'inappropriate',
+    'sex', 'sexy', 'horny', 'kinky', 'fetish', 'porn', 'pornographic'
   ]
   
   // Violence and harmful content
-  const violentTerms = [
-    'violence', 'violent', 'weapon', 'kill', 'murder', 'death', 'dead',
-    'blood', 'gore', 'torture', 'harm', 'hurt', 'attack', 'assault',
-    'knife', 'gun', 'weapon', 'shoot', 'stab', 'cut', 'wound'
+  const violenceTerms = [
+    'violence', 'violent', 'kill', 'murder', 'death', 'blood', 'gore',
+    'weapon', 'gun', 'knife', 'sword', 'bomb', 'explosion', 'torture',
+    'harm', 'hurt', 'pain', 'suffering', 'abuse', 'assault'
   ]
   
-  // Age-related inappropriate modifications
+  // Age-related inappropriate content
   const ageTerms = [
-    'younger', 'child', 'kid', 'baby', 'infant', 'toddler', 'teen',
-    'make younger', 'age down', 'juvenile', 'minor', 'underage',
-    'school uniform', 'childish', 'infantile'
+    'younger', 'child', 'kid', 'minor', 'underage', 'teen', 'teenager',
+    'juvenile', 'adolescent', 'schoolgirl', 'schoolboy', 'loli', 'shota'
   ]
   
-  // Check for NSFW content
-  if (nsfwTerms.some(term => text_lower.includes(term))) {
-    return { 
-      allowed: false, 
-      reason: 'NSFW content detected. This request violates content policy regarding sexual or inappropriate material.' 
+  const allTerms = [...nsfwTerms, ...violenceTerms, ...ageTerms]
+  const flaggedTerms: string[] = []
+  
+  // Check for exact matches and partial matches
+  for (const term of allTerms) {
+    if (lowerText.includes(term)) {
+      flaggedTerms.push(term)
     }
   }
   
-  // Check for violence
-  if (violentTerms.some(term => text_lower.includes(term))) {
-    return { 
-      allowed: false, 
-      reason: 'Violent content detected. This request violates content policy regarding harmful material.' 
-    }
-  }
-  
-  // Check for age-related inappropriate content
-  if (ageTerms.some(term => text_lower.includes(term))) {
-    return { 
-      allowed: false, 
-      reason: 'Age-related inappropriate content detected. This request violates content policy regarding minors.' 
-    }
-  }
-  
-  // Pattern-based detection for common problematic phrases
+  // Additional pattern-based detection for problematic phrases
   const problematicPatterns = [
     /make.*naked/i,
     /remove.*cloth/i,
@@ -613,57 +607,29 @@ async function moderateContent(text: string): Promise<{ allowed: boolean; reason
     /show.*breast/i,
     /visible.*breast/i,
     /expose.*body/i,
+    /bare.*skin/i,
     /strip.*down/i,
-    /take.*off/i,
-    /undress.*\w+/i,
-    /naked.*\w+/i,
-    /\w+.*naked/i,
+    /undress/i,
     /sexual.*pose/i,
-    /erotic.*\w+/i,
-    /adult.*content/i
+    /erotic.*scene/i
   ]
   
-  if (problematicPatterns.some(pattern => pattern.test(text))) {
-    return { 
-      allowed: false, 
-      reason: 'Inappropriate content pattern detected. This request violates content policy.' 
+  for (const pattern of problematicPatterns) {
+    if (pattern.test(text)) {
+      flaggedTerms.push(`Pattern: ${pattern.source}`)
     }
   }
   
-  // Allow by default
+  if (flaggedTerms.length > 0) {
+    console.warn(`[External Edit-Image] Content moderation blocked request. Flagged terms:`, flaggedTerms)
+    return {
+      allowed: false,
+      reason: "Content contains inappropriate or harmful material",
+      flaggedTerms
+    }
+  }
+  
   return { allowed: true }
 }
 
-function handleModerationError(errorData: any): string {
-  if (!errorData?.error) return "Could not edit image. Please try with different content."
-  
-  const errorMessage = errorData.error.toLowerCase()
-  
-  // Check for specific moderation reasons
-  if (errorMessage.includes('explicit') || errorMessage.includes('sexual') || errorMessage.includes('nude')) {
-    return "This content contains explicit material that is not permitted. Try descriptions like 'professionals in meeting' or 'natural landscape'."
-  }
-  
-  if (errorMessage.includes('violence') || errorMessage.includes('weapon') || errorMessage.includes('violent')) {
-    return "This content includes violent elements that are not permitted. Try descriptions like 'peaceful demonstration' or 'community event'."
-  }
-  
-  if (errorMessage.includes('public figure') || errorMessage.includes('celebrity') || errorMessage.includes('politician')) {
-    return "We cannot generate images of public figures or celebrities. Describe generic people like 'community leader' or 'organizational spokesperson'."
-  }
-  
-  if (errorMessage.includes('fake news') || errorMessage.includes('misinformation') || errorMessage.includes('false')) {
-    return "This content could include misinformation. Make sure to describe accurate and truthful information for your organization."
-  }
-  
-  if (errorMessage.includes('inappropriate language') || errorMessage.includes('offensive')) {
-    return "The language used is not appropriate. Rephrase your description in a more professional and constructive manner."
-  }
-  
-  if (errorMessage.includes('blocked by content moderation')) {
-    return "This content does not comply with our usage policies. Try descriptions appropriate like 'educational campaign' or 'informational material'."
-  }
-  
-  // Generic moderation message
-  return "This content is not permitted according to our policies. Try descriptions appropriate for professional organizational use."
-}
+

@@ -339,7 +339,8 @@ export default function ImageEditor() {
       jsonOptions: {
         useDefaults: !editCustomEnhancementText || editCustomEnhancementText === editDefaultEnhancementText,
         customText: editCustomEnhancementText !== editDefaultEnhancementText ? editCustomEnhancementText : undefined,
-        intensity: editJsonIntensity
+        intensity: editJsonIntensity,
+        enhancementType: 'edit' // Specify to use edit_enhancement_text
       }
     }
 
@@ -1687,7 +1688,8 @@ export default function ImageEditor() {
           jsonOptions: {
             useDefaults: !editCustomEnhancementText || editCustomEnhancementText === editDefaultEnhancementText,
             customText: editCustomEnhancementText !== editDefaultEnhancementText ? editCustomEnhancementText : undefined,
-            intensity: editJsonIntensity
+            intensity: editJsonIntensity,
+            enhancementType: 'edit' // Specify to use edit_enhancement_text
           }
         }
         

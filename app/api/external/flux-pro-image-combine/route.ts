@@ -699,26 +699,87 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 /**
- * Basic content moderation function
- * This is a simple implementation - can be enhanced with external services
+ * Unified content moderation function
+ * This uses the same comprehensive moderation logic as all other endpoints
  */
-async function basicContentModeration(prompt: string): Promise<{ safe: boolean; reason?: string; category?: string }> {
-  // Basic content moderation - can be enhanced with external services
-  const blockedTerms = [
-    'nude', 'naked', 'sex', 'explicit', 'porn', 'violence', 'gore', 'blood', 'weapon',
-    'drug', 'hate', 'racist', 'discriminat', 'illegal', 'terrorist', 'bomb', 'kill'
+function moderateContent(text: string): { allowed: boolean; reason?: string; flaggedTerms?: string[] } {
+  const lowerText = text.toLowerCase()
+  
+  // Comprehensive NSFW and inappropriate content detection
+  const nsfwTerms = [
+    'naked', 'nude', 'topless', 'undressed', 'bare', 'exposed', 'revealing',
+    'breast', 'breasts', 'nipple', 'nipples', 'cleavage', 'bare chest',
+    'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties',
+    'sexual', 'erotic', 'seductive', 'sensual', 'provocative', 'suggestive',
+    'intimate', 'arousing', 'lustful', 'passionate', 'orgasm', 'climax',
+    'nsfw', 'adult content', 'mature content', 'explicit', 'inappropriate',
+    'sex', 'sexy', 'horny', 'kinky', 'fetish', 'porn', 'pornographic'
   ]
   
-  const lowerPrompt = prompt.toLowerCase()
-  const foundTerm = blockedTerms.find(term => lowerPrompt.includes(term))
+  // Violence and harmful content
+  const violenceTerms = [
+    'violence', 'violent', 'kill', 'murder', 'death', 'blood', 'gore',
+    'weapon', 'gun', 'knife', 'sword', 'bomb', 'explosion', 'torture',
+    'harm', 'hurt', 'pain', 'suffering', 'abuse', 'assault'
+  ]
   
-  if (foundTerm) {
-    return {
-      safe: false,
-      reason: `Content contains inappropriate material: ${foundTerm}`,
-      category: 'inappropriate_content'
+  // Age-related inappropriate content
+  const ageTerms = [
+    'younger', 'child', 'kid', 'minor', 'underage', 'teen', 'teenager',
+    'juvenile', 'adolescent', 'schoolgirl', 'schoolboy', 'loli', 'shota'
+  ]
+  
+  const allTerms = [...nsfwTerms, ...violenceTerms, ...ageTerms]
+  const flaggedTerms: string[] = []
+  
+  // Check for exact matches and partial matches
+  for (const term of allTerms) {
+    if (lowerText.includes(term)) {
+      flaggedTerms.push(term)
     }
   }
   
-  return { safe: true }
+  // Additional pattern-based detection for problematic phrases
+  const problematicPatterns = [
+    /make.*naked/i,
+    /remove.*cloth/i,
+    /without.*cloth/i,
+    /show.*breast/i,
+    /visible.*breast/i,
+    /expose.*body/i,
+    /bare.*skin/i,
+    /strip.*down/i,
+    /undress/i,
+    /sexual.*pose/i,
+    /erotic.*scene/i
+  ]
+  
+  for (const pattern of problematicPatterns) {
+    if (pattern.test(text)) {
+      flaggedTerms.push(`Pattern: ${pattern.source}`)
+    }
+  }
+  
+  if (flaggedTerms.length > 0) {
+    console.warn(`[External Flux Combine] Content moderation blocked request. Flagged terms:`, flaggedTerms)
+    return {
+      allowed: false,
+      reason: "Content contains inappropriate or harmful material",
+      flaggedTerms
+    }
+  }
+  
+  return { allowed: true }
+}
+
+/**
+ * Adapter function to maintain compatibility with existing code
+ */
+async function basicContentModeration(prompt: string): Promise<{ safe: boolean; reason?: string; category?: string }> {
+  const result = moderateContent(prompt)
+  return {
+    safe: result.allowed,
+    reason: result.reason,
+    category: result.allowed ? undefined : 'inappropriate_content'
+  }
 }
