@@ -139,3 +139,10 @@ export function getAllDefaults() {
     qwen: clampQwenValues(getQwenDefaults())
   }
 }
+
+/**
+ * Whether Claude Sonnet 4.5 should be enabled for clients
+ */
+export function isClaudeSonnetEnabled(): boolean {
+  return (process.env.ENABLE_CLAUDE_SONNET || "false").toLowerCase() === "true"
+}

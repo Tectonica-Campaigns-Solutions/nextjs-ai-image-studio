@@ -5,6 +5,11 @@ export const clients: ClientType[] = [
     id: "client-example",
     name: "Client Demo",
     description: "",
+    // Optional list of chat/LLM models available for this client
+    availableChatModels: [
+      "qwen-chat",
+      ...(process.env.ENABLE_CLAUDE_SONNET === "true" ? ["claude-sonnet-4.5"] : [])
+    ],
     bots: {
       copy_assistant_id:
         "pmpt_68b0b420922881939406ca7df513cec208d30e21bb75ca51",

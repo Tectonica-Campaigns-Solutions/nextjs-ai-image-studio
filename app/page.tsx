@@ -503,6 +503,21 @@ export default function ImageEditor() {
   const [externalFluxCombineGeneratedPrompt, setExternalFluxCombineGeneratedPrompt] = useState<string>("")
   const [showExternalFluxCombineAdvanced, setShowExternalFluxCombineAdvanced] = useState(false)
 
+  // Seedream Ark Combine States
+  const [seedreamArkPrompt, setSeedreamArkPrompt] = useState("")
+  const [localSeedreamArkPrompt, setLocalSeedreamArkPrompt] = useState("")
+  const [seedreamArkImages, setSeedreamArkImages] = useState<File[]>([])
+  const [seedreamArkImageUrls, setSeedreamArkImageUrls] = useState<string[]>([])
+  const [seedreamArkSettings, setSeedreamArkSettings] = useState({
+    aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
+    num_images: 1,
+    enable_safety_checker: true,
+    negative_prompt: ""
+  })
+  const [seedreamArkResult, setSeedreamArkResult] = useState<any[]>([])
+  const [isSeedreamArkGenerating, setIsSeedreamArkGenerating] = useState(false)
+  const [seedreamArkError, setSeedreamArkError] = useState<string>("")
+
   // External Flux Ultra States
   const [externalFluxUltraPrompt, setExternalFluxUltraPrompt] = useState("")
   const [externalFluxUltraSettings, setExternalFluxUltraSettings] = useState({
@@ -1476,6 +1491,108 @@ export default function ImageEditor() {
     setFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
   }
 
+  // Seedream Ark Combine handlers
+  const handleSeedreamArkImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length > 0) {
+      setSeedreamArkImages(prev => [...prev, ...files])
+    }
+  }
+
+  const removeSeedreamArkImage = (index: number) => {
+    setSeedreamArkImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addSeedreamArkImageUrl = () => {
+    setSeedreamArkImageUrls(prev => [...prev, ""])
+  }
+
+  const updateSeedreamArkImageUrl = (index: number, url: string) => {
+    setSeedreamArkImageUrls(prev => {
+      const newUrls = [...prev]
+      newUrls[index] = url
+      return newUrls
+    })
+  }
+
+  const removeSeedreamArkImageUrl = (index: number) => {
+    setSeedreamArkImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSeedreamArkCombineSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!seedreamArkPrompt.trim()) {
+      setSeedreamArkError("Please enter a prompt")
+      return
+    }
+
+    if (seedreamArkImages.length + seedreamArkImageUrls.length < 2) {
+      setSeedreamArkError("Please upload at least 2 images to combine")
+      return
+    }
+
+    setIsSeedreamArkGenerating(true)
+    setSeedreamArkError("")
+
+    try {
+      const formData = new FormData()
+      
+      formData.append("prompt", seedreamArkPrompt)
+      
+      // Add uploaded image files
+      seedreamArkImages.forEach((file, index) => {
+        formData.append(`image${index}`, file)
+      })
+      
+      // Add image URLs
+      seedreamArkImageUrls.forEach((url, index) => {
+        if (url.trim()) {
+          formData.append(`imageUrl${index}`, url.trim())
+        }
+      })
+      
+      // Prepare settings object
+      const settings: any = { ...seedreamArkSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      console.log("[FRONTEND] Seedream Ark settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+
+      const response = await fetch("/api/seedream-ark-combine", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (errorData?.blocked) {
+          throw new Error(handleModerationError(errorData))
+        }
+        throw new Error(errorData?.error || `Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.image) {
+        setSeedreamArkResult([{ url: result.image }])
+      } else {
+        throw new Error("No combined image received from server")
+      }
+    } catch (err) {
+      setSeedreamArkError(err instanceof Error ? err.message : "Failed to combine images")
+    } finally {
+      setIsSeedreamArkGenerating(false)
+    }
+  }
+
   // External Flux Combine image handling functions
   const handleExternalCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -1861,11 +1978,12 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
           <TabsTrigger value="external-flux-ultra">External Generate</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           <TabsTrigger value="external-flux-combine">External Combine</TabsTrigger>
+          <TabsTrigger value="seedream-ark-combine">Seedream Combine</TabsTrigger>
           <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
@@ -3301,6 +3419,245 @@ export default function ImageEditor() {
                   ) : (
                     <div className="flex items-center justify-center h-96 border-2 border-dashed border-gray-300 rounded-lg">
                       <p className="text-gray-500">Combined image will appear here</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Seedream Ark Combine Tab */}
+          <TabsContent value="seedream-ark-combine" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Seedream Ark Combine
+                  </CardTitle>
+                  <CardDescription>
+                    Combine images using Seedream-v4 from fal.ai platform
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleSeedreamArkCombineSubmit} className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Upload Images (exactly 2 required)</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleSeedreamArkImageUpload}
+                          className="cursor-pointer"
+                        />
+                        {seedreamArkImages.length > 0 && (
+                          <div className="space-y-2">
+                            <Label>Uploaded Files:</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {seedreamArkImages.map((file, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 border rounded">
+                                  <span className="text-sm truncate">{file.name}</span>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => removeSeedreamArkImage(index)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Image URLs Section */}
+                      <div className="space-y-2">
+                        <Label>Or use Image URLs</Label>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Image URL 1"
+                            value={seedreamArkImageUrls[0] || ""}
+                            onChange={(e) => {
+                              const newUrls = [...seedreamArkImageUrls]
+                              newUrls[0] = e.target.value
+                              setSeedreamArkImageUrls(newUrls)
+                            }}
+                          />
+                          <Input
+                            placeholder="Image URL 2"
+                            value={seedreamArkImageUrls[1] || ""}
+                            onChange={(e) => {
+                              const newUrls = [...seedreamArkImageUrls]
+                              newUrls[1] = e.target.value
+                              setSeedreamArkImageUrls(newUrls)
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Prompt Section */}
+                    <div className="space-y-2">
+                      <Label htmlFor="seedream-ark-prompt">Combination Prompt</Label>
+                      <Textarea
+                        id="seedream-ark-prompt"
+                        placeholder="Describe how you want to combine the images..."
+                        value={localSeedreamArkPrompt}
+                        onChange={(e) => {
+                          setLocalSeedreamArkPrompt(e.target.value)
+                          setSeedreamArkPrompt(e.target.value)
+                        }}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    {/* Settings Section */}
+                    <div className="space-y-4 p-4 border rounded-lg">
+                      <Label className="text-sm font-semibold">Settings</Label>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Aspect Ratio</Label>
+                          <Select
+                            value={seedreamArkSettings.aspect_ratio}
+                            onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4") => 
+                              setSeedreamArkSettings(prev => ({ ...prev, aspect_ratio: value }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1:1">Square (1:1)</SelectItem>
+                              <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                              <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                              <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                              <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Number of Images</Label>
+                          <Select
+                            value={seedreamArkSettings.num_images.toString()}
+                            onValueChange={(value) => 
+                              setSeedreamArkSettings(prev => ({ ...prev, num_images: parseInt(value) }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 Image</SelectItem>
+                              <SelectItem value="2">2 Images</SelectItem>
+                              <SelectItem value="3">3 Images</SelectItem>
+                              <SelectItem value="4">4 Images</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="seedream-ark-negative-prompt">Negative Prompt (Optional)</Label>
+                        <Textarea
+                          id="seedream-ark-negative-prompt"
+                          placeholder="Describe what you don't want in the image..."
+                          value={seedreamArkSettings.negative_prompt}
+                          onChange={(e) => 
+                            setSeedreamArkSettings(prev => ({ ...prev, negative_prompt: e.target.value }))
+                          }
+                          className="min-h-[60px]"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="seedream-ark-safety"
+                          checked={seedreamArkSettings.enable_safety_checker}
+                          onCheckedChange={(checked) => 
+                            setSeedreamArkSettings(prev => ({ ...prev, enable_safety_checker: checked }))
+                          }
+                        />
+                        <Label htmlFor="seedream-ark-safety">Enable Safety Checker</Label>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isSeedreamArkGenerating || (!seedreamArkImages.length && !seedreamArkImageUrls.filter(url => url.trim()).length) || !seedreamArkPrompt.trim()}
+                    >
+                      {isSeedreamArkGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Combining Images...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Combine Images
+                        </>
+                      )}
+                    </Button>
+
+                    {seedreamArkError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{seedreamArkError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generated Images</CardTitle>
+                  <CardDescription>
+                    Combined images using Seedream-v4
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {seedreamArkResult.length > 0 ? (
+                    <div className="space-y-4">
+                      {seedreamArkResult.map((image, index) => (
+                        <div key={index} className="space-y-2">
+                          <img 
+                            src={image.url} 
+                            alt={`Seedream Combined Image ${index + 1}`}
+                            className="w-full rounded-lg border"
+                          />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              {image.width} x {image.height}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(image.url, '_blank')}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <Sparkles className="h-12 w-12 mx-auto mb-2" />
+                        <p>No images generated yet</p>
+                      </div>
                     </div>
                   )}
                 </CardContent>

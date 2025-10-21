@@ -19,6 +19,14 @@ export async function GET(request: NextRequest) {
     // For now, we'll return a basic configuration structure
     
     const config = {
+      // Expose available chat models / LLMs for external clients
+      chatModels: {
+        default: "qwen-chat",
+        available: [
+          "qwen-chat",
+        ],
+        description: "Available chat/LLM models for conversational features"
+      },
       rag: {
         available: true,
         activeRAG: null, // Will be populated when RAG is selected in the main app

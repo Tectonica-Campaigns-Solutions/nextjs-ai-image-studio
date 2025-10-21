@@ -19,6 +19,7 @@ export type ClientType = {
   id: string;
   name: string;
   description: string;
+  availableChatModels?: string[];
   bots: {
     copy_assistant_id: string;
     strategy_assistant_id: string;
