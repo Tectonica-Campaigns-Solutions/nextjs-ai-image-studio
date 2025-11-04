@@ -5,9 +5,9 @@ import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/cano
 import { getSedreamEnhancementText } from "@/lib/json-enhancement"
 
 /**
- * POST /api/seedream-ark-combine
+ * POST /api/external/seedream-ark-combine
  * 
- * Internal API endpoint for combining images using Seedream-v4 via fal.ai with enhanced pipeline.
+ * External API endpoint for combining images using Seedream-v4 via fal.ai with enhanced pipeline.
  * 
  * ENHANCED PIPELINE (2 steps):
  * Step 1: Process image2 (second image) with seedream-v4-edit using configured sedream_enhancement_text
@@ -24,8 +24,6 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * - useCanonicalPrompt (optional): boolean (enable canonical prompt processing)
  * - canonicalConfig (optional): JSON string with canonical prompt configuration
  * - orgType (optional): Organization type for moderation (default: general)
- * 
- * Authentication: Required (internal endpoint)
  * 
  * Response format:
  * {
@@ -48,7 +46,7 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log("[SEEDREAM-COMBINE] Request received")
+    console.log("[External Seedream Combine] Request received")
     
     const formData = await request.formData()
     
@@ -56,14 +54,14 @@ export async function POST(request: NextRequest) {
     const prompt = formData.get("prompt") as string
     const orgType = formData.get("orgType") as string || "general"
     
-    // Parse settings
-    const settingsStr = formData.get("settings") as string
+    // Settings
+    const settingsJson = formData.get("settings") as string
     let settings: any = {}
-    if (settingsStr) {
+    if (settingsJson) {
       try {
-        settings = JSON.parse(settingsStr)
+        settings = JSON.parse(settingsJson)
       } catch (error) {
-        console.warn("[SEEDREAM-COMBINE] Failed to parse settings:", error)
+        console.warn("[External Seedream Combine] Failed to parse settings:", error)
       }
     }
 
@@ -75,14 +73,10 @@ export async function POST(request: NextRequest) {
       try {
         canonicalConfig = JSON.parse(canonicalConfigStr)
       } catch (error) {
-        console.warn("[SEEDREAM-COMBINE] Failed to parse canonical config:", error)
+        console.warn("[External Seedream Combine] Failed to parse canonical config:", error)
       }
     }
-    
-    console.log("[SEEDREAM-COMBINE] Canonical prompt parameters:")
-    console.log("  - useCanonicalPrompt:", useCanonicalPrompt)
-    console.log("  - canonicalConfig:", JSON.stringify(canonicalConfig, null, 2))
-    
+
     // Extract fal.ai specific settings
     const aspectRatio = settings.aspect_ratio || "1:1"
     const enableSafetyChecker = settings.enable_safety_checker !== false // Default to true
@@ -90,41 +84,18 @@ export async function POST(request: NextRequest) {
     // Validate prompt
     if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
       return NextResponse.json({
+        success: false,
         error: "Prompt is required",
         details: "Please provide a text description for image combination"
       }, { status: 400 })
     }
 
-    // Validate aspect ratio
-    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"]
-    if (!validAspectRatios.includes(aspectRatio)) {
-      return NextResponse.json({
-        error: "Invalid aspect ratio",
-        details: `Aspect ratio must be one of: ${validAspectRatios.join(', ')}`
-      }, { status: 400 })
-    }
-
-    // Check if Fal.ai API key is available
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      return NextResponse.json({
-        error: "FAL_API_KEY not configured",
-        details: "FAL API key is required for Seedream image generation"
-      }, { status: 500 })
-    }
-
-    console.log("[SEEDREAM-COMBINE] Fal API Key exists:", !!falApiKey)
-    
-    // Configure fal.ai client with API key
-    fal.config({
-      credentials: falApiKey,
-    })
-
-    console.log("[SEEDREAM-COMBINE] Parameters:", {
+    console.log("[External Seedream Combine] Parameters:", {
       prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
       aspectRatio,
       enableSafetyChecker,
-      orgType
+      orgType,
+      useCanonicalPrompt
     })
 
     // Extract image files and URLs
@@ -135,10 +106,10 @@ export async function POST(request: NextRequest) {
     for (const [key, value] of formData.entries()) {
       if (key.startsWith('image') && key.match(/^image\d+$/) && value instanceof File && value.size > 0) {
         imageFiles.push(value)
-        console.log(`[SEEDREAM-COMBINE] Found image file: ${key}, size: ${value.size}, type: ${value.type}`)
+        console.log(`[External Seedream Combine] Found image file: ${key}, size: ${value.size}, type: ${value.type}`)
       } else if (key.startsWith('imageUrl') && key.match(/^imageUrl\d+$/) && typeof value === 'string' && value.trim()) {
         imageUrls.push(value.trim())
-        console.log(`[SEEDREAM-COMBINE] Found image URL: ${key}, url: ${value}`)
+        console.log(`[External Seedream Combine] Found image URL: ${key}, url: ${value}`)
       }
     }
 
@@ -146,6 +117,7 @@ export async function POST(request: NextRequest) {
     const totalImages = imageFiles.length + imageUrls.length
     if (totalImages !== 2) {
       return NextResponse.json({
+        success: false,
         error: "Enhanced pipeline requires exactly 2 images",
         details: `Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
       }, { status: 400 })
@@ -153,38 +125,53 @@ export async function POST(request: NextRequest) {
 
     // Content moderation check
     try {
-      console.log("[MODERATION] Checking content for Seedream Combine prompt:", prompt.substring(0, 50) + "...")
+      console.log("[MODERATION] Checking content for External Seedream Combine prompt:", prompt.substring(0, 50) + "...")
       const moderationService = new ContentModerationService(orgType)
       const moderationResult = await moderationService.moderateContent({ prompt })
       
       if (!moderationResult.safe) {
         console.log("[MODERATION] Content blocked:", moderationResult.reason)
-        return NextResponse.json({
+        return NextResponse.json({ 
+          success: false,
           error: moderationResult.reason,
           category: moderationResult.category,
-          blocked: true,
-          moderation: true
+          blocked: true
         }, { status: 400 })
       }
       console.log("[MODERATION] Content approved")
     } catch (moderationError) {
       console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
-      // Continue with generation if moderation fails to avoid blocking users
     }
 
-    // Process images - upload files to fal.ai storage or use provided URLs
+    // Check if Fal.ai API key is available
+    const falApiKey = process.env.FAL_API_KEY
+    if (!falApiKey) {
+      return NextResponse.json({ 
+        success: false,
+        error: "FAL_API_KEY not configured" 
+      }, { status: 500 })
+    }
+
+    // Configure Fal.ai client
+    fal.config({
+      credentials: falApiKey,
+    })
+
+    // Collect all image URLs (upload files first if needed)
     const allImageUrls: string[] = [...imageUrls]
     
     if (imageFiles.length > 0) {
-      console.log("[SEEDREAM-COMBINE] Uploading files to fal.ai storage...")
+      console.log("[External Seedream Combine] Uploading image files...")
       
       for (const file of imageFiles) {
         try {
           // Validate file type
-          if (!file.type.startsWith('image/')) {
+          const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+          if (!validTypes.includes(file.type)) {
             return NextResponse.json({
+              success: false,
               error: "Invalid file type",
-              details: `File ${file.name} is not an image. Only image files are allowed.`
+              details: `File ${file.name} has type ${file.type}. Allowed types: ${validTypes.join(', ')}`
             }, { status: 400 })
           }
 
@@ -192,21 +179,23 @@ export async function POST(request: NextRequest) {
           const maxSize = 10 * 1024 * 1024 // 10MB
           if (file.size > maxSize) {
             return NextResponse.json({
+              success: false,
               error: "File too large",
               details: `File ${file.name} is ${Math.round(file.size / 1024 / 1024)}MB. Maximum size is 10MB.`
             }, { status: 400 })
           }
 
           // Upload to fal.ai storage
-          console.log(`[SEEDREAM-COMBINE] Uploading ${file.name} to fal.ai storage...`)
+          console.log(`[External Seedream Combine] Uploading ${file.name} to fal.ai storage...`)
           const uploadedUrl = await fal.storage.upload(file)
           allImageUrls.push(uploadedUrl)
           
-          console.log(`[SEEDREAM-COMBINE] Successfully uploaded ${file.name}: ${uploadedUrl}`)
+          console.log(`[External Seedream Combine] Successfully uploaded ${file.name}: ${uploadedUrl}`)
           
         } catch (error) {
-          console.error(`[SEEDREAM-COMBINE] Failed to upload file ${file.name}:`, error)
+          console.error(`[External Seedream Combine] Failed to upload file ${file.name}:`, error)
           return NextResponse.json({
+            success: false,
             error: "File upload failed",
             details: `Failed to upload file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
           }, { status: 500 })
@@ -216,6 +205,7 @@ export async function POST(request: NextRequest) {
 
     if (allImageUrls.length !== 2) {
       return NextResponse.json({
+        success: false,
         error: "Exactly 2 image URLs required",
         details: `Expected 2 image URLs, but got ${allImageUrls.length}`
       }, { status: 400 })
@@ -224,9 +214,9 @@ export async function POST(request: NextRequest) {
     // Process canonical prompt if enabled
     let finalPrompt = prompt
     if (useCanonicalPrompt) {
-      console.log("[SEEDREAM-COMBINE] Processing canonical prompt...")
-      console.log("[SEEDREAM-COMBINE] Original prompt:", prompt)
-      console.log("[SEEDREAM-COMBINE] Canonical config:", JSON.stringify(canonicalConfig, null, 2))
+      console.log("[External Seedream Combine] Processing canonical prompt...")
+      console.log("[External Seedream Combine] Original prompt:", prompt)
+      console.log("[External Seedream Combine] Canonical config:", JSON.stringify(canonicalConfig, null, 2))
       
       // Set user input from original prompt
       canonicalConfig.userInput = prompt
@@ -236,28 +226,28 @@ export async function POST(request: NextRequest) {
         const result = canonicalPromptProcessor.generateCanonicalPrompt(canonicalConfig)
         finalPrompt = result.canonicalPrompt
         
-        console.log("[SEEDREAM-COMBINE] Generated canonical prompt:", finalPrompt)
-        console.log("[SEEDREAM-COMBINE] Processed user input:", result.processedUserInput)
+        console.log("[External Seedream Combine] Generated canonical prompt:", finalPrompt)
+        console.log("[External Seedream Combine] Processed user input:", result.processedUserInput)
       } catch (canonicalError) {
-        console.error("[SEEDREAM-COMBINE] Error processing canonical prompt:", canonicalError)
-        console.log("[SEEDREAM-COMBINE] Falling back to original prompt")
+        console.error("[External Seedream Combine] Error processing canonical prompt:", canonicalError)
+        console.log("[External Seedream Combine] Falling back to original prompt")
         // Fall back to original prompt if canonical processing fails
       }
     } else {
-      console.log("[SEEDREAM-COMBINE] Canonical prompt disabled, using original prompt")
+      console.log("[External Seedream Combine] Canonical prompt disabled, using original prompt")
     }
 
-    console.log("[SEEDREAM-COMBINE] All image URLs ready:", allImageUrls)
-    console.log("[SEEDREAM-COMBINE] Starting enhanced pipeline: seedream → combine")
+    console.log("[External Seedream Combine] All image URLs ready:", allImageUrls)
+    console.log("[External Seedream Combine] Starting enhanced pipeline: seedream → combine")
 
     // ENHANCED PIPELINE: Step 1 - Process image2 (second image) with seedream-v4-edit
-    console.log("[SEEDREAM-COMBINE] Pipeline Step 1: Processing image2 with seedream-v4-edit")
+    console.log("[External Seedream Combine] Pipeline Step 1: Processing image2 with seedream-v4-edit")
     
     const image1Url = allImageUrls[0] // First image (remains unchanged)
     const image2Url = allImageUrls[1] // Second image (will be processed with seedream)
     
-    console.log("[SEEDREAM-COMBINE] Image1 (unchanged):", image1Url)
-    console.log("[SEEDREAM-COMBINE] Image2 (to be processed):", image2Url)
+    console.log("[External Seedream Combine] Image1 (unchanged):", image1Url)
+    console.log("[External Seedream Combine] Image2 (to be processed):", image2Url)
 
     let processedImage2Url: string
     let sedreamPrompt: string // Declare sedream prompt variable
@@ -267,16 +257,17 @@ export async function POST(request: NextRequest) {
       sedreamPrompt = await getSedreamEnhancementText() || ""
       
       if (!sedreamPrompt) {
-        console.error("[SEEDREAM-COMBINE] No sedream_enhancement_text configured")
+        console.error("[External Seedream Combine] No sedream_enhancement_text configured")
         return NextResponse.json({
+          success: false,
           error: "Configuration error",
           details: "No SeDream enhancement text configured for image processing pipeline"
         }, { status: 500 })
       }
 
-      console.log("[SEEDREAM-COMBINE] Using sedream prompt:", sedreamPrompt.substring(0, 100) + "...")
+      console.log("[External Seedream Combine] Using sedream prompt:", sedreamPrompt.substring(0, 100) + "...")
 
-      // Call seedream-v4-edit to process image2
+      // Call internal seedream-v4-edit to process image2
       const seedreamFormData = new FormData()
       
       // Download image2 to create a File object for seedream
@@ -294,7 +285,7 @@ export async function POST(request: NextRequest) {
       seedreamFormData.append("customEnhancementText", sedreamPrompt)
       seedreamFormData.append("aspect_ratio", aspectRatio)
 
-      console.log("[SEEDREAM-COMBINE] Calling seedream-v4-edit API...")
+      console.log("[External Seedream Combine] Calling internal seedream-v4-edit API...")
       
       const seedreamResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/seedream-v4-edit`, {
         method: 'POST',
@@ -313,11 +304,12 @@ export async function POST(request: NextRequest) {
       }
 
       processedImage2Url = seedreamResult.images[0].url
-      console.log("[SEEDREAM-COMBINE] ✅ SeDream processing complete:", processedImage2Url)
+      console.log("[External Seedream Combine] ✅ SeDream processing complete:", processedImage2Url)
       
     } catch (seedreamError) {
-      console.error("[SEEDREAM-COMBINE] Pipeline Step 1 failed:", seedreamError)
+      console.error("[External Seedream Combine] Pipeline Step 1 failed:", seedreamError)
       return NextResponse.json({
+        success: false,
         error: "Pipeline step 1 failed",
         details: `SeDream processing failed: ${seedreamError instanceof Error ? seedreamError.message : 'Unknown error'}`,
         step: "seedream-v4-edit",
@@ -326,8 +318,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ENHANCED PIPELINE: Step 2 - Combine image1 with processed image2
-    console.log("[SEEDREAM-COMBINE] Pipeline Step 2: Combining images with seedream-v4-edit")
-    console.log("[SEEDREAM-COMBINE] Final combination:")
+    console.log("[External Seedream Combine] Pipeline Step 2: Combining images with seedream-v4-edit")
+    console.log("[External Seedream Combine] Final combination:")
     console.log("  - Image1 (original):", image1Url)
     console.log("  - Image2 (processed):", processedImage2Url)
     console.log("  - User prompt:", finalPrompt)
@@ -364,7 +356,7 @@ export async function POST(request: NextRequest) {
       enable_safety_checker: enableSafetyChecker
     }
 
-    console.log("[SEEDREAM-COMBINE] Final input object being sent to fal.ai:")
+    console.log("[External Seedream Combine] Final input object being sent to fal.ai:")
     console.log("=====================================")
     console.log("Model: fal-ai/bytedance/seedream/v4/edit")
     console.log("Input images count:", combinedImageUrls.length)
@@ -375,7 +367,7 @@ export async function POST(request: NextRequest) {
     }, null, 2))
     console.log("=====================================")
 
-    console.log("[SEEDREAM-COMBINE] Calling fal.ai Seedream v4...")
+    console.log("[External Seedream Combine] Calling fal.ai Seedream v4...")
     
     try {
       const result = await fal.subscribe("fal-ai/bytedance/seedream/v4/edit", {
@@ -383,46 +375,25 @@ export async function POST(request: NextRequest) {
         logs: true,
         onQueueUpdate: (update) => {
           if (update.status === "IN_PROGRESS") {
-            console.log("[SEEDREAM-COMBINE] Progress:", update.logs?.map(log => log.message).join(" ") || "Processing...")
+            console.log("[External Seedream Combine] Progress:", update.logs?.map(log => log.message).join(" ") || "Processing...")
           }
         }
       })
 
-      console.log("[SEEDREAM-COMBINE] fal.ai response received")
-      
-      // Debug: Log the full response structure
-      console.log("[SEEDREAM-COMBINE] Full response structure:", JSON.stringify(result, null, 2))
-      console.log("[SEEDREAM-COMBINE] Response analysis:", {
-        hasData: !!result.data,
-        hasImages: !!result.data?.images,
-        imageCount: result.data?.images?.length || 0,
-        dataKeys: result.data ? Object.keys(result.data) : [],
-        resultKeys: Object.keys(result)
-      })
+      console.log("[External Seedream Combine] fal.ai response received")
       
       // Validate response
       if (!result.data || !result.data.images || !Array.isArray(result.data.images) || result.data.images.length === 0) {
-        console.error("[SEEDREAM-COMBINE] Invalid response format - detailed analysis:")
-        console.error("- result exists:", !!result)
-        console.error("- result.data exists:", !!result.data)
-        console.error("- result.data.images exists:", !!result.data?.images)
-        console.error("- result.data.images is array:", Array.isArray(result.data?.images))
-        console.error("- images length:", result.data?.images?.length || 0)
-        console.error("- Full result object:", JSON.stringify(result, null, 2))
+        console.error("[External Seedream Combine] Invalid response format")
         
         return NextResponse.json({
+          success: false,
           error: "No images generated",
-          details: "fal.ai API returned no images. Check the prompt and input images.",
-          debugInfo: {
-            hasData: !!result.data,
-            hasImages: !!result.data?.images,
-            imageCount: result.data?.images?.length || 0,
-            fullResponse: result
-          }
+          details: "fal.ai API returned no images. Check the prompt and input images."
         }, { status: 500 })
       }
 
-      console.log("[SEEDREAM-COMBINE] Successfully generated", result.data.images.length, "images")
+      console.log("[External Seedream Combine] Successfully generated", result.data.images.length, "images")
 
       // Format response to match expected structure
       const images = result.data.images.map((img: any) => ({
@@ -469,82 +440,190 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (falError) {
-      console.error("[SEEDREAM-COMBINE] fal.ai API error:", falError)
-      
-      // Enhanced error logging for debugging
-      if (falError && typeof falError === 'object') {
-        console.error("[SEEDREAM-COMBINE] Error details:")
-        console.error("  - Status:", (falError as any).status)
-        console.error("  - Message:", (falError as any).message)
-        
-        // Log the full error body for ValidationError
-        if ((falError as any).body) {
-          console.error("  - Full Error Body:", JSON.stringify((falError as any).body, null, 2))
-          
-          // Try to extract validation details
-          if ((falError as any).body.detail) {
-            console.error("  - Validation Details:", (falError as any).body.detail)
-          }
-          
-          if ((falError as any).body.errors) {
-            console.error("  - Validation Errors:", (falError as any).body.errors)
-          }
-        }
-        
-        // Log the input that caused the error
-        console.error("[SEEDREAM-COMBINE] Input that caused error:")
-        console.error(JSON.stringify(input, null, 2))
-      }
-      
-      // Return more detailed error information
-      let errorMessage = "Failed to combine images with Seedream v4"
-      let errorDetails = falError instanceof Error ? falError.message : "Unknown error"
-      
-      // Extract specific validation errors if available
-      if ((falError as any)?.body?.detail) {
-        const details = (falError as any).body.detail
-        if (Array.isArray(details) && details.length > 0) {
-          const firstError = details[0]
-          
-          // Handle file download errors specifically
-          if (firstError.type === 'file_download_error') {
-            errorMessage = "Image URL download failed"
-            errorDetails = `One or more image URLs cannot be accessed by fal.ai. ${firstError.msg}`
-            
-            if (firstError.input && Array.isArray(firstError.input)) {
-              console.error("[SEEDREAM-COMBINE] Problematic URLs:", firstError.input)
-              errorDetails += `\n\nProblematic URLs:\n${firstError.input.join('\n')}`
-            }
-          } else {
-            errorDetails = firstError.msg || JSON.stringify(details)
-          }
-        } else {
-          errorDetails = (falError as any).body.detail
-        }
-      } else if ((falError as any)?.body?.errors) {
-        errorDetails = JSON.stringify((falError as any).body.errors)
-      }
+      console.error("[External Seedream Combine] fal.ai API error:", falError)
       
       return NextResponse.json({
-        error: errorMessage,
-        details: errorDetails,
+        success: false,
+        error: "Failed to combine images with Seedream v4",
+        details: falError instanceof Error ? falError.message : "Unknown error",
         model: "fal-ai/bytedance/seedream/v4/edit",
-        provider: "fal.ai",
-        status: (falError as any)?.status,
-        validationError: (falError as any)?.status === 422,
-        fileDownloadError: (falError as any)?.body?.detail?.[0]?.type === 'file_download_error',
-        inputParameters: Object.keys(input),
-        problematicUrls: (falError as any)?.body?.detail?.[0]?.input,
-        errorBody: (falError as any)?.body
+        provider: "fal.ai"
       }, { status: 500 })
     }
 
   } catch (error) {
-    console.error("[SEEDREAM-COMBINE] Unexpected error:", error)
+    console.error("[External Seedream Combine] Unexpected error:", error)
     
     return NextResponse.json({
+      success: false,
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 })
   }
+}
+
+/**
+ * GET /api/external/seedream-ark-combine
+ * 
+ * Returns API documentation and usage information
+ */
+export async function GET() {
+  return NextResponse.json({
+    name: "Seedream Combine API (Enhanced Pipeline)",
+    description: "Combine two images using Seedream v4 with AI-powered style transfer and composition",
+    version: "2.0.0",
+    endpoint: "/api/external/seedream-ark-combine",
+    method: "POST",
+    contentType: "multipart/form-data",
+    pipeline: {
+      description: "Two-step enhanced pipeline for optimal results",
+      steps: [
+        {
+          step: 1,
+          name: "Style Transfer",
+          description: "Process second image with Seedream v4 using configured style prompt"
+        },
+        {
+          step: 2,
+          name: "Image Combination",
+          description: "Combine first image with style-processed second image using user prompt"
+        }
+      ]
+    },
+    parameters: {
+      prompt: {
+        type: "string",
+        required: true,
+        description: "Text description for the final image combination (used in step 2)"
+      },
+      "image0 & image1": {
+        type: "file",
+        required: true,
+        description: "Exactly 2 image files (PNG, JPG, JPEG, WEBP)",
+        maxSize: "10MB each",
+        alternative: "Can use imageUrl0 and imageUrl1 instead"
+      },
+      "imageUrl0 & imageUrl1": {
+        type: "string",
+        required: "alternative",
+        description: "Exactly 2 image URLs",
+        alternative: "Can use image0 and image1 files instead"
+      },
+      settings: {
+        type: "JSON string",
+        required: false,
+        description: "Generation settings",
+        properties: {
+          aspect_ratio: {
+            type: "string",
+            options: ["1:1", "16:9", "9:16", "4:3", "3:4"],
+            default: "1:1"
+          },
+          enable_safety_checker: {
+            type: "boolean",
+            default: true
+          }
+        }
+      },
+      useCanonicalPrompt: {
+        type: "boolean",
+        required: false,
+        description: "Enable canonical prompt processing for advanced control",
+        default: false
+      },
+      canonicalConfig: {
+        type: "JSON string",
+        required: false,
+        description: "Configuration for canonical prompt (when useCanonicalPrompt is true)"
+      },
+      orgType: {
+        type: "string",
+        required: false,
+        description: "Organization type for content moderation",
+        default: "general"
+      }
+    },
+    response: {
+      success: {
+        success: true,
+        image: "https://example.com/combined-image.png",
+        images: [
+          {
+            url: "https://example.com/combined-image.png",
+            width: 1280,
+            height: 1280
+          }
+        ],
+        prompt: "Final processed prompt used",
+        originalPrompt: "User's original prompt",
+        model: "fal-ai/bytedance/seedream/image-to-image-v4",
+        provider: "fal.ai",
+        inputImages: 2,
+        settings: {
+          aspect_ratio: "1:1",
+          enable_safety_checker: true,
+          image_size: "square_hd",
+          use_canonical_prompt: false
+        },
+        timestamp: "2025-10-29T00:00:00.000Z",
+        enhancedPipeline: true,
+        pipelineSteps: [
+          {
+            step: 1,
+            operation: "seedream-v4-edit",
+            inputImage: "https://...",
+            outputImage: "https://...",
+            prompt: "Configured style transfer prompt"
+          },
+          {
+            step: 2,
+            operation: "seedream-v4-edit-combine",
+            inputImages: ["https://...", "https://..."],
+            outputImage: "https://...",
+            prompt: "User's final prompt"
+          }
+        ]
+      },
+      error: {
+        success: false,
+        error: "Error description",
+        details: "Additional error details",
+        category: "Content category (for moderation errors)",
+        blocked: "Boolean indicating if content was blocked"
+      }
+    },
+    examples: {
+      curl: `curl -X POST https://your-domain.com/api/external/seedream-ark-combine \\
+  -F "prompt=Combine these images with vibrant colors" \\
+  -F "image0=@/path/to/first-image.jpg" \\
+  -F "image1=@/path/to/second-image.jpg" \\
+  -F 'settings={"aspect_ratio":"16:9","enable_safety_checker":true}'`,
+      
+      javascript: `const formData = new FormData();
+formData.append('prompt', 'Combine these images with vibrant colors');
+formData.append('image0', firstImageFile);
+formData.append('image1', secondImageFile);
+formData.append('settings', JSON.stringify({
+  aspect_ratio: '16:9',
+  enable_safety_checker: true
+}));
+
+const response = await fetch('/api/external/seedream-ark-combine', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.json();`
+    },
+    notes: [
+      "Requires exactly 2 images for the enhanced pipeline",
+      "Step 1: Second image is processed with configured style prompt",
+      "Step 2: First image is combined with processed second image using your prompt",
+      "Processing time: 30-60 seconds depending on image complexity",
+      "Maximum file size: 10MB per image",
+      "Supported formats: PNG, JPG, JPEG, WEBP",
+      "Built-in content moderation for safe results",
+      "Optional canonical prompt for advanced composition control"
+    ]
+  })
 }

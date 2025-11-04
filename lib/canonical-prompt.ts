@@ -182,7 +182,7 @@ export class CanonicalPromptProcessor {
     const overlay = applyStyle.overlay || styleConfig.overlay.default;
 
     // Build parts array and only include non-'none' values
-    const parts = [`palette ${paletteConfig.description}`];
+    const parts: string[] = [];
     
     if (texture && texture !== 'none') {
       parts.push(`texture ${texture}`);
@@ -192,7 +192,8 @@ export class CanonicalPromptProcessor {
       parts.push(`overlay ${overlay}`);
     }
 
-    return parts.join(', ');
+    // Return comma-separated parts, or default style instruction if no parts
+    return parts.length > 0 ? parts.join(', ') : 'maintain original styling';
   }
 
   /**

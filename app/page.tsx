@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye, X, Plus, Download, AlertCircle, Shield, ChevronUp, ChevronDown } from "lucide-react"
+import { Upload, Wand2, Loader2, Image as ImageIcon, Sparkles, Settings, Zap, FileText, ExternalLink, Eye, X, Plus, Download, AlertCircle, Shield, ChevronUp, ChevronDown, Edit } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
@@ -180,13 +180,15 @@ export default function ImageEditor() {
   // Load canonical prompt options
   const loadCanonicalOptions = async () => {
     try {
+      console.log('[CANONICAL-OPTIONS] Loading canonical options...')
       const response = await fetch('/api/canonical-prompt-options')
       const data = await response.json()
       if (data.success) {
-        console.log('[UI-DEBUG] Loaded canonical options:', data.data)
-        console.log('[UI-DEBUG] Available options:', data.data?.availableOptions)
-        console.log('[UI-DEBUG] Texture options:', data.data?.availableOptions?.texture)
-        console.log('[UI-DEBUG] Overlay options:', data.data?.availableOptions?.overlay)
+        console.log('[CANONICAL-OPTIONS] Loaded canonical options:', data.data)
+        console.log('[CANONICAL-OPTIONS] Available options structure:')
+        console.log('  - keepOptions:', data.data?.availableOptions?.keepOptions)
+        console.log('  - preserveOptions:', data.data?.availableOptions?.preserveOptions)
+        console.log('  - combineOptions:', data.data?.availableOptions?.combineOptions)
         setCanonicalOptions(data.data)
         
         // Update canonical config with default values
@@ -243,6 +245,67 @@ export default function ImageEditor() {
       setCanonicalPreview("")
     } finally {
       setIsGeneratingCombineCanonicalPreview(false)
+    }
+  }
+
+  // Generate canonical prompt preview for Seedream Combine
+  const generateSeedreamArkCanonicalPreview = async () => {
+    console.log("[SEEDREAM-CANONICAL] Starting preview generation...")
+    console.log("[SEEDREAM-CANONICAL] useCanonicalPrompt:", seedreamArkUseCanonicalPrompt)
+    console.log("[SEEDREAM-CANONICAL] prompt:", seedreamArkPrompt)
+    console.log("[SEEDREAM-CANONICAL] config:", seedreamArkCanonicalConfig)
+    
+    if (!seedreamArkUseCanonicalPrompt) {
+      console.log("[SEEDREAM-CANONICAL] Canonical prompt disabled, clearing preview")
+      setSeedreamArkCanonicalPreview("")
+      return
+    }
+
+    if (!seedreamArkPrompt.trim()) {
+      console.log("[SEEDREAM-CANONICAL] No prompt provided, skipping preview")
+      return
+    }
+
+    setIsGeneratingSeedreamArkCanonicalPreview(true)
+
+    try {
+      const requestBody = {
+        config: {
+          ...seedreamArkCanonicalConfig,
+          userInput: seedreamArkPrompt
+        }
+      }
+      
+      console.log("[SEEDREAM-CANONICAL] Sending request to /api/canonical-prompt-test")
+      console.log("[SEEDREAM-CANONICAL] Request body:", JSON.stringify(requestBody, null, 2))
+
+      const response = await fetch('/api/canonical-prompt-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      console.log("[SEEDREAM-CANONICAL] Response status:", response.status)
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("[SEEDREAM-CANONICAL] Response data:", data)
+        const canonicalPrompt = data.data?.canonicalPrompt || data.canonicalPrompt || ""
+        setSeedreamArkCanonicalPreview(canonicalPrompt)
+        console.log("[SEEDREAM-CANONICAL] Preview set:", canonicalPrompt)
+      } else {
+        const errorText = await response.text()
+        console.warn('[SEEDREAM-CANONICAL] Failed to generate preview:', response.status, errorText)
+        setSeedreamArkCanonicalPreview("")
+      }
+    } catch (error) {
+      console.error('[SEEDREAM-CANONICAL] Error generating preview:', error)
+      setSeedreamArkCanonicalPreview("")
+    } finally {
+      setIsGeneratingSeedreamArkCanonicalPreview(false)
+      console.log("[SEEDREAM-CANONICAL] Preview generation completed")
     }
   }
 
@@ -510,13 +573,43 @@ export default function ImageEditor() {
   const [seedreamArkImageUrls, setSeedreamArkImageUrls] = useState<string[]>([])
   const [seedreamArkSettings, setSeedreamArkSettings] = useState({
     aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
-    num_images: 1,
-    enable_safety_checker: true,
-    negative_prompt: ""
+    enable_safety_checker: true
   })
   const [seedreamArkResult, setSeedreamArkResult] = useState<any[]>([])
   const [isSeedreamArkGenerating, setIsSeedreamArkGenerating] = useState(false)
   const [seedreamArkError, setSeedreamArkError] = useState<string>("")
+
+  // Seedream Combine Canonical Prompt States
+  const [seedreamArkUseCanonicalPrompt, setSeedreamArkUseCanonicalPrompt] = useState(true) // Enabled by default
+  const [seedreamArkCanonicalConfig, setSeedreamArkCanonicalConfig] = useState<CanonicalPromptConfig>({
+    keepOptions: {
+      identity: true,
+      layout: true,
+      pose: true
+    },
+    preserveOptions: {
+      preserve_primary: true
+    },
+    combineOptions: {
+      force_integration: true
+    }
+  })
+  const [seedreamArkCanonicalPreview, setSeedreamArkCanonicalPreview] = useState<string>("")
+  const [isGeneratingSeedreamArkCanonicalPreview, setIsGeneratingSeedreamArkCanonicalPreview] = useState(false)
+
+  // Seedream Single Edit States
+  const [seedreamSinglePrompt, setSeedreamSinglePrompt] = useState("")
+  const [localSeedreamSinglePrompt, setLocalSeedreamSinglePrompt] = useState("")
+  const [seedreamSingleImage, setSeedreamSingleImage] = useState<File | null>(null)
+  const [seedreamSingleImageUrl, setSeedreamSingleImageUrl] = useState<string>("")
+  const [seedreamSingleSettings, setSeedreamSingleSettings] = useState({
+    aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
+    num_images: 1,
+    enable_safety_checker: true
+  })
+  const [seedreamSingleResult, setSeedreamSingleResult] = useState<any[]>([])
+  const [isSeedreamSingleGenerating, setIsSeedreamSingleGenerating] = useState(false)
+  const [seedreamSingleError, setSeedreamSingleError] = useState<string>("")
 
   // External Flux Ultra States
   const [externalFluxUltraPrompt, setExternalFluxUltraPrompt] = useState("")
@@ -646,6 +739,14 @@ export default function ImageEditor() {
       setIsGeneratingCombineCanonicalPreview(false)
     }
   }, [useCanonicalPrompt])
+
+  // Clear Seedream canonical preview when disabled
+  useEffect(() => {
+    if (!seedreamArkUseCanonicalPrompt) {
+      setSeedreamArkCanonicalPreview("")
+      setIsGeneratingSeedreamArkCanonicalPreview(false)
+    }
+  }, [seedreamArkUseCanonicalPrompt])
 
   // Sync local states with config when config changes programmatically
   useEffect(() => {
@@ -1536,9 +1637,23 @@ export default function ImageEditor() {
     setSeedreamArkError("")
 
     try {
+      console.log("[SEEDREAM-SUBMIT] Starting Seedream Combine submission...")
+      console.log("[SEEDREAM-SUBMIT] useCanonicalPrompt:", seedreamArkUseCanonicalPrompt)
+      console.log("[SEEDREAM-SUBMIT] canonicalConfig:", seedreamArkCanonicalConfig)
+      
       const formData = new FormData()
       
       formData.append("prompt", seedreamArkPrompt)
+      
+      // Canonical Prompt parameters
+      formData.append("useCanonicalPrompt", seedreamArkUseCanonicalPrompt.toString())
+      console.log("[SEEDREAM-SUBMIT] Added useCanonicalPrompt:", seedreamArkUseCanonicalPrompt.toString())
+      
+      if (seedreamArkUseCanonicalPrompt) {
+        const canonicalConfigStr = JSON.stringify(seedreamArkCanonicalConfig)
+        formData.append("canonicalConfig", canonicalConfigStr)
+        console.log("[SEEDREAM-SUBMIT] Added canonicalConfig:", canonicalConfigStr)
+      }
       
       // Add uploaded image files
       seedreamArkImages.forEach((file, index) => {
@@ -1590,6 +1705,87 @@ export default function ImageEditor() {
       setSeedreamArkError(err instanceof Error ? err.message : "Failed to combine images")
     } finally {
       setIsSeedreamArkGenerating(false)
+    }
+  }
+
+  // Seedream Single Edit handlers
+  const handleSeedreamSingleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSeedreamSingleImage(file)
+    }
+  }
+
+  const removeSeedreamSingleImage = () => {
+    setSeedreamSingleImage(null)
+  }
+
+  const handleSeedreamSingleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!seedreamSinglePrompt.trim()) {
+      setSeedreamSingleError("Please enter a prompt")
+      return
+    }
+
+    if (!seedreamSingleImage && !seedreamSingleImageUrl.trim()) {
+      setSeedreamSingleError("Please upload an image or provide an image URL")
+      return
+    }
+
+    setIsSeedreamSingleGenerating(true)
+    setSeedreamSingleError("")
+
+    try {
+      const formData = new FormData()
+      
+      formData.append("prompt", seedreamSinglePrompt)
+      
+      // Add image file or URL
+      if (seedreamSingleImage) {
+        formData.append("image", seedreamSingleImage)
+      } else if (seedreamSingleImageUrl.trim()) {
+        formData.append("imageUrl", seedreamSingleImageUrl.trim())
+      }
+      
+      // Prepare settings object
+      const settings: any = { ...seedreamSingleSettings }
+      
+      // Remove empty string values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      console.log("[FRONTEND] Seedream Single Edit settings being sent:", settings)
+      
+      formData.append("settings", JSON.stringify(settings))
+
+      const response = await fetch("/api/seedream-single-edit", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (errorData?.blocked) {
+          throw new Error(handleModerationError(errorData))
+        }
+        throw new Error(errorData?.error || `Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.image) {
+        setSeedreamSingleResult([{ url: result.image }])
+      } else {
+        throw new Error("No edited image received from server")
+      }
+    } catch (err) {
+      setSeedreamSingleError(err instanceof Error ? err.message : "Failed to edit image")
+    } finally {
+      setIsSeedreamSingleGenerating(false)
     }
   }
 
@@ -1978,13 +2174,14 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
           <TabsTrigger value="external-flux-ultra">External Generate</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
           <TabsTrigger value="external-flux-combine">External Combine</TabsTrigger>
           <TabsTrigger value="seedream-ark-combine">Seedream Combine</TabsTrigger>
-          <TabsTrigger value="edit-image">Edit Image</TabsTrigger>
+          <TabsTrigger value="seedream-single-edit">Seedream Edit</TabsTrigger>
+          {/* <TabsTrigger value="edit-image">Edit Image</TabsTrigger> */}
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
         </TabsList>
@@ -2319,7 +2516,7 @@ export default function ImageEditor() {
                       <Textarea
                         id="flux-pro-prompt"
                         placeholder="Describe the image you want to generate. You can start with 'Create a poster of...' for example."
-º                        value={fluxProPrompt}
+                        value={fluxProPrompt}
                         onChange={(e) => setFluxProPrompt(e.target.value)}
                         required
                         rows={3}
@@ -3520,72 +3717,212 @@ export default function ImageEditor() {
                     <div className="space-y-4 p-4 border rounded-lg">
                       <Label className="text-sm font-semibold">Settings</Label>
                       
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Aspect Ratio</Label>
-                          <Select
-                            value={seedreamArkSettings.aspect_ratio}
-                            onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4") => 
-                              setSeedreamArkSettings(prev => ({ ...prev, aspect_ratio: value }))
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1:1">Square (1:1)</SelectItem>
-                              <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                              <SelectItem value="9:16">Portrait (9:16)</SelectItem>
-                              <SelectItem value="4:3">Landscape (4:3)</SelectItem>
-                              <SelectItem value="3:4">Portrait (3:4)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Number of Images</Label>
-                          <Select
-                            value={seedreamArkSettings.num_images.toString()}
-                            onValueChange={(value) => 
-                              setSeedreamArkSettings(prev => ({ ...prev, num_images: parseInt(value) }))
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="1">1 Image</SelectItem>
-                              <SelectItem value="2">2 Images</SelectItem>
-                              <SelectItem value="3">3 Images</SelectItem>
-                              <SelectItem value="4">4 Images</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
                       <div className="space-y-2">
-                        <Label htmlFor="seedream-ark-negative-prompt">Negative Prompt (Optional)</Label>
-                        <Textarea
-                          id="seedream-ark-negative-prompt"
-                          placeholder="Describe what you don't want in the image..."
-                          value={seedreamArkSettings.negative_prompt}
-                          onChange={(e) => 
-                            setSeedreamArkSettings(prev => ({ ...prev, negative_prompt: e.target.value }))
+                        <Label>Aspect Ratio</Label>
+                        <Select
+                          value={seedreamArkSettings.aspect_ratio}
+                          onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4") => 
+                            setSeedreamArkSettings(prev => ({ ...prev, aspect_ratio: value }))
                           }
-                          className="min-h-[60px]"
-                        />
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1:1">Square (1:1)</SelectItem>
+                            <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                            <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                            <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                            <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="seedream-ark-safety"
-                          checked={seedreamArkSettings.enable_safety_checker}
-                          onCheckedChange={(checked) => 
-                            setSeedreamArkSettings(prev => ({ ...prev, enable_safety_checker: checked }))
-                          }
-                        />
-                        <Label htmlFor="seedream-ark-safety">Enable Safety Checker</Label>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            id="seedream-ark-safety"
+                            checked={seedreamArkSettings.enable_safety_checker}
+                            onCheckedChange={(checked) => 
+                              setSeedreamArkSettings(prev => ({ ...prev, enable_safety_checker: checked }))
+                            }
+                          />
+                          <div className="flex flex-col">
+                            <Label htmlFor="seedream-ark-safety" className="text-sm font-medium">
+                              Safety Checker
+                            </Label>
+                            <span className="text-xs text-muted-foreground">
+                              {seedreamArkSettings.enable_safety_checker 
+                                ? "Content filtering is enabled" 
+                                : "Content filtering is disabled"
+                              }
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          seedreamArkSettings.enable_safety_checker 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        }`}>
+                          {seedreamArkSettings.enable_safety_checker ? 'ON' : 'OFF'}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Canonical Prompt Section */}
+                    <div className="space-y-4 p-4 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            id="seedream-ark-canonical"
+                            checked={seedreamArkUseCanonicalPrompt}
+                            onCheckedChange={setSeedreamArkUseCanonicalPrompt}
+                          />
+                          <div className="flex flex-col">
+                            <Label htmlFor="seedream-ark-canonical" className="font-medium">
+                              Use Canonical Prompt
+                            </Label>
+                            <span className="text-xs text-muted-foreground">
+                              {seedreamArkUseCanonicalPrompt 
+                                ? "Enhanced prompt generation enabled" 
+                                : "Use standard prompt processing"
+                              }
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          seedreamArkUseCanonicalPrompt 
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' 
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                        }`}>
+                          {seedreamArkUseCanonicalPrompt ? 'ON' : 'OFF'}
+                        </div>
+                      </div>
+
+                      {seedreamArkUseCanonicalPrompt && (
+                        <div className="space-y-4 pt-2 border-t border-emerald-200 dark:border-emerald-800">
+                          <div className="text-sm text-muted-foreground">
+                            Use the options below to enhance the image combination prompt
+                          </div>
+
+                          {/* Keep Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Basic Preservation Options</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {canonicalOptions?.availableOptions?.keepOptions && Object.entries(canonicalOptions.availableOptions.keepOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`seedream-keep-${key}`}
+                                    checked={seedreamArkCanonicalConfig.keepOptions?.[key as keyof typeof seedreamArkCanonicalConfig.keepOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setSeedreamArkCanonicalConfig((prev: CanonicalPromptConfig) => ({
+                                        ...prev,
+                                        keepOptions: {
+                                          ...prev.keepOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`seedream-keep-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Preserve Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Advanced Preservation</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                              {canonicalOptions?.availableOptions?.preserveOptions && Object.entries(canonicalOptions.availableOptions.preserveOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`seedream-preserve-${key}`}
+                                    checked={seedreamArkCanonicalConfig.preserveOptions?.[key as keyof typeof seedreamArkCanonicalConfig.preserveOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setSeedreamArkCanonicalConfig((prev: CanonicalPromptConfig) => ({
+                                        ...prev,
+                                        preserveOptions: {
+                                          ...prev.preserveOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`seedream-preserve-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Combine Options */}
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">Integration Options</Label>
+                            <div className="grid grid-cols-1 gap-3">
+                              {canonicalOptions?.availableOptions?.combineOptions && Object.entries(canonicalOptions.availableOptions.combineOptions).map(([key, option]: [string, any]) => (
+                                <div key={key} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`seedream-combine-${key}`}
+                                    checked={seedreamArkCanonicalConfig.combineOptions?.[key as keyof typeof seedreamArkCanonicalConfig.combineOptions] || false}
+                                    onCheckedChange={(checked) => 
+                                      setSeedreamArkCanonicalConfig((prev: CanonicalPromptConfig) => ({
+                                        ...prev,
+                                        combineOptions: {
+                                          ...prev.combineOptions,
+                                          [key]: checked
+                                        }
+                                      }))
+                                    }
+                                  />
+                                  <Label htmlFor={`seedream-combine-${key}`} className="text-sm">{option.label}</Label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Apply Button */}
+                          <div className="pt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={generateSeedreamArkCanonicalPreview}
+                              disabled={isGeneratingSeedreamArkCanonicalPreview || !seedreamArkPrompt.trim()}
+                              className="w-full"
+                            >
+                              {isGeneratingSeedreamArkCanonicalPreview ? (
+                                <>
+                                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                  Generating Preview...
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="mr-2 h-3 w-3" />
+                                  Apply & Generate Preview
+                                </>
+                              )}
+                            </Button>
+                          </div>
+
+                          {/* Preview */}
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                              ✨ Enhanced Prompt Preview
+                            </Label>
+                            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                              {seedreamArkCanonicalPreview ? (
+                                <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                                  {seedreamArkCanonicalPreview}
+                                </p>
+                              ) : (
+                                <p className="text-sm text-emerald-600 dark:text-emerald-400 italic">
+                                  Click "Apply & Generate Preview" to see the enhanced prompt
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Submit Button */}
@@ -3657,6 +3994,235 @@ export default function ImageEditor() {
                       <div className="text-center text-muted-foreground">
                         <Sparkles className="h-12 w-12 mx-auto mb-2" />
                         <p>No images generated yet</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Seedream Single Edit Tab */}
+          <TabsContent value="seedream-single-edit" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit className="h-5 w-5" />
+                    Seedream Single Image Edit
+                  </CardTitle>
+                  <CardDescription>
+                    Edit a single image using Seedream-v4 from fal.ai platform
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleSeedreamSingleSubmit} className="space-y-4">
+                    {/* Image Upload Section */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Upload Image</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleSeedreamSingleImageUpload}
+                          className="cursor-pointer"
+                        />
+                        {seedreamSingleImage && (
+                          <div className="flex items-center justify-between p-2 border rounded">
+                            <span className="text-sm truncate">{seedreamSingleImage.name}</span>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={removeSeedreamSingleImage}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Image URL Section */}
+                      <div className="space-y-2">
+                        <Label>Or use Image URL</Label>
+                        <Input
+                          placeholder="https://example.com/image.jpg"
+                          value={seedreamSingleImageUrl}
+                          onChange={(e) => setSeedreamSingleImageUrl(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Prompt Section */}
+                    <div className="space-y-2">
+                      <Label htmlFor="seedream-single-prompt">Edit Prompt</Label>
+                      <Textarea
+                        id="seedream-single-prompt"
+                        placeholder="Describe how you want to edit the image..."
+                        value={localSeedreamSinglePrompt}
+                        onChange={(e) => {
+                          setLocalSeedreamSinglePrompt(e.target.value)
+                          setSeedreamSinglePrompt(e.target.value)
+                        }}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    {/* Basic Settings */}
+                    <div className="space-y-4 p-4 border rounded-lg">
+                      <Label className="text-sm font-semibold">Basic Settings</Label>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Aspect Ratio</Label>
+                          <Select
+                            value={seedreamSingleSettings.aspect_ratio}
+                            onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4") => 
+                              setSeedreamSingleSettings(prev => ({ ...prev, aspect_ratio: value }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1:1">Square (1:1)</SelectItem>
+                              <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                              <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                              <SelectItem value="4:3">Landscape (4:3)</SelectItem>
+                              <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Number of Images</Label>
+                          <Select
+                            value={seedreamSingleSettings.num_images.toString()}
+                            onValueChange={(value) => 
+                              setSeedreamSingleSettings(prev => ({ ...prev, num_images: parseInt(value) }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 Image</SelectItem>
+                              <SelectItem value="2">2 Images</SelectItem>
+                              <SelectItem value="3">3 Images</SelectItem>
+                              <SelectItem value="4">4 Images</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            id="seedream-single-safety"
+                            checked={seedreamSingleSettings.enable_safety_checker}
+                            onCheckedChange={(checked) => 
+                              setSeedreamSingleSettings(prev => ({ ...prev, enable_safety_checker: checked }))
+                            }
+                          />
+                          <div className="flex flex-col">
+                            <Label htmlFor="seedream-single-safety" className="text-sm font-medium">
+                              Safety Checker
+                            </Label>
+                            <span className="text-xs text-muted-foreground">
+                              {seedreamSingleSettings.enable_safety_checker 
+                                ? "Content filtering is enabled" 
+                                : "Content filtering is disabled"
+                              }
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          seedreamSingleSettings.enable_safety_checker 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        }`}>
+                          {seedreamSingleSettings.enable_safety_checker ? 'ON' : 'OFF'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Note about limited parameters */}
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Note:</strong> This endpoint uses simplified settings. Advanced parameters like strength, guidance scale, and negative prompts are not currently supported by the Seedream v4 edit model.
+                      </p>
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isSeedreamSingleGenerating || (!seedreamSingleImage && !seedreamSingleImageUrl.trim()) || !seedreamSinglePrompt.trim()}
+                    >
+                      {isSeedreamSingleGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Editing Image...
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Image
+                        </>
+                      )}
+                    </Button>
+
+                    {seedreamSingleError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{seedreamSingleError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Edited Images</CardTitle>
+                  <CardDescription>
+                    Images edited using Seedream-v4
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {seedreamSingleResult.length > 0 ? (
+                    <div className="space-y-4">
+                      {seedreamSingleResult.map((image, index) => (
+                        <div key={index} className="space-y-2">
+                          <img 
+                            src={image.url} 
+                            alt={`Seedream Edited Image ${index + 1}`}
+                            className="w-full rounded-lg border"
+                          />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              {image.width} x {image.height}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(image.url, '_blank')}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <Edit className="h-12 w-12 mx-auto mb-2" />
+                        <p>No images edited yet</p>
                       </div>
                     </div>
                   )}
@@ -4330,7 +4896,8 @@ export default function ImageEditor() {
             </div>
           </TabsContent>
 
-          {/* Edit Image Tab */}
+          {/* Edit Image Tab - HIDDEN (Qwen model) */}
+          {false && (
           <TabsContent value="edit-image" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Upload and Form Section */}
@@ -4699,6 +5266,7 @@ export default function ImageEditor() {
               </Card>
             )}
           </TabsContent>
+          )}
 
           {/* Branding Configuration Tab */}
           <TabsContent value="upload-branding" className="space-y-6" style={{ display: 'none' }}>

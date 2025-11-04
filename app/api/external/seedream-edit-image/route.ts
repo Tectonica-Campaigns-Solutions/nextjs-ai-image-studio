@@ -3,29 +3,36 @@ import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 
 /**
- * POST /api/external/seedream-v4-edit
+ * POST /api/external/seedream-edit-image
  * 
- * External API endpoint for SeDream v4 image style transfer.
- * This endpoint replicates the functionality of the main app's SeDream v4 feature
- * but without requiring authentication and with simplified parameters.
+ * External API endpoint for SeDream v4 image editing with custom prompts.
+ * This endpoint allows users to modify images using text prompts combined with
+ * pre-configured enhancement text for style guidance.
  * 
  * Body parameters (multipart/form-data):
- * - image (required): Image file to transform (PNG, JPG, JPEG, WEBP)
+ * - image (required): Image file to edit (PNG, JPG, JPEG, WEBP)
+ * - prompt (required): Text description of desired modifications
  * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
- *   Note: aspect_ratio is mapped to image_size parameter for the SeDream model
  * 
- * The endpoint automatically uses:
- * - A pre-configured style prompt from sedream_enhancement_text configuration
- * - A reference image for style transfer: https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg
+ * The endpoint automatically:
+ * - Combines user prompt with sedream_enhancement_text configuration
+ * - Uses a reference image for style transfer: https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg
+ * - Applies content moderation and safety checks
  * 
  * Response format:
- * Success: { success: true, images: [{ url: string, width: number, height: number }], prompt: string }
+ * Success: { 
+ *   success: true, 
+ *   images: [{ url: string, width: number, height: number }], 
+ *   prompt: string,
+ *   negativePrompt: string,
+ *   safetyProtections: {...}
+ * }
  * Error: { success: false, error: string, details?: string }
  */
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("[External SeDream v4] Processing request...")
+    console.log("[External SeDream Edit] Processing request...")
     
     // Check if Fal.ai API key is available
     const falApiKey = process.env.FAL_API_KEY
@@ -36,7 +43,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
     
-    console.log("[External SeDream v4] Fal API Key exists:", !!falApiKey)
+    console.log("[External SeDream Edit] Fal API Key exists:", !!falApiKey)
     
     // Configure fal.ai client with API key
     fal.config({
@@ -45,23 +52,15 @@ export async function POST(request: NextRequest) {
     
     const formData = await request.formData()
     
-    // Extract and validate required parameters
+    // Extract and validate parameters
     const image = formData.get('image') as File
+    const prompt = (formData.get('prompt') as string) || ''
     const aspectRatio = (formData.get('aspect_ratio') as string) || '1:1'
     
-    // Validate aspect_ratio parameter
-    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4']
-    if (!validAspectRatios.includes(aspectRatio)) {
-      return NextResponse.json({ 
-        success: false,
-        error: "Invalid aspect_ratio parameter",
-        details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
-      }, { status: 400 })
-    }
-    
-    console.log("[External SeDream v4] Request parameters:", {
+    console.log("[External SeDream Edit] Request parameters:", {
       hasImage: !!image,
       imageSize: image ? `${image.size} bytes` : "N/A",
+      prompt: prompt || "(empty)",
       aspectRatio
     })
 
@@ -70,56 +69,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: false,
         error: "Missing required 'image' parameter",
-        details: "An image file is required for SeDream v4 style transfer"
+        details: "An image file is required for SeDream v4 editing"
       }, { status: 400 })
     }
 
-    // Load the configured SeDream enhancement text
-    let finalPrompt: string
-    try {
-      const { getSedreamEnhancementText } = await import("@/lib/json-enhancement")
-      const configuredPrompt = await getSedreamEnhancementText()
-      
-      if (!configuredPrompt || !configuredPrompt.trim()) {
-        console.error("[External SeDream v4] No sedream_enhancement_text configured")
-        return NextResponse.json({ 
-          success: false,
-          error: "Configuration error",
-          details: "No SeDream enhancement text configured"
-        }, { status: 500 })
-      }
-      
-      finalPrompt = configuredPrompt.trim()
-      console.log("[External SeDream v4] Using configured prompt:", finalPrompt.substring(0, 100) + "...")
-    } catch (configError) {
-      console.error("[External SeDream v4] Config load error:", configError)
+    if (!prompt || !prompt.trim()) {
       return NextResponse.json({ 
         success: false,
-        error: "Configuration error",
-        details: "Failed to load SeDream enhancement configuration"
-      }, { status: 500 })
+        error: "Missing required 'prompt' parameter",
+        details: "A text prompt is required to describe the desired image modifications"
+      }, { status: 400 })
     }
 
-    // Content moderation check
-    try {
-      console.log("[MODERATION] Checking content for External SeDream v4 prompt:", finalPrompt.substring(0, 50) + "...")
-      const moderationService = new ContentModerationService("general")
-      const moderationResult = await moderationService.moderateContent({ prompt: finalPrompt })
-      
-      if (!moderationResult.safe) {
-        console.log("[MODERATION] Content blocked:", moderationResult.reason)
-        return NextResponse.json({
-          success: false,
-          error: moderationResult.reason,
-          category: moderationResult.category,
-          blocked: true,
-          moderation: true
-        }, { status: 400 })
-      }
-      console.log("[MODERATION] Content approved")
-    } catch (moderationError) {
-      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
-      // Continue with generation if moderation fails to avoid blocking users
+    // Validate aspect_ratio parameter
+    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4']
+    if (!validAspectRatios.includes(aspectRatio)) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Invalid aspect_ratio parameter",
+        details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
+      }, { status: 400 })
     }
 
     // Validate file type
@@ -142,7 +111,31 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    console.log("[External SeDream v4] Final prompt:", finalPrompt)
+    // Use the user's prompt directly without modification
+    const finalPrompt = prompt.trim()
+    console.log("[External SeDream Edit] Using user prompt directly:", finalPrompt.substring(0, 100) + "...")
+
+    // Content moderation check
+    try {
+      console.log("[MODERATION] Checking content for External SeDream Edit prompt:", finalPrompt.substring(0, 50) + "...")
+      const moderationService = new ContentModerationService("general")
+      const moderationResult = await moderationService.moderateContent({ prompt: finalPrompt })
+      
+      if (!moderationResult.safe) {
+        console.log("[MODERATION] Content blocked:", moderationResult.reason)
+        return NextResponse.json({
+          success: false,
+          error: moderationResult.reason,
+          category: moderationResult.category,
+          blocked: true,
+          moderation: true
+        }, { status: 400 })
+      }
+      console.log("[MODERATION] Content approved")
+    } catch (moderationError) {
+      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+      // Continue with generation if moderation fails to avoid blocking users
+    }
 
     // Load negative prompts from configuration
     let negativePrompts: string[] = []
@@ -162,34 +155,34 @@ export async function POST(request: NextRequest) {
       ]
       
       negativePrompts = allNegatives
-      console.log("[External SeDream v4] Loaded negative prompts:", negativePrompts.length, "terms")
-      console.log("[External SeDream v4] NSFW protection terms:", config.enforced_negatives_nsfw?.length || 0)
-      console.log("[External SeDream v4] Age bias protection terms:", config.enforced_negatives_age?.length || 0)
-      console.log("[External SeDream v4] Human integrity protection terms:", config.enforced_negatives_human_integrity?.length || 0)
+      console.log("[External SeDream Edit] Loaded negative prompts:", negativePrompts.length, "terms")
+      console.log("[External SeDream Edit] NSFW protection terms:", config.enforced_negatives_nsfw?.length || 0)
+      console.log("[External SeDream Edit] Age bias protection terms:", config.enforced_negatives_age?.length || 0)
+      console.log("[External SeDream Edit] Human integrity protection terms:", config.enforced_negatives_human_integrity?.length || 0)
       
     } catch (error) {
-      console.warn("[External SeDream v4] Could not load negative prompts from config:", error)
+      console.warn("[External SeDream Edit] Could not load negative prompts from config:", error)
       // Fallback to basic safety terms if config fails
       negativePrompts = [
         "naked", "nude", "sexual", "revealing", "inappropriate", "nsfw", "explicit",
         "younger", "child-like", "age regression", "juvenile appearance",
         "unrealistic proportions", "sexualized", "distorted anatomy"
       ]
-      console.log("[External SeDream v4] Using fallback negative prompts:", negativePrompts.length, "terms")
+      console.log("[External SeDream Edit] Using fallback negative prompts:", negativePrompts.length, "terms")
     }
 
-    // Upload image to fal.ai storage first
-    console.log("[External SeDream v4] Uploading image to fal.ai storage...")
+    // Upload image to fal.ai storage
+    console.log("[External SeDream Edit] Uploading image to fal.ai storage...")
     
     try {
       // Upload the image and get URL
       const imageUrl = await fal.storage.upload(image)
-      console.log("[External SeDream v4] Image uploaded successfully:", imageUrl)
+      console.log("[External SeDream Edit] Image uploaded successfully:", imageUrl)
 
       // Reference image URL (fixed, invisible to user)
       const referenceImageUrl = "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg"
 
-      console.log("[External SeDream v4] Calling fal.ai API...")
+      console.log("[External SeDream Edit] Calling fal.ai API...")
 
       // Calculate image_size from aspect ratio selection
       let imageSize: string | { width: number; height: number }
@@ -213,7 +206,7 @@ export async function POST(request: NextRequest) {
           break
       }
 
-      // Prepare input for SeDream v4 Edit (uses image_urls array, not single image)
+      // Prepare input for SeDream v4 Edit (uses image_urls array)
       const negativePromptString = negativePrompts.join(", ")
       const input = {
         prompt: finalPrompt,
@@ -224,7 +217,7 @@ export async function POST(request: NextRequest) {
         image_size: imageSize
       }
 
-      console.log("[External SeDream v4] API Input:", {
+      console.log("[External SeDream Edit] API Input:", {
         prompt: input.prompt,
         negativePrompt: `${negativePromptString.substring(0, 100)}...`,
         negativePromptTerms: negativePrompts.length,
@@ -240,12 +233,12 @@ export async function POST(request: NextRequest) {
         logs: true,
         onQueueUpdate: (update) => {
           if (update.status === "IN_PROGRESS") {
-            console.log("[External SeDream v4] Progress:", update.logs?.map(log => log.message).join(" ") || "Processing...")
+            console.log("[External SeDream Edit] Progress:", update.logs?.map(log => log.message).join(" ") || "Processing...")
           }
         }
       })
 
-      console.log("[External SeDream v4] API Response:", {
+      console.log("[External SeDream Edit] API Response:", {
         hasData: !!result.data,
         hasImages: !!result.data?.images,
         imageCount: result.data?.images?.length || 0
@@ -253,7 +246,7 @@ export async function POST(request: NextRequest) {
 
       // Validate response
       if (!result.data || !result.data.images || !Array.isArray(result.data.images) || result.data.images.length === 0) {
-        console.error("[External SeDream v4] Invalid response format:", result)
+        console.error("[External SeDream Edit] Invalid response format:", result)
         return NextResponse.json({ 
           success: false,
           error: "Invalid response from SeDream API",
@@ -261,7 +254,7 @@ export async function POST(request: NextRequest) {
         }, { status: 500 })
       }
 
-      console.log("[External SeDream v4] Successfully processed with SeDream v4")
+      console.log("[External SeDream Edit] Successfully processed with SeDream v4")
       
       // Return the result in external API format
       return NextResponse.json({
@@ -280,16 +273,16 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (uploadError) {
-      console.error("[External SeDream v4] Upload error:", uploadError)
+      console.error("[External SeDream Edit] Upload/processing error:", uploadError)
       return NextResponse.json({
         success: false,
-        error: "Failed to upload image",
-        details: uploadError instanceof Error ? uploadError.message : "Unknown upload error"
+        error: "Failed to process image",
+        details: uploadError instanceof Error ? uploadError.message : "Unknown error"
       }, { status: 500 })
     }
 
   } catch (error: any) {
-    console.error("[External SeDream v4] API Error:", error)
+    console.error("[External SeDream Edit] API Error:", error)
     
     // Handle specific fal.ai errors
     if (error.message?.includes('ValidationError')) {
@@ -319,30 +312,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: false,
       error: "Internal server error",
-      details: error.message || "Failed to process SeDream v4 edit request"
+      details: error.message || "Failed to process SeDream edit request"
     }, { status: 500 })
   }
 }
 
 /**
- * GET /api/external/seedream-v4-edit
+ * GET /api/external/seedream-edit-image
  * 
  * Returns API documentation and usage information
  */
 export async function GET() {
   return NextResponse.json({
-    name: "SeDream v4 Style Transfer API",
-    description: "Transform images with AI-powered style transfer using SeDream v4",
+    name: "SeDream v4 Image Editing API",
+    description: "Edit and modify images using text prompts with AI-powered style transfer",
     version: "1.0.0",
-    endpoint: "/api/external/seedream-v4-edit",
+    endpoint: "/api/external/seedream-edit-image",
     method: "POST",
     contentType: "multipart/form-data",
     parameters: {
       image: {
         type: "file",
         required: true,
-        description: "Image file to transform (PNG, JPG, JPEG, WEBP)",
+        description: "Image file to edit (PNG, JPG, JPEG, WEBP)",
         maxSize: "10MB"
+      },
+      prompt: {
+        type: "string",
+        required: true,
+        description: "Text description of desired image modifications (used directly without enhancement text)",
+        example: "add vibrant colors and dynamic lighting"
       },
       aspect_ratio: {
         type: "string",
@@ -357,12 +356,12 @@ export async function GET() {
         success: true,
         images: [
           {
-            url: "https://example.com/generated-image.png",
+            url: "https://example.com/edited-image.png",
             width: 1280,
             height: 1280
           }
         ],
-        prompt: "Final prompt used for generation",
+        prompt: "Final combined prompt used for editing",
         negativePrompt: "Combined negative prompts for safety",
         safetyProtections: {
           negativeTermsApplied: 70,
@@ -383,23 +382,44 @@ export async function GET() {
       }
     },
     examples: {
-      curl: `curl -X POST https://your-domain.com/api/external/seedream-v4-edit \\
+      curl: `curl -X POST https://your-domain.com/api/external/seedream-edit-image \\
   -F "image=@/path/to/your/image.jpg" \\
-  -F "aspect_ratio=16:9"`
+  -F "prompt=add vibrant colors and dynamic lighting" \\
+  -F "aspect_ratio=16:9"`,
+      javascript: `const formData = new FormData();
+formData.append('image', imageFile);
+formData.append('prompt', 'add vibrant colors and dynamic lighting');
+formData.append('aspect_ratio', '16:9');
+
+const response = await fetch('https://your-domain.com/api/external/seedream-edit-image', {
+  method: 'POST',
+  body: formData
+});
+
+const result = await response.json();
+if (result.success) {
+  console.log('Edited image URL:', result.images[0].url);
+}`
     },
     notes: [
-      "Uses a pre-configured style prompt from sedream_enhancement_text configuration",
-      "A reference image is automatically used for style transfer",
-      "The transformation preserves the main subject while applying the configured style",
-      "Processing time varies based on image complexity and server load",
-      "No prompt input required - the style is automatically applied",
+      "The user's prompt is used directly without any modifications or enhancements",
+      "Full control over the prompt allows for precise image editing instructions",
+      "A reference image is automatically used for consistent style transfer",
+      "The editing preserves the main subject while applying the requested modifications",
+      "Processing time varies based on image complexity and server load (typically 10-30 seconds)",
       "Advanced safety protections automatically applied:",
       "  • Unified content moderation with ContentModerationService",
       "  • NSFW content prevention with 25+ negative terms",
       "  • Age bias prevention to avoid inappropriate age modifications",
       "  • Human integrity protection to maintain realistic proportions",
-      "  • Built-in content moderation and safety checker",
+      "  • Built-in safety checker enabled for all generations",
       "Multiple layers of protection ensure ethical and appropriate results"
+    ],
+    differenceFromStyleTransfer: [
+      "This endpoint (/seedream-edit-image) allows custom prompts for specific modifications",
+      "The style transfer endpoint (/seedream-v4-edit) uses only pre-configured style prompts",
+      "Use this endpoint when you want to describe specific changes to make",
+      "Use the style transfer endpoint when you want to apply a consistent pre-defined style"
     ]
   })
 }
