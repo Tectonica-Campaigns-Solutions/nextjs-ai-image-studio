@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
     // Extract multiple image files
     const imageFiles: File[] = []
     const imageUrls: string[] = []
+    const base64Images: string[] = []
     
     // Get all files with 'image' prefix from form data
     for (const [key, value] of formData.entries()) {
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest) {
       } else if (key.startsWith('imageUrl') && typeof value === 'string' && value.trim()) {
         imageUrls.push(value.trim())
         console.log(`[FLUX-COMBINE] Found image URL: ${key}, url: ${value}`)
+      } else if (key.startsWith('imageBase64') && typeof value === 'string' && value.trim()) {
+        base64Images.push(value.trim())
+        console.log(`[FLUX-COMBINE] Found base64 image: ${key}, length: ${value.length}`)
       }
     }
 
@@ -63,18 +67,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 })
     }
 
-    if (imageFiles.length === 0 && imageUrls.length === 0) {
+    if (imageFiles.length === 0 && imageUrls.length === 0 && base64Images.length === 0) {
       return NextResponse.json({ 
         error: "At least one image is required for combination" 
       }, { status: 400 })
     }
 
     // Validate exactly 2 images for enhanced pipeline
-    const totalImages = imageFiles.length + imageUrls.length
+    const totalImages = imageFiles.length + imageUrls.length + base64Images.length
     if (totalImages !== 2) {
       return NextResponse.json({ 
         error: "Enhanced pipeline requires exactly 2 images",
-        details: `Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
+        details: `Found ${imageFiles.length} files, ${imageUrls.length} URLs, and ${base64Images.length} base64 images (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
       }, { status: 400 })
     }
 
@@ -82,7 +86,8 @@ export async function POST(request: NextRequest) {
     console.log("[FLUX-COMBINE] Original prompt:", prompt)
     console.log("[FLUX-COMBINE] Image files count:", imageFiles.length)
     console.log("[FLUX-COMBINE] Image URLs count:", imageUrls.length)
-    console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length)
+    console.log("[FLUX-COMBINE] Base64 images count:", base64Images.length)
+    console.log("[FLUX-COMBINE] Total images:", imageFiles.length + imageUrls.length + base64Images.length)
     console.log("[FLUX-COMBINE] Use JSON Enhancement:", useJSONEnhancement)
     console.log("[FLUX-COMBINE] Use Canonical Prompt:", useCanonicalPrompt)
     console.log("[FLUX-COMBINE] JSON Options:", defaultJsonOptions)
@@ -188,6 +193,78 @@ export async function POST(request: NextRequest) {
     // ENHANCED PIPELINE IMPLEMENTATION
     // First, collect all image URLs (from direct URLs and uploads)
     const allImageUrls: string[] = [...imageUrls]
+    
+    // Process base64 images - convert to File and upload
+    if (base64Images.length > 0) {
+      console.log("[FLUX-COMBINE] Processing base64 images...")
+      for (let i = 0; i < base64Images.length; i++) {
+        const base64Data = base64Images[i]
+        try {
+          console.log(`[FLUX-COMBINE] Processing base64 image ${i + 1}/${base64Images.length}`)
+          
+          // Extract base64 data and mime type
+          let base64String = base64Data
+          let mimeType = 'image/jpeg' // default
+          
+          // Check if it has data URL prefix (data:image/jpeg;base64,...)
+          if (base64Data.startsWith('data:')) {
+            const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/)
+            if (matches) {
+              mimeType = matches[1]
+              base64String = matches[2]
+              console.log(`[FLUX-COMBINE] Detected MIME type from data URL: ${mimeType}`)
+            } else {
+              console.warn(`[FLUX-COMBINE] Invalid data URL format, using raw data`)
+              // Try to extract base64 part after comma
+              const commaIndex = base64Data.indexOf(',')
+              if (commaIndex !== -1) {
+                base64String = base64Data.substring(commaIndex + 1)
+              }
+            }
+          }
+          
+          // Validate base64 format
+          if (!/^[A-Za-z0-9+/=]+$/.test(base64String)) {
+            throw new Error(`Invalid base64 format for image ${i + 1}`)
+          }
+          
+          // Convert base64 to buffer
+          const imageBuffer = Buffer.from(base64String, 'base64')
+          
+          // Validate buffer size
+          if (imageBuffer.length === 0) {
+            throw new Error(`Empty image buffer for base64 image ${i + 1}`)
+          }
+          
+          // Check size limit (10MB)
+          const maxSize = 10 * 1024 * 1024
+          if (imageBuffer.length > maxSize) {
+            throw new Error(`Base64 image ${i + 1} is too large: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB (max: 10MB)`)
+          }
+          
+          console.log(`[FLUX-COMBINE] Base64 image ${i + 1} size: ${(imageBuffer.length / 1024).toFixed(2)}KB`)
+          
+          // Convert to Blob
+          const blob = new Blob([imageBuffer], { type: mimeType })
+          
+          // Convert to File
+          const file = new File([blob], `base64-image-${i + 1}.${mimeType.split('/')[1] || 'jpg'}`, { type: mimeType })
+          
+          // Upload to fal.ai storage
+          console.log(`[FLUX-COMBINE] Uploading base64 image ${i + 1} to fal.ai storage...`)
+          const uploadedUrl = await fal.storage.upload(file)
+          allImageUrls.push(uploadedUrl)
+          console.log(`[FLUX-COMBINE] Base64 image ${i + 1} uploaded successfully: ${uploadedUrl}`)
+          
+        } catch (base64Error) {
+          console.error(`[FLUX-COMBINE] Failed to process base64 image ${i + 1}:`, base64Error)
+          return NextResponse.json({ 
+            error: `Failed to process base64 image ${i + 1}`,
+            details: base64Error instanceof Error ? base64Error.message : 'Unknown error'
+          }, { status: 400 })
+        }
+      }
+    }
     
     if (imageFiles.length > 0) {
       console.log("[FLUX-COMBINE] Uploading image files to fal.ai storage...")
