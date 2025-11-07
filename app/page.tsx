@@ -485,6 +485,8 @@ export default function ImageEditor() {
   const [localFluxCombinePrompt, setLocalFluxCombinePrompt] = useState("") // Local state for input performance
   const [fluxCombineImages, setFluxCombineImages] = useState<File[]>([])
   const [fluxCombineImageUrls, setFluxCombineImageUrls] = useState<string[]>([])
+  const [fluxCombineBase64Images, setFluxCombineBase64Images] = useState<string[]>([])
+  const [fluxCombineBase64Input, setFluxCombineBase64Input] = useState("")
   const [fluxCombineSettings, setFluxCombineSettings] = useState({
     aspect_ratio: "1:1",
     guidance_scale: 3.5,
@@ -550,6 +552,8 @@ export default function ImageEditor() {
   const [externalFluxCombinePrompt, setExternalFluxCombinePrompt] = useState("")
   const [externalFluxCombineImages, setExternalFluxCombineImages] = useState<File[]>([])
   const [externalFluxCombineImageUrls, setExternalFluxCombineImageUrls] = useState<string[]>([])
+  const [externalFluxCombineBase64Images, setExternalFluxCombineBase64Images] = useState<string[]>([])
+  const [externalFluxCombineBase64Input, setExternalFluxCombineBase64Input] = useState("")
   const [externalFluxCombineSettings, setExternalFluxCombineSettings] = useState({
     aspect_ratio: "1:1",
     guidance_scale: 3.5,
@@ -1375,7 +1379,7 @@ export default function ImageEditor() {
       return
     }
 
-    if (fluxCombineImages.length + fluxCombineImageUrls.length < 2) {
+    if (fluxCombineImages.length + fluxCombineImageUrls.length + fluxCombineBase64Images.length < 2) {
       setFluxCombineError("Please upload at least 2 images to combine")
       return
     }
@@ -1410,6 +1414,11 @@ export default function ImageEditor() {
         if (url.trim()) {
           formData.append(`imageUrl${index}`, url.trim())
         }
+      })
+
+      // Add Base64 images
+      fluxCombineBase64Images.forEach((base64, index) => {
+        formData.append(`imageBase64${index}`, base64)
       })
       
       // Prepare settings object
@@ -1479,7 +1488,7 @@ export default function ImageEditor() {
       return
     }
 
-    if (externalFluxCombineImages.length + externalFluxCombineImageUrls.length < 2) {
+    if (externalFluxCombineImages.length + externalFluxCombineImageUrls.length + externalFluxCombineBase64Images.length < 2) {
       setExternalFluxCombineError("Please upload at least 2 images to combine")
       return
     }
@@ -1488,32 +1497,6 @@ export default function ImageEditor() {
     setExternalFluxCombineError("")
 
     try {
-      // Prepare form data for external endpoint
-      const formData = new FormData()
-      
-      formData.append("prompt", externalFluxCombinePrompt)
-      
-      // Add canonical prompt configuration (enabled by default for external)
-      formData.append("useCanonicalPrompt", externalUseCanonicalPrompt.toString())
-      if (externalUseCanonicalPrompt) {
-        formData.append("canonicalConfig", JSON.stringify(canonicalConfig))
-      }
-      
-      // Add JSON enhancement configuration (disabled by default for external)
-      formData.append("useJSONEnhancement", externalUseJSONEnhancement.toString())
-      
-      // Add uploaded image files
-      externalFluxCombineImages.forEach((file, index) => {
-        formData.append(`image${index}`, file)
-      })
-      
-      // Add image URLs
-      externalFluxCombineImageUrls.forEach((url, index) => {
-        if (url.trim()) {
-          formData.append(`imageUrl${index}`, url.trim())
-        }
-      })
-      
       // Prepare settings object
       const settings: any = { ...externalFluxCombineSettings }
       
@@ -1529,13 +1512,83 @@ export default function ImageEditor() {
       
       console.log("[FRONTEND] External combine settings being sent:", settings)
       
-      formData.append("settings", JSON.stringify(settings))
+      // Check if we have large Base64 images (>900KB to be safe, limit is 1MB)
+      const hasLargeBase64 = externalFluxCombineBase64Images.some(b64 => b64.length > 900000)
+      const hasOnlyBase64AndUrls = externalFluxCombineImages.length === 0
+      
+      let response: Response
+      
+      // Use JSON if we have large Base64 images and no file uploads
+      if (hasLargeBase64 && hasOnlyBase64AndUrls) {
+        console.log("[FRONTEND] Using JSON method for large Base64 images (>900KB)")
+        
+        const jsonBody: any = {
+          prompt: externalFluxCombinePrompt,
+          useCanonicalPrompt: externalUseCanonicalPrompt,
+          canonicalConfig: externalUseCanonicalPrompt ? canonicalConfig : {},
+          useJSONEnhancement: externalUseJSONEnhancement,
+          settings: settings
+        }
+        
+        // Add image URLs
+        externalFluxCombineImageUrls.forEach((url, index) => {
+          if (url.trim()) {
+            jsonBody.imageUrls = jsonBody.imageUrls || []
+            jsonBody.imageUrls.push(url.trim())
+          }
+        })
+        
+        // Add Base64 images
+        externalFluxCombineBase64Images.forEach((base64, index) => {
+          jsonBody[`imageBase64${index}`] = base64
+        })
+        
+        response = await fetch("/api/external/flux-pro-image-combine", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(jsonBody)
+        })
+        
+      } else {
+        // Use FormData for file uploads or small Base64
+        console.log("[FRONTEND] Using FormData method")
+        
+        const formData = new FormData()
+        
+        formData.append("prompt", externalFluxCombinePrompt)
+        formData.append("useCanonicalPrompt", externalUseCanonicalPrompt.toString())
+        
+        if (externalUseCanonicalPrompt) {
+          formData.append("canonicalConfig", JSON.stringify(canonicalConfig))
+        }
+        
+        formData.append("useJSONEnhancement", externalUseJSONEnhancement.toString())
+        formData.append("settings", JSON.stringify(settings))
+        
+        // Add uploaded image files
+        externalFluxCombineImages.forEach((file, index) => {
+          formData.append(`image${index}`, file)
+        })
+        
+        // Add image URLs
+        externalFluxCombineImageUrls.forEach((url, index) => {
+          if (url.trim()) {
+            formData.append(`imageUrl${index}`, url.trim())
+          }
+        })
 
-      // Call external endpoint
-      const response = await fetch("/api/external/flux-pro-image-combine", {
-        method: "POST",
-        body: formData,
-      })
+        // Add Base64 images
+        externalFluxCombineBase64Images.forEach((base64, index) => {
+          formData.append(`imageBase64${index}`, base64)
+        })
+        
+        response = await fetch("/api/external/flux-pro-image-combine", {
+          method: "POST",
+          body: formData,
+        })
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
@@ -1590,6 +1643,27 @@ export default function ImageEditor() {
 
   const removeCombineImageUrl = (index: number) => {
     setFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addCombineBase64Image = () => {
+    const trimmed = fluxCombineBase64Input.trim()
+    if (!trimmed) return
+
+    // Validate base64 format
+    const isDataUrl = trimmed.startsWith('data:')
+    const base64Part = isDataUrl ? trimmed.split(',')[1] || '' : trimmed
+    const isBase64 = /^[A-Za-z0-9+/=]+$/.test(base64Part)
+    
+    if (isDataUrl || isBase64) {
+      setFluxCombineBase64Images(prev => [...prev, trimmed])
+      setFluxCombineBase64Input("")
+    } else {
+      alert("Invalid Base64 format. Please paste a valid Base64 string or data URL.")
+    }
+  }
+
+  const removeCombineBase64Image = (index: number) => {
+    setFluxCombineBase64Images(prev => prev.filter((_, i) => i !== index))
   }
 
   // Seedream Ark Combine handlers
@@ -1815,6 +1889,27 @@ export default function ImageEditor() {
 
   const removeExternalCombineImageUrl = (index: number) => {
     setExternalFluxCombineImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addExternalCombineBase64Image = () => {
+    const trimmed = externalFluxCombineBase64Input.trim()
+    if (!trimmed) return
+
+    // Validate base64 format
+    const isDataUrl = trimmed.startsWith('data:')
+    const base64Part = isDataUrl ? trimmed.split(',')[1] || '' : trimmed
+    const isBase64 = /^[A-Za-z0-9+/=]+$/.test(base64Part)
+    
+    if (isDataUrl || isBase64) {
+      setExternalFluxCombineBase64Images(prev => [...prev, trimmed])
+      setExternalFluxCombineBase64Input("")
+    } else {
+      alert("Invalid Base64 format. Please paste a valid Base64 string or data URL.")
+    }
+  }
+
+  const removeExternalCombineBase64Image = (index: number) => {
+    setExternalFluxCombineBase64Images(prev => prev.filter((_, i) => i !== index))
   }
 
   // External Flux Ultra helper functions
@@ -3017,7 +3112,66 @@ export default function ImageEditor() {
                       </div>
 
                       <div className="text-sm text-muted-foreground">
-                        Total images: {fluxCombineImages.length + fluxCombineImageUrls.filter(url => url.trim()).length}
+                        Total images: {fluxCombineImages.length + fluxCombineImageUrls.filter(url => url.trim()).length + fluxCombineBase64Images.length}
+                      </div>
+
+                      {/* Base64 Images Section */}
+                      <div className="space-y-2">
+                        <Label>Or Add Base64 Images</Label>
+                        <div className="flex gap-2">
+                          <Textarea
+                            placeholder="Paste Base64 string or data URL (e.g., data:image/jpeg;base64,/9j/4AAQ...)"
+                            value={fluxCombineBase64Input}
+                            onChange={(e) => setFluxCombineBase64Input(e.target.value)}
+                            className="min-h-[80px] font-mono text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addCombineBase64Image}
+                            disabled={!fluxCombineBase64Input.trim()}
+                            className="self-start"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                        {fluxCombineBase64Images.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-sm text-muted-foreground">
+                              {fluxCombineBase64Images.length} Base64 image(s) added
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {fluxCombineBase64Images.map((base64, index) => {
+                                // Convert base64 to displayable format if needed
+                                const displaySrc = base64.startsWith('data:') 
+                                  ? base64 
+                                  : `data:image/jpeg;base64,${base64}`
+                                
+                                return (
+                                  <div key={index} className="relative group">
+                                    <div className="aspect-square overflow-hidden rounded border">
+                                      <img
+                                        src={displaySrc}
+                                        alt={`Base64 ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => removeCombineBase64Image(index)}
+                                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -4312,6 +4466,69 @@ export default function ImageEditor() {
                           Add Image URL
                         </Button>
                       </div>
+
+                      {/* Base64 Images Section */}
+                      <div className="space-y-2">
+                        <Label>Or Add Base64 Images</Label>
+                        <div className="flex gap-2">
+                          <Textarea
+                            placeholder="Paste Base64 string or data URL (e.g., data:image/jpeg;base64,/9j/4AAQ...)"
+                            value={externalFluxCombineBase64Input}
+                            onChange={(e) => setExternalFluxCombineBase64Input(e.target.value)}
+                            className="min-h-[80px] font-mono text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addExternalCombineBase64Image}
+                            disabled={!externalFluxCombineBase64Input.trim()}
+                            className="self-start"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                        {externalFluxCombineBase64Images.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-sm text-muted-foreground">
+                              {externalFluxCombineBase64Images.length} Base64 image(s) added
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {externalFluxCombineBase64Images.map((base64, index) => {
+                                // Convert base64 to displayable format if needed
+                                const displaySrc = base64.startsWith('data:') 
+                                  ? base64 
+                                  : `data:image/jpeg;base64,${base64}`
+                                
+                                return (
+                                  <div key={index} className="relative group">
+                                    <div className="aspect-square overflow-hidden rounded border">
+                                      <img
+                                        src={displaySrc}
+                                        alt={`Base64 ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => removeExternalCombineBase64Image(index)}
+                                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-sm text-muted-foreground">
+                        Total images: {externalFluxCombineImages.length + externalFluxCombineImageUrls.filter(url => url.trim()).length + externalFluxCombineBase64Images.length}
+                      </div>
                     </div>
 
                     {/* Prompt Section */}
@@ -4822,7 +5039,7 @@ export default function ImageEditor() {
                     {/* Submit Button */}
                     <Button
                       type="submit"
-                      disabled={isExternalFluxCombineGenerating || externalFluxCombineImages.length + externalFluxCombineImageUrls.length < 2}
+                      disabled={isExternalFluxCombineGenerating || externalFluxCombineImages.length + externalFluxCombineImageUrls.length + externalFluxCombineBase64Images.length < 2}
                       className="w-full"
                     >
                       {isExternalFluxCombineGenerating ? (

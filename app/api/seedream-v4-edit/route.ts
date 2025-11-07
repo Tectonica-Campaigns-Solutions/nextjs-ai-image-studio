@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
     })
     
     const formData = await request.formData()
-    const image = formData.get("image") as File
+    const image = formData.get("image") as File | null
+    const providedImageUrl = (formData.get("imageUrl") as string) || ""
     const prompt = (formData.get("prompt") as string) || ""
     const useJSONEnhancement = formData.get("useJSONEnhancement") === "true"
     const jsonIntensity = parseFloat(formData.get("jsonIntensity") as string) || 1.0
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[SeDream v4 Edit] Request parameters:", {
       hasImage: !!image,
+      hasImageUrl: !!providedImageUrl,
       prompt: prompt || "(empty)",
       useJSONEnhancement,
       jsonIntensity,
@@ -93,11 +95,11 @@ export async function POST(request: NextRequest) {
       aspectRatio
     })
 
-    // Validate required parameters
-    if (!image) {
+    // Validate required parameters - either image file or imageUrl must be provided
+    if (!image && !providedImageUrl) {
       return NextResponse.json({ 
         error: "Missing required image parameter",
-        details: "An image file is required for SeDream v4 edit"
+        details: "Either an image file or imageUrl is required for SeDream v4 edit"
       }, { status: 400 })
     }
 
@@ -199,12 +201,62 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload image to fal.ai storage first
-    console.log("[SeDream v4 Edit] Uploading image to fal.ai storage...")
-    const imageBuffer = Buffer.from(await image.arrayBuffer())
+    // Get or upload image URL
+    let imageUrl: string
     
-    // Upload the image and get URL
-    const imageUrl = await fal.storage.upload(image)
+    if (providedImageUrl) {
+      // Use provided URL directly (no need to re-upload)
+      console.log("[SeDream v4 Edit] Using provided image URL (skipping upload):", providedImageUrl)
+      imageUrl = providedImageUrl
+    } else if (image) {
+      // Upload image to fal.ai storage
+      console.log("[SeDream v4 Edit] Uploading image to fal.ai storage...")
+      const imageBuffer = Buffer.from(await image.arrayBuffer())
+      console.log(`[SeDream v4 Edit] Image details: ${image.name}, ${image.size} bytes (${(image.size / 1024 / 1024).toFixed(2)} MB), type: ${image.type}`)
+      
+      // Check if image is too large for SeDream (limit: 2MB)
+      const MAX_SIZE_BYTES = 2 * 1024 * 1024 // 2MB
+      let finalImage: File = image
+      
+      if (image.size > MAX_SIZE_BYTES) {
+        console.log(`[SeDream v4 Edit] Image size (${(image.size / 1024 / 1024).toFixed(2)} MB) exceeds 2MB limit, compressing...`)
+        
+        try {
+          // Use sharp to compress the image
+          const sharp = (await import('sharp')).default
+          
+          // Compress to JPEG with 85% quality, resize if needed
+          const compressedBuffer = await sharp(imageBuffer)
+            .resize(2048, 2048, {
+              fit: 'inside',
+              withoutEnlargement: true
+            })
+            .jpeg({ quality: 85 })
+            .toBuffer()
+          
+          console.log(`[SeDream v4 Edit] Compressed from ${(image.size / 1024 / 1024).toFixed(2)} MB to ${(compressedBuffer.length / 1024 / 1024).toFixed(2)} MB`)
+          
+          // Create new File from compressed buffer via Blob (use as any to bypass TypeScript Buffer/ArrayBuffer type mismatch)
+          const compressedBlob = new Blob([compressedBuffer as any], { type: 'image/jpeg' })
+          finalImage = new File([compressedBlob], image.name.replace(/\.[^.]+$/, '.jpg'), { 
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          })
+          
+        } catch (sharpError: unknown) {
+          const errorMsg = sharpError instanceof Error ? sharpError.message : String(sharpError)
+          console.warn(`[SeDream v4 Edit] Sharp compression failed: ${errorMsg}, using original image`)
+          // If sharp fails, continue with original image
+        }
+      }
+      
+      // Upload the (possibly compressed) image and get URL
+      imageUrl = await fal.storage.upload(finalImage)
+      console.log(`[SeDream v4 Edit] Image uploaded: ${imageUrl}`)
+    } else {
+      // This shouldn't happen due to validation above, but TypeScript needs it
+      throw new Error("No image or imageUrl provided")
+    }
 
     // Reference image URL (fixed, invisible to user)
     const referenceImageUrl = "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg"
@@ -252,7 +304,7 @@ export async function POST(request: NextRequest) {
       numImages: input.num_images,
       aspectRatio: aspectRatio,
       imageSize: input.image_size,
-      imageBufferSize: `${imageBuffer.length} bytes`
+      usedProvidedUrl: !!providedImageUrl
     })
     
     console.log("[SeDream v4 Edit] Full input object being sent to fal.ai:")

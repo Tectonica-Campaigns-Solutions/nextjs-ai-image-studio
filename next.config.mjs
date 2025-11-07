@@ -13,6 +13,14 @@ const nextConfig = {
   // Vercel-specific optimizations
   poweredByHeader: false,
   compress: true,
+  
+  // Increase body size limit for Base64 image uploads
+  // Default is 1MB, we need more for large Base64 strings (up to 10MB)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
 }
 
 export default nextConfig
