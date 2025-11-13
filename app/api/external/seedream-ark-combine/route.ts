@@ -13,17 +13,36 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * Step 1: Process image2 (second image) with seedream-v4-edit using configured sedream_enhancement_text
  * Step 2: Combine image1 (original) with processed_image2 using user's prompt (canonical or enhanced)
  * 
- * Body parameters (multipart/form-data):
- * - prompt (required): Text description for image combination (used in Step 2)
- * - image0, image1 (required): Exactly 2 image files to upload and combine
- *   OR
- * - imageUrl0, imageUrl1 (required): Exactly 2 image URLs to combine
- * - settings (optional): JSON string with generation settings
+ * ⚠️  IMPORTANT: Use JSON format (application/json) for Base64 images and URLs.
+ * FormData should ONLY be used for actual file uploads (File objects).
+ * 
+ * Body parameters:
+ * 
+ * JSON FORMAT (RECOMMENDED for Base64/URLs):
+ * {
+ *   "prompt": "your prompt here",
+ *   "imageUrls": ["url1", "url2"],        // optional - array of image URLs
+ *   "base64Images": ["base64...", "..."], // optional - array of Base64 strings
+ *   "settings": { "aspect_ratio": "1:1" },
+ *   "useCanonicalPrompt": true,
+ *   "canonicalConfig": { ... },
+ *   "orgType": "general"
+ * }
+ * 
+ * FORMDATA FORMAT (ONLY for file uploads):
+ * - prompt (required): Text description for image combination
+ * - image0, image1: Exactly 2 image files to upload
+ * - imageUrl0, imageUrl1: Image URLs (if not using files)
+ * - imageBase640, imageBase641: Base64 images (NOT RECOMMENDED - use JSON instead)
+ * - settings: JSON string with generation settings
  *   - aspect_ratio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" (default: "1:1") 
  *   - enable_safety_checker: boolean (default: true)
- * - useCanonicalPrompt (optional): boolean (enable canonical prompt processing)
- * - canonicalConfig (optional): JSON string with canonical prompt configuration
- * - orgType (optional): Organization type for moderation (default: general)
+ * - useCanonicalPrompt: "true" or "false"
+ * - canonicalConfig: JSON string with canonical config
+ * - orgType: Organization type for moderation
+ * 
+ * NOTE: Next.js 15 has a hardcoded 1MB limit for FormData bodies.
+ * Always use JSON for Base64 images to avoid truncation issues.
  * 
  * Response format:
  * {
@@ -48,37 +67,53 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[External Seedream Combine] Request received")
     
-    const formData = await request.formData()
+    // Validate Content-Type
+    const contentType = request.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      return NextResponse.json({
+        success: false,
+        error: "Invalid Content-Type",
+        details: "This endpoint only accepts application/json. Received: " + contentType
+      }, { status: 415 }) // 415 Unsupported Media Type
+    }
     
-    // Extract parameters
-    const prompt = formData.get("prompt") as string
-    const orgType = formData.get("orgType") as string || "general"
+    console.log(`[External Seedream Combine] Content-Type: ${contentType}`)
     
-    // Settings
-    const settingsJson = formData.get("settings") as string
-    let settings: any = {}
-    if (settingsJson) {
-      try {
-        settings = JSON.parse(settingsJson)
-      } catch (error) {
-        console.warn("[External Seedream Combine] Failed to parse settings:", error)
-      }
+    // ============================================================================
+    // JSON-ONLY PARSER: Accepts only Base64 images and URLs
+    // ============================================================================
+    const body = await request.json()
+    
+    const prompt: string = body.prompt
+    const orgType: string = body.orgType || "general"
+    const aspectRatio = body.aspect_ratio || "1:1"
+    const useCanonicalPrompt = body.useCanonicalPrompt === true || body.useCanonicalPrompt === "true"
+    const canonicalConfig: CanonicalPromptConfig | undefined = body.canonicalConfig
+    
+    let settings: any = {
+      aspect_ratio: aspectRatio,
+      enable_safety_checker: body.enable_safety_checker !== false
+    }
+    
+    let imageUrls: string[] = []
+    let base64Images: string[] = []
+    
+    // Extract image URLs and Base64 from JSON
+    if (body.imageUrls && Array.isArray(body.imageUrls)) {
+      imageUrls = body.imageUrls.filter((url: string) => url && url.trim())
+      console.log(`[External Seedream Combine] Found ${imageUrls.length} image URLs in JSON`)
+    }
+    
+    if (body.base64Images && Array.isArray(body.base64Images)) {
+      base64Images = body.base64Images.filter((b64: string) => b64 && b64.trim())
+      console.log(`[External Seedream Combine] Found ${base64Images.length} Base64 images in JSON`)
+      
+      // Log sizes to verify no truncation
+      base64Images.forEach((b64, i) => {
+        console.log(`[External Seedream Combine] Base64 image ${i + 1}: ${b64.length} chars (${(b64.length / 1024 / 1024).toFixed(2)} MB)`)
+      })
     }
 
-    // Canonical Prompt parameters
-    const useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
-    const canonicalConfigStr = formData.get("canonicalConfig") as string
-    let canonicalConfig: CanonicalPromptConfig = {}
-    if (canonicalConfigStr) {
-      try {
-        canonicalConfig = JSON.parse(canonicalConfigStr)
-      } catch (error) {
-        console.warn("[External Seedream Combine] Failed to parse canonical config:", error)
-      }
-    }
-
-    // Extract fal.ai specific settings
-    const aspectRatio = settings.aspect_ratio || "1:1"
     const enableSafetyChecker = settings.enable_safety_checker !== false // Default to true
 
     // Validate prompt
@@ -97,29 +132,14 @@ export async function POST(request: NextRequest) {
       orgType,
       useCanonicalPrompt
     })
-
-    // Extract image files and URLs
-    const imageFiles: File[] = []
-    const imageUrls: string[] = []
     
-    // Get image files (image0, image1, etc.)
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith('image') && key.match(/^image\d+$/) && value instanceof File && value.size > 0) {
-        imageFiles.push(value)
-        console.log(`[External Seedream Combine] Found image file: ${key}, size: ${value.size}, type: ${value.type}`)
-      } else if (key.startsWith('imageUrl') && key.match(/^imageUrl\d+$/) && typeof value === 'string' && value.trim()) {
-        imageUrls.push(value.trim())
-        console.log(`[External Seedream Combine] Found image URL: ${key}, url: ${value}`)
-      }
-    }
-
     // Validate that we have exactly 2 images for enhanced pipeline
-    const totalImages = imageFiles.length + imageUrls.length
+    const totalImages = imageUrls.length + base64Images.length
     if (totalImages !== 2) {
       return NextResponse.json({
         success: false,
         error: "Enhanced pipeline requires exactly 2 images",
-        details: `Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
+        details: `Found ${imageUrls.length} URLs and ${base64Images.length} Base64 images (total: ${totalImages}). The enhanced pipeline requires exactly 2 images.`
       }, { status: 400 })
     }
 
@@ -160,44 +180,141 @@ export async function POST(request: NextRequest) {
     // Collect all image URLs (upload files first if needed)
     const allImageUrls: string[] = [...imageUrls]
     
-    if (imageFiles.length > 0) {
-      console.log("[External Seedream Combine] Uploading image files...")
+    // Process Base64 images first (if any)
+    if (base64Images.length > 0) {
+      console.log(`[External Seedream Combine] Processing ${base64Images.length} Base64 images...`)
       
-      for (const file of imageFiles) {
+      // Get FAL API key
+      const falApiKey = process.env.FAL_API_KEY
+      if (!falApiKey) {
+        throw new Error("FAL_API_KEY environment variable is not set")
+      }
+      
+      for (let i = 0; i < base64Images.length; i++) {
+        const base64Data = base64Images[i]
+        
         try {
-          // Validate file type
-          const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-          if (!validTypes.includes(file.type)) {
-            return NextResponse.json({
-              success: false,
-              error: "Invalid file type",
-              details: `File ${file.name} has type ${file.type}. Allowed types: ${validTypes.join(', ')}`
-            }, { status: 400 })
-          }
-
-          // Validate file size (10MB limit)
-          const maxSize = 10 * 1024 * 1024 // 10MB
-          if (file.size > maxSize) {
-            return NextResponse.json({
-              success: false,
-              error: "File too large",
-              details: `File ${file.name} is ${Math.round(file.size / 1024 / 1024)}MB. Maximum size is 10MB.`
-            }, { status: 400 })
-          }
-
-          // Upload to fal.ai storage
-          console.log(`[External Seedream Combine] Uploading ${file.name} to fal.ai storage...`)
-          const uploadedUrl = await fal.storage.upload(file)
-          allImageUrls.push(uploadedUrl)
+          // Parse Base64 data URL or raw Base64
+          let imageBuffer: Buffer
+          let mimeType = 'image/jpeg' // Default
           
-          console.log(`[External Seedream Combine] Successfully uploaded ${file.name}: ${uploadedUrl}`)
+          if (base64Data.startsWith('data:')) {
+            // Extract MIME type and Base64 data from data URL
+            const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/)
+            if (!matches) {
+              throw new Error(`Invalid Base64 data URL format for image ${i + 1}`)
+            }
+            mimeType = matches[1]
+            const base64String = matches[2]
+            imageBuffer = Buffer.from(base64String, 'base64')
+          } else {
+            // Raw Base64 string
+            imageBuffer = Buffer.from(base64Data, 'base64')
+          }
+          
+          // Normalize MIME type
+          if (mimeType === 'image/jpg') {
+            mimeType = 'image/jpeg'
+            console.log(`[External Seedream Combine] Normalized MIME type from image/jpg to image/jpeg for image ${i + 1}`)
+          }
+          
+          console.log(`[External Seedream Combine] Processing Base64 image ${i + 1}/${base64Images.length}, type: ${mimeType}`)
+          
+          let finalBuffer: Buffer = imageBuffer
+          let finalMimeType = 'image/jpeg' // Always use standard JPEG
+          
+          console.log(`[External Seedream Combine] Base64 image ${i + 1} original size: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB, type: ${mimeType}`)
+          
+          // CRITICAL: Validate image integrity BEFORE processing
+          const sharpModule = await import('sharp')
+          const sharp = sharpModule.default
+          
+          try {
+            const metadata = await sharp(imageBuffer).metadata()
+            console.log(`[External Seedream Combine] ✅ Image validated: ${metadata.format}, ${metadata.width}x${metadata.height}`)
+          } catch (validationError) {
+            const errorMsg = validationError instanceof Error ? validationError.message : String(validationError)
+            console.error(`[External Seedream Combine] ❌ CORRUPTED BASE64 IMAGE DETECTED:`, errorMsg)
+            throw new Error(`Base64 image ${i + 1} is corrupted or incomplete. Error: ${errorMsg}. Please ensure the Base64 string is complete and correctly formatted.`)
+          }
+          
+          try {
+            console.log(`[External Seedream Combine] Normalizing to JPEG with Sharp...`)
+            
+            // Convert to standardized JPEG: 90% quality, max 2048px
+            const normalizedBuffer = await sharp(imageBuffer)
+              .resize(2048, 2048, {
+                fit: 'inside',
+                withoutEnlargement: true
+              })
+              .jpeg({ quality: 90 })
+              .toBuffer()
+            
+            console.log(`[External Seedream Combine] ✅ Normalized to JPEG: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB → ${(normalizedBuffer.length / 1024 / 1024).toFixed(2)} MB`)
+            
+            finalBuffer = normalizedBuffer
+            
+          } catch (sharpError: unknown) {
+            const errorMsg = sharpError instanceof Error ? sharpError.message : String(sharpError)
+            console.error(`[External Seedream Combine] ❌ JPEG normalization failed:`, errorMsg)
+            console.warn(`[External Seedream Combine] ⚠️  WARNING: Using original image without normalization`)
+          }
+          
+          // Upload using 2-step process: initiate → PUT
+          const fileExtension = finalMimeType.split('/')[1] || 'jpeg'
+          const fileName = `base64-image-${i + 1}.${fileExtension}`
+          
+          console.log(`[External Seedream Combine] Uploading ${fileName}: ${finalBuffer.length} bytes (${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB)`)
+          
+          // Step 1: Initiate upload to get presigned URL
+          const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Key ${falApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              content_type: finalMimeType,
+              file_name: fileName
+            })
+          })
+          
+          if (!initiateResponse.ok) {
+            const errorText = await initiateResponse.text()
+            throw new Error(`Failed to initiate upload: ${initiateResponse.status} - ${errorText}`)
+          }
+          
+          const { upload_url, file_url } = await initiateResponse.json()
+          
+          console.log(`[External Seedream Combine] Initiated upload for ${fileName}`)
+          console.log(`[External Seedream Combine] Upload URL: ${upload_url.substring(0, 100)}...`)
+          console.log(`[External Seedream Combine] File URL: ${file_url}`)
+          
+          // Step 2: PUT the file to the presigned URL using Uint8Array
+          const uint8Array = new Uint8Array(finalBuffer)
+          
+          const uploadResponse = await fetch(upload_url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': finalMimeType,
+            },
+            body: uint8Array
+          })
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text()
+            throw new Error(`Failed to upload file: ${uploadResponse.status} - ${errorText}`)
+          }
+          
+          console.log(`[External Seedream Combine] ✅ Successfully uploaded Base64 image ${i + 1}: ${file_url}`)
+          allImageUrls.push(file_url)
           
         } catch (error) {
-          console.error(`[External Seedream Combine] Failed to upload file ${file.name}:`, error)
+          console.error(`[External Seedream Combine] Failed to process Base64 image ${i + 1}:`, error)
           return NextResponse.json({
             success: false,
-            error: "File upload failed",
-            details: `Failed to upload file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            error: "Base64 image processing failed",
+            details: `Failed to process Base64 image ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`
           }, { status: 500 })
         }
       }
@@ -213,17 +330,21 @@ export async function POST(request: NextRequest) {
 
     // Process canonical prompt if enabled
     let finalPrompt = prompt
+    let tempCanonicalConfig = canonicalConfig
     if (useCanonicalPrompt) {
       console.log("[External Seedream Combine] Processing canonical prompt...")
       console.log("[External Seedream Combine] Original prompt:", prompt)
-      console.log("[External Seedream Combine] Canonical config:", JSON.stringify(canonicalConfig, null, 2))
+      console.log("[External Seedream Combine] Canonical config:", JSON.stringify(tempCanonicalConfig, null, 2))
       
       // Set user input from original prompt
-      canonicalConfig.userInput = prompt
+      if (!tempCanonicalConfig) {
+        tempCanonicalConfig = {}
+      }
+      tempCanonicalConfig.userInput = prompt
       
       try {
         // Generate canonical prompt
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(canonicalConfig)
+        const result = canonicalPromptProcessor.generateCanonicalPrompt(tempCanonicalConfig)
         finalPrompt = result.canonicalPrompt
         
         console.log("[External Seedream Combine] Generated canonical prompt:", finalPrompt)
