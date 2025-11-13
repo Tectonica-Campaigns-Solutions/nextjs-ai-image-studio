@@ -442,13 +442,19 @@ export async function GET() {
     version: "1.0.0",
     endpoint: "/api/external/seedream-edit-image",
     method: "POST",
-    contentType: "multipart/form-data",
+    contentType: "application/json",
     parameters: {
-      image: {
-        type: "file",
-        required: true,
-        description: "Image file to edit (PNG, JPG, JPEG, WEBP)",
-        maxSize: "10MB"
+      base64Image: {
+        type: "string",
+        required: false,
+        description: "Base64-encoded image data (with or without data:image prefix)",
+        example: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+      },
+      imageUrl: {
+        type: "string",
+        required: false,
+        description: "URL of image to edit",
+        example: "https://example.com/image.jpg"
       },
       prompt: {
         type: "string",
@@ -483,7 +489,8 @@ export async function GET() {
           humanIntegrityProtection: true,
           safetyCheckerEnabled: true
         },
-        referenceUsed: "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg"
+        inputImage: "https://v3.fal.media/files/...",
+        aspectRatio: "1:1"
       },
       error: {
         success: false,
@@ -496,17 +503,22 @@ export async function GET() {
     },
     examples: {
       curl: `curl -X POST https://your-domain.com/api/external/seedream-edit-image \\
-  -F "image=@/path/to/your/image.jpg" \\
-  -F "prompt=add vibrant colors and dynamic lighting" \\
-  -F "aspect_ratio=16:9"`,
-      javascript: `const formData = new FormData();
-formData.append('image', imageFile);
-formData.append('prompt', 'add vibrant colors and dynamic lighting');
-formData.append('aspect_ratio', '16:9');
-
-const response = await fetch('https://your-domain.com/api/external/seedream-edit-image', {
+  -H "Content-Type: application/json" \\
+  -d '{
+    "imageUrl": "https://example.com/image.jpg",
+    "prompt": "add vibrant colors and dynamic lighting",
+    "aspect_ratio": "16:9"
+  }'`,
+      javascript: `const response = await fetch('https://your-domain.com/api/external/seedream-edit-image', {
   method: 'POST',
-  body: formData
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    imageUrl: 'https://example.com/image.jpg',
+    prompt: 'add vibrant colors and dynamic lighting',
+    aspect_ratio: '16:9'
+  })
 });
 
 const result = await response.json();
@@ -515,10 +527,10 @@ if (result.success) {
 }`
     },
     notes: [
+      "This endpoint ONLY accepts JSON payloads with Content-Type: application/json",
+      "Provide either base64Image OR imageUrl (not both)",
       "The user's prompt is used directly without any modifications or enhancements",
       "Full control over the prompt allows for precise image editing instructions",
-      "A reference image is automatically used for consistent style transfer",
-      "The editing preserves the main subject while applying the requested modifications",
       "Processing time varies based on image complexity and server load (typically 10-30 seconds)",
       "Advanced safety protections automatically applied:",
       "  • Unified content moderation with ContentModerationService",
