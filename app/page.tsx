@@ -575,6 +575,8 @@ export default function ImageEditor() {
   const [localSeedreamArkPrompt, setLocalSeedreamArkPrompt] = useState("")
   const [seedreamArkImages, setSeedreamArkImages] = useState<File[]>([])
   const [seedreamArkImageUrls, setSeedreamArkImageUrls] = useState<string[]>([])
+  const [seedreamArkBase64Images, setSeedreamArkBase64Images] = useState<string[]>([])
+  const [seedreamArkBase64Input, setSeedreamArkBase64Input] = useState<string>("")
   const [seedreamArkSettings, setSeedreamArkSettings] = useState({
     aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
     enable_safety_checker: true
@@ -606,6 +608,8 @@ export default function ImageEditor() {
   const [localSeedreamSinglePrompt, setLocalSeedreamSinglePrompt] = useState("")
   const [seedreamSingleImage, setSeedreamSingleImage] = useState<File | null>(null)
   const [seedreamSingleImageUrl, setSeedreamSingleImageUrl] = useState<string>("")
+  const [seedreamSingleBase64Image, setSeedreamSingleBase64Image] = useState<string>("")
+  const [seedreamSingleBase64Preview, setSeedreamSingleBase64Preview] = useState<string>("")
   const [seedreamSingleSettings, setSeedreamSingleSettings] = useState({
     aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
     num_images: 1,
@@ -702,6 +706,9 @@ export default function ImageEditor() {
 
   // SeDream v4 Edit States
   const [sedreamImage, setSedreamImage] = useState<File | null>(null)
+  const [sedreamImageUrl, setSedreamImageUrl] = useState<string>("")
+  const [sedreamBase64Image, setSedreamBase64Image] = useState<string>("")
+  const [sedreamBase64Preview, setSedreamBase64Preview] = useState<string>("")
   const [sedreamPreviewUrl, setSedreamPreviewUrl] = useState<string>("")
   const [sedreamPrompt, setSedreamPrompt] = useState("") // Optional prompt
   const [sedreamResult, setSedreamResult] = useState<string>("")
@@ -1512,15 +1519,16 @@ export default function ImageEditor() {
       
       console.log("[FRONTEND] External combine settings being sent:", settings)
       
-      // Check if we have large Base64 images (>900KB to be safe, limit is 1MB)
-      const hasLargeBase64 = externalFluxCombineBase64Images.some(b64 => b64.length > 900000)
+      // ALWAYS use JSON when we have Base64 or URLs (no file uploads)
+      // This avoids FormData 1MB truncation issue entirely
       const hasOnlyBase64AndUrls = externalFluxCombineImages.length === 0
+      const hasBase64OrUrls = externalFluxCombineBase64Images.length > 0 || externalFluxCombineImageUrls.some(url => url.trim())
       
       let response: Response
       
-      // Use JSON if we have large Base64 images and no file uploads
-      if (hasLargeBase64 && hasOnlyBase64AndUrls) {
-        console.log("[FRONTEND] Using JSON method for large Base64 images (>900KB)")
+      // Use JSON if we have Base64/URLs and no file uploads
+      if (hasOnlyBase64AndUrls && hasBase64OrUrls) {
+        console.log("[FRONTEND] 📦 Using JSON payload (Base64/URLs only - no file uploads)")
         
         const jsonBody: any = {
           prompt: externalFluxCombinePrompt,
@@ -1543,6 +1551,12 @@ export default function ImageEditor() {
           jsonBody[`imageBase64${index}`] = base64
         })
         
+        if (externalFluxCombineBase64Images.length > 0) {
+          console.log("[FRONTEND] Base64 images sizes:", 
+            externalFluxCombineBase64Images.map((b64, i) => `Image ${i + 1}: ${(b64.length / 1024 / 1024).toFixed(2)} MB`)
+          )
+        }
+        
         response = await fetch("/api/external/flux-pro-image-combine", {
           method: "POST",
           headers: {
@@ -1552,8 +1566,8 @@ export default function ImageEditor() {
         })
         
       } else {
-        // Use FormData for file uploads or small Base64
-        console.log("[FRONTEND] Using FormData method")
+        // Use FormData for file uploads
+        console.log("[FRONTEND] 📎 Using FormData (file uploads detected)")
         
         const formData = new FormData()
         
@@ -1694,6 +1708,38 @@ export default function ImageEditor() {
     setSeedreamArkImageUrls(prev => prev.filter((_, i) => i !== index))
   }
 
+  const addSeedreamArkBase64Image = () => {
+    const input = seedreamArkBase64Input.trim()
+    if (!input) {
+      alert("Please paste a Base64 string")
+      return
+    }
+
+    // Remove data URL prefix if present
+    let base64String = input
+    if (input.startsWith('data:')) {
+      const match = input.match(/^data:image\/[^;]+;base64,(.+)$/)
+      if (match) {
+        base64String = match[1]
+      }
+    }
+
+    // Validate Base64 format
+    const base64Regex = /^[A-Za-z0-9+/=]+$/
+    const trimmed = base64String.trim()
+    
+    if (base64Regex.test(trimmed)) {
+      setSeedreamArkBase64Images(prev => [...prev, trimmed])
+      setSeedreamArkBase64Input("")
+    } else {
+      alert("Invalid Base64 format. Please paste a valid Base64 string or data URL.")
+    }
+  }
+
+  const removeSeedreamArkBase64Image = (index: number) => {
+    setSeedreamArkBase64Images(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSeedreamArkCombineSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
@@ -1702,7 +1748,7 @@ export default function ImageEditor() {
       return
     }
 
-    if (seedreamArkImages.length + seedreamArkImageUrls.length < 2) {
+    if (seedreamArkImages.length + seedreamArkImageUrls.length + seedreamArkBase64Images.length < 2) {
       setSeedreamArkError("Please upload at least 2 images to combine")
       return
     }
@@ -1715,6 +1761,73 @@ export default function ImageEditor() {
       console.log("[SEEDREAM-SUBMIT] useCanonicalPrompt:", seedreamArkUseCanonicalPrompt)
       console.log("[SEEDREAM-SUBMIT] canonicalConfig:", seedreamArkCanonicalConfig)
       
+      // ALWAYS use JSON when we have Base64 or URLs (no file uploads)
+      // This avoids FormData 1MB truncation issue entirely
+      const hasOnlyBase64AndUrls = seedreamArkImages.length === 0
+      const hasBase64OrUrls = seedreamArkBase64Images.length > 0 || seedreamArkImageUrls.some(url => url.trim())
+      
+      if (hasOnlyBase64AndUrls && hasBase64OrUrls) {
+        console.log("[SEEDREAM-SUBMIT] � Using JSON payload (Base64/URLs only - no file uploads)")
+        
+        // Prepare settings object
+        const settings: any = { ...seedreamArkSettings }
+        Object.keys(settings).forEach(key => {
+          if (settings[key] === "") {
+            delete settings[key]
+          }
+        })
+        
+        const jsonPayload = {
+          prompt: seedreamArkPrompt,
+          useCanonicalPrompt: seedreamArkUseCanonicalPrompt,
+          canonicalConfig: seedreamArkUseCanonicalPrompt ? seedreamArkCanonicalConfig : undefined,
+          imageUrls: seedreamArkImageUrls.filter(url => url.trim()),
+          base64Images: seedreamArkBase64Images,
+          settings
+        }
+        
+        if (seedreamArkBase64Images.length > 0) {
+          console.log("[SEEDREAM-SUBMIT] Base64 images sizes:", 
+            seedreamArkBase64Images.map((b64, i) => `Image ${i + 1}: ${(b64.length / 1024 / 1024).toFixed(2)} MB`)
+          )
+        }
+        
+        const response = await fetch("/api/seedream-ark-combine", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(jsonPayload),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null)
+          if (errorData?.blocked) {
+            throw new Error(handleModerationError(errorData))
+          }
+          throw new Error(errorData?.error || `Server error (${response.status}). Please try again.`)
+        }
+
+        const result = await response.json()
+        
+        // Handle result (same as FormData path)
+        if (result.success && result.image) {
+          setSeedreamArkResult([{ url: result.image }])
+        } else {
+          throw new Error("No combined image received from server")
+        }
+        
+        // Reset form
+        setSeedreamArkImages([])
+        setSeedreamArkImageUrls(["", ""])
+        setSeedreamArkBase64Images([])
+        setSeedreamArkBase64Input("")
+        setIsSeedreamArkGenerating(false)
+        return
+      }
+      
+      // FormData path (only for file uploads)
+      console.log("[SEEDREAM-SUBMIT] 📎 Using FormData (file uploads detected)")
       const formData = new FormData()
       
       formData.append("prompt", seedreamArkPrompt)
@@ -1739,6 +1852,12 @@ export default function ImageEditor() {
         if (url.trim()) {
           formData.append(`imageUrl${index}`, url.trim())
         }
+      })
+
+      // Add Base64 images
+      seedreamArkBase64Images.forEach((base64, index) => {
+        console.log(`[SEEDREAM-SUBMIT] Adding Base64 image ${index + 1}: ${(base64.length / 1024 / 1024).toFixed(2)} MB`)
+        formData.append(`imageBase64${index}`, base64)
       })
       
       // Prepare settings object
@@ -1794,6 +1913,27 @@ export default function ImageEditor() {
     setSeedreamSingleImage(null)
   }
 
+  const handleSeedreamSingleBase64Process = () => {
+    const trimmed = seedreamSingleBase64Image.trim()
+    if (!trimmed) {
+      setSeedreamSingleError("Please paste Base64 data first")
+      return
+    }
+    
+    // Create preview
+    const base64WithPrefix = trimmed.startsWith('data:') 
+      ? trimmed 
+      : `data:image/jpeg;base64,${trimmed}`
+    
+    setSeedreamSingleBase64Preview(base64WithPrefix)
+    console.log('[FRONTEND] Seedream Single Edit Base64 processed, length:', trimmed.length)
+  }
+
+  const clearSeedreamSingleBase64 = () => {
+    setSeedreamSingleBase64Image("")
+    setSeedreamSingleBase64Preview("")
+  }
+
   const handleSeedreamSingleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
@@ -1802,8 +1942,8 @@ export default function ImageEditor() {
       return
     }
 
-    if (!seedreamSingleImage && !seedreamSingleImageUrl.trim()) {
-      setSeedreamSingleError("Please upload an image or provide an image URL")
+    if (!seedreamSingleImage && !seedreamSingleImageUrl.trim() && !seedreamSingleBase64Image.trim()) {
+      setSeedreamSingleError("Please upload an image, provide an image URL, or paste Base64 data")
       return
     }
 
@@ -1811,35 +1951,68 @@ export default function ImageEditor() {
     setSeedreamSingleError("")
 
     try {
-      const formData = new FormData()
+      // Determine if we should use JSON (for Base64/URLs) or FormData (for File uploads)
+      const hasBase64 = seedreamSingleBase64Image.trim().length > 0
+      const hasUrl = !seedreamSingleImage && seedreamSingleImageUrl.trim().length > 0
+      const useJSON = hasBase64 || hasUrl
       
-      formData.append("prompt", seedreamSinglePrompt)
+      console.log(`[FRONTEND] Seedream Single Edit - Using ${useJSON ? 'JSON' : 'FormData'}`)
+      console.log('[FRONTEND] Has Base64:', hasBase64, 'Has URL:', hasUrl, 'Has File:', !!seedreamSingleImage)
       
-      // Add image file or URL
-      if (seedreamSingleImage) {
-        formData.append("image", seedreamSingleImage)
-      } else if (seedreamSingleImageUrl.trim()) {
-        formData.append("imageUrl", seedreamSingleImageUrl.trim())
-      }
+      let response: Response
       
-      // Prepare settings object
-      const settings: any = { ...seedreamSingleSettings }
-      
-      // Remove empty string values
-      Object.keys(settings).forEach(key => {
-        if (settings[key] === "") {
-          delete settings[key]
+      if (useJSON) {
+        // JSON method for Base64 or URL
+        const jsonBody: any = {
+          prompt: seedreamSinglePrompt,
+          aspect_ratio: seedreamSingleSettings.aspect_ratio,
+          num_images: seedreamSingleSettings.num_images,
+          enable_safety_checker: seedreamSingleSettings.enable_safety_checker
         }
-      })
-      
-      console.log("[FRONTEND] Seedream Single Edit settings being sent:", settings)
-      
-      formData.append("settings", JSON.stringify(settings))
+        
+        if (hasBase64) {
+          jsonBody.base64Image = seedreamSingleBase64Image.trim()
+          console.log('[FRONTEND] 📦 Using JSON with Base64, length:', seedreamSingleBase64Image.length)
+        } else if (hasUrl) {
+          jsonBody.imageUrl = seedreamSingleImageUrl.trim()
+          console.log('[FRONTEND] 📦 Using JSON with URL:', seedreamSingleImageUrl.trim().substring(0, 50))
+        }
+        
+        response = await fetch("/api/seedream-single-edit", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(jsonBody)
+        })
+      } else {
+        // FormData method for File uploads
+        const formData = new FormData()
+        formData.append("prompt", seedreamSinglePrompt)
+        
+        if (seedreamSingleImage) {
+          formData.append("image", seedreamSingleImage)
+          console.log('[FRONTEND] 📎 Using FormData with File:', seedreamSingleImage.name)
+        }
+        
+        // Prepare settings object
+        const settings: any = { ...seedreamSingleSettings }
+        
+        // Remove empty string values
+        Object.keys(settings).forEach(key => {
+          if (settings[key] === "") {
+            delete settings[key]
+          }
+        })
+        
+        console.log("[FRONTEND] Seedream Single Edit settings being sent:", settings)
+        formData.append("settings", JSON.stringify(settings))
 
-      const response = await fetch("/api/seedream-single-edit", {
-        method: "POST",
-        body: formData,
-      })
+        response = await fetch("/api/seedream-single-edit", {
+          method: "POST",
+          body: formData,
+        })
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
@@ -2179,11 +2352,32 @@ export default function ImageEditor() {
     }
   }
 
+  const handleSedreamBase64Process = () => {
+    const trimmed = sedreamBase64Image.trim()
+    if (!trimmed) {
+      setSedreamError("Please paste Base64 data first")
+      return
+    }
+    
+    // Create preview
+    const base64WithPrefix = trimmed.startsWith('data:') 
+      ? trimmed 
+      : `data:image/jpeg;base64,${trimmed}`
+    
+    setSedreamBase64Preview(base64WithPrefix)
+    console.log('[FRONTEND] SeDream v4 Base64 processed, length:', trimmed.length)
+  }
+
+  const clearSedreamBase64 = () => {
+    setSedreamBase64Image("")
+    setSedreamBase64Preview("")
+  }
+
   const handleSedreamSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!sedreamImage) {
-      setSedreamError("Please select an image")
+    if (!sedreamImage && !sedreamImageUrl.trim() && !sedreamBase64Image.trim()) {
+      setSedreamError("Please upload an image, provide an image URL, or paste Base64 data")
       return
     }
 
@@ -2195,36 +2389,77 @@ export default function ImageEditor() {
       // Send original prompt and JSON options to avoid double enhancement
       let finalPrompt = sedreamPrompt
 
-      const formData = new FormData()
-      formData.append("image", sedreamImage)
-      if (finalPrompt.trim()) {
-        formData.append("prompt", finalPrompt)
-      }
-      formData.append("useJSONEnhancement", useSedreamJSONEnhancement.toString())
-      formData.append("jsonIntensity", sedreamJsonIntensity.toString())
-      formData.append("customEnhancementText", sedreamCustomEnhancementText)
-      formData.append("aspect_ratio", sedreamAspectRatio)
+      // Determine if we should use JSON (for Base64/URLs) or FormData (for File uploads)
+      const hasBase64 = sedreamBase64Image.trim().length > 0
+      const hasUrl = !sedreamImage && sedreamImageUrl.trim().length > 0
+      const useJSON = hasBase64 || hasUrl
       
-      // Debug logging
-      console.log("[Frontend] SeDream submission - aspect_ratio:", sedreamAspectRatio)
-      console.log("[Frontend] All FormData entries:")
-      for (const [key, value] of formData.entries()) {
-        if (key !== "image") {
-          console.log(`  ${key}: "${value}"`)
+      console.log(`[FRONTEND] SeDream v4 Edit - Using ${useJSON ? 'JSON' : 'FormData'}`)
+      console.log('[FRONTEND] Has Base64:', hasBase64, 'Has URL:', hasUrl, 'Has File:', !!sedreamImage)
+      
+      let response: Response
+      
+      if (useJSON) {
+        // JSON method for Base64 or URL
+        const jsonBody: any = {
+          prompt: finalPrompt.trim() || '',
+          useJSONEnhancement: useSedreamJSONEnhancement,
+          jsonIntensity: sedreamJsonIntensity,
+          customEnhancementText: sedreamCustomEnhancementText,
+          aspect_ratio: sedreamAspectRatio,
+          jsonOptions: {
+            customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : '',
+            intensity: sedreamJsonIntensity
+          }
         }
-      }
-      
-      // Add JSON enhancement options for backend processing
-      const jsonOptions = {
-        customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : '',
-        intensity: sedreamJsonIntensity
-      }
-      formData.append("jsonOptions", JSON.stringify(jsonOptions))
+        
+        if (hasBase64) {
+          jsonBody.base64Image = sedreamBase64Image.trim()
+          console.log('[FRONTEND] 📦 Using JSON with Base64, length:', sedreamBase64Image.length)
+        } else if (hasUrl) {
+          jsonBody.imageUrl = sedreamImageUrl.trim()
+          console.log('[FRONTEND] 📦 Using JSON with URL:', sedreamImageUrl.trim().substring(0, 50))
+        }
+        
+        response = await fetch("/api/seedream-v4-edit", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(jsonBody)
+        })
+      } else {
+        // FormData method for File uploads
+        const formData = new FormData()
+        
+        if (sedreamImage) {
+          formData.append("image", sedreamImage)
+          console.log('[FRONTEND] 📎 Using FormData with File:', sedreamImage.name)
+        }
+        
+        if (finalPrompt.trim()) {
+          formData.append("prompt", finalPrompt)
+        }
+        formData.append("useJSONEnhancement", useSedreamJSONEnhancement.toString())
+        formData.append("jsonIntensity", sedreamJsonIntensity.toString())
+        formData.append("customEnhancementText", sedreamCustomEnhancementText)
+        formData.append("aspect_ratio", sedreamAspectRatio)
+        
+        // Debug logging
+        console.log("[Frontend] SeDream submission - aspect_ratio:", sedreamAspectRatio)
+        
+        // Add JSON enhancement options for backend processing
+        const jsonOptions = {
+          customText: sedreamCustomEnhancementText !== sedreamDefaultEnhancementText ? sedreamCustomEnhancementText : '',
+          intensity: sedreamJsonIntensity
+        }
+        formData.append("jsonOptions", JSON.stringify(jsonOptions))
 
-      const response = await fetch("/api/seedream-v4-edit", {
-        method: "POST",
-        body: formData
-      })
+        response = await fetch("/api/seedream-v4-edit", {
+          method: "POST",
+          body: formData
+        })
+      }
 
       const result = await response.json()
 
@@ -2306,6 +2541,69 @@ export default function ImageEditor() {
                         onChange={handleSedreamImageUpload}
                         className="cursor-pointer"
                       />
+                    </div>
+
+                    {/* Or use Image URL */}
+                    <div className="space-y-2">
+                      <Label htmlFor="sedream-image-url">Or use Image URL</Label>
+                      <Input
+                        id="sedream-image-url"
+                        type="text"
+                        placeholder="https://example.com/image.jpg"
+                        value={sedreamImageUrl}
+                        onChange={(e) => setSedreamImageUrl(e.target.value)}
+                        disabled={!!sedreamImage || sedreamBase64Image.trim().length > 0}
+                      />
+                    </div>
+
+                    {/* Or use Base64 Image */}
+                    <div className="space-y-2">
+                      <Label htmlFor="sedream-base64">Or use Base64 Image</Label>
+                      <Textarea
+                        id="sedream-base64"
+                        placeholder="Paste Base64 encoded image data here (with or without data:image/jpeg;base64, prefix)"
+                        value={sedreamBase64Image}
+                        onChange={(e) => setSedreamBase64Image(e.target.value)}
+                        rows={4}
+                        className="font-mono text-xs"
+                        disabled={!!sedreamImage || sedreamImageUrl.trim().length > 0}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          onClick={handleSedreamBase64Process}
+                          disabled={!sedreamBase64Image.trim() || !!sedreamImage || sedreamImageUrl.trim().length > 0}
+                          size="sm"
+                          variant="secondary"
+                        >
+                          Preview Base64
+                        </Button>
+                        {sedreamBase64Preview && (
+                          <Button
+                            type="button"
+                            onClick={clearSedreamBase64}
+                            size="sm"
+                            variant="outline"
+                          >
+                            Clear
+                          </Button>
+                        )}
+                        {sedreamBase64Image.trim() && (
+                          <span className="text-xs text-muted-foreground">
+                            Length: {sedreamBase64Image.trim().length.toLocaleString()} chars
+                          </span>
+                        )}
+                      </div>
+                      {sedreamBase64Preview && (
+                        <div className="mt-2 border rounded p-2 bg-muted/50">
+                          <img 
+                            src={sedreamBase64Preview} 
+                            alt="Base64 preview" 
+                            className="max-w-full h-auto rounded"
+                            style={{ maxHeight: '200px' }}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -2501,7 +2799,7 @@ export default function ImageEditor() {
                       </div>
                     )}
 
-                    <Button type="submit" className="w-full" disabled={!sedreamImage || !sedreamCustomEnhancementText.trim() || isSedreamLoading}>
+                    <Button type="submit" className="w-full" disabled={(!sedreamImage && !sedreamImageUrl.trim() && !sedreamBase64Image.trim()) || !sedreamCustomEnhancementText.trim() || isSedreamLoading}>
                       {isSedreamLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -3850,6 +4148,67 @@ export default function ImageEditor() {
                           />
                         </div>
                       </div>
+
+                      {/* Base64 Images Section */}
+                      <div className="space-y-2">
+                        <Label>Or paste Base64 Images</Label>
+                        <div className="space-y-2">
+                          <Textarea
+                            placeholder="Paste Base64 string here (with or without data:image prefix)"
+                            value={seedreamArkBase64Input}
+                            onChange={(e) => setSeedreamArkBase64Input(e.target.value)}
+                            className="min-h-[100px] font-mono text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addSeedreamArkBase64Image}
+                            disabled={!seedreamArkBase64Input.trim()}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Base64 Image
+                          </Button>
+                        </div>
+                        
+                        {seedreamArkBase64Images.length > 0 && (
+                          <div className="space-y-2">
+                            <Label>Base64 Images Added: ({seedreamArkBase64Images.length})</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {seedreamArkBase64Images.map((base64, index) => (
+                                <div key={index} className="relative group">
+                                  <div className="aspect-square rounded-lg border-2 border-dashed border-gray-300 overflow-hidden">
+                                    <img
+                                      src={`data:image/jpeg;base64,${base64}`}
+                                      alt={`Base64 ${index + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => removeSeedreamArkBase64Image(index)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                  <div className="mt-1 text-xs text-muted-foreground truncate">
+                                    {(base64.length / 1024 / 1024).toFixed(2)} MB
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Image Counter */}
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium">
+                        Total Images: {seedreamArkImages.length + seedreamArkImageUrls.filter(url => url.trim()).length + seedreamArkBase64Images.length} / 2 required
+                      </p>
                     </div>
 
                     {/* Prompt Section */}
@@ -4083,7 +4442,7 @@ export default function ImageEditor() {
                     <Button 
                       type="submit" 
                       className="w-full" 
-                      disabled={isSeedreamArkGenerating || (!seedreamArkImages.length && !seedreamArkImageUrls.filter(url => url.trim()).length) || !seedreamArkPrompt.trim()}
+                      disabled={isSeedreamArkGenerating || (!seedreamArkImages.length && !seedreamArkImageUrls.filter(url => url.trim()).length && !seedreamArkBase64Images.length) || !seedreamArkPrompt.trim()}
                     >
                       {isSeedreamArkGenerating ? (
                         <>
@@ -4206,6 +4565,58 @@ export default function ImageEditor() {
                           onChange={(e) => setSeedreamSingleImageUrl(e.target.value)}
                         />
                       </div>
+
+                      {/* Base64 Image Section */}
+                      <div className="space-y-2">
+                        <Label>Or use Base64 Image</Label>
+                        <Textarea
+                          placeholder="Paste Base64 image data here (with or without data:image prefix)..."
+                          value={seedreamSingleBase64Image}
+                          onChange={(e) => setSeedreamSingleBase64Image(e.target.value)}
+                          className="min-h-[100px] font-mono text-xs"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSeedreamSingleBase64Process}
+                            disabled={!seedreamSingleBase64Image.trim()}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Preview Base64
+                          </Button>
+                          {seedreamSingleBase64Preview && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={clearSeedreamSingleBase64}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {/* Base64 Preview */}
+                        {seedreamSingleBase64Preview && (
+                          <div className="mt-2 p-2 border rounded-lg">
+                            <div className="text-xs text-muted-foreground mb-2">
+                              Preview (Base64 length: {seedreamSingleBase64Image.length} chars)
+                            </div>
+                            <img 
+                              src={seedreamSingleBase64Preview} 
+                              alt="Base64 Preview" 
+                              className="w-full rounded border"
+                              onError={() => {
+                                setSeedreamSingleError("Invalid Base64 image data")
+                                setSeedreamSingleBase64Preview("")
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Prompt Section */}
@@ -4312,7 +4723,7 @@ export default function ImageEditor() {
                     <Button 
                       type="submit" 
                       className="w-full" 
-                      disabled={isSeedreamSingleGenerating || (!seedreamSingleImage && !seedreamSingleImageUrl.trim()) || !seedreamSinglePrompt.trim()}
+                      disabled={isSeedreamSingleGenerating || (!seedreamSingleImage && !seedreamSingleImageUrl.trim() && !seedreamSingleBase64Image.trim()) || !seedreamSinglePrompt.trim()}
                     >
                       {isSeedreamSingleGenerating ? (
                         <>
