@@ -1,23 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import sharp from 'sharp'
 
 /**
  * POST /api/external/seedream-edit-image
  * 
  * External API endpoint for SeDream v4 image editing with custom prompts.
- * This endpoint allows users to modify images using text prompts combined with
- * pre-configured enhancement text for style guidance.
+ * This endpoint allows users to modify images using text prompts.
  * 
- * Body parameters (multipart/form-data):
- * - image (required): Image file to edit (PNG, JPG, JPEG, WEBP)
+ * IMPORTANT: This endpoint ONLY accepts JSON payloads with Content-Type: application/json
+ * 
+ * Body parameters (JSON):
+ * - base64Image (optional): Base64-encoded image data (with or without data:image prefix)
+ * - imageUrl (optional): URL of image to edit
  * - prompt (required): Text description of desired modifications
  * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
  * 
+ * Note: Provide either base64Image OR imageUrl (not both)
+ * 
  * The endpoint automatically:
- * - Combines user prompt with sedream_enhancement_text configuration
- * - Uses a reference image for style transfer: https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg
+ * - Validates and processes Base64 images
  * - Applies content moderation and safety checks
+ * - Adds negative prompts for safety
  * 
  * Response format:
  * Success: { 
@@ -25,7 +30,9 @@ import { ContentModerationService } from "@/lib/content-moderation"
  *   images: [{ url: string, width: number, height: number }], 
  *   prompt: string,
  *   negativePrompt: string,
- *   safetyProtections: {...}
+ *   safetyProtections: {...},
+ *   inputImage: string,
+ *   aspectRatio: string
  * }
  * Error: { success: false, error: string, details?: string }
  */
@@ -33,6 +40,16 @@ import { ContentModerationService } from "@/lib/content-moderation"
 export async function POST(request: NextRequest) {
   try {
     console.log("[External SeDream Edit] Processing request...")
+    
+    // Validate Content-Type
+    const contentType = request.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      return NextResponse.json({
+        success: false,
+        error: "Invalid Content-Type",
+        details: "This endpoint only accepts application/json. Received: " + contentType
+      }, { status: 415 }) // 415 Unsupported Media Type
+    }
     
     // Check if Fal.ai API key is available
     const falApiKey = process.env.FAL_API_KEY
@@ -50,34 +67,44 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
     
-    const formData = await request.formData()
+    // ============================================================================
+    // JSON-ONLY PARSER: Accepts only Base64 images and URLs
+    // ============================================================================
+    const body = await request.json()
     
-    // Extract and validate parameters
-    const image = formData.get('image') as File
-    const prompt = (formData.get('prompt') as string) || ''
-    const aspectRatio = (formData.get('aspect_ratio') as string) || '1:1'
+    const {
+      base64Image = null,
+      imageUrl = null,
+      prompt = '',
+      aspect_ratio = '1:1'
+    } = body
     
-    console.log("[External SeDream Edit] Request parameters:", {
-      hasImage: !!image,
-      imageSize: image ? `${image.size} bytes` : "N/A",
-      prompt: prompt || "(empty)",
+    const aspectRatio = aspect_ratio
+    
+    console.log('[External SeDream Edit] JSON input:', {
+      hasBase64: !!base64Image,
+      base64Length: base64Image?.length || 0,
+      hasImageUrl: !!imageUrl,
+      imageUrl: imageUrl || 'N/A',
+      prompt: prompt.substring(0, 50) + '...',
       aspectRatio
     })
-
-    // Validate required parameters
-    if (!image) {
-      return NextResponse.json({ 
-        success: false,
-        error: "Missing required 'image' parameter",
-        details: "An image file is required for SeDream v4 editing"
-      }, { status: 400 })
-    }
-
+    
+    // Validate prompt
     if (!prompt || !prompt.trim()) {
       return NextResponse.json({ 
         success: false,
         error: "Missing required 'prompt' parameter",
         details: "A text prompt is required to describe the desired image modifications"
+      }, { status: 400 })
+    }
+
+    // Validate that at least one image source is provided
+    if (!imageUrl && !base64Image) {
+      return NextResponse.json({ 
+        success: false,
+        error: "No image provided",
+        details: "Please provide either 'imageUrl' or 'base64Image' parameter"
       }, { status: 400 })
     }
 
@@ -88,26 +115,6 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "Invalid aspect_ratio parameter",
         details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
-      }, { status: 400 })
-    }
-
-    // Validate file type
-    const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    if (!validMimeTypes.includes(image.type)) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid file type",
-        details: `File must be one of: ${validMimeTypes.join(', ')}. Received: ${image.type}`
-      }, { status: 400 })
-    }
-
-    // Validate file size (max 10MB)
-    const maxFileSize = 10 * 1024 * 1024 // 10MB
-    if (image.size > maxFileSize) {
-      return NextResponse.json({
-        success: false,
-        error: "File too large",
-        details: `Maximum file size is 10MB. Received: ${(image.size / 1024 / 1024).toFixed(2)}MB`
       }, { status: 400 })
     }
 
@@ -135,6 +142,110 @@ export async function POST(request: NextRequest) {
     } catch (moderationError) {
       console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
       // Continue with generation if moderation fails to avoid blocking users
+    }
+
+    // ============================================================================
+    // PROCESS BASE64 IMAGE (if provided)
+    // ============================================================================
+    let finalImageUrl = imageUrl // Start with URL if provided
+    
+    if (base64Image && !finalImageUrl) {
+      console.log('[External SeDream Edit] Processing Base64 image...')
+      console.log('[External SeDream Edit] Base64 length:', base64Image.length)
+      
+      try {
+        // Remove data:image/...;base64, prefix if present
+        const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '')
+        const imageBuffer = Buffer.from(base64Data, 'base64')
+        
+        console.log('[External SeDream Edit] Base64 decoded, buffer size:', imageBuffer.length)
+        
+        // Validate with Sharp (ensures it's a valid image)
+        try {
+          const metadata = await sharp(imageBuffer).metadata()
+          console.log('[External SeDream Edit] Image validation - Format:', metadata.format, 'Size:', metadata.width, 'x', metadata.height)
+        } catch (validationError) {
+          console.error('[External SeDream Edit] Invalid image data:', validationError)
+          return NextResponse.json({
+            success: false,
+            error: 'Invalid image data',
+            details: 'The provided Base64 data is not a valid image'
+          }, { status: 400 })
+        }
+
+        // Normalize image to JPEG with Sharp (max 2048px, 90% quality)
+        try {
+          const processedBuffer = await sharp(imageBuffer)
+            .resize(2048, 2048, { 
+              fit: 'inside', 
+              withoutEnlargement: true 
+            })
+            .jpeg({ quality: 90 })
+            .toBuffer()
+          
+          console.log('[External SeDream Edit] Image normalized - Original:', imageBuffer.length, 'Processed:', processedBuffer.length)
+          
+          // 2-step upload to fal.ai storage
+          console.log('[External SeDream Edit] Initiating fal.ai storage upload...')
+          
+          const initResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Key ${falApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              file_name: 'seedream-edit-image.jpg',
+              content_type: 'image/jpeg'
+            })
+          })
+
+          if (!initResponse.ok) {
+            const errorText = await initResponse.text()
+            console.error('[External SeDream Edit] Storage initiate failed:', initResponse.status, errorText)
+            throw new Error(`Storage initiate failed: ${initResponse.status} ${errorText}`)
+          }
+
+          const { upload_url, file_url } = await initResponse.json()
+          console.log('[External SeDream Edit] Got presigned URL, uploading file...')
+
+          // PUT the image to the presigned URL
+          const uploadResponse = await fetch(upload_url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'image/jpeg'
+            },
+            body: new Uint8Array(processedBuffer)
+          })
+
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text()
+            console.error('[External SeDream Edit] File upload failed:', uploadResponse.status, errorText)
+            throw new Error(`File upload failed: ${uploadResponse.status}`)
+          }
+
+          console.log('[External SeDream Edit] ✅ Base64 image uploaded successfully:', file_url)
+          finalImageUrl = file_url
+
+        } catch (sharpError: unknown) {
+          const errorMessage = sharpError instanceof Error ? sharpError.message : 'Unknown Sharp error'
+          console.error('[External SeDream Edit] Sharp processing failed:', errorMessage)
+          return NextResponse.json({
+            success: false,
+            error: 'Image processing failed',
+            details: errorMessage
+          }, { status: 500 })
+        }
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error processing Base64'
+        console.error('[External SeDream Edit] Base64 processing error:', errorMessage)
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to process Base64 image',
+          details: errorMessage
+        }, { status: 500 })
+      }
     }
 
     // Load negative prompts from configuration
@@ -171,63 +282,64 @@ export async function POST(request: NextRequest) {
       console.log("[External SeDream Edit] Using fallback negative prompts:", negativePrompts.length, "terms")
     }
 
-    // Upload image to fal.ai storage
-    console.log("[External SeDream Edit] Uploading image to fal.ai storage...")
+    // Validate that we have a final image URL
+    if (!finalImageUrl) {
+      return NextResponse.json({
+        success: false,
+        error: "No image URL available",
+        details: "Failed to process the provided image"
+      }, { status: 400 })
+    }
+
+    console.log(`[External SeDream Edit] Using final image URL: ${finalImageUrl}`)
+
+    console.log("[External SeDream Edit] Calling fal.ai API...")
+
+    // Calculate image_size from aspect ratio selection
+    let imageSize: string | { width: number; height: number }
     
+    switch (aspectRatio) {
+      case "16:9":
+        imageSize = "landscape_16_9"
+        break
+      case "9:16":
+        imageSize = "portrait_16_9"
+        break
+      case "4:3":
+        imageSize = "landscape_4_3"
+        break
+      case "3:4":
+        imageSize = "portrait_4_3"
+        break
+      case "1:1":
+      default:
+        imageSize = "square_hd"
+        break
+    }
+
+    // Prepare input for SeDream v4 Edit (uses image_urls array)
+    const negativePromptString = negativePrompts.join(", ")
+    const input = {
+      prompt: finalPrompt,
+      negative_prompt: negativePromptString,
+      image_urls: [finalImageUrl],
+      num_images: 1,
+      enable_safety_checker: true,
+      image_size: imageSize
+    }
+
+    console.log("[External SeDream Edit] API Input:", {
+      prompt: input.prompt,
+      negativePrompt: `${negativePromptString.substring(0, 100)}...`,
+      negativePromptTerms: negativePrompts.length,
+      imageUrls: input.image_urls,
+      numImages: input.num_images,
+      aspectRatio: aspectRatio,
+      imageSize: input.image_size
+    })
+
+    // Call SeDream v4 Edit API
     try {
-      // Upload the image and get URL
-      const imageUrl = await fal.storage.upload(image)
-      console.log("[External SeDream Edit] Image uploaded successfully:", imageUrl)
-
-      // Reference image URL (fixed, invisible to user)
-      const referenceImageUrl = "https://v3.fal.media/files/monkey/huuJHd0OJn7pBsJc37rh5_Reference.jpg"
-
-      console.log("[External SeDream Edit] Calling fal.ai API...")
-
-      // Calculate image_size from aspect ratio selection
-      let imageSize: string | { width: number; height: number }
-      
-      switch (aspectRatio) {
-        case "16:9":
-          imageSize = "landscape_16_9"
-          break
-        case "9:16":
-          imageSize = "portrait_16_9"
-          break
-        case "4:3":
-          imageSize = "landscape_4_3"
-          break
-        case "3:4":
-          imageSize = "portrait_4_3"
-          break
-        case "1:1":
-        default:
-          imageSize = "square_hd"
-          break
-      }
-
-      // Prepare input for SeDream v4 Edit (uses image_urls array)
-      const negativePromptString = negativePrompts.join(", ")
-      const input = {
-        prompt: finalPrompt,
-        negative_prompt: negativePromptString,
-        image_urls: [imageUrl, referenceImageUrl],
-        num_images: 1,
-        enable_safety_checker: true,
-        image_size: imageSize
-      }
-
-      console.log("[External SeDream Edit] API Input:", {
-        prompt: input.prompt,
-        negativePrompt: `${negativePromptString.substring(0, 100)}...`,
-        negativePromptTerms: negativePrompts.length,
-        imageUrls: input.image_urls,
-        numImages: input.num_images,
-        aspectRatio: aspectRatio,
-        imageSize: input.image_size
-      })
-
-      // Call SeDream v4 Edit API
       const result = await fal.subscribe("fal-ai/bytedance/seedream/v4/edit", {
         input,
         logs: true,
@@ -269,7 +381,8 @@ export async function POST(request: NextRequest) {
           humanIntegrityProtection: true,
           safetyCheckerEnabled: true
         },
-        referenceUsed: referenceImageUrl
+        inputImage: finalImageUrl,
+        aspectRatio: aspectRatio
       })
 
     } catch (uploadError) {

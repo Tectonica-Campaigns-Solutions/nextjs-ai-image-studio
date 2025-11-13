@@ -10,24 +10,45 @@ import sharp from 'sharp'
  * This endpoint replicates the functionality of the main app's SeDream v4 feature
  * but without requiring authentication and with simplified parameters.
  * 
- * Body parameters (JSON or FormData):
- * - base64Image (optional): Base64-encoded image data
+ * IMPORTANT: This endpoint ONLY accepts JSON payloads with Content-Type: application/json
+ * 
+ * Body parameters (JSON):
+ * - base64Image (optional): Base64-encoded image data (with or without data:image prefix)
  * - imageUrl (optional): URL of image to transform
- * - image (optional): Image file to transform (PNG, JPG, JPEG, WEBP)
  * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
  *   Note: aspect_ratio is mapped to image_size parameter for the SeDream model
  * 
+ * Note: Provide either base64Image OR imageUrl (not both)
+ * 
  * The endpoint automatically uses:
  * - A pre-configured style prompt from sedream_enhancement_text configuration
+ * - Reference image for style transfer
  * 
  * Response format:
- * Success: { success: true, images: [{ url: string, width: number, height: number }], prompt: string, inputImage: string }
+ * Success: { 
+ *   success: true, 
+ *   images: [{ url: string, width: number, height: number }], 
+ *   prompt: string, 
+ *   inputImage: string,
+ *   referenceUsed: string,
+ *   aspectRatio: string
+ * }
  * Error: { success: false, error: string, details?: string }
  */
 
 export async function POST(request: NextRequest) {
   try {
     console.log("[External SeDream v4] Processing request...")
+    
+    // Validate Content-Type
+    const contentType = request.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      return NextResponse.json({
+        success: false,
+        error: "Invalid Content-Type",
+        details: "This endpoint only accepts application/json. Received: " + contentType
+      }, { status: 415 }) // 415 Unsupported Media Type
+    }
     
     // Check if Fal.ai API key is available
     const falApiKey = process.env.FAL_API_KEY
@@ -46,48 +67,25 @@ export async function POST(request: NextRequest) {
     })
     
     // ============================================================================
-    // DUAL PARSER: Support both JSON (Base64/URLs) and FormData (File uploads)
+    // JSON-ONLY PARSER: Accepts only Base64 images and URLs
     // ============================================================================
-    const contentType = request.headers.get('content-type') || ''
-    const isJSON = contentType.includes('application/json')
+    const body = await request.json()
     
-    console.log(`[External SeDream v4] Content-Type: ${contentType}`)
-    console.log(`[External SeDream v4] Using ${isJSON ? 'JSON' : 'FormData'} parser`)
+    const {
+      base64Image = null,
+      imageUrl = null,
+      aspect_ratio = '1:1'
+    } = body
     
-    let imageFile: File | null = null
-    let imageUrl: string | null = null
-    let base64Image: string | null = null
-    let aspectRatio = '1:1'
+    const aspectRatio = aspect_ratio
     
-    if (isJSON) {
-      // Parse JSON body for Base64 or URL inputs
-      const jsonBody = await request.json()
-      base64Image = jsonBody.base64Image || null
-      imageUrl = jsonBody.imageUrl || null
-      aspectRatio = jsonBody.aspect_ratio || jsonBody.aspectRatio || '1:1'
-      
-      console.log('[External SeDream v4] JSON input:', {
-        hasBase64: !!base64Image,
-        base64Length: base64Image?.length || 0,
-        hasImageUrl: !!imageUrl,
-        imageUrl: imageUrl || 'N/A',
-        aspectRatio
-      })
-    } else {
-      // Parse FormData for File uploads
-      const formData = await request.formData()
-      imageFile = formData.get('image') as File | null
-      imageUrl = (formData.get('imageUrl') as string) || null
-      aspectRatio = (formData.get('aspect_ratio') as string) || '1:1'
-      
-      console.log('[External SeDream v4] FormData input:', {
-        hasFile: !!imageFile,
-        fileSize: imageFile?.size || 0,
-        fileName: imageFile?.name || 'N/A',
-        hasImageUrl: !!imageUrl,
-        aspectRatio
-      })
-    }
+    console.log('[External SeDream v4] JSON input:', {
+      hasBase64: !!base64Image,
+      base64Length: base64Image?.length || 0,
+      hasImageUrl: !!imageUrl,
+      imageUrl: imageUrl || 'N/A',
+      aspectRatio
+    })
     
     // Validate aspect_ratio parameter
     const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4']
@@ -100,34 +98,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate that at least one image source is provided
-    if (!imageFile && !imageUrl && !base64Image) {
+    if (!imageUrl && !base64Image) {
       return NextResponse.json({ 
         success: false,
         error: "Missing required image parameter",
-        details: "Either an image file, imageUrl, or base64Image is required for SeDream v4 style transfer"
+        details: "Either 'imageUrl' or 'base64Image' is required for SeDream v4 style transfer"
       }, { status: 400 })
-    }
-
-    // Validate file type if File was provided
-    if (imageFile) {
-      const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-      if (!validMimeTypes.includes(imageFile.type)) {
-        return NextResponse.json({
-          success: false,
-          error: "Invalid file type",
-          details: `File must be one of: ${validMimeTypes.join(', ')}. Received: ${imageFile.type}`
-        }, { status: 400 })
-      }
-
-      // Validate file size (max 10MB)
-      const maxFileSize = 10 * 1024 * 1024 // 10MB
-      if (imageFile.size > maxFileSize) {
-        return NextResponse.json({
-          success: false,
-          error: "File too large",
-          details: `Maximum file size is 10MB. Received: ${(imageFile.size / 1024 / 1024).toFixed(2)}MB`
-        }, { status: 400 })
-      }
     }
 
     // Load the configured SeDream enhancement text
@@ -318,32 +294,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ============================================================================
-    // UPLOAD FILE (if File object was provided)
-    // ============================================================================
-    if (imageFile && !finalImageUrl) {
-      console.log("[External SeDream v4] Uploading image file to fal.ai storage...")
-      
-      try {
-        finalImageUrl = await fal.storage.upload(imageFile)
-        console.log("[External SeDream v4] File uploaded successfully:", finalImageUrl)
-      } catch (uploadError) {
-        const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown upload error'
-        console.error("[External SeDream v4] File upload failed:", errorMessage)
-        return NextResponse.json({
-          success: false,
-          error: "File upload failed",
-          details: errorMessage
-        }, { status: 500 })
-      }
-    }
-    
     // Validate that we have a final image URL
     if (!finalImageUrl) {
       return NextResponse.json({
         success: false,
-        error: "No image provided",
-        details: "Please provide either an image file, image URL, or Base64 image"
+        error: "No image URL available",
+        details: "Failed to process the provided image"
       }, { status: 400 })
     }
 
@@ -443,7 +399,8 @@ export async function POST(request: NextRequest) {
           safetyCheckerEnabled: true
         },
         inputImage: finalImageUrl,
-        referenceUsed: referenceImageUrl
+        referenceUsed: referenceImageUrl,
+        aspectRatio: aspectRatio
       })
 
     } catch (uploadError) {
