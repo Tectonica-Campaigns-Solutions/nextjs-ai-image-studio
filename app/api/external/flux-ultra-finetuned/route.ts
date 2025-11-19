@@ -184,8 +184,7 @@ export async function POST(request: NextRequest) {
       safety_tolerance: 1, // Most strict by default
       output_format: "jpeg", // Changed back to jpeg (jpg might not be valid)
       enable_safety_checker: true,
-      raw: false, // Raw mode disabled by default
-      seed: 1234 // Default seed for consistent results
+      raw: false // Raw mode disabled by default
     }
     
     const mergedSettings = { ...defaultSettings, ...settings }
