@@ -9,9 +9,11 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * 
  * External API endpoint for combining images using Seedream-v4 via fal.ai with enhanced pipeline.
  * 
- * ENHANCED PIPELINE (2 steps):
- * Step 1: Process image2 (second image) with seedream-v4-edit using configured sedream_enhancement_text
- * Step 2: Combine image1 (original) with processed_image2 using user's prompt (canonical or enhanced)
+ * ENHANCED PIPELINE (conditional 2-step or direct combination):
+ * Step 1 (optional): If processSecondImage=true, process target image with seedream-v4-edit using sedream_enhancement_text
+ *   - CA origin: Processes first image (index 0)
+ *   - TCN origin: Processes second image (index 1)
+ * Step 2: Combine both images (one processed, one original) using user's prompt (canonical or enhanced)
  * 
  * ⚠️  IMPORTANT: Use JSON format (application/json) for Base64 images and URLs.
  * FormData should ONLY be used for actual file uploads (File objects).
@@ -23,7 +25,11 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  *   "prompt": "your prompt here",
  *   "imageUrls": ["url1", "url2"],        // optional - array of image URLs
  *   "base64Images": ["base64...", "..."], // optional - array of Base64 strings
- *   "settings": { "aspect_ratio": "1:1" },
+ *   "settings": { 
+ *     "aspect_ratio": "1:1",
+ *     "processSecondImage": true,
+ *     "origin": "CA"
+ *   },
  *   "useCanonicalPrompt": true,
  *   "canonicalConfig": { ... },
  *   "orgType": "general"
@@ -37,6 +43,10 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * - settings: JSON string with generation settings
  *   - aspect_ratio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" (default: "1:1") 
  *   - enable_safety_checker: boolean (default: true)
+ *   - processSecondImage: boolean (default: true) - Enable 2-step processing with seedream-v4-edit
+ *   - origin: "CA" | "TCN" (default: "CA") - Determines which image to process in Step 1
+ *     * "CA": Process first image (index 0)
+ *     * "TCN": Process second image (index 1)
  * - useCanonicalPrompt: "true" or "false"
  * - canonicalConfig: JSON string with canonical config
  * - orgType: Organization type for moderation
@@ -92,7 +102,9 @@ export async function POST(request: NextRequest) {
     
     let settings: any = {
       aspect_ratio: aspectRatio,
-      enable_safety_checker: body.enable_safety_checker !== false
+      enable_safety_checker: body.enable_safety_checker !== false,
+      processSecondImage: body.settings?.processSecondImage !== false, // Default: true
+      origin: body.settings?.origin || "CA" // Default: CA
     }
     
     let imageUrls: string[] = []
@@ -115,6 +127,18 @@ export async function POST(request: NextRequest) {
     }
 
     const enableSafetyChecker = settings.enable_safety_checker !== false // Default to true
+    const processSecondImage = settings.processSecondImage !== false // Default to true
+    const origin = settings.origin || "CA" // Default to CA
+    
+    // Validate origin parameter
+    const validOrigins = ["CA", "TCN"]
+    if (!validOrigins.includes(origin)) {
+      return NextResponse.json({
+        success: false,
+        error: "Invalid origin parameter",
+        details: `origin must be one of: ${validOrigins.join(', ')}. Received: ${origin}`
+      }, { status: 400 })
+    }
 
     // Validate prompt
     if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
@@ -129,6 +153,8 @@ export async function POST(request: NextRequest) {
       prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
       aspectRatio,
       enableSafetyChecker,
+      processSecondImage,
+      origin,
       orgType,
       useCanonicalPrompt
     })
@@ -361,21 +387,44 @@ export async function POST(request: NextRequest) {
     console.log("[External Seedream Combine] All image URLs ready:", allImageUrls)
     console.log("[External Seedream Combine] Starting enhanced pipeline: seedream → combine")
 
-    // ENHANCED PIPELINE: Step 1 - Process image2 (second image) with seedream-v4-edit
-    console.log("[External Seedream Combine] Pipeline Step 1: Processing image2 with seedream-v4-edit")
+    // ENHANCED PIPELINE: Conditionally process image based on origin and processSecondImage flag
+    // CA: Process first image (index 0)
+    // TCN: Process second image (index 1)
+    let image1Url: string
+    let image2Url: string
+    let imageToProcess: string
+    let imageToProcessLabel: string
     
-    const image1Url = allImageUrls[0] // First image (remains unchanged)
-    const image2Url = allImageUrls[1] // Second image (will be processed with seedream)
+    if (origin === "CA") {
+      image1Url = allImageUrls[0] // First image - will be processed if enabled
+      image2Url = allImageUrls[1] // Second image - kept original
+      imageToProcess = image1Url
+      imageToProcessLabel = "image1 (first image)"
+      console.log("[External Seedream Combine] CA mode: Will process first image (index 0)")
+    } else {
+      image1Url = allImageUrls[0] // First image - kept original
+      image2Url = allImageUrls[1] // Second image - will be processed if enabled
+      imageToProcess = image2Url
+      imageToProcessLabel = "image2 (second image)"
+      console.log("[External Seedream Combine] TCN mode: Will process second image (index 1)")
+    }
     
-    console.log("[External Seedream Combine] Image1 (unchanged):", image1Url)
-    console.log("[External Seedream Combine] Image2 (to be processed):", image2Url)
+    console.log("[External Seedream Combine] Image1:", image1Url)
+    console.log("[External Seedream Combine] Image2:", image2Url)
+    console.log("[External Seedream Combine] Process second image:", processSecondImage)
+    console.log("[External Seedream Combine] Image to process:", imageToProcessLabel)
 
-    let processedImage2Url: string
-    let sedreamPrompt: string // Declare sedream prompt variable
+    let processedImage1Url: string = image1Url // Default: use original
+    let processedImage2Url: string = image2Url // Default: use original
+    let sedreamPrompt: string = "" // Declare sedream prompt variable
     
-    try {
-      // Get sedream enhancement text from configuration
-      sedreamPrompt = await getSedreamEnhancementText() || ""
+    if (processSecondImage) {
+      // PIPELINE STEP 1: Process target image with seedream-v4-edit
+      console.log(`[External Seedream Combine] Pipeline Step 1: Processing ${imageToProcessLabel} with seedream-v4-edit`)
+      
+      try {
+        // Get sedream enhancement text from configuration
+        sedreamPrompt = await getSedreamEnhancementText() || ""
       
       if (!sedreamPrompt) {
         console.error("[External Seedream Combine] No sedream_enhancement_text configured")
@@ -388,19 +437,19 @@ export async function POST(request: NextRequest) {
 
       console.log("[External Seedream Combine] Using sedream prompt:", sedreamPrompt.substring(0, 100) + "...")
 
-      // Call internal seedream-v4-edit to process image2
+      // Call internal seedream-v4-edit to process target image
       const seedreamFormData = new FormData()
       
-      // Download image2 to create a File object for seedream
-      const image2Response = await fetch(image2Url)
-      if (!image2Response.ok) {
-        throw new Error(`Failed to fetch image2: ${image2Response.status}`)
+      // Download target image to create a File object for seedream
+      const imageResponse = await fetch(imageToProcess)
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch ${imageToProcessLabel}: ${imageResponse.status}`)
       }
       
-      const image2Blob = await image2Response.blob()
-      const image2File = new File([image2Blob], 'image2.jpg', { type: 'image/jpeg' })
+      const imageBlob = await imageResponse.blob()
+      const imageFile = new File([imageBlob], 'image.jpg', { type: 'image/jpeg' })
       
-      seedreamFormData.append("image", image2File)
+      seedreamFormData.append("image", imageFile)
       seedreamFormData.append("prompt", "") // Empty prompt - use only customEnhancementText
       seedreamFormData.append("useJSONEnhancement", "false") // Use customEnhancementText as-is
       seedreamFormData.append("customEnhancementText", sedreamPrompt)
@@ -424,29 +473,49 @@ export async function POST(request: NextRequest) {
         throw new Error("SeDream API returned invalid response")
       }
 
-      processedImage2Url = seedreamResult.images[0].url
-      console.log("[External Seedream Combine] ✅ SeDream processing complete:", processedImage2Url)
-      
-    } catch (seedreamError) {
-      console.error("[External Seedream Combine] Pipeline Step 1 failed:", seedreamError)
-      return NextResponse.json({
-        success: false,
-        error: "Pipeline step 1 failed",
-        details: `SeDream processing failed: ${seedreamError instanceof Error ? seedreamError.message : 'Unknown error'}`,
-        step: "seedream-v4-edit",
-        failedImage: image2Url
-      }, { status: 500 })
+        const processedUrl = seedreamResult.images[0].url
+        
+        if (origin === "CA") {
+          processedImage1Url = processedUrl
+          console.log("[External Seedream Combine] ✅ SeDream processing complete (image1):", processedImage1Url)
+        } else {
+          processedImage2Url = processedUrl
+          console.log("[External Seedream Combine] ✅ SeDream processing complete (image2):", processedImage2Url)
+        }
+        
+      } catch (seedreamError) {
+        console.error("[External Seedream Combine] Pipeline Step 1 failed:", seedreamError)
+        return NextResponse.json({
+          success: false,
+          error: "Pipeline step 1 failed",
+          details: `SeDream processing failed: ${seedreamError instanceof Error ? seedreamError.message : 'Unknown error'}`,
+          step: "seedream-v4-edit",
+          failedImage: imageToProcess
+        }, { status: 500 })
+      }
+    } else {
+      // Skip Step 1: Use both original images directly
+      console.log("[External Seedream Combine] Skipping Step 1: Using both original images directly")
     }
 
-    // ENHANCED PIPELINE: Step 2 - Combine image1 with processed image2
-    console.log("[External Seedream Combine] Pipeline Step 2: Combining images with seedream-v4-edit")
+    // PIPELINE STEP 2: Combine images
+    let step2Label: string
+    if (processSecondImage) {
+      step2Label = origin === "CA" 
+        ? "Combining images (with processed image1)" 
+        : "Combining images (with processed image2)"
+    } else {
+      step2Label = "Combining images (both original)"
+    }
+    
+    console.log(`[External Seedream Combine] Pipeline Step 2: ${step2Label}`)
     console.log("[External Seedream Combine] Final combination:")
-    console.log("  - Image1 (original):", image1Url)
-    console.log("  - Image2 (processed):", processedImage2Url)
+    console.log(`  - Image1 (${origin === "CA" && processSecondImage ? 'processed' : 'original'}):`, processedImage1Url)
+    console.log(`  - Image2 (${origin === "TCN" && processSecondImage ? 'processed' : 'original'}):`, processedImage2Url)
     console.log("  - User prompt:", finalPrompt)
 
-    // Update image URLs for final combination (use processed image2)
-    const combinedImageUrls = [image1Url, processedImage2Url]
+    // Update image URLs for final combination
+    const combinedImageUrls = [processedImage1Url, processedImage2Url]
 
     // Map aspect ratio to fal.ai image_size format
     let imageSize: string
@@ -542,13 +611,15 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         // Enhanced pipeline metadata
         enhancedPipeline: true,
-        pipelineSteps: [
+        pipelineSteps: processSecondImage ? [
           {
             step: 1,
             operation: "seedream-v4-edit",
-            inputImage: image2Url,
-            outputImage: processedImage2Url,
-            prompt: sedreamPrompt
+            inputImage: origin === "CA" ? image1Url : image2Url,
+            outputImage: origin === "CA" ? processedImage1Url : processedImage2Url,
+            prompt: sedreamPrompt,
+            processedImageIndex: origin === "CA" ? 0 : 1,
+            origin: origin
           },
           {
             step: 2,
@@ -556,6 +627,15 @@ export async function POST(request: NextRequest) {
             inputImages: combinedImageUrls,
             outputImage: images[0]?.url,
             prompt: finalPrompt
+          }
+        ] : [
+          {
+            step: 1,
+            operation: "seedream-v4-edit-combine",
+            inputImages: combinedImageUrls,
+            outputImage: images[0]?.url,
+            prompt: finalPrompt,
+            note: "Direct combination without pre-processing"
           }
         ]
       })
@@ -597,17 +677,19 @@ export async function GET() {
     method: "POST",
     contentType: "multipart/form-data",
     pipeline: {
-      description: "Two-step enhanced pipeline for optimal results",
+      description: "Conditional 2-step pipeline for optimal results (Step 1 optional based on processSecondImage flag)",
       steps: [
         {
           step: 1,
-          name: "Style Transfer",
-          description: "Process second image with Seedream v4 using configured style prompt"
+          name: "Style Transfer (Optional)",
+          description: "Process target image with Seedream v4 using configured style prompt (only if processSecondImage=true)",
+          enabled: "Controlled by settings.processSecondImage (default: true)",
+          targetImage: "Determined by origin parameter: CA=first image (index 0), TCN=second image (index 1)"
         },
         {
           step: 2,
           name: "Image Combination",
-          description: "Combine first image with style-processed second image using user prompt"
+          description: "Combine both images (one processed, one original) using user prompt"
         }
       ]
     },
@@ -643,6 +725,17 @@ export async function GET() {
           enable_safety_checker: {
             type: "boolean",
             default: true
+          },
+          processSecondImage: {
+            type: "boolean",
+            default: true,
+            description: "Enable 2-step pipeline: process target image with Seedream v4 before combination. When false, both images are used as-is."
+          },
+          origin: {
+            type: "string",
+            default: "CA",
+            options: ["CA", "TCN"],
+            description: "Determines which image to process in Step 1: 'CA' processes first image (index 0), 'TCN' processes second image (index 1)"
           }
         }
       },
@@ -718,7 +811,7 @@ export async function GET() {
   -F "prompt=Combine these images with vibrant colors" \\
   -F "image0=@/path/to/first-image.jpg" \\
   -F "image1=@/path/to/second-image.jpg" \\
-  -F 'settings={"aspect_ratio":"16:9","enable_safety_checker":true}'`,
+  -F 'settings={"aspect_ratio":"16:9","processSecondImage":false}'`,
       
       javascript: `const formData = new FormData();
 formData.append('prompt', 'Combine these images with vibrant colors');
@@ -726,7 +819,7 @@ formData.append('image0', firstImageFile);
 formData.append('image1', secondImageFile);
 formData.append('settings', JSON.stringify({
   aspect_ratio: '16:9',
-  enable_safety_checker: true
+  processSecondImage: false // Set to true to enable 2-step processing
 }));
 
 const response = await fetch('/api/external/seedream-ark-combine', {
@@ -737,10 +830,11 @@ const response = await fetch('/api/external/seedream-ark-combine', {
 const result = await response.json();`
     },
     notes: [
-      "Requires exactly 2 images for the enhanced pipeline",
-      "Step 1: Second image is processed with configured style prompt",
-      "Step 2: First image is combined with processed second image using your prompt",
-      "Processing time: 30-60 seconds depending on image complexity",
+      "Requires exactly 2 images for combination",
+      "Conditional 2-step pipeline controlled by processSecondImage flag (default: false)",
+      "  • When false: Both images combined directly without preprocessing",
+      "  • When true: Step 1 processes second image with configured style, Step 2 combines with first image",
+      "Processing time: 15-30 seconds (direct) or 30-60 seconds (with preprocessing)",
       "Maximum file size: 10MB per image",
       "Supported formats: PNG, JPG, JPEG, WEBP",
       "Built-in content moderation for safe results",
