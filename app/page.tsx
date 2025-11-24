@@ -4267,7 +4267,6 @@ export default function ImageEditor() {
                                 type="number"
                                 min={512}
                                 max={2048}
-                                step={64}
                                 value={seedreamArkSettings.custom_width}
                                 onChange={(e) => 
                                   setSeedreamArkSettings(prev => ({ 
@@ -4285,7 +4284,6 @@ export default function ImageEditor() {
                                 type="number"
                                 min={512}
                                 max={2048}
-                                step={64}
                                 value={seedreamArkSettings.custom_height}
                                 onChange={(e) => 
                                   setSeedreamArkSettings(prev => ({ 
@@ -4298,7 +4296,7 @@ export default function ImageEditor() {
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Range: 512-2048 pixels. Recommended: multiples of 64.
+                            Range: 512-2048 pixels. Any value within range is supported.
                           </p>
                         </div>
                       )}
