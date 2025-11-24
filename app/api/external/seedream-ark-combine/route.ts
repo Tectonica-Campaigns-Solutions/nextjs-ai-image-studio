@@ -575,14 +575,17 @@ export async function POST(request: NextRequest) {
     const input: any = {
       image_urls: combinedImageUrls, // Image1 + Processed Image2
       prompt: finalPrompt, // User's prompt (canonical or enhanced)
-      image_size: imageSize,
       enable_safety_checker: enableSafetyChecker
     }
     
-    // Add custom dimensions if using custom size
+    // Add image_size OR custom dimensions (mutually exclusive)
     if (aspectRatio === "custom" && imageDimensions) {
+      // For custom dimensions, only send width and height (no image_size)
       input.width = imageDimensions.width
       input.height = imageDimensions.height
+    } else {
+      // For preset aspect ratios, use image_size
+      input.image_size = imageSize
     }
 
     console.log("[External Seedream Combine] Final input object being sent to fal.ai:")
