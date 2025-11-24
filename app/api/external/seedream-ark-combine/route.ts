@@ -26,7 +26,9 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  *   "imageUrls": ["url1", "url2"],        // optional - array of image URLs
  *   "base64Images": ["base64...", "..."], // optional - array of Base64 strings
  *   "settings": { 
- *     "aspect_ratio": "1:1",
+ *     "aspect_ratio": "1:1",              // or "16:9", "9:16", "4:3", "3:4", "custom"
+ *     "custom_width": 1080,               // required if aspect_ratio is "custom"
+ *     "custom_height": 1350,              // required if aspect_ratio is "custom"
  *     "processSecondImage": true,
  *     "origin": "CA"
  *   },
@@ -41,7 +43,9 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * - imageUrl0, imageUrl1: Image URLs (if not using files)
  * - imageBase640, imageBase641: Base64 images (NOT RECOMMENDED - use JSON instead)
  * - settings: JSON string with generation settings
- *   - aspect_ratio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" (default: "1:1") 
+ *   - aspect_ratio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom" (default: "1:1") 
+ *   - custom_width: number (512-2048, required if aspect_ratio is "custom")
+ *   - custom_height: number (512-2048, required if aspect_ratio is "custom")
  *   - enable_safety_checker: boolean (default: true)
  *   - processSecondImage: boolean (default: true) - Enable 2-step processing with seedream-v4-edit
  *   - origin: "CA" | "TCN" (default: "CA") - Determines which image to process in Step 1
@@ -96,9 +100,11 @@ export async function POST(request: NextRequest) {
     
     const prompt: string = body.prompt
     const orgType: string = body.orgType || "general"
-    const aspectRatio = body.aspect_ratio || "1:1"
     const useCanonicalPrompt = body.useCanonicalPrompt === true || body.useCanonicalPrompt === "true"
     const canonicalConfig: CanonicalPromptConfig | undefined = body.canonicalConfig
+    
+    // Extract settings (support both body.settings.* and body.* for backward compatibility)
+    const aspectRatio = body.settings?.aspect_ratio || body.aspect_ratio || "1:1"
     
     let settings: any = {
       aspect_ratio: aspectRatio,
