@@ -42,6 +42,8 @@ export default function CombineModal({
   const [promptValue, setPromptValue] = useState("");
   const [imageSize, setImageSize] = useState<ImageSize>("3:4");
   const [uploadedImages, setUploadedImages] = useState<FileAttachment[]>([]);
+  const [base64Images, setBase64Images] = useState<string[]>([]);
+  const [base64Input, setBase64Input] = useState("");
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -78,6 +80,26 @@ export default function CombineModal({
     }
   };
 
+  const handleAddBase64Image = () => {
+    const trimmed = base64Input.trim();
+    if (!trimmed) return;
+
+    // Validate base64 format
+    const isDataUrl = trimmed.startsWith('data:');
+    const isBase64 = /^[A-Za-z0-9+/=]+$/.test(trimmed.replace(/^data:image\/[^;]+;base64,/, ''));
+    
+    if (isDataUrl || isBase64) {
+      setBase64Images((prev) => [...prev, trimmed]);
+      setBase64Input("");
+    } else {
+      alert("Invalid Base64 format. Please paste a valid Base64 string or data URL.");
+    }
+  };
+
+  const handleRemoveBase64Image = (index: number) => {
+    setBase64Images((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!imageUrl) return;
 
@@ -88,15 +110,25 @@ export default function CombineModal({
           ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-image-combine`
           : `https://qwen-image-editor-production-49d4.up.railway.app/api/external/flux-pro-image-combine`;
 
+      // Prepare payload with Base64 images
+      const payload: any = {
+        prompt: promptValue,
+        imageUrls: [imageUrl, ...uploadedImages.map((f) => f.fileUrl)],
+        settings: {
+          aspect_ratio: imageSize || "1:1",
+        },
+      };
+
+      // Add Base64 images if present
+      if (base64Images.length > 0) {
+        base64Images.forEach((base64, index) => {
+          payload[`imageBase64${index}`] = base64;
+        });
+      }
+
       const response = await fetch(url, {
         method: "POST",
-        body: JSON.stringify({
-          prompt: promptValue,
-          imageUrls: [imageUrl, ...uploadedImages.map((f) => f.fileUrl)],
-          settings: {
-            aspect_ratio: imageSize || "1:1",
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       const responseValues = await response.json();
@@ -175,12 +207,41 @@ export default function CombineModal({
               </Button>
             </div>
 
+            {/* Base64 input section */}
+            <div>
+              <label className="block mb-1 font-medium">
+                Add Base64 Images (Optional)
+              </label>
+              <div className="flex gap-2">
+                <textarea
+                  className="flex-1 min-h-[60px] max-h-[120px] resize-none px-3 py-2 border border-gray-300 rounded-md font-mono text-xs"
+                  placeholder="Paste Base64 string or data URL (e.g., data:image/jpeg;base64,/9j/4AAQ...)"
+                  disabled={isLoading}
+                  value={base64Input}
+                  onChange={(e) => setBase64Input(e.target.value)}
+                />
+                <Button
+                  onClick={handleAddBase64Image}
+                  disabled={isLoading || !base64Input.trim()}
+                  className="h-[60px] px-4"
+                  variant="outline"
+                >
+                  Add
+                </Button>
+              </div>
+              {base64Images.length > 0 && (
+                <div className="mt-2 text-sm text-gray-600">
+                  {base64Images.length} Base64 image(s) added
+                </div>
+              )}
+            </div>
+
             <div>
               {/* Preview uploaded images */}
               {uploadedImages.length > 0 && (
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg pb-3">Additional images</h3>
-                  <div className="flex gap-3">
+                <div className="flex-1 min-w-0 mb-4">
+                  <h3 className="font-bold text-lg pb-3">Additional images (Uploaded)</h3>
+                  <div className="flex gap-3 flex-wrap">
                     {uploadedImages.map((file, idx) => (
                       <div
                         key={idx}
@@ -193,6 +254,41 @@ export default function CombineModal({
                         />
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preview Base64 images */}
+              {base64Images.length > 0 && (
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg pb-3">Additional images (Base64)</h3>
+                  <div className="flex gap-3 flex-wrap">
+                    {base64Images.map((base64, idx) => {
+                      // Convert base64 to displayable format if needed
+                      const displaySrc = base64.startsWith('data:') 
+                        ? base64 
+                        : `data:image/jpeg;base64,${base64}`;
+                      
+                      return (
+                        <div
+                          key={idx}
+                          className="relative overflow-hidden rounded-lg border border-gray-200"
+                        >
+                          <img
+                            src={displaySrc}
+                            alt={`base64-${idx}`}
+                            className="w-[100px] h-auto"
+                          />
+                          <button
+                            onClick={() => handleRemoveBase64Image(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                            disabled={isLoading}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

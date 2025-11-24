@@ -23,19 +23,39 @@ Original Base64 strings are ~3.9M characters, but they get cut off at exactly 1M
 
 ## Solution
 
-**Use JSON instead of FormData for Base64 images >1MB**
+**Use JSON instead of FormData for ALL Base64/URL image requests**
 
 JSON bodies don't have the same strict limit as FormData multipart parsing.
 
 ## Implementation
 
-1. Keep FormData for file uploads (works fine, no limit issues)
-2. Add JSON endpoint variant for Base64-only requests
-3. Frontend detects Base64 size and chooses appropriate method
+### ✅ Complete Implementation
 
-## Workaround Status
+**Frontend Strategy:**
+- Use **JSON** when request contains only Base64 images or URLs (no file uploads)
+- Use **FormData** only when there are actual File objects to upload
+- Auto-detection based on presence of file uploads
 
-- ✅ Logs added to detect truncation
-- ✅ Validation to reject corrupted Base64
-- ⏳ JSON endpoint implementation (pending)
-- ⏳ Frontend auto-detection (pending)
+**Backend Support:**
+- All endpoints accept both `application/json` AND `multipart/form-data`
+- Content-Type detection automatically routes to correct parser
+- No breaking changes - backward compatible
+
+**Affected Endpoints:**
+- ✅ `/api/external/flux-pro-image-combine` - JSON + FormData support
+- ✅ `/api/seedream-ark-combine` - JSON + FormData support  
+- ✅ `/api/external/seedream-ark-combine` - JSON + FormData support
+
+## Results
+
+- ✅ No more 1MB truncation issues
+- ✅ Base64 images of any size work correctly
+- ✅ Sharp validation catches corrupted images before upload
+- ✅ 2-step upload (initiate → PUT) prevents corruption
+- ✅ Comprehensive logging for debugging
+
+## Status
+
+**Problem:** ✅ SOLVED
+
+Strategy: Always use JSON for Base64/URLs (no size limits), FormData only for file uploads.

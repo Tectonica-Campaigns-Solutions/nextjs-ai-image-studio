@@ -15,7 +15,9 @@ import sharp from 'sharp'
  * Body parameters (JSON):
  * - base64Image (optional): Base64-encoded image data (with or without data:image prefix)
  * - imageUrl (optional): URL of image to transform
- * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
+ * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4, custom (default: 1:1)
+ * - custom_width (optional): Custom width in pixels (512-2048, required if aspect_ratio is 'custom')
+ * - custom_height (optional): Custom height in pixels (512-2048, required if aspect_ratio is 'custom')
  *   Note: aspect_ratio is mapped to image_size parameter for the SeDream model
  * 
  * Note: Provide either base64Image OR imageUrl (not both)
@@ -74,10 +76,14 @@ export async function POST(request: NextRequest) {
     const {
       base64Image = null,
       imageUrl = null,
-      aspect_ratio = '1:1'
+      aspect_ratio = '1:1',
+      custom_width,
+      custom_height
     } = body
     
     const aspectRatio = aspect_ratio
+    const customWidth = custom_width ? parseInt(custom_width.toString()) : undefined
+    const customHeight = custom_height ? parseInt(custom_height.toString()) : undefined
     
     console.log('[External SeDream v4] JSON input:', {
       hasBase64: !!base64Image,
@@ -88,13 +94,44 @@ export async function POST(request: NextRequest) {
     })
     
     // Validate aspect_ratio parameter
-    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4']
+    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4', 'custom']
     if (!validAspectRatios.includes(aspectRatio)) {
       return NextResponse.json({ 
         success: false,
         error: "Invalid aspect_ratio parameter",
         details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
       }, { status: 400 })
+    }
+    
+    // Validate custom dimensions if aspect_ratio is custom
+    if (aspectRatio === "custom") {
+      if (!customWidth || !customHeight) {
+        return NextResponse.json({
+          success: false,
+          error: "custom_width and custom_height are required when aspect_ratio is 'custom'",
+          details: `Received customWidth: ${customWidth}, customHeight: ${customHeight}`
+        }, { status: 400 })
+      }
+      
+      // Validate dimension ranges (512-2048 pixels)
+      if (customWidth < 512 || customWidth > 2048 || customHeight < 512 || customHeight > 2048) {
+        return NextResponse.json({
+          success: false,
+          error: "custom_width and custom_height must be between 512 and 2048 pixels",
+          details: `Received customWidth: ${customWidth}, customHeight: ${customHeight}`
+        }, { status: 400 })
+      }
+      
+      // Validate minimum total area (Seedream v4 requirement: 921600 pixels minimum)
+      const totalArea = customWidth * customHeight
+      const minArea = 921600
+      if (totalArea < minArea) {
+        return NextResponse.json({
+          success: false,
+          error: "Image area too small",
+          details: `Custom dimensions must have a minimum total area of ${minArea} pixels (e.g., 960x960). Your request: ${customWidth}x${customHeight} = ${totalArea} pixels. The API will automatically scale up images below this threshold.`
+        }, { status: 400 })
+      }
     }
 
     // Validate that at least one image source is provided
@@ -309,24 +346,31 @@ export async function POST(request: NextRequest) {
 
     // Calculate image_size from aspect ratio selection
     let imageSize: string | { width: number; height: number }
+    let imageDimensions: { width: number; height: number } | undefined
     
-    switch (aspectRatio) {
-      case "16:9":
-        imageSize = "landscape_16_9"
-        break
-      case "9:16":
-        imageSize = "portrait_16_9"
-        break
-      case "4:3":
-        imageSize = "landscape_4_3"
-        break
-      case "3:4":
-        imageSize = "portrait_4_3"
-        break
-      case "1:1":
-      default:
-        imageSize = "square_hd"
-        break
+    if (aspectRatio === "custom") {
+      imageDimensions = { width: customWidth!, height: customHeight! }
+      console.log("[External SeDream v4] Using custom dimensions:", imageDimensions)
+    } else {
+      switch (aspectRatio) {
+        case "16:9":
+          imageSize = "landscape_16_9"
+          break
+        case "9:16":
+          imageSize = "portrait_16_9"
+          break
+        case "4:3":
+          imageSize = "landscape_4_3"
+          break
+        case "3:4":
+          imageSize = "portrait_4_3"
+          break
+        case "1:1":
+        default:
+          imageSize = "square_hd"
+          break
+      }
+      console.log("[External SeDream v4] Using preset aspect ratio:", imageSize)
     }
 
     // Reference image for style transfer
@@ -334,13 +378,22 @@ export async function POST(request: NextRequest) {
 
     // Prepare input for SeDream v4 Edit (uses image_urls array with user image and reference)
     const negativePromptString = negativePrompts.join(", ")
-    const input = {
+    const input: any = {
       prompt: finalPrompt,
       negative_prompt: negativePromptString,
       image_urls: [finalImageUrl, referenceImageUrl],
       num_images: 1,
-      enable_safety_checker: true,
-      image_size: imageSize
+      enable_safety_checker: true
+    }
+    
+    // Add image_size (string for presets, object for custom dimensions)
+    if (aspectRatio === "custom" && imageDimensions) {
+      input.image_size = {
+        width: imageDimensions.width,
+        height: imageDimensions.height
+      }
+    } else {
+      input.image_size = imageSize!
     }
 
     try {
@@ -400,7 +453,13 @@ export async function POST(request: NextRequest) {
         },
         inputImage: finalImageUrl,
         referenceUsed: referenceImageUrl,
-        aspectRatio: aspectRatio
+        aspectRatio: aspectRatio,
+        ...(aspectRatio === "custom" && imageDimensions ? {
+          customDimensions: {
+            width: imageDimensions.width,
+            height: imageDimensions.height
+          }
+        } : {})
       })
 
     } catch (uploadError) {

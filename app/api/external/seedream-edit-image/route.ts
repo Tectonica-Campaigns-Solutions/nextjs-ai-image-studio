@@ -15,7 +15,9 @@ import sharp from 'sharp'
  * - base64Image (optional): Base64-encoded image data (with or without data:image prefix)
  * - imageUrl (optional): URL of image to edit
  * - prompt (required): Text description of desired modifications
- * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1)
+ * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4, custom (default: 1:1)
+ * - custom_width (optional): Width in pixels (512-2048, required if aspect_ratio is 'custom')
+ * - custom_height (optional): Height in pixels (512-2048, required if aspect_ratio is 'custom')
  * 
  * Note: Provide either base64Image OR imageUrl (not both)
  * 
@@ -72,14 +74,20 @@ export async function POST(request: NextRequest) {
     // ============================================================================
     const body = await request.json()
     
-    const {
-      base64Image = null,
-      imageUrl = null,
-      prompt = '',
-      aspect_ratio = '1:1'
-    } = body
+    // Support both direct parameters and nested settings object
+    const settings = body.settings || {}
     
-    const aspectRatio = aspect_ratio
+    const base64Image = body.base64Image || null
+    const imageUrl = body.imageUrl || null
+    const prompt = body.prompt || ''
+    
+    // Prioritize direct parameters over settings
+    const aspectRatio = body.aspect_ratio || settings.aspect_ratio || '1:1'
+    const customWidth = body.custom_width || settings.custom_width
+    const customHeight = body.custom_height || settings.custom_height
+    
+    const parsedCustomWidth = customWidth ? parseInt(customWidth.toString()) : undefined
+    const parsedCustomHeight = customHeight ? parseInt(customHeight.toString()) : undefined
     
     console.log('[External SeDream Edit] JSON input:', {
       hasBase64: !!base64Image,
@@ -87,7 +95,9 @@ export async function POST(request: NextRequest) {
       hasImageUrl: !!imageUrl,
       imageUrl: imageUrl || 'N/A',
       prompt: prompt.substring(0, 50) + '...',
-      aspectRatio
+      aspectRatio,
+      customWidth: parsedCustomWidth,
+      customHeight: parsedCustomHeight
     })
     
     // Validate prompt
@@ -109,13 +119,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate aspect_ratio parameter
-    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4']
+    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4', 'custom']
     if (!validAspectRatios.includes(aspectRatio)) {
       return NextResponse.json({ 
         success: false,
         error: "Invalid aspect_ratio parameter",
         details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
       }, { status: 400 })
+    }
+    
+    // Validate custom dimensions if aspect_ratio is custom
+    if (aspectRatio === "custom") {
+      if (!parsedCustomWidth || !parsedCustomHeight) {
+        return NextResponse.json({
+          success: false,
+          error: "custom_width and custom_height are required when aspect_ratio is 'custom'",
+          details: `Received customWidth: ${parsedCustomWidth}, customHeight: ${parsedCustomHeight}`
+        }, { status: 400 })
+      }
+      
+      // Validate dimension ranges (Seedream supports 512-2048)
+      if (parsedCustomWidth < 512 || parsedCustomWidth > 2048 || parsedCustomHeight < 512 || parsedCustomHeight > 2048) {
+        return NextResponse.json({
+          success: false,
+          error: "custom_width and custom_height must be between 512 and 2048 pixels",
+          details: `Received customWidth: ${parsedCustomWidth}, customHeight: ${parsedCustomHeight}`
+        }, { status: 400 })
+      }
+      
+      // Validate minimum total area (Seedream v4 requirement: 921600 pixels minimum)
+      const totalArea = parsedCustomWidth * parsedCustomHeight
+      const minArea = 921600
+      if (totalArea < minArea) {
+        return NextResponse.json({
+          success: false,
+          error: "Image area too small",
+          details: `Custom dimensions must have a minimum total area of ${minArea} pixels (e.g., 960x960). Your request: ${parsedCustomWidth}x${parsedCustomHeight} = ${totalArea} pixels. The API will automatically scale up images below this threshold, which may not match your exact dimensions.`
+        }, { status: 400 })
+      }
     }
 
     // Use the user's prompt directly without modification
@@ -296,47 +337,63 @@ export async function POST(request: NextRequest) {
     console.log("[External SeDream Edit] Calling fal.ai API...")
 
     // Calculate image_size from aspect ratio selection
-    let imageSize: string | { width: number; height: number }
+    let imageSize: string | undefined
+    let imageDimensions: { width: number; height: number } | undefined
     
-    switch (aspectRatio) {
-      case "16:9":
-        imageSize = "landscape_16_9"
-        break
-      case "9:16":
-        imageSize = "portrait_16_9"
-        break
-      case "4:3":
-        imageSize = "landscape_4_3"
-        break
-      case "3:4":
-        imageSize = "portrait_4_3"
-        break
-      case "1:1":
-      default:
-        imageSize = "square_hd"
-        break
+    if (aspectRatio === "custom") {
+      imageDimensions = { width: parsedCustomWidth!, height: parsedCustomHeight! }
+      console.log("[External SeDream Edit] Using custom dimensions:", imageDimensions)
+    } else {
+      switch (aspectRatio) {
+        case "16:9":
+          imageSize = "landscape_16_9"
+          break
+        case "9:16":
+          imageSize = "portrait_16_9"
+          break
+        case "4:3":
+          imageSize = "landscape_4_3"
+          break
+        case "3:4":
+          imageSize = "portrait_4_3"
+          break
+        case "1:1":
+        default:
+          imageSize = "square_hd"
+          break
+      }
+      console.log("[External SeDream Edit] Using preset aspect ratio:", imageSize)
     }
 
     // Prepare input for SeDream v4 Edit (uses image_urls array)
-    const negativePromptString = negativePrompts.join(", ")
-    const input = {
-      prompt: finalPrompt,
-      negative_prompt: negativePromptString,
+    // Note: negative_prompt is NOT sent to maintain compatibility with custom dimensions
+    const input: any = {
       image_urls: [finalImageUrl],
-      num_images: 1,
-      enable_safety_checker: true,
-      image_size: imageSize
+      prompt: finalPrompt,
+      enable_safety_checker: true
+    }
+    
+    // Add image_size (string for presets, object for custom dimensions)
+    if (aspectRatio === "custom" && imageDimensions) {
+      // For custom dimensions, send as object with width and height
+      input.image_size = {
+        width: imageDimensions.width,
+        height: imageDimensions.height
+      }
+    } else {
+      // For preset aspect ratios, use string value
+      input.image_size = imageSize
     }
 
     console.log("[External SeDream Edit] API Input:", {
       prompt: input.prompt,
-      negativePrompt: `${negativePromptString.substring(0, 100)}...`,
-      negativePromptTerms: negativePrompts.length,
       imageUrls: input.image_urls,
-      numImages: input.num_images,
       aspectRatio: aspectRatio,
-      imageSize: input.image_size
+      imageSize: input.image_size,
+      enableSafetyChecker: input.enable_safety_checker
     })
+    
+    console.log("[External SeDream Edit] Full input object:", JSON.stringify(input, null, 2))
 
     // Call SeDream v4 Edit API
     try {
@@ -373,7 +430,6 @@ export async function POST(request: NextRequest) {
         success: true,
         images: result.data.images,
         prompt: finalPrompt,
-        negativePrompt: negativePromptString,
         safetyProtections: {
           negativeTermsApplied: negativePrompts.length,
           nsfwProtection: true,
@@ -382,7 +438,13 @@ export async function POST(request: NextRequest) {
           safetyCheckerEnabled: true
         },
         inputImage: finalImageUrl,
-        aspectRatio: aspectRatio
+        aspectRatio: aspectRatio,
+        ...(aspectRatio === "custom" && imageDimensions ? {
+          customDimensions: {
+            width: imageDimensions.width,
+            height: imageDimensions.height
+          }
+        } : {})
       })
 
     } catch (uploadError) {

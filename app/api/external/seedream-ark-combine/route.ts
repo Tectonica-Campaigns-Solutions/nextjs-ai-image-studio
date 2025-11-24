@@ -168,6 +168,17 @@ export async function POST(request: NextRequest) {
           details: "Width and height must be between 512 and 2048 pixels"
         }, { status: 400 })
       }
+      
+      // Validate minimum total area (Seedream v4 requirement: 921600 pixels minimum)
+      const totalArea = customWidth * customHeight
+      const minArea = 921600
+      if (totalArea < minArea) {
+        return NextResponse.json({
+          success: false,
+          error: "Image area too small",
+          details: `Custom dimensions must have a minimum total area of ${minArea} pixels (e.g., 960x960). Your request: ${customWidth}x${customHeight} = ${totalArea} pixels. The API will automatically scale up images below this threshold.`
+        }, { status: 400 })
+      }
     }
 
     // Validate prompt

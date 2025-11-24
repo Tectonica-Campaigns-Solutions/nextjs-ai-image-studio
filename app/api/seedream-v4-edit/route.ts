@@ -16,7 +16,9 @@ import sharp from 'sharp'
  * - useJSONEnhancement: boolean (optional) - Whether to apply JSON enhancement to prompt
  * - jsonIntensity: number (optional) - JSON enhancement intensity (0.1-1.0)
  * - customEnhancementText: string (optional) - Custom enhancement text
- * - aspect_ratio: string (optional) - Output aspect ratio (1:1, 16:9, 9:16, 4:3, 3:4)
+ * - aspect_ratio: string (optional) - Output aspect ratio (1:1, 16:9, 9:16, 4:3, 3:4, custom)
+ * - custom_width: number (optional) - Custom width in pixels (512-2048, required if aspect_ratio is 'custom')
+ * - custom_height: number (optional) - Custom height in pixels (512-2048, required if aspect_ratio is 'custom')
  * 
  * Response format:
  * Success: { images: [{ url: string, width: number, height: number }] }
@@ -58,6 +60,8 @@ export async function POST(request: NextRequest) {
     let customEnhancementText = ''
     let aspectRatio = '1:1'
     let jsonOptions: any = {}
+    let customWidth: number | undefined = undefined
+    let customHeight: number | undefined = undefined
     
     if (isJSON) {
       // Parse JSON body for Base64 or URL inputs
@@ -70,6 +74,9 @@ export async function POST(request: NextRequest) {
       customEnhancementText = jsonBody.customEnhancementText || ''
       aspectRatio = jsonBody.aspect_ratio || jsonBody.aspectRatio || '1:1'
       jsonOptions = jsonBody.jsonOptions || {}
+      
+      customWidth = jsonBody.custom_width ? parseInt(jsonBody.custom_width.toString()) : undefined
+      customHeight = jsonBody.custom_height ? parseInt(jsonBody.custom_height.toString()) : undefined
       
       console.log('[SeDream v4 Edit] JSON input:', {
         hasBase64: !!base64Image,
@@ -90,6 +97,11 @@ export async function POST(request: NextRequest) {
       jsonIntensity = parseFloat(formData.get("jsonIntensity") as string) || 1.0
       customEnhancementText = (formData.get("customEnhancementText") as string) || ""
       aspectRatio = (formData.get("aspect_ratio") as string) || "1:1"
+      
+      const customWidthStr = formData.get("custom_width") as string
+      const customHeightStr = formData.get("custom_height") as string
+      customWidth = customWidthStr ? parseInt(customWidthStr) : undefined
+      customHeight = customHeightStr ? parseInt(customHeightStr) : undefined
       
       // Parse JSON options from frontend
       const jsonOptionsStr = formData.get("jsonOptions") as string
@@ -119,13 +131,41 @@ export async function POST(request: NextRequest) {
     }
     
     // Validate aspect_ratio parameter
-    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"]
+    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4", "custom"]
     if (!validAspectRatios.includes(aspectRatio)) {
       console.error("[SeDream v4 Edit] Invalid aspect_ratio received:", aspectRatio)
       return NextResponse.json({ 
         error: "Invalid aspect_ratio parameter",
         details: `aspect_ratio must be one of: ${validAspectRatios.join(', ')}. Received: ${aspectRatio}`
       }, { status: 400 })
+    }
+    
+    // Validate custom dimensions if aspect_ratio is custom
+    if (aspectRatio === "custom") {
+      if (!customWidth || !customHeight) {
+        return NextResponse.json({
+          error: "Custom dimensions required",
+          details: "When aspect_ratio is 'custom', both custom_width and custom_height must be provided"
+        }, { status: 400 })
+      }
+      
+      // Validate dimension ranges (512-2048 pixels)
+      if (customWidth < 512 || customWidth > 2048 || customHeight < 512 || customHeight > 2048) {
+        return NextResponse.json({
+          error: "Invalid custom dimensions",
+          details: "Width and height must be between 512 and 2048 pixels"
+        }, { status: 400 })
+      }
+      
+      // Validate minimum total area (Seedream v4 requirement: 921600 pixels minimum)
+      const totalArea = customWidth * customHeight
+      const minArea = 921600
+      if (totalArea < minArea) {
+        return NextResponse.json({
+          error: "Image area too small",
+          details: `Custom dimensions must have a minimum total area of ${minArea} pixels (e.g., 960x960). Your request: ${customWidth}x${customHeight} = ${totalArea} pixels. The API will automatically scale up images below this threshold.`
+        }, { status: 400 })
+      }
     }
 
     // Validate that at least one image source is provided
@@ -394,24 +434,31 @@ export async function POST(request: NextRequest) {
 
     // Calculate image_size from aspect ratio selection
     let imageSize: string | { width: number; height: number }
+    let imageDimensions: { width: number; height: number } | undefined
     
-    switch (aspectRatio) {
-      case "16:9":
-        imageSize = "landscape_16_9"
-        break
-      case "9:16":
-        imageSize = "portrait_16_9"
-        break
-      case "4:3":
-        imageSize = "landscape_4_3"
-        break
-      case "3:4":
-        imageSize = "portrait_4_3"
-        break
-      case "1:1":
-      default:
-        imageSize = "square_hd"
-        break
+    if (aspectRatio === "custom") {
+      imageDimensions = { width: customWidth!, height: customHeight! }
+      console.log("[SeDream v4 Edit] Using custom dimensions:", imageDimensions)
+    } else {
+      switch (aspectRatio) {
+        case "16:9":
+          imageSize = "landscape_16_9"
+          break
+        case "9:16":
+          imageSize = "portrait_16_9"
+          break
+        case "4:3":
+          imageSize = "landscape_4_3"
+          break
+        case "3:4":
+          imageSize = "portrait_4_3"
+          break
+        case "1:1":
+        default:
+          imageSize = "square_hd"
+          break
+      }
+      console.log("[SeDream v4 Edit] Using preset aspect ratio:", imageSize)
     }
 
     // Reference image for style transfer
@@ -419,13 +466,22 @@ export async function POST(request: NextRequest) {
 
     // Prepare input for SeDream v4 Edit (uses image_urls array with user image and reference)
     const negativePromptString = negativePrompts.join(", ")
-    const input = {
+    const input: any = {
       prompt: finalPrompt,
       negative_prompt: negativePromptString,
       image_urls: [finalImageUrl, referenceImageUrl],
       num_images: 1,
-      enable_safety_checker: true,
-      image_size: imageSize
+      enable_safety_checker: true
+    }
+    
+    // Add image_size (string for presets, object for custom dimensions)
+    if (aspectRatio === "custom" && imageDimensions) {
+      input.image_size = {
+        width: imageDimensions.width,
+        height: imageDimensions.height
+      }
+    } else {
+      input.image_size = imageSize!
     }
 
     console.log("[SeDream v4 Edit] API Input:", {

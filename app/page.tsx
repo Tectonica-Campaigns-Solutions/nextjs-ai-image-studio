@@ -614,9 +614,11 @@ export default function ImageEditor() {
   const [seedreamSingleBase64Image, setSeedreamSingleBase64Image] = useState<string>("")
   const [seedreamSingleBase64Preview, setSeedreamSingleBase64Preview] = useState<string>("")
   const [seedreamSingleSettings, setSeedreamSingleSettings] = useState({
-    aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
+    aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom",
     num_images: 1,
-    enable_safety_checker: true
+    enable_safety_checker: true,
+    custom_width: 1024,
+    custom_height: 1024
   })
   const [seedreamSingleResult, setSeedreamSingleResult] = useState<any[]>([])
   const [isSeedreamSingleGenerating, setIsSeedreamSingleGenerating] = useState(false)
@@ -724,7 +726,9 @@ export default function ImageEditor() {
   const [sedreamEnhancementPreview, setSedreamEnhancementPreview] = useState<string>("")
   const [sedreamEnhancementMeta, setSedreamEnhancementMeta] = useState<any>(null)
   const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
-  const [sedreamAspectRatio, setSedreamAspectRatio] = useState<string>("1:1")
+  const [sedreamAspectRatio, setSedreamAspectRatio] = useState<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom">("1:1")
+  const [sedreamCustomWidth, setSedreamCustomWidth] = useState(1024)
+  const [sedreamCustomHeight, setSedreamCustomHeight] = useState(1024)
   const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
   const [sedreamNegativePrompts, setSedreamNegativePrompts] = useState<string[]>([])
   const [showNegativePrompts, setShowNegativePrompts] = useState(false)
@@ -2416,6 +2420,12 @@ export default function ImageEditor() {
           }
         }
         
+        // Add custom dimensions if aspect_ratio is custom
+        if (sedreamAspectRatio === "custom") {
+          jsonBody.custom_width = sedreamCustomWidth
+          jsonBody.custom_height = sedreamCustomHeight
+        }
+        
         if (hasBase64) {
           jsonBody.base64Image = sedreamBase64Image.trim()
           console.log('[FRONTEND] 📦 Using JSON with Base64, length:', sedreamBase64Image.length)
@@ -2447,6 +2457,12 @@ export default function ImageEditor() {
         formData.append("jsonIntensity", sedreamJsonIntensity.toString())
         formData.append("customEnhancementText", sedreamCustomEnhancementText)
         formData.append("aspect_ratio", sedreamAspectRatio)
+        
+        // Add custom dimensions if aspect_ratio is custom
+        if (sedreamAspectRatio === "custom") {
+          formData.append("custom_width", sedreamCustomWidth.toString())
+          formData.append("custom_height", sedreamCustomHeight.toString())
+        }
         
         // Debug logging
         console.log("[Frontend] SeDream submission - aspect_ratio:", sedreamAspectRatio)
@@ -2631,7 +2647,7 @@ export default function ImageEditor() {
                       <Label htmlFor="sedream-aspect-ratio" className="font-medium">
                         Aspect Ratio
                       </Label>
-                      <Select value={sedreamAspectRatio} onValueChange={setSedreamAspectRatio}>
+                      <Select value={sedreamAspectRatio} onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom") => setSedreamAspectRatio(value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -2641,9 +2657,42 @@ export default function ImageEditor() {
                           <SelectItem value="9:16">Portrait (9:16)</SelectItem>
                           <SelectItem value="4:3">Landscape (4:3)</SelectItem>
                           <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                          <SelectItem value="custom">Custom Size</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {sedreamAspectRatio === "custom" && (
+                      <div className="grid grid-cols-2 gap-4 p-3 border rounded-lg bg-muted/50">
+                        <div className="space-y-2">
+                          <Label htmlFor="sedream-width">Width (px)</Label>
+                          <Input
+                            id="sedream-width"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={sedreamCustomWidth}
+                            onChange={(e) => setSedreamCustomWidth(parseInt(e.target.value) || 1024)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="sedream-height">Height (px)</Label>
+                          <Input
+                            id="sedream-height"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={sedreamCustomHeight}
+                            onChange={(e) => setSedreamCustomHeight(parseInt(e.target.value) || 1024)}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-muted-foreground">
+                            Range: 512-2048 pixels. Minimum area: 921,600 pixels (e.g., 960x960).
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Safety Protections Display */}
                     <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200/50 dark:border-green-700/50">
@@ -4723,7 +4772,7 @@ export default function ImageEditor() {
                           <Label>Aspect Ratio</Label>
                           <Select
                             value={seedreamSingleSettings.aspect_ratio}
-                            onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4") => 
+                            onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom") => 
                               setSeedreamSingleSettings(prev => ({ ...prev, aspect_ratio: value }))
                             }
                           >
@@ -4736,6 +4785,7 @@ export default function ImageEditor() {
                               <SelectItem value="9:16">Portrait (9:16)</SelectItem>
                               <SelectItem value="4:3">Landscape (4:3)</SelectItem>
                               <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                              <SelectItem value="custom">Custom Size</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -4760,6 +4810,44 @@ export default function ImageEditor() {
                           </Select>
                         </div>
                       </div>
+
+                      {seedreamSingleSettings.aspect_ratio === "custom" && (
+                        <div className="grid grid-cols-2 gap-4 p-3 border rounded-lg bg-muted/50">
+                          <div className="space-y-2">
+                            <Label htmlFor="seedream-single-width">Width (px)</Label>
+                            <Input
+                              id="seedream-single-width"
+                              type="number"
+                              min={512}
+                              max={2048}
+                              value={seedreamSingleSettings.custom_width}
+                              onChange={(e) => setSeedreamSingleSettings(prev => ({ 
+                                ...prev, 
+                                custom_width: parseInt(e.target.value) || 1024 
+                              }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="seedream-single-height">Height (px)</Label>
+                            <Input
+                              id="seedream-single-height"
+                              type="number"
+                              min={512}
+                              max={2048}
+                              value={seedreamSingleSettings.custom_height}
+                              onChange={(e) => setSeedreamSingleSettings(prev => ({ 
+                                ...prev, 
+                                custom_height: parseInt(e.target.value) || 1024 
+                              }))}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-xs text-muted-foreground">
+                              Range: 512-2048 pixels. Any value within range is supported.
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">

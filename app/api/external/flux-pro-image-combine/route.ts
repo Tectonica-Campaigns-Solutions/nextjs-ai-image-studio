@@ -681,7 +681,7 @@ export async function POST(request: NextRequest) {
         body: seedreamFormData,
       })
 
-      // const seedreamResponse = await fetch(`https://formatting-attention-receivers-climb.trycloudflare.com/api/seedream-v4-edit`, {
+      // const seedreamResponse = await fetch(`https://jpg-invalid-remains-buying.trycloudflare.com/api/seedream-v4-edit`, {
       //   method: 'POST',
       //   body: seedreamFormData,
       // })

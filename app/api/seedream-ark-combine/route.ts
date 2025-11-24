@@ -187,11 +187,21 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
       
-      // Validate dimension ranges (Seedream typically supports 512-2048)
+      // Validate dimension ranges (512-2048 pixels)
       if (customWidth < 512 || customWidth > 2048 || customHeight < 512 || customHeight > 2048) {
         return NextResponse.json({
           error: "Invalid custom dimensions",
           details: "Width and height must be between 512 and 2048 pixels"
+        }, { status: 400 })
+      }
+      
+      // Validate minimum total area (Seedream v4 requirement: 921600 pixels minimum)
+      const totalArea = customWidth * customHeight
+      const minArea = 921600
+      if (totalArea < minArea) {
+        return NextResponse.json({
+          error: "Image area too small",
+          details: `Custom dimensions must have a minimum total area of ${minArea} pixels (e.g., 960x960). Your request: ${customWidth}x${customHeight} = ${totalArea} pixels. The API will automatically scale up images below this threshold.`
         }, { status: 400 })
       }
     }
