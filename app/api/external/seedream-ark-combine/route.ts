@@ -477,7 +477,8 @@ export async function POST(request: NextRequest) {
       seedreamFormData.append("prompt", "") // Empty prompt - use only customEnhancementText
       seedreamFormData.append("useJSONEnhancement", "false") // Use customEnhancementText as-is
       seedreamFormData.append("customEnhancementText", sedreamPrompt)
-      seedreamFormData.append("aspect_ratio", aspectRatio)
+      // seedream-v4-edit doesn't support "custom" - use "1:1" for custom dimensions
+      seedreamFormData.append("aspect_ratio", aspectRatio === "custom" ? "1:1" : aspectRatio)
 
       console.log("[External Seedream Combine] Calling internal seedream-v4-edit API...")
       
