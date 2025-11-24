@@ -578,8 +578,11 @@ export default function ImageEditor() {
   const [seedreamArkBase64Images, setSeedreamArkBase64Images] = useState<string[]>([])
   const [seedreamArkBase64Input, setSeedreamArkBase64Input] = useState<string>("")
   const [seedreamArkSettings, setSeedreamArkSettings] = useState({
-    aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
-    enable_safety_checker: true
+    aspect_ratio: "1:1" as "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom",
+    enable_safety_checker: true,
+    processSecondImage: true, // Default: true (2-step processing)
+    custom_width: 1024,
+    custom_height: 1024
   })
   const [seedreamArkResult, setSeedreamArkResult] = useState<any[]>([])
   const [isSeedreamArkGenerating, setIsSeedreamArkGenerating] = useState(false)
@@ -4234,7 +4237,7 @@ export default function ImageEditor() {
                         <Label>Aspect Ratio</Label>
                         <Select
                           value={seedreamArkSettings.aspect_ratio}
-                          onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4") => 
+                          onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom") => 
                             setSeedreamArkSettings(prev => ({ ...prev, aspect_ratio: value }))
                           }
                         >
@@ -4247,9 +4250,58 @@ export default function ImageEditor() {
                             <SelectItem value="9:16">Portrait (9:16)</SelectItem>
                             <SelectItem value="4:3">Landscape (4:3)</SelectItem>
                             <SelectItem value="3:4">Portrait (3:4)</SelectItem>
+                            <SelectItem value="custom">Custom Size</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {/* Custom Dimensions - Show only when Custom is selected */}
+                      {seedreamArkSettings.aspect_ratio === "custom" && (
+                        <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+                          <Label className="text-sm font-medium">Custom Dimensions</Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="seedream-ark-width" className="text-xs">Width (px)</Label>
+                              <Input
+                                id="seedream-ark-width"
+                                type="number"
+                                min={512}
+                                max={2048}
+                                step={64}
+                                value={seedreamArkSettings.custom_width}
+                                onChange={(e) => 
+                                  setSeedreamArkSettings(prev => ({ 
+                                    ...prev, 
+                                    custom_width: parseInt(e.target.value) || 1024 
+                                  }))
+                                }
+                                className="h-9"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="seedream-ark-height" className="text-xs">Height (px)</Label>
+                              <Input
+                                id="seedream-ark-height"
+                                type="number"
+                                min={512}
+                                max={2048}
+                                step={64}
+                                value={seedreamArkSettings.custom_height}
+                                onChange={(e) => 
+                                  setSeedreamArkSettings(prev => ({ 
+                                    ...prev, 
+                                    custom_height: parseInt(e.target.value) || 1024 
+                                  }))
+                                }
+                                className="h-9"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Range: 512-2048 pixels. Recommended: multiples of 64.
+                          </p>
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
@@ -4278,6 +4330,36 @@ export default function ImageEditor() {
                             : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                         }`}>
                           {seedreamArkSettings.enable_safety_checker ? 'ON' : 'OFF'}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            id="seedream-ark-process-second"
+                            checked={seedreamArkSettings.processSecondImage}
+                            onCheckedChange={(checked) => 
+                              setSeedreamArkSettings(prev => ({ ...prev, processSecondImage: checked }))
+                            }
+                          />
+                          <div className="flex flex-col">
+                            <Label htmlFor="seedream-ark-process-second" className="text-sm font-medium">
+                              Process Second Image
+                            </Label>
+                            <span className="text-xs text-muted-foreground">
+                              {seedreamArkSettings.processSecondImage 
+                                ? "2-step pipeline: applies style to second image first" 
+                                : "Direct combination: both images used as-is"
+                              }
+                            </span>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          seedreamArkSettings.processSecondImage 
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' 
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                        }`}>
+                          {seedreamArkSettings.processSecondImage ? 'ON' : 'OFF'}
                         </div>
                       </div>
                     </div>

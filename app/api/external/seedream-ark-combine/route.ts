@@ -104,7 +104,9 @@ export async function POST(request: NextRequest) {
       aspect_ratio: aspectRatio,
       enable_safety_checker: body.enable_safety_checker !== false,
       processSecondImage: body.settings?.processSecondImage !== false, // Default: true
-      origin: body.settings?.origin || "CA" // Default: CA
+      origin: body.settings?.origin || "CA", // Default: CA
+      custom_width: body.settings?.custom_width,
+      custom_height: body.settings?.custom_height
     }
     
     let imageUrls: string[] = []
@@ -129,6 +131,8 @@ export async function POST(request: NextRequest) {
     const enableSafetyChecker = settings.enable_safety_checker !== false // Default to true
     const processSecondImage = settings.processSecondImage !== false // Default to true
     const origin = settings.origin || "CA" // Default to CA
+    const customWidth = settings.custom_width ? parseInt(settings.custom_width.toString()) : undefined
+    const customHeight = settings.custom_height ? parseInt(settings.custom_height.toString()) : undefined
     
     // Validate origin parameter
     const validOrigins = ["CA", "TCN"]
@@ -138,6 +142,26 @@ export async function POST(request: NextRequest) {
         error: "Invalid origin parameter",
         details: `origin must be one of: ${validOrigins.join(', ')}. Received: ${origin}`
       }, { status: 400 })
+    }
+    
+    // Validate custom dimensions if aspect_ratio is custom
+    if (aspectRatio === "custom") {
+      if (!customWidth || !customHeight) {
+        return NextResponse.json({
+          success: false,
+          error: "Custom dimensions required",
+          details: "When aspect_ratio is 'custom', both custom_width and custom_height must be provided in settings"
+        }, { status: 400 })
+      }
+      
+      // Validate dimension ranges
+      if (customWidth < 512 || customWidth > 2048 || customHeight < 512 || customHeight > 2048) {
+        return NextResponse.json({
+          success: false,
+          error: "Invalid custom dimensions",
+          details: "Width and height must be between 512 and 2048 pixels"
+        }, { status: 400 })
+      }
     }
 
     // Validate prompt
@@ -517,33 +541,47 @@ export async function POST(request: NextRequest) {
     // Update image URLs for final combination
     const combinedImageUrls = [processedImage1Url, processedImage2Url]
 
-    // Map aspect ratio to fal.ai image_size format
-    let imageSize: string
-    switch (aspectRatio) {
-      case "16:9":
-        imageSize = "landscape_16_9"
-        break
-      case "9:16":
-        imageSize = "portrait_16_9"
-        break
-      case "4:3":
-        imageSize = "landscape_4_3"
-        break
-      case "3:4":
-        imageSize = "portrait_4_3"
-        break
-      case "1:1":
-      default:
-        imageSize = "square_hd"
-        break
+    // Map aspect ratio to fal.ai image_size format or custom dimensions
+    let imageSize: string | undefined
+    let imageDimensions: { width: number; height: number } | undefined
+    
+    if (aspectRatio === "custom") {
+      imageSize = "custom"
+      imageDimensions = { width: customWidth!, height: customHeight! }
+      console.log("[External Seedream Combine] Using custom dimensions:", imageDimensions)
+    } else {
+      switch (aspectRatio) {
+        case "16:9":
+          imageSize = "landscape_16_9"
+          break
+        case "9:16":
+          imageSize = "portrait_16_9"
+          break
+        case "4:3":
+          imageSize = "landscape_4_3"
+          break
+        case "3:4":
+          imageSize = "portrait_4_3"
+          break
+        case "1:1":
+        default:
+          imageSize = "square_hd"
+          break
+      }
     }
 
     // Prepare input for fal.ai Seedream v4 edit (final combination)
-    const input = {
+    const input: any = {
       image_urls: combinedImageUrls, // Image1 + Processed Image2
       prompt: finalPrompt, // User's prompt (canonical or enhanced)
       image_size: imageSize,
       enable_safety_checker: enableSafetyChecker
+    }
+    
+    // Add custom dimensions if using custom size
+    if (aspectRatio === "custom" && imageDimensions) {
+      input.width = imageDimensions.width
+      input.height = imageDimensions.height
     }
 
     console.log("[External Seedream Combine] Final input object being sent to fal.ai:")

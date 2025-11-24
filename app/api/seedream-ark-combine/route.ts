@@ -9,9 +9,9 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * 
  * Internal API endpoint for combining images using Seedream-v4 via fal.ai with enhanced pipeline.
  * 
- * ENHANCED PIPELINE (2 steps):
- * Step 1: Process image2 (second image) with seedream-v4-edit using configured sedream_enhancement_text
- * Step 2: Combine image1 (original) with processed_image2 using user's prompt (canonical or enhanced)
+ * ENHANCED PIPELINE (conditional 2-step or direct combination):
+ * Step 1 (optional): If processSecondImage=true, process image2 with seedream-v4-edit using sedream_enhancement_text
+ * Step 2: Combine image1 with image2 (processed or original) using user's prompt (canonical or enhanced)
  * 
  * Body parameters (multipart/form-data):
  * - prompt (required): Text description for image combination (used in Step 2)
@@ -21,6 +21,7 @@ import { getSedreamEnhancementText } from "@/lib/json-enhancement"
  * - settings (optional): JSON string with generation settings
  *   - aspect_ratio: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" (default: "1:1") 
  *   - enable_safety_checker: boolean (default: true)
+ *   - processSecondImage: boolean (default: true) - Enable 2-step processing with seedream-v4-edit
  * - useCanonicalPrompt (optional): boolean (enable canonical prompt processing)
  * - canonicalConfig (optional): JSON string with canonical prompt configuration
  * - orgType (optional): Organization type for moderation (default: general)
@@ -50,32 +51,102 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[SEEDREAM-COMBINE] Request received")
     
-    const formData = await request.formData()
+    // Check Content-Type to determine if JSON or FormData
+    const contentType = request.headers.get('content-type') || ''
+    const isJSON = contentType.includes('application/json')
     
-    // Extract parameters
-    const prompt = formData.get("prompt") as string
-    const orgType = formData.get("orgType") as string || "general"
+    console.log(`[SEEDREAM-COMBINE] Content-Type: ${contentType}, isJSON: ${isJSON}`)
     
-    // Parse settings
-    const settingsStr = formData.get("settings") as string
+    let prompt: string
+    let orgType: string
     let settings: any = {}
-    if (settingsStr) {
-      try {
-        settings = JSON.parse(settingsStr)
-      } catch (error) {
-        console.warn("[SEEDREAM-COMBINE] Failed to parse settings:", error)
+    let useCanonicalPrompt = false
+    let canonicalConfig: CanonicalPromptConfig | undefined
+    let imageFiles: File[] = []
+    let imageUrls: string[] = []
+    let base64Images: string[] = []
+    
+    if (isJSON) {
+      // JSON payload (for large Base64 images >900KB to avoid FormData 1MB truncation)
+      console.log("[SEEDREAM-COMBINE] 📦 Processing JSON payload (large Base64 workaround)")
+      
+      const jsonBody = await request.json()
+      
+      prompt = jsonBody.prompt
+      orgType = jsonBody.orgType || "general"
+      settings = jsonBody.settings || {}
+      useCanonicalPrompt = jsonBody.useCanonicalPrompt === true || jsonBody.useCanonicalPrompt === "true"
+      
+      if (jsonBody.canonicalConfig) {
+        canonicalConfig = jsonBody.canonicalConfig
       }
-    }
+      
+      // Extract image URLs and Base64 from JSON
+      if (jsonBody.imageUrls && Array.isArray(jsonBody.imageUrls)) {
+        imageUrls = jsonBody.imageUrls.filter((url: string) => url && url.trim())
+        console.log(`[SEEDREAM-COMBINE] Found ${imageUrls.length} image URLs in JSON`)
+      }
+      
+      if (jsonBody.base64Images && Array.isArray(jsonBody.base64Images)) {
+        base64Images = jsonBody.base64Images.filter((b64: string) => b64 && b64.trim())
+        console.log(`[SEEDREAM-COMBINE] Found ${base64Images.length} Base64 images in JSON`)
+        
+        // Log sizes to verify no truncation
+        base64Images.forEach((b64, i) => {
+          console.log(`[SEEDREAM-COMBINE] JSON Base64 image ${i + 1}: ${b64.length} chars (${(b64.length / 1024 / 1024).toFixed(2)} MB)`)
+        })
+      }
+      
+    } else {
+      // FormData payload (standard path for file uploads or small Base64)
+      console.log("[SEEDREAM-COMBINE] 📦 Processing FormData payload")
+      
+      const formData = await request.formData()
+      
+      // Extract parameters
+      prompt = formData.get("prompt") as string
+      orgType = formData.get("orgType") as string || "general"
+      
+      // Parse settings
+      const settingsStr = formData.get("settings") as string
+      if (settingsStr) {
+        try {
+          settings = JSON.parse(settingsStr)
+        } catch (error) {
+          console.warn("[SEEDREAM-COMBINE] Failed to parse settings:", error)
+        }
+      }
 
-    // Canonical Prompt parameters
-    const useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
-    const canonicalConfigStr = formData.get("canonicalConfig") as string
-    let canonicalConfig: CanonicalPromptConfig = {}
-    if (canonicalConfigStr) {
-      try {
-        canonicalConfig = JSON.parse(canonicalConfigStr)
-      } catch (error) {
-        console.warn("[SEEDREAM-COMBINE] Failed to parse canonical config:", error)
+      // Canonical Prompt parameters
+      useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
+      const canonicalConfigStr = formData.get("canonicalConfig") as string
+      if (canonicalConfigStr) {
+        try {
+          canonicalConfig = JSON.parse(canonicalConfigStr)
+        } catch (error) {
+          console.warn("[SEEDREAM-COMBINE] Failed to parse canonical config:", error)
+        }
+      }
+      
+      // Get image files (image0, image1, etc.)
+      for (const [key, value] of formData.entries()) {
+        if (key.startsWith('image') && key.match(/^image\d+$/) && value instanceof File && value.size > 0) {
+          imageFiles.push(value)
+          console.log(`[SEEDREAM-COMBINE] Found image file: ${key}, size: ${value.size}, type: ${value.type}`)
+        } else if (key.startsWith('imageUrl') && key.match(/^imageUrl\d+$/) && typeof value === 'string' && value.trim()) {
+          imageUrls.push(value.trim())
+          console.log(`[SEEDREAM-COMBINE] Found image URL: ${key}, url: ${value}`)
+        } else if (key.startsWith('imageBase64') && typeof value === 'string' && value.trim()) {
+          const base64String = value.trim()
+          base64Images.push(base64String)
+          console.log(`[SEEDREAM-COMBINE] Found Base64 image: ${key}, length: ${base64String.length} chars (${(base64String.length / 1024 / 1024).toFixed(2)} MB)`)
+          
+          // Check if Base64 might be truncated
+          const last4 = base64String.slice(-4)
+          if (!last4.match(/[A-Za-z0-9+/=]{4}$/)) {
+            console.warn(`[SEEDREAM-COMBINE] ⚠️  WARNING: Base64 image ${key} might be truncated (unusual ending: "${last4}")`)
+          }
+        }
       }
     }
     
@@ -85,7 +156,10 @@ export async function POST(request: NextRequest) {
     
     // Extract fal.ai specific settings
     const aspectRatio = settings.aspect_ratio || "1:1"
+    const customWidth = settings.custom_width ? parseInt(settings.custom_width.toString()) : undefined
+    const customHeight = settings.custom_height ? parseInt(settings.custom_height.toString()) : undefined
     const enableSafetyChecker = settings.enable_safety_checker !== false // Default to true
+    const processSecondImage = settings.processSecondImage !== false // Default to true
 
     // Validate prompt
     if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
@@ -96,12 +170,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate aspect ratio
-    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"]
+    const validAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4", "custom"]
     if (!validAspectRatios.includes(aspectRatio)) {
       return NextResponse.json({
         error: "Invalid aspect ratio",
         details: `Aspect ratio must be one of: ${validAspectRatios.join(', ')}`
       }, { status: 400 })
+    }
+    
+    // Validate custom dimensions if aspect_ratio is custom
+    if (aspectRatio === "custom") {
+      if (!customWidth || !customHeight) {
+        return NextResponse.json({
+          error: "Custom dimensions required",
+          details: "When aspect_ratio is 'custom', both custom_width and custom_height must be provided"
+        }, { status: 400 })
+      }
+      
+      // Validate dimension ranges (Seedream typically supports 512-2048)
+      if (customWidth < 512 || customWidth > 2048 || customHeight < 512 || customHeight > 2048) {
+        return NextResponse.json({
+          error: "Invalid custom dimensions",
+          details: "Width and height must be between 512 and 2048 pixels"
+        }, { status: 400 })
+      }
     }
 
     // Check if Fal.ai API key is available
@@ -124,30 +216,16 @@ export async function POST(request: NextRequest) {
       prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : ''),
       aspectRatio,
       enableSafetyChecker,
+      processSecondImage,
       orgType
     })
 
-    // Extract image files and URLs
-    const imageFiles: File[] = []
-    const imageUrls: string[] = []
-    
-    // Get image files (image0, image1, etc.)
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith('image') && key.match(/^image\d+$/) && value instanceof File && value.size > 0) {
-        imageFiles.push(value)
-        console.log(`[SEEDREAM-COMBINE] Found image file: ${key}, size: ${value.size}, type: ${value.type}`)
-      } else if (key.startsWith('imageUrl') && key.match(/^imageUrl\d+$/) && typeof value === 'string' && value.trim()) {
-        imageUrls.push(value.trim())
-        console.log(`[SEEDREAM-COMBINE] Found image URL: ${key}, url: ${value}`)
-      }
-    }
-
     // Validate that we have exactly 2 images for enhanced pipeline
-    const totalImages = imageFiles.length + imageUrls.length
+    const totalImages = imageFiles.length + imageUrls.length + base64Images.length
     if (totalImages !== 2) {
       return NextResponse.json({
         error: "Enhanced pipeline requires exactly 2 images",
-        details: `Found ${imageFiles.length} files and ${imageUrls.length} URLs (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
+        details: `Found ${imageFiles.length} files, ${imageUrls.length} URLs, and ${base64Images.length} Base64 images (total: ${totalImages}). The enhanced pipeline processes image2 with seedream-v4-edit, then combines image1 with the processed result.`
       }, { status: 400 })
     }
 
@@ -174,6 +252,146 @@ export async function POST(request: NextRequest) {
 
     // Process images - upload files to fal.ai storage or use provided URLs
     const allImageUrls: string[] = [...imageUrls]
+    
+    // Process Base64 images first
+    if (base64Images.length > 0) {
+      console.log(`[SEEDREAM-COMBINE] Processing ${base64Images.length} Base64 images...`)
+      
+      for (let i = 0; i < base64Images.length; i++) {
+        const base64Data = base64Images[i]
+        
+        try {
+          // Parse Base64 data URL or raw Base64
+          let imageBuffer: Buffer
+          let mimeType = 'image/jpeg' // Default
+          
+          if (base64Data.startsWith('data:')) {
+            // Extract MIME type and Base64 data from data URL
+            const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/)
+            if (!matches) {
+              throw new Error(`Invalid Base64 data URL format for image ${i + 1}`)
+            }
+            mimeType = matches[1]
+            const base64String = matches[2]
+            imageBuffer = Buffer.from(base64String, 'base64')
+          } else {
+            // Raw Base64 string
+            imageBuffer = Buffer.from(base64Data, 'base64')
+          }
+          
+          // Normalize MIME type
+          if (mimeType === 'image/jpg') {
+            mimeType = 'image/jpeg'
+            console.log(`[SEEDREAM-COMBINE] Normalized MIME type from image/jpg to image/jpeg for image ${i + 1}`)
+          }
+          
+          console.log(`[SEEDREAM-COMBINE] Processing Base64 image ${i + 1}/${base64Images.length}, type: ${mimeType}`)
+          
+          let finalBuffer: Buffer = imageBuffer
+          let finalMimeType = 'image/jpeg' // Always use standard JPEG
+          
+          console.log(`[SEEDREAM-COMBINE] Base64 image ${i + 1} original size: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB, type: ${mimeType}`)
+          
+          // CRITICAL: Validate image integrity BEFORE processing
+          const sharpModule = await import('sharp')
+          const sharp = sharpModule.default
+          
+          try {
+            const metadata = await sharp(imageBuffer).metadata()
+            console.log(`[SEEDREAM-COMBINE] ✅ Image validated: ${metadata.format}, ${metadata.width}x${metadata.height}`)
+          } catch (validationError) {
+            const errorMsg = validationError instanceof Error ? validationError.message : String(validationError)
+            console.error(`[SEEDREAM-COMBINE] ❌ CORRUPTED BASE64 IMAGE DETECTED:`, errorMsg)
+            throw new Error(`Base64 image ${i + 1} is corrupted or incomplete. Error: ${errorMsg}. Please ensure the Base64 string is complete and correctly formatted.`)
+          }
+          
+          try {
+            console.log(`[SEEDREAM-COMBINE] Normalizing to JPEG with Sharp...`)
+            
+            // Convert to standardized JPEG: 90% quality, max 2048px
+            const normalizedBuffer = await sharp(imageBuffer)
+              .resize(2048, 2048, {
+                fit: 'inside',
+                withoutEnlargement: true
+              })
+              .jpeg({ quality: 90 })
+              .toBuffer()
+            
+            console.log(`[SEEDREAM-COMBINE] ✅ Normalized to JPEG: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB → ${(normalizedBuffer.length / 1024 / 1024).toFixed(2)} MB`)
+            
+            finalBuffer = normalizedBuffer
+            
+          } catch (sharpError: unknown) {
+            const errorMsg = sharpError instanceof Error ? sharpError.message : String(sharpError)
+            console.error(`[SEEDREAM-COMBINE] ❌ JPEG normalization failed:`, errorMsg)
+            console.warn(`[SEEDREAM-COMBINE] ⚠️  WARNING: Using original image without normalization`)
+          }
+          
+          // Upload using 2-step process: initiate → PUT
+          const fileExtension = finalMimeType.split('/')[1] || 'jpeg'
+          const fileName = `base64-image-${i + 1}.${fileExtension}`
+          
+          console.log(`[SEEDREAM-COMBINE] Uploading ${fileName}: ${finalBuffer.length} bytes (${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB)`)
+          
+          // Step 1: Initiate upload to get presigned URL
+          const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Key ${falApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              content_type: finalMimeType,
+              file_name: fileName
+            })
+          })
+          
+          if (!initiateResponse.ok) {
+            const errorText = await initiateResponse.text()
+            throw new Error(`Failed to initiate upload: ${initiateResponse.status} - ${errorText}`)
+          }
+          
+          const { upload_url, file_url } = await initiateResponse.json() as { 
+            upload_url: string
+            file_url: string 
+          }
+          
+          console.log(`[SEEDREAM-COMBINE] Got presigned URL, uploading ${finalBuffer.length} bytes...`)
+          
+          // Step 2: PUT the actual file data to presigned URL
+          const uint8Array = new Uint8Array(finalBuffer)
+          const putResponse = await fetch(upload_url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': finalMimeType,
+              'Content-Length': finalBuffer.length.toString()
+            },
+            body: uint8Array
+          })
+          
+          if (!putResponse.ok) {
+            const errorText = await putResponse.text()
+            throw new Error(`Failed to PUT file: ${putResponse.status} - ${errorText}`)
+          }
+          
+          const uploadedUrl = file_url
+          
+          console.log(`[SEEDREAM-COMBINE] ✅ Uploaded successfully: ${uploadedUrl}`)
+          console.log(`[SEEDREAM-COMBINE]    Original: ${imageBuffer.length} bytes → Sharp: ${finalBuffer.length} bytes → Sent: ${uint8Array.byteLength} bytes`)
+          
+          allImageUrls.push(uploadedUrl)
+          console.log(`[SEEDREAM-COMBINE] Base64 image ${i + 1} uploaded successfully: ${uploadedUrl}`)
+          console.log(`[SEEDREAM-COMBINE] Upload verified: ${finalMimeType}, ${finalBuffer.length} bytes`)
+          
+        } catch (base64Error) {
+          console.error(`[SEEDREAM-COMBINE] Failed to process Base64 image ${i + 1}:`, base64Error)
+          return NextResponse.json({
+            error: "Base64 image processing failed",
+            details: `Failed to process Base64 image ${i + 1}: ${base64Error instanceof Error ? base64Error.message : 'Unknown error'}. Ensure the Base64 string is valid and complete (not truncated).`
+          }, { status: 400 })
+        }
+      }
+    }
     
     if (imageFiles.length > 0) {
       console.log("[SEEDREAM-COMBINE] Uploading files to fal.ai storage...")
@@ -229,6 +447,9 @@ export async function POST(request: NextRequest) {
       console.log("[SEEDREAM-COMBINE] Canonical config:", JSON.stringify(canonicalConfig, null, 2))
       
       // Set user input from original prompt
+      if (!canonicalConfig) {
+        canonicalConfig = {}
+      }
       canonicalConfig.userInput = prompt
       
       try {
@@ -248,23 +469,26 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[SEEDREAM-COMBINE] All image URLs ready:", allImageUrls)
-    console.log("[SEEDREAM-COMBINE] Starting enhanced pipeline: seedream → combine")
+    console.log("[SEEDREAM-COMBINE] Starting pipeline with processSecondImage:", processSecondImage)
 
-    // ENHANCED PIPELINE: Step 1 - Process image2 (second image) with seedream-v4-edit
-    console.log("[SEEDREAM-COMBINE] Pipeline Step 1: Processing image2 with seedream-v4-edit")
-    
-    const image1Url = allImageUrls[0] // First image (remains unchanged)
-    const image2Url = allImageUrls[1] // Second image (will be processed with seedream)
+    // ENHANCED PIPELINE: Conditionally process image2 based on processSecondImage flag
+    const image1Url = allImageUrls[0] // First image (always unchanged)
+    const image2Url = allImageUrls[1] // Second image
     
     console.log("[SEEDREAM-COMBINE] Image1 (unchanged):", image1Url)
-    console.log("[SEEDREAM-COMBINE] Image2 (to be processed):", image2Url)
+    console.log("[SEEDREAM-COMBINE] Image2 (original):", image2Url)
+    console.log("[SEEDREAM-COMBINE] Process second image:", processSecondImage)
 
     let processedImage2Url: string
-    let sedreamPrompt: string // Declare sedream prompt variable
+    let sedreamPrompt: string = "" // Declare sedream prompt variableiable
     
-    try {
-      // Get sedream enhancement text from configuration
-      sedreamPrompt = await getSedreamEnhancementText() || ""
+    if (processSecondImage) {
+      // PIPELINE STEP 1: Process image2 with seedream-v4-edit
+      console.log("[SEEDREAM-COMBINE] Pipeline Step 1: Processing image2 with seedream-v4-edit")
+      
+      try {
+        // Get sedream enhancement text from configuration
+        sedreamPrompt = await getSedreamEnhancementText() || ""
       
       if (!sedreamPrompt) {
         console.error("[SEEDREAM-COMBINE] No sedream_enhancement_text configured")
@@ -324,44 +548,65 @@ export async function POST(request: NextRequest) {
         failedImage: image2Url
       }, { status: 500 })
     }
+  } else {
+    // Skip Step 1: Use original image2 directly
+    console.log("[SEEDREAM-COMBINE] Skipping Step 1: Using original image2 directly")
+    processedImage2Url = image2Url
+  }
 
     // ENHANCED PIPELINE: Step 2 - Combine image1 with processed image2
-    console.log("[SEEDREAM-COMBINE] Pipeline Step 2: Combining images with seedream-v4-edit")
+    // PIPELINE STEP 2: Combine images
+    const step2Label = processSecondImage ? "Combining images (with processed image2)" : "Combining images (both original)"
+    console.log(`[SEEDREAM-COMBINE] Pipeline Step 2: ${step2Label}`)
     console.log("[SEEDREAM-COMBINE] Final combination:")
     console.log("  - Image1 (original):", image1Url)
-    console.log("  - Image2 (processed):", processedImage2Url)
+    console.log(`  - Image2 (${processSecondImage ? 'processed' : 'original'}):`, processedImage2Url)
     console.log("  - User prompt:", finalPrompt)
 
     // Update image URLs for final combination (use processed image2)
     const combinedImageUrls = [image1Url, processedImage2Url]
 
-    // Map aspect ratio to fal.ai image_size format
-    let imageSize: string
-    switch (aspectRatio) {
-      case "16:9":
-        imageSize = "landscape_16_9"
-        break
-      case "9:16":
-        imageSize = "portrait_16_9"
-        break
-      case "4:3":
-        imageSize = "landscape_4_3"
-        break
-      case "3:4":
-        imageSize = "portrait_4_3"
-        break
-      case "1:1":
-      default:
-        imageSize = "square_hd"
-        break
+    // Map aspect ratio to fal.ai image_size format or custom dimensions
+    let imageSize: string | undefined
+    let imageDimensions: { width: number; height: number } | undefined
+    
+    if (aspectRatio === "custom") {
+      imageSize = "custom"
+      imageDimensions = { width: customWidth!, height: customHeight! }
+      console.log("[SEEDREAM-COMBINE] Using custom dimensions:", imageDimensions)
+    } else {
+      switch (aspectRatio) {
+        case "16:9":
+          imageSize = "landscape_16_9"
+          break
+        case "9:16":
+          imageSize = "portrait_16_9"
+          break
+        case "4:3":
+          imageSize = "landscape_4_3"
+          break
+        case "3:4":
+          imageSize = "portrait_4_3"
+          break
+        case "1:1":
+        default:
+          imageSize = "square_hd"
+          break
+      }
     }
 
     // Prepare input for fal.ai Seedream v4 edit (final combination)
-    const input = {
+    const input: any = {
       image_urls: combinedImageUrls, // Image1 + Processed Image2
       prompt: finalPrompt, // User's prompt (canonical or enhanced)
       image_size: imageSize,
       enable_safety_checker: enableSafetyChecker
+    }
+    
+    // Add custom dimensions if using custom size
+    if (aspectRatio === "custom" && imageDimensions) {
+      input.width = imageDimensions.width
+      input.height = imageDimensions.height
     }
 
     console.log("[SEEDREAM-COMBINE] Final input object being sent to fal.ai:")
@@ -445,7 +690,11 @@ export async function POST(request: NextRequest) {
           aspect_ratio: aspectRatio,
           enable_safety_checker: enableSafetyChecker,
           image_size: imageSize,
-          use_canonical_prompt: useCanonicalPrompt
+          use_canonical_prompt: useCanonicalPrompt,
+          ...(aspectRatio === "custom" && imageDimensions ? {
+            custom_width: imageDimensions.width,
+            custom_height: imageDimensions.height
+          } : {})
         },
         timestamp: new Date().toISOString(),
         // Enhanced pipeline metadata
