@@ -578,13 +578,15 @@ export async function POST(request: NextRequest) {
       enable_safety_checker: enableSafetyChecker
     }
     
-    // Add image_size OR custom dimensions (mutually exclusive)
+    // Add image_size (string for presets, object for custom dimensions)
     if (aspectRatio === "custom" && imageDimensions) {
-      // For custom dimensions, only send width and height (no image_size)
-      input.width = imageDimensions.width
-      input.height = imageDimensions.height
+      // For custom dimensions, send as object with width and height
+      input.image_size = {
+        width: imageDimensions.width,
+        height: imageDimensions.height
+      }
     } else {
-      // For preset aspect ratios, use image_size
+      // For preset aspect ratios, use string value
       input.image_size = imageSize
     }
 
