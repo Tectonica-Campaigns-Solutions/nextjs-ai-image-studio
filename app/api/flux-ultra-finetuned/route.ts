@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
             generatedImage.url,
             "Created by supporters with ethical AI. // More at: tectonica.ai",
             {
-              fontSize: 20,
+              fontSize: 30,
               padding: 15,
               textColor: '#FFFFFF',
               shadowColor: '#000000',
