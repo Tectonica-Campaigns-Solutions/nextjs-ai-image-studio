@@ -47,13 +47,11 @@ export async function addDisclaimerToImage(
     console.log('[Disclaimer] Image dimensions:', imageWidth, 'x', imageHeight)
     
     // Calculate text position (bottom-center with padding)
-    // We'll estimate text width based on character count and font size
-    const estimatedCharWidth = fontSize * 0.6
-    const textWidth = disclaimerText.length * estimatedCharWidth
-    const textX = (imageWidth - textWidth) / 2 // Center horizontally
-    const textY = imageHeight - padding - fontSize
+    // Use text-anchor="middle" in SVG to properly center the text
+    const textX = imageWidth / 2 // Center point of the image
+    const textY = imageHeight - padding
     
-    console.log('[Disclaimer] Text position:', { textX, textY, textWidth })
+    console.log('[Disclaimer] Text position (centered):', { textX, textY })
     
     // Create SVG with text and shadow effect
     // Using filter for text shadow (better than multiple text elements)
@@ -78,6 +76,7 @@ export async function addDisclaimerToImage(
           font-family="Arial, sans-serif"
           font-size="${fontSize}px"
           fill="${textColor}"
+          text-anchor="middle"
           filter="url(#textShadow)"
         >${disclaimerText}</text>
       </svg>
