@@ -103,8 +103,9 @@ async function testFluxUltraWithDisclaimer() {
     
     console.log()
     console.log('Expected Disclaimer:')
-    console.log('  "Created by supporters with ethical AI. // More at: tectonica.ai"')
-    console.log('  Position: Bottom-center')
+    console.log('  Line 1: "Created by supporters with ethical AI."')
+    console.log('  Line 2: "More at: tectonica.ai"')
+    console.log('  Position: Bottom-right corner')
     console.log('  Style: White text with black shadow, 30px Arial, 15px padding')
     console.log()
     

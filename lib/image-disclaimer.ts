@@ -4,13 +4,13 @@ import sharp from 'sharp'
  * Adds a disclaimer text to the bottom-right corner of an image
  * 
  * @param imageUrl - URL of the source image
- * @param disclaimerText - Text to add (default: "Created by supporters with ethical AI. // More at: tectonica.ai")
+ * @param disclaimerText - Text to add (default: multi-line disclaimer)
  * @param options - Customization options
  * @returns Base64 encoded image with disclaimer
  */
 export async function addDisclaimerToImage(
   imageUrl: string,
-  disclaimerText: string = "Created by supporters with ethical AI. // More at: tectonica.ai",
+  disclaimerText?: string,
   options: {
     fontSize?: number
     padding?: number
@@ -46,12 +46,18 @@ export async function addDisclaimerToImage(
     
     console.log('[Disclaimer] Image dimensions:', imageWidth, 'x', imageHeight)
     
-    // Calculate text position (bottom-center with padding)
-    // Use text-anchor="middle" in SVG to properly center the text
-    const textX = imageWidth / 2 // Center point of the image
-    const textY = imageHeight - padding
+    // Calculate text position (bottom-right with padding)
+    // Using text-anchor="end" to align text to the right
+    const textX = imageWidth - padding // Right edge minus padding
+    const lineHeight = fontSize * 1.2 // Line spacing
+    const textY1 = imageHeight - padding - lineHeight // First line
+    const textY2 = imageHeight - padding // Second line
     
-    console.log('[Disclaimer] Text position (centered):', { textX, textY })
+    // Default disclaimer text (2 lines)
+    const line1 = "Created by supporters with ethical AI."
+    const line2 = "More at: tectonica.ai"
+    
+    console.log('[Disclaimer] Text position (right-aligned):', { textX, textY1, textY2 })
     
     // Create SVG with text and shadow effect
     // Using filter for text shadow (better than multiple text elements)
@@ -72,13 +78,22 @@ export async function addDisclaimerToImage(
         </defs>
         <text
           x="${textX}"
-          y="${textY}"
+          y="${textY1}"
           font-family="Arial, sans-serif"
           font-size="${fontSize}px"
           fill="${textColor}"
-          text-anchor="middle"
+          text-anchor="end"
           filter="url(#textShadow)"
-        >${disclaimerText}</text>
+        >${line1}</text>
+        <text
+          x="${textX}"
+          y="${textY2}"
+          font-family="Arial, sans-serif"
+          font-size="${fontSize}px"
+          fill="${textColor}"
+          text-anchor="end"
+          filter="url(#textShadow)"
+        >${line2}</text>
       </svg>
     `
     

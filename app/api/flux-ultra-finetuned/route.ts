@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         try {
           imageWithDisclaimer = await addDisclaimerToImage(
             generatedImage.url,
-            "Created by supporters with ethical AI. // More at: tectonica.ai",
+            undefined,
             {
               fontSize: 30,
               padding: 15,
