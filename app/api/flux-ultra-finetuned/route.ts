@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 
 export async function POST(request: NextRequest) {
   try {
@@ -143,12 +144,51 @@ export async function POST(request: NextRequest) {
       if (result.data && result.data.images && result.data.images.length > 0) {
         const generatedImage = result.data.images[0]
         
+        console.log("[FLUX-ULTRA-FINETUNED] Adding disclaimer to generated image...")
+        
+        // Add disclaimer to the image
+        let imageWithDisclaimer: string
+        try {
+          imageWithDisclaimer = await addDisclaimerToImage(
+            generatedImage.url,
+            "Created by supporters with ethical AI. // More at: tectonica.ai",
+            {
+              fontSize: 16,
+              padding: 15,
+              textColor: '#FFFFFF',
+              shadowColor: '#000000',
+              shadowBlur: 2
+            }
+          )
+          console.log("[FLUX-ULTRA-FINETUNED] Disclaimer added successfully")
+        } catch (disclaimerError) {
+          console.error("[FLUX-ULTRA-FINETUNED] Failed to add disclaimer:", disclaimerError)
+          // If disclaimer fails, return original image
+          return NextResponse.json({
+            success: true,
+            image: generatedImage.url,
+            width: generatedImage.width,
+            height: generatedImage.height,
+            content_type: generatedImage.content_type || "image/jpeg",
+            finalPrompt: finalPrompt,
+            originalPrompt: prompt,
+            triggerPhrase: triggerPhrase,
+            finetuneId: finetuneId,
+            finetuneStrength: parseFloat(finetuneStrength) || 1.3,
+            settings: mergedSettings,
+            model: "flux-pro/v1.1-ultra-finetuned",
+            timestamp: new Date().toISOString(),
+            disclaimerError: disclaimerError instanceof Error ? disclaimerError.message : "Failed to add disclaimer"
+          })
+        }
+        
         return NextResponse.json({
           success: true,
-          image: generatedImage.url,
+          image: imageWithDisclaimer, // Base64 image with disclaimer
+          originalImageUrl: generatedImage.url, // Original URL from Fal.ai
           width: generatedImage.width,
           height: generatedImage.height,
-          content_type: generatedImage.content_type || "image/jpeg",
+          content_type: "image/jpeg",
           finalPrompt: finalPrompt,
           originalPrompt: prompt,
           triggerPhrase: triggerPhrase,
@@ -156,7 +196,8 @@ export async function POST(request: NextRequest) {
           finetuneStrength: parseFloat(finetuneStrength) || 1.3,
           settings: mergedSettings,
           model: "flux-pro/v1.1-ultra-finetuned",
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          disclaimerAdded: true
         })
       } else {
         throw new Error("No image returned from Flux Ultra Finetuned")
