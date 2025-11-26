@@ -46,11 +46,11 @@ export async function addDisclaimerToImage(
     
     console.log('[Disclaimer] Image dimensions:', imageWidth, 'x', imageHeight)
     
-    // Calculate text position (bottom-right with padding)
+    // Calculate text position (bottom-center with padding)
     // We'll estimate text width based on character count and font size
     const estimatedCharWidth = fontSize * 0.6
     const textWidth = disclaimerText.length * estimatedCharWidth
-    const textX = imageWidth - textWidth - padding
+    const textX = (imageWidth - textWidth) / 2 // Center horizontally
     const textY = imageHeight - padding - fontSize
     
     console.log('[Disclaimer] Text position:', { textX, textY, textWidth })
