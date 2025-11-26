@@ -21,7 +21,7 @@ export async function addDisclaimerToImage(
 ): Promise<string> {
   try {
     const {
-      fontSize = 16,
+      fontSize = 20,
       padding = 15,
       textColor = '#FFFFFF',
       shadowColor = '#000000',
@@ -75,7 +75,7 @@ export async function addDisclaimerToImage(
         <text
           x="${textX}"
           y="${textY}"
-          font-family="sans-serif"
+          font-family="Arial, sans-serif"
           font-size="${fontSize}px"
           fill="${textColor}"
           filter="url(#textShadow)"
