@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { generationCanonicalPromptProcessor } from '@/lib/canonical-prompt-generation'
+import { addDisclaimerToImage } from '@/lib/image-disclaimer'
 
 /**
  * Content Moderation Helper
@@ -253,12 +254,53 @@ export async function POST(request: NextRequest) {
       if (result.data && result.data.images && result.data.images.length > 0) {
         const generatedImage = result.data.images[0]
         
+        console.log("[External Flux Ultra] Adding disclaimer to generated image...")
+        
+        // Add disclaimer to the image
+        let imageWithDisclaimer: string
+        try {
+          imageWithDisclaimer = await addDisclaimerToImage(
+            generatedImage.url,
+            "Created by supporters with ethical AI. // More at: tectonica.ai",
+            {
+              fontSize: 30,
+              padding: 15,
+              textColor: '#FFFFFF',
+              shadowColor: '#000000',
+              shadowBlur: 2
+            }
+          )
+          console.log("[External Flux Ultra] Disclaimer added successfully")
+        } catch (disclaimerError) {
+          console.error("[External Flux Ultra] Failed to add disclaimer:", disclaimerError)
+          // If disclaimer fails, return original image
+          return NextResponse.json({
+            success: true,
+            image: generatedImage.url,
+            width: generatedImage.width,
+            height: generatedImage.height,
+            content_type: generatedImage.content_type || "image/jpeg",
+            finalPrompt: finalPrompt,
+            originalPrompt: prompt.trim(),
+            canonicalApplied: useGenerationCanonical && canonicalConfig !== null,
+            canonicalPrompt: useGenerationCanonical && canonicalConfig !== null ? processedPrompt : null,
+            triggerPhrase: triggerPhrase.trim(),
+            finetuneId: finetuneId.trim(),
+            finetuneStrength: clampedFinetuneStrength,
+            settings: mergedSettings,
+            model: "flux-pro/v1.1-ultra-finetuned",
+            timestamp: new Date().toISOString(),
+            disclaimerError: disclaimerError instanceof Error ? disclaimerError.message : "Failed to add disclaimer"
+          })
+        }
+        
         return NextResponse.json({
           success: true,
-          image: generatedImage.url,
+          image: imageWithDisclaimer, // Base64 image with disclaimer
+          originalImageUrl: generatedImage.url, // Original URL from Fal.ai
           width: generatedImage.width,
           height: generatedImage.height,
-          content_type: generatedImage.content_type || "image/jpeg",
+          content_type: "image/jpeg",
           finalPrompt: finalPrompt,
           originalPrompt: prompt.trim(),
           canonicalApplied: useGenerationCanonical && canonicalConfig !== null,
@@ -268,7 +310,8 @@ export async function POST(request: NextRequest) {
           finetuneStrength: clampedFinetuneStrength,
           settings: mergedSettings,
           model: "flux-pro/v1.1-ultra-finetuned",
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          disclaimerAdded: true
         })
       } else {
         throw new Error("No image returned from Flux Ultra Finetuned")
@@ -317,9 +360,12 @@ export async function POST(request: NextRequest) {
         const fallbackResult = await fallbackResponse.json()
         console.log("[External Flux Ultra] Fallback successful!")
         
+        // The fallback already includes the disclaimer from the internal endpoint
+        // Return the result as-is
         return NextResponse.json({
           success: true,
           image: fallbackResult.image,
+          originalImageUrl: fallbackResult.originalImageUrl,
           width: fallbackResult.width,
           height: fallbackResult.height,
           content_type: fallbackResult.content_type,
@@ -331,6 +377,7 @@ export async function POST(request: NextRequest) {
           settings: fallbackResult.settings,
           model: fallbackResult.model,
           timestamp: fallbackResult.timestamp,
+          disclaimerAdded: fallbackResult.disclaimerAdded,
           fallback: true
         })
       } catch (fallbackError) {
