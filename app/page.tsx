@@ -733,6 +733,27 @@ export default function ImageEditor() {
   const [sedreamNegativePrompts, setSedreamNegativePrompts] = useState<string[]>([])
   const [showNegativePrompts, setShowNegativePrompts] = useState(false)
 
+  // Helper function to handle image download/view
+  const handleImageDownload = (imageUrl: string, filename: string = 'image.png') => {
+    // Check if it's a base64 image
+    if (imageUrl.startsWith('data:image')) {
+      // For base64 images, open in new tab
+      const win = window.open()
+      if (win) {
+        win.document.write(`<img src="${imageUrl}" style="max-width: 100%; height: auto;" />`)
+        win.document.title = filename
+      }
+    } else {
+      // For URL images, use download link
+      const link = document.createElement('a')
+      link.href = imageUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
   // Load canonical options on component mount
   useEffect(() => {
     loadCanonicalOptions()
@@ -3351,14 +3372,7 @@ export default function ImageEditor() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            const link = document.createElement('a')
-                            link.href = fluxProImageUrl
-                            link.download = 'flux-pro-generated-image.png'
-                            document.body.appendChild(link)
-                            link.click()
-                            document.body.removeChild(link)
-                          }}
+                          onClick={() => handleImageDownload(fluxProImageUrl, 'flux-pro-generated-image.png')}
                         >
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Download
@@ -4112,7 +4126,7 @@ export default function ImageEditor() {
                       <Button 
                         variant="outline" 
                         className="w-full"
-                        onClick={() => window.open(fluxCombineResult, '_blank')}
+                        onClick={() => handleImageDownload(fluxCombineResult, 'flux-combine-result.png')}
                       >
                         Open Full Size
                       </Button>
@@ -4622,7 +4636,7 @@ export default function ImageEditor() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(image.url, '_blank')}
+                              onClick={() => handleImageDownload(image.url, `seedream-ark-combine-${index + 1}.png`)}
                             >
                               <Download className="h-4 w-4 mr-2" />
                               Download
@@ -4942,7 +4956,7 @@ export default function ImageEditor() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(image.url, '_blank')}
+                              onClick={() => handleImageDownload(image.url, `seedream-edit-image-${index + 1}.png`)}
                             >
                               <Download className="h-4 w-4 mr-2" />
                               Download
@@ -5657,7 +5671,7 @@ export default function ImageEditor() {
                           className="w-full h-auto rounded-lg shadow-lg"
                         />
                         <Button
-                          onClick={() => window.open(externalFluxCombineResult, '_blank')}
+                          onClick={() => handleImageDownload(externalFluxCombineResult, 'external-flux-combine.png')}
                           className="absolute top-2 right-2"
                           size="sm"
                         >
