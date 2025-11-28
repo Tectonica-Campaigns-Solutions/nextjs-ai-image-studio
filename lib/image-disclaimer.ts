@@ -1,6 +1,56 @@
 import sharp from 'sharp'
 
 /**
+ * Removes the disclaimer area from an image by cropping the bottom portion
+ * 
+ * @param imageBuffer - Buffer of the source image
+ * @param cropHeight - Height to crop from bottom (default: 80px to remove 2-line disclaimer)
+ * @returns Buffer of the cropped image
+ */
+export async function removeDisclaimerArea(
+  imageBuffer: Buffer,
+  cropHeight: number = 80
+): Promise<Buffer> {
+  try {
+    console.log('[Disclaimer] Removing disclaimer area from image buffer')
+    
+    // Get image metadata
+    const metadata = await sharp(imageBuffer).metadata()
+    const imageWidth = metadata.width || 1024
+    const imageHeight = metadata.height || 1024
+    
+    console.log('[Disclaimer] Original dimensions:', imageWidth, 'x', imageHeight)
+    console.log('[Disclaimer] Cropping', cropHeight, 'px from bottom')
+    
+    // Calculate new height (remove bottom portion)
+    const newHeight = imageHeight - cropHeight
+    
+    if (newHeight <= 0) {
+      console.warn('[Disclaimer] Crop height too large, returning original image')
+      return imageBuffer
+    }
+    
+    // Crop the image from top-left, excluding bottom portion
+    const croppedImage = await sharp(imageBuffer)
+      .extract({
+        left: 0,
+        top: 0,
+        width: imageWidth,
+        height: newHeight
+      })
+      .toBuffer()
+    
+    console.log('[Disclaimer] Image cropped to:', imageWidth, 'x', newHeight)
+    
+    return croppedImage
+    
+  } catch (error) {
+    console.error('[Disclaimer] Error removing disclaimer area:', error)
+    throw new Error(`Failed to remove disclaimer area: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
  * Adds a disclaimer text to the bottom-right corner of an image
  * 
  * @param imageUrl - URL of the source image
@@ -17,6 +67,8 @@ export async function addDisclaimerToImage(
     textColor?: string
     shadowColor?: string
     shadowBlur?: number
+    removeExisting?: boolean  // New option to remove existing disclaimer
+    cropHeight?: number       // Height to crop from bottom if removeExisting is true
   } = {}
 ): Promise<string> {
   try {
@@ -25,7 +77,9 @@ export async function addDisclaimerToImage(
       padding = 15,
       textColor = '#FFFFFF',
       shadowColor = '#000000',
-      shadowBlur = 2
+      shadowBlur = 2,
+      removeExisting = false,
+      cropHeight = 80
     } = options
 
     console.log('[Disclaimer] Downloading image from URL:', imageUrl)
@@ -36,10 +90,17 @@ export async function addDisclaimerToImage(
       throw new Error(`Failed to download image: ${response.statusText}`)
     }
     
-    const imageBuffer = Buffer.from(await response.arrayBuffer())
+    let imageBuffer = Buffer.from(await response.arrayBuffer())
     console.log('[Disclaimer] Image downloaded, size:', imageBuffer.length, 'bytes')
     
-    // Get image metadata
+    // Remove existing disclaimer area if requested
+    if (removeExisting) {
+      console.log('[Disclaimer] removeExisting=true, cropping bottom area...')
+      const croppedBuffer = await removeDisclaimerArea(imageBuffer, cropHeight)
+      imageBuffer = Buffer.from(croppedBuffer)
+    }
+    
+    // Get image metadata (after potential crop)
     const metadata = await sharp(imageBuffer).metadata()
     const imageWidth = metadata.width || 1024
     const imageHeight = metadata.height || 1024
