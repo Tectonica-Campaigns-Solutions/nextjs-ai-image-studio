@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 
 /**
  * POST /api/seedream-single-edit
@@ -516,10 +517,56 @@ export async function POST(request: NextRequest) {
         height: img.height || 1024
       }))
 
-      // Return successful response
+      // Add disclaimer to the first image
+      console.log("[SEEDREAM-SINGLE-EDIT] Adding disclaimer to edited image...")
+      const primaryImage = images[0]
+      let imageWithDisclaimer: string
+      
+      try {
+        imageWithDisclaimer = await addDisclaimerToImage(
+          primaryImage.url,
+          undefined,
+          {
+            fontSize: 30,
+            padding: 15,
+            textColor: '#FFFFFF',
+            shadowColor: '#000000',
+            shadowBlur: 2
+          }
+        )
+        console.log("[SEEDREAM-SINGLE-EDIT] Disclaimer added successfully")
+      } catch (disclaimerError) {
+        console.error("[SEEDREAM-SINGLE-EDIT] Failed to add disclaimer:", disclaimerError)
+        // If disclaimer fails, return original image
+        return NextResponse.json({
+          success: true,
+          image: primaryImage.url,
+          images,
+          prompt,
+          originalPrompt: prompt,
+          model: "fal-ai/bytedance/seedream/v4/edit",
+          provider: "fal.ai",
+          inputImage: finalImageUrl,
+          settings: {
+            aspect_ratio: aspectRatio,
+            ...(aspectRatio === "custom" && imageDimensions ? {
+              custom_width: imageDimensions.width,
+              custom_height: imageDimensions.height
+            } : {}),
+            num_images: numImages,
+            enable_safety_checker: enableSafetyChecker,
+            note: "This endpoint uses simplified settings for compatibility with Seedream v4 edit model"
+          },
+          timestamp: new Date().toISOString(),
+          disclaimerError: disclaimerError instanceof Error ? disclaimerError.message : "Failed to add disclaimer"
+        })
+      }
+
+      // Return successful response with disclaimer
       return NextResponse.json({
         success: true,
-        image: images[0]?.url || images[0], // Primary image for UI compatibility
+        image: imageWithDisclaimer, // Base64 image with disclaimer
+        originalImageUrl: primaryImage.url, // Original URL from Fal.ai
         images, // All images for completeness
         prompt,
         originalPrompt: prompt,
@@ -534,10 +581,10 @@ export async function POST(request: NextRequest) {
           } : {}),
           num_images: numImages,
           enable_safety_checker: enableSafetyChecker,
-          // Note: Advanced parameters are not supported by this model
           note: "This endpoint uses simplified settings for compatibility with Seedream v4 edit model"
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        disclaimerAdded: true
       })
 
     } catch (falError) {
