@@ -108,8 +108,15 @@ async function testSeedreamEditWithDisclaimer(imageUrl) {
     console.log()
     console.log('Expected Behavior:')
     console.log('  - Input image: Disclaimer removed (if present) before editing')
+    console.log('  - Dimensions: Maintained using proportional resize + center crop')
     console.log('  - Output image: Fresh disclaimer added at bottom-right')
     console.log('  - No duplicate or overlapping disclaimers')
+    console.log()
+    console.log('Proportional Resize Method:')
+    console.log('  1. Crop 80px from bottom (remove old disclaimer)')
+    console.log('  2. Resize proportionally to restore original height')
+    console.log('  3. Center crop to restore original width')
+    console.log('  4. Result: Original dimensions preserved, ~11% content loss from sides')
     console.log()
     console.log('Disclaimer Details:')
     console.log('  Line 1: "Created by supporters with ethical AI."')
@@ -140,8 +147,12 @@ async function testSeedreamEditWithDisclaimer(imageUrl) {
 const imageUrl = process.argv[2] || 'https://picsum.photos/1024/1024'
 
 console.log()
-console.log('Note: If testing with an image that already has a disclaimer,')
-console.log('      the endpoint will remove ~80px from the bottom before editing.')
+console.log('Note: This endpoint uses proportional resize method to maintain dimensions.')
+console.log('      If the input image has a disclaimer:')
+console.log('      1. Bottom 80px is cropped (removes disclaimer)')
+console.log('      2. Image is resized proportionally to restore original height')
+console.log('      3. Center crop restores original width (~11% loss from sides)')
+console.log('      4. New disclaimer is added to the restored dimensions')
 console.log()
 
 // Run the test

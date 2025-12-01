@@ -51,6 +51,93 @@ export async function removeDisclaimerArea(
 }
 
 /**
+ * Removes disclaimer and restores original dimensions using proportional resize
+ * This method crops the disclaimer, resizes proportionally, then crops to original dimensions
+ * 
+ * @param imageBuffer - Buffer of the source image
+ * @param cropHeight - Height to crop from bottom (default: 80px)
+ * @returns Buffer of the processed image with original dimensions
+ */
+export async function removeDisclaimerWithResize(
+  imageBuffer: Buffer,
+  cropHeight: number = 80
+): Promise<Buffer> {
+  try {
+    console.log('[Disclaimer] Removing disclaimer with proportional resize')
+    
+    // Get original metadata
+    const metadata = await sharp(imageBuffer).metadata()
+    const originalWidth = metadata.width || 1024
+    const originalHeight = metadata.height || 1024
+    
+    console.log('[Disclaimer] Original dimensions:', originalWidth, 'x', originalHeight)
+    console.log('[Disclaimer] Cropping', cropHeight, 'px from bottom')
+    
+    // Step 1: Crop bottom (remove disclaimer)
+    const croppedHeight = originalHeight - cropHeight
+    
+    if (croppedHeight <= 0) {
+      console.warn('[Disclaimer] Crop height too large, returning original image')
+      return imageBuffer
+    }
+    
+    const cropped = await sharp(imageBuffer)
+      .extract({
+        left: 0,
+        top: 0,
+        width: originalWidth,
+        height: croppedHeight
+      })
+      .toBuffer()
+    
+    console.log('[Disclaimer] After crop:', originalWidth, 'x', croppedHeight)
+    
+    // Step 2: Calculate new width for proportional resize back to original height
+    const resizeRatio = originalHeight / croppedHeight
+    const newWidth = Math.round(originalWidth * resizeRatio)
+    
+    console.log('[Disclaimer] Resize ratio:', resizeRatio.toFixed(4))
+    console.log('[Disclaimer] New width after proportional resize:', newWidth)
+    
+    // Step 3: Resize proportionally to original height
+    const resized = await sharp(cropped)
+      .resize({
+        width: newWidth,
+        height: originalHeight,
+        fit: 'fill'
+      })
+      .toBuffer()
+    
+    console.log('[Disclaimer] After resize:', newWidth, 'x', originalHeight)
+    
+    // Step 4: Crop center to get back to original dimensions
+    const widthDiff = newWidth - originalWidth
+    const cropLeft = Math.floor(widthDiff / 2)
+    
+    console.log('[Disclaimer] Width difference:', widthDiff, 'px')
+    console.log('[Disclaimer] Cropping', cropLeft, 'px from left,', (widthDiff - cropLeft), 'px from right')
+    
+    const final = await sharp(resized)
+      .extract({
+        left: cropLeft,
+        top: 0,
+        width: originalWidth,
+        height: originalHeight
+      })
+      .toBuffer()
+    
+    console.log('[Disclaimer] Final dimensions:', originalWidth, 'x', originalHeight, '✓')
+    console.log('[Disclaimer] Content loss: ~', ((widthDiff / originalWidth) * 100).toFixed(1), '% from sides')
+    
+    return final
+    
+  } catch (error) {
+    console.error('[Disclaimer] Error in removeDisclaimerWithResize:', error)
+    throw new Error(`Failed to remove disclaimer with resize: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
  * Adds a disclaimer text to the bottom-right corner of an image
  * 
  * @param imageUrl - URL of the source image
@@ -67,8 +154,9 @@ export async function addDisclaimerToImage(
     textColor?: string
     shadowColor?: string
     shadowBlur?: number
-    removeExisting?: boolean  // New option to remove existing disclaimer
+    removeExisting?: boolean  // Remove existing disclaimer before adding new one
     cropHeight?: number       // Height to crop from bottom if removeExisting is true
+    preserveMethod?: 'resize' | 'crop' // Method to preserve/restore dimensions (default: 'resize')
   } = {}
 ): Promise<string> {
   try {
@@ -79,7 +167,8 @@ export async function addDisclaimerToImage(
       shadowColor = '#000000',
       shadowBlur = 2,
       removeExisting = false,
-      cropHeight = 80
+      cropHeight = 80,
+      preserveMethod = 'resize' // Default to proportional resize method
     } = options
 
     console.log('[Disclaimer] Downloading image from URL:', imageUrl)
@@ -95,9 +184,17 @@ export async function addDisclaimerToImage(
     
     // Remove existing disclaimer area if requested
     if (removeExisting) {
-      console.log('[Disclaimer] removeExisting=true, cropping bottom area...')
-      const croppedBuffer = await removeDisclaimerArea(imageBuffer, cropHeight)
-      imageBuffer = Buffer.from(croppedBuffer)
+      console.log('[Disclaimer] removeExisting=true, using preserve method:', preserveMethod)
+      
+      if (preserveMethod === 'resize') {
+        // Use proportional resize method to maintain original dimensions
+        const processedBuffer = await removeDisclaimerWithResize(imageBuffer, cropHeight)
+        imageBuffer = Buffer.from(processedBuffer)
+      } else {
+        // Use simple crop (dimensions will change)
+        const croppedBuffer = await removeDisclaimerArea(imageBuffer, cropHeight)
+        imageBuffer = Buffer.from(croppedBuffer)
+      }
     }
     
     // Get image metadata (after potential crop)

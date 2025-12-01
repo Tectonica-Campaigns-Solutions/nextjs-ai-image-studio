@@ -532,8 +532,9 @@ export async function POST(request: NextRequest) {
             textColor: '#FFFFFF',
             shadowColor: '#000000',
             shadowBlur: 2,
-            removeExisting: true,  // Remove any existing disclaimer before adding new one
-            cropHeight: 80         // Crop 80px from bottom (enough for 2-line disclaimer)
+            removeExisting: true,    // Remove any existing disclaimer before adding new one
+            cropHeight: 80,          // Crop 80px from bottom (enough for 2-line disclaimer)
+            preserveMethod: 'resize' // Use proportional resize to maintain original dimensions
           }
         )
         console.log("[SEEDREAM-SINGLE-EDIT] Disclaimer added successfully")
