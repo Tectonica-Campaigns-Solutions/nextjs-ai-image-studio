@@ -3,6 +3,10 @@ import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 import { getSedreamEnhancementText } from "@/lib/json-enhancement"
+import {
+  addDisclaimerToImage,
+  preprocessImageForCombine,
+} from "@/lib/image-disclaimer"
 
 /**
  * POST /api/external/seedream-ark-combine
@@ -428,6 +432,17 @@ export async function POST(request: NextRequest) {
     console.log("[External Seedream Combine] All image URLs ready:", allImageUrls)
     console.log("[External Seedream Combine] Starting enhanced pipeline: seedream → combine")
 
+    // Pre-process both input images to remove existing disclaimers
+    console.log("[External Seedream Combine] Pre-processing input images to remove disclaimers...")
+    const [processedInput1, processedInput2] = await Promise.all([
+      preprocessImageForCombine(allImageUrls[0]),
+      preprocessImageForCombine(allImageUrls[1]),
+    ])
+    
+    console.log("[External Seedream Combine] Input images pre-processed:")
+    console.log("  - Image1:", processedInput1.startsWith('data:') ? 'base64 (' + processedInput1.length + ' chars)' : processedInput1)
+    console.log("  - Image2:", processedInput2.startsWith('data:') ? 'base64 (' + processedInput2.length + ' chars)' : processedInput2)
+
     // ENHANCED PIPELINE: Conditionally process image based on origin and processSecondImage flag
     // CA: Process first image (index 0)
     // TCN: Process second image (index 1)
@@ -437,21 +452,21 @@ export async function POST(request: NextRequest) {
     let imageToProcessLabel: string
     
     if (origin === "CA") {
-      image1Url = allImageUrls[0] // First image - will be processed if enabled
-      image2Url = allImageUrls[1] // Second image - kept original
+      image1Url = processedInput1 // First image (pre-processed) - will be processed if enabled
+      image2Url = processedInput2 // Second image (pre-processed) - kept original
       imageToProcess = image1Url
       imageToProcessLabel = "image1 (first image)"
       console.log("[External Seedream Combine] CA mode: Will process first image (index 0)")
     } else {
-      image1Url = allImageUrls[0] // First image - kept original
-      image2Url = allImageUrls[1] // Second image - will be processed if enabled
+      image1Url = processedInput1 // First image (pre-processed) - kept original
+      image2Url = processedInput2 // Second image (pre-processed) - will be processed if enabled
       imageToProcess = image2Url
       imageToProcessLabel = "image2 (second image)"
       console.log("[External Seedream Combine] TCN mode: Will process second image (index 1)")
     }
     
-    console.log("[External Seedream Combine] Image1:", image1Url)
-    console.log("[External Seedream Combine] Image2:", image2Url)
+    console.log("[External Seedream Combine] Image1 (pre-processed):", image1Url.startsWith('data:') ? 'base64' : image1Url)
+    console.log("[External Seedream Combine] Image2 (pre-processed):", image2Url.startsWith('data:') ? 'base64' : image2Url)
     console.log("[External Seedream Combine] Process second image:", processSecondImage)
     console.log("[External Seedream Combine] Image to process:", imageToProcessLabel)
 
@@ -653,11 +668,38 @@ export async function POST(request: NextRequest) {
         height: img.height || 1024
       }))
 
+      // Add disclaimer to the combined result image
+      let finalImageUrl = images[0]?.url || images[0]
+      let originalImageUrl = finalImageUrl
+      
+      if (finalImageUrl) {
+        try {
+          console.log("[External Seedream Combine] Adding disclaimer to final combined image...")
+          const imageWithDisclaimer = await addDisclaimerToImage(
+            finalImageUrl,
+            undefined,
+            {
+              removeExisting: false, // Already pre-processed inputs
+              preserveMethod: 'resize',
+            }
+          )
+          
+          console.log("[External Seedream Combine] Disclaimer added successfully to final image")
+          finalImageUrl = imageWithDisclaimer
+          
+        } catch (disclaimerError) {
+          console.error("[External Seedream Combine] Error adding disclaimer:", disclaimerError)
+          console.log("[External Seedream Combine] Returning original image without disclaimer")
+          // Return original if disclaimer fails
+        }
+      }
+
       // Return successful response with enhanced pipeline metadata
       return NextResponse.json({
         success: true,
-        image: images[0]?.url || images[0], // Primary image for UI compatibility
-        images, // All images for completeness
+        image: finalImageUrl, // Primary image with disclaimer for UI compatibility
+        images: [{ url: finalImageUrl, width: images[0]?.width, height: images[0]?.height }], // Image with disclaimer
+        originalImageUrl, // Original without disclaimer for reference
         prompt: finalPrompt,
         originalPrompt: prompt,
         model: "fal-ai/bytedance/seedream/v4/edit",
@@ -676,7 +718,7 @@ export async function POST(request: NextRequest) {
           {
             step: 1,
             operation: "seedream-v4-edit",
-            inputImage: origin === "CA" ? image1Url : image2Url,
+            inputImage: origin === "CA" ? allImageUrls[0] : allImageUrls[1],
             outputImage: origin === "CA" ? processedImage1Url : processedImage2Url,
             prompt: sedreamPrompt,
             processedImageIndex: origin === "CA" ? 0 : 1,
@@ -686,7 +728,7 @@ export async function POST(request: NextRequest) {
             step: 2,
             operation: "seedream-v4-edit-combine",
             inputImages: combinedImageUrls,
-            outputImage: images[0]?.url,
+            outputImage: originalImageUrl,
             prompt: finalPrompt
           }
         ] : [
@@ -694,7 +736,7 @@ export async function POST(request: NextRequest) {
             step: 1,
             operation: "seedream-v4-edit-combine",
             inputImages: combinedImageUrls,
-            outputImage: images[0]?.url,
+            outputImage: originalImageUrl,
             prompt: finalPrompt,
             note: "Direct combination without pre-processing"
           }
