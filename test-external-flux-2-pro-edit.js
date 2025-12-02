@@ -1,9 +1,12 @@
 /**
  * Test script for external Flux 2 Pro Edit endpoint
- * Tests JSON API for external integrations (returns fal.ai URLs, no Base64)
+ * Tests JSON API for external integrations (returns Base64 with disclaimer)
  * 
  * Usage: node test-external-flux-2-pro-edit.js
  */
+
+const fs = require('fs');
+const path = require('path');
 
 const API_URL = 'http://localhost:3000/api/external-flux-2-pro-edit';
 
@@ -69,10 +72,25 @@ async function testExternalFlux2ProEdit() {
     
     if (result.images && result.images.length > 0) {
       console.log('\n🖼️  Generated image:');
-      console.log('  - URL:', result.images[0].url);
+      console.log('  - URL:', result.images[0].url.substring(0, 100) + '...');
+      console.log('  - Original URL:', result.images[0].originalUrl);
       console.log('  - Dimensions:', `${result.images[0].width}x${result.images[0].height}`);
-      console.log('  - Format: Hosted URL (fal.ai CDN)');
-      console.log('\n📋 You can download the image from:', result.images[0].url);
+      
+      // Check if image is Base64
+      if (result.images[0].url.startsWith('data:')) {
+        const base64Length = result.images[0].url.length;
+        const sizeInKB = (base64Length * 0.75 / 1024).toFixed(1);
+        console.log('  - Format: Base64 with disclaimer');
+        console.log('  - Size: ~', sizeInKB, 'KB');
+        
+        // Save to file
+        const base64Data = result.images[0].url.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const outputPath = path.join(__dirname, 'test-external-flux-2-pro-edit-output.jpg');
+        fs.writeFileSync(outputPath, buffer);
+        console.log('  - Saved to:', outputPath);
+      }
+      console.log('\n📋 Original fal.ai URL:', result.images[0].originalUrl);
     }
     
     console.log('\n✅ Test completed successfully!');
@@ -333,14 +351,14 @@ async function runAllTests() {
   console.log('  ALL TESTS COMPLETED');
   console.log('═══════════════════════════════════════════════════════\n');
   
-  console.log('📋 Summary:');
-  console.log('  - External endpoint returns fal.ai hosted URLs');
-  console.log('  - No Base64 conversion (faster response)');
-  console.log('  - No disclaimer added (clean fal.ai images)');
+  console.log('\n📋 Summary:');
+  console.log('  - External endpoint returns Base64 images with disclaimer');
+  console.log('  - Also includes originalUrl (fal.ai hosted URL)');
+  console.log('  - JSON-only communication');
   console.log('  - Supports up to 9 images');
   console.log('  - Automatic image resizing (4MP first, 1MP others)');
-  console.log('  - JSON-only communication');
-  console.log('  - Ideal for external API integrations\n');
+  console.log('  - Ideal for external API integrations');
+  console.log('  - Disclaimer automatically applied\n');
 }
 
 // Execute tests

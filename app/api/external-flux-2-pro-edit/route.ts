@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
+import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 
 /**
@@ -53,7 +54,7 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  * POST /api/external-flux-2-pro-edit
  * 
  * External API endpoint for FLUX.2 [pro] image editing with multi-reference support.
- * Returns fal.ai image URLs (no Base64 conversion, no disclaimer).
+ * Returns Base64 images with disclaimer for external API integrations.
  * 
  * Features:
  * - Multi-image editing: Up to 9 reference images (9 MP total input)
@@ -64,6 +65,7 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  * - Safety controls: Configurable tolerance (1-5) and safety checker
  * - Multiple formats: JPEG or PNG output
  * - Reproducibility: Seed support
+ * - Disclaimer: Automatic disclaimer overlay on results
  * 
  * Body parameters (JSON):
  * - prompt (required): Text description for the edit
@@ -82,7 +84,12 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  * Response format:
  * {
  *   "success": true,
- *   "images": [{ "url": "https://fal.ai/...", "width": 1024, "height": 1024 }],
+ *   "images": [{ 
+ *     "url": "data:image/jpeg;base64,...", 
+ *     "originalUrl": "https://fal.ai/...",
+ *     "width": 1024, 
+ *     "height": 1024 
+ *   }],
  *   "prompt": "enhanced prompt used",
  *   "originalPrompt": "user's original prompt",
  *   "seed": 12345,
@@ -206,24 +213,24 @@ export async function POST(request: NextRequest) {
 
     // Content moderation
     try {
-      const moderationService = new ContentModerationService()
       console.log(`[MODERATION] Checking content for External Flux 2 Pro Edit prompt: ${prompt.substring(0, 100)}...`)
+      const moderationService = new ContentModerationService(orgType)
+      const moderationResult = await moderationService.moderateContent({ prompt })
       
-      const moderationResult = await moderationService.moderateContent(prompt, orgType)
-      
-      if (!moderationResult.approved) {
+      if (!moderationResult.safe) {
         console.log(`[MODERATION] Content blocked: ${moderationResult.reason}`)
         return NextResponse.json({
-          error: "Content moderation failed",
-          details: moderationResult.reason,
-          categories: moderationResult.flaggedCategories
+          error: moderationResult.reason,
+          category: moderationResult.category,
+          blocked: true,
+          moderation: true
         }, { status: 400 })
       }
       
       console.log("[MODERATION] Content approved")
     } catch (moderationError) {
-      console.error("[MODERATION] Moderation check failed:", moderationError)
-      // Continue anyway - don't block on moderation failures
+      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
+      // Continue with generation if moderation fails to avoid blocking users
     }
 
     // Process images - upload to fal.ai storage
@@ -438,16 +445,46 @@ export async function POST(request: NextRequest) {
 
       console.log("[External Flux 2 Pro Edit] Generated", result.data.images.length, "images")
 
-      // Format response - return fal.ai URLs directly (no Base64, no disclaimer)
-      const images = result.data.images.map((img: any) => ({
-        url: img.url,
-        width: img.width || 1024,
-        height: img.height || 1024
-      }))
+      // Add disclaimer to the result images
+      const processedImages = []
+      
+      for (const img of result.data.images) {
+        let imageUrl = img.url
+        const originalImageUrl = imageUrl
+        
+        if (imageUrl) {
+          try {
+            console.log("[External Flux 2 Pro Edit] Adding disclaimer to result image...")
+            const imageWithDisclaimer = await addDisclaimerToImage(
+              imageUrl,
+              undefined,
+              {
+                removeExisting: false,
+                preserveMethod: 'resize',
+              }
+            )
+            
+            console.log("[External Flux 2 Pro Edit] Disclaimer added successfully")
+            imageUrl = imageWithDisclaimer
+            
+          } catch (disclaimerError) {
+            console.error("[External Flux 2 Pro Edit] Error adding disclaimer:", disclaimerError)
+            console.log("[External Flux 2 Pro Edit] Returning original image without disclaimer")
+            // Continue with original if disclaimer fails
+          }
+        }
+        
+        processedImages.push({
+          url: imageUrl,
+          originalUrl: originalImageUrl,
+          width: img.width || 1024,
+          height: img.height || 1024
+        })
+      }
 
       return NextResponse.json({
         success: true,
-        images,
+        images: processedImages,
         prompt: finalPrompt,
         originalPrompt: prompt,
         seed: result.data.seed,
