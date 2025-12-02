@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 
 /**
@@ -425,10 +426,66 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream Edit] Successfully processed with SeDream v4")
       
-      // Return the result in external API format
+      // Add disclaimer to the edited image
+      console.log("[External SeDream Edit] Adding disclaimer to edited image...")
+      const editedImage = result.data.images[0]
+      let imageWithDisclaimer: string
+      
+      try {
+        imageWithDisclaimer = await addDisclaimerToImage(
+          editedImage.url,
+          undefined,
+          {
+            fontSize: 30,
+            padding: 15,
+            textColor: '#FFFFFF',
+            shadowColor: '#000000',
+            shadowBlur: 2,
+            removeExisting: true,    // Remove any existing disclaimer before adding new one
+            cropHeight: 80,          // Crop 80px from bottom (enough for 2-line disclaimer)
+            preserveMethod: 'resize' // Use proportional resize to maintain original dimensions
+          }
+        )
+        console.log("[External SeDream Edit] Disclaimer added successfully")
+      } catch (disclaimerError) {
+        console.error("[External SeDream Edit] Failed to add disclaimer:", disclaimerError)
+        // If disclaimer fails, return original images without disclaimer
+        return NextResponse.json({
+          success: true,
+          images: result.data.images,
+          prompt: finalPrompt,
+          safetyProtections: {
+            negativeTermsApplied: negativePrompts.length,
+            nsfwProtection: true,
+            ageBiasProtection: true,
+            humanIntegrityProtection: true,
+            safetyCheckerEnabled: true
+          },
+          inputImage: finalImageUrl,
+          aspectRatio: aspectRatio,
+          ...(aspectRatio === "custom" && imageDimensions ? {
+            customDimensions: {
+              width: imageDimensions.width,
+              height: imageDimensions.height
+            }
+          } : {}),
+          disclaimerError: disclaimerError instanceof Error ? disclaimerError.message : "Failed to add disclaimer"
+        })
+      }
+      
+      // Update images array with disclaimer
+      const imagesWithDisclaimer = [{
+        url: imageWithDisclaimer,
+        width: editedImage.width,
+        height: editedImage.height,
+        content_type: 'image/jpeg'
+      }]
+      
+      // Return the result in external API format with disclaimer
       return NextResponse.json({
         success: true,
-        images: result.data.images,
+        images: imagesWithDisclaimer,
+        originalImageUrl: editedImage.url, // Original URL from Fal.ai
         prompt: finalPrompt,
         safetyProtections: {
           negativeTermsApplied: negativePrompts.length,
@@ -444,7 +501,8 @@ export async function POST(request: NextRequest) {
             width: imageDimensions.width,
             height: imageDimensions.height
           }
-        } : {})
+        } : {}),
+        disclaimerAdded: true
       })
 
     } catch (uploadError) {
