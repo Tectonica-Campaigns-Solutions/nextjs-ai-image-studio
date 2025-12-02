@@ -219,6 +219,7 @@ export async function addDisclaimerToImage(
     
     // Create SVG with text and shadow effect
     // Using filter for text shadow (better than multiple text elements)
+    // Font stack: Liberation Sans (metrics-compatible with Arial), DejaVu Sans, system fallbacks
     const svg = `
       <svg width="${imageWidth}" height="${imageHeight}">
         <defs>
@@ -237,7 +238,7 @@ export async function addDisclaimerToImage(
         <text
           x="${textX}"
           y="${textY1}"
-          font-family="Arial, sans-serif"
+          font-family="Liberation Sans, DejaVu Sans, Arial, Helvetica, sans-serif"
           font-size="${fontSize}px"
           fill="${textColor}"
           text-anchor="end"
@@ -246,7 +247,7 @@ export async function addDisclaimerToImage(
         <text
           x="${textX}"
           y="${textY2}"
-          font-family="Arial, sans-serif"
+          font-family="Liberation Sans, DejaVu Sans, Arial, Helvetica, sans-serif"
           font-size="${fontSize}px"
           fill="${textColor}"
           text-anchor="end"

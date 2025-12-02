@@ -1,6 +1,18 @@
 # Use Node.js 20 LTS
 FROM node:20-alpine
 
+# Install font packages for text rendering with Sharp
+# fontconfig: Font configuration library
+# ttf-dejavu: DejaVu font family (good Arial alternative)
+# ttf-liberation: Liberation fonts (metric-compatible with Arial, Times, Courier)
+RUN apk add --no-cache \
+    fontconfig \
+    ttf-dejavu \
+    ttf-liberation
+
+# Refresh font cache
+RUN fc-cache -f
+
 # Set working directory
 WORKDIR /app
 
