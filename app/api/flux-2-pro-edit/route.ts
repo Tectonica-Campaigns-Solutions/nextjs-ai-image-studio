@@ -6,6 +6,51 @@ import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 
 /**
+ * Helper: Resize image to respect fal.ai megapixel limits
+ * First image: max 4 MP (2048x2048)
+ * Subsequent images: max 1 MP (1024x1024)
+ */
+async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promise<Buffer> {
+  const maxMegapixels = isFirstImage ? 4_000_000 : 1_000_000
+  const maxDimension = isFirstImage ? 2048 : 1024
+  
+  const metadata = await sharp(buffer).metadata()
+  const currentPixels = (metadata.width || 0) * (metadata.height || 0)
+  
+  // If already within limits, return as-is
+  if (currentPixels <= maxMegapixels && 
+      (metadata.width || 0) <= maxDimension && 
+      (metadata.height || 0) <= maxDimension) {
+    return buffer
+  }
+  
+  // Calculate resize dimensions while maintaining aspect ratio
+  const aspectRatio = (metadata.width || 1) / (metadata.height || 1)
+  let targetWidth: number
+  let targetHeight: number
+  
+  if (aspectRatio > 1) {
+    // Landscape
+    targetWidth = Math.min(maxDimension, Math.floor(Math.sqrt(maxMegapixels * aspectRatio)))
+    targetHeight = Math.floor(targetWidth / aspectRatio)
+  } else {
+    // Portrait or square
+    targetHeight = Math.min(maxDimension, Math.floor(Math.sqrt(maxMegapixels / aspectRatio)))
+    targetWidth = Math.floor(targetHeight * aspectRatio)
+  }
+  
+  console.log(`[Flux 2 Pro Edit] Resizing image from ${metadata.width}x${metadata.height} (${Math.round(currentPixels/1000000)}MP) to ${targetWidth}x${targetHeight} (${Math.round((targetWidth*targetHeight)/1000000)}MP)`)
+  
+  return sharp(buffer)
+    .resize(targetWidth, targetHeight, { 
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .jpeg({ quality: 90 })
+    .toBuffer()
+}
+
+/**
  * POST /api/flux-2-pro-edit
  * 
  * Internal API endpoint for FLUX.2 [pro] image editing with multi-reference support.
@@ -302,6 +347,7 @@ export async function POST(request: NextRequest) {
       
       for (let i = 0; i < base64Images.length; i++) {
         const base64Data = base64Images[i]
+        const isFirstImage = allImageUrls.length === 0
         
         try {
           // Parse Base64 data URL or raw Base64
@@ -339,22 +385,15 @@ export async function POST(request: NextRequest) {
             throw new Error(`Base64 image ${i + 1} is corrupted or incomplete. Error: ${errorMsg}`)
           }
           
-          // Normalize to JPEG with Sharp
+          // Resize to respect fal.ai megapixel limits
           let finalBuffer: Buffer
           let finalMimeType = 'image/jpeg'
           
           try {
-            finalBuffer = await sharp(imageBuffer)
-              .resize(2048, 2048, {
-                fit: 'inside',
-                withoutEnlargement: true
-              })
-              .jpeg({ quality: 90 })
-              .toBuffer()
-            
-            console.log(`[Flux 2 Pro Edit] ✅ Normalized to JPEG: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB → ${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB`)
+            finalBuffer = await resizeImageForFalAI(imageBuffer, isFirstImage)
+            console.log(`[Flux 2 Pro Edit] ✅ Processed: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB → ${(finalBuffer.length / 1024 / 1024).toFixed(2)} MB`)
           } catch (sharpError: unknown) {
-            console.warn(`[Flux 2 Pro Edit] ⚠️  Sharp normalization failed, using original`)
+            console.warn(`[Flux 2 Pro Edit] ⚠️  Image processing failed, using original`)
             finalBuffer = imageBuffer
             finalMimeType = mimeType
           }
@@ -418,7 +457,10 @@ export async function POST(request: NextRequest) {
     if (imageFiles.length > 0) {
       console.log("[Flux 2 Pro Edit] Uploading files to fal.ai storage...")
       
-      for (const file of imageFiles) {
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i]
+        const isFirstImage = allImageUrls.length === 0
+        
         try {
           // Validate file type
           if (!file.type.startsWith('image/')) {
@@ -437,9 +479,21 @@ export async function POST(request: NextRequest) {
             }, { status: 400 })
           }
 
+          // Convert file to buffer and resize if needed
+          console.log(`[Flux 2 Pro Edit] Processing ${file.name} (${Math.round(file.size/1024)}KB)...`)
+          const arrayBuffer = await file.arrayBuffer()
+          const originalBuffer = Buffer.from(arrayBuffer)
+          
+          // Resize to respect fal.ai limits
+          const resizedBuffer = await resizeImageForFalAI(originalBuffer, isFirstImage)
+          
+          // Create a new File object with resized buffer
+          const uint8Array = new Uint8Array(resizedBuffer)
+          const resizedFile = new File([uint8Array], file.name, { type: 'image/jpeg' })
+          
           // Upload to fal.ai storage
           console.log(`[Flux 2 Pro Edit] Uploading ${file.name} to fal.ai storage...`)
-          const uploadedUrl = await fal.storage.upload(file)
+          const uploadedUrl = await fal.storage.upload(resizedFile)
           allImageUrls.push(uploadedUrl)
           
           console.log(`[Flux 2 Pro Edit] Successfully uploaded ${file.name}: ${uploadedUrl}`)
