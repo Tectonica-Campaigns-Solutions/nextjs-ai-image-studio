@@ -602,6 +602,11 @@ export async function POST(request: NextRequest) {
     } catch (falError) {
       console.error("[Flux 2 Pro Edit] fal.ai API error:", falError)
       
+      // Log the full error body for debugging
+      if ((falError as any)?.body) {
+        console.error("[Flux 2 Pro Edit] Full error body:", JSON.stringify((falError as any).body, null, 2))
+      }
+      
       let errorMessage = "Failed to edit image with Flux 2 Pro"
       let errorDetails = falError instanceof Error ? falError.message : "Unknown error"
       
@@ -609,7 +614,7 @@ export async function POST(request: NextRequest) {
       if ((falError as any)?.body?.detail) {
         const details = (falError as any).body.detail
         if (Array.isArray(details) && details.length > 0) {
-          errorDetails = details[0].msg || JSON.stringify(details)
+          errorDetails = details.map((d: any) => `${d.loc?.join('.')||'field'}: ${d.msg}`).join('; ') || JSON.stringify(details)
         } else {
           errorDetails = (falError as any).body.detail
         }
