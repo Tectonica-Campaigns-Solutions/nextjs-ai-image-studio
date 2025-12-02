@@ -302,3 +302,50 @@ export async function addDisclaimerToImages(
   )
   return results
 }
+
+/**
+ * Pre-process an image for combining by removing any existing disclaimer
+ * Returns base64 data URL with cleaned image
+ * 
+ * @param imageUrl - URL of the image to pre-process
+ * @returns Base64 data URL of the cleaned image
+ */
+export async function preprocessImageForCombine(
+  imageUrl: string
+): Promise<string> {
+  try {
+    console.log('[Disclaimer] Pre-processing image for combine:', imageUrl)
+    
+    // Download the image
+    const response = await fetch(imageUrl)
+    if (!response.ok) {
+      console.error(`[Disclaimer] Failed to download image: ${response.statusText}`)
+      return imageUrl // Return original on error
+    }
+
+    const imageBuffer = Buffer.from(await response.arrayBuffer())
+    const metadata = await sharp(imageBuffer).metadata()
+
+    if (!metadata.width || !metadata.height) {
+      console.error('[Disclaimer] Could not get image dimensions')
+      return imageUrl
+    }
+
+    console.log('[Disclaimer] Image dimensions:', metadata.width, 'x', metadata.height)
+
+    // Remove disclaimer using proportional resize method
+    const cleanedBuffer = await removeDisclaimerWithResize(imageBuffer, 80)
+
+    // Convert to base64
+    const base64Image = cleanedBuffer.toString('base64')
+    const dataUrl = `data:image/png;base64,${base64Image}`
+    
+    console.log('[Disclaimer] Pre-processing complete, base64 length:', dataUrl.length, 'chars')
+    
+    return dataUrl
+    
+  } catch (error) {
+    console.error('[Disclaimer] Error preprocessing image:', error)
+    return imageUrl // Return original on error
+  }
+}

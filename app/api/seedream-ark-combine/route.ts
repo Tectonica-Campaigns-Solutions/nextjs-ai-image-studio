@@ -3,6 +3,10 @@ import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 import { getSedreamEnhancementText } from "@/lib/json-enhancement"
+import {
+  addDisclaimerToImage,
+  preprocessImageForCombine,
+} from "@/lib/image-disclaimer"
 
 /**
  * POST /api/seedream-ark-combine
@@ -481,12 +485,23 @@ export async function POST(request: NextRequest) {
     console.log("[SEEDREAM-COMBINE] All image URLs ready:", allImageUrls)
     console.log("[SEEDREAM-COMBINE] Starting pipeline with processSecondImage:", processSecondImage)
 
-    // ENHANCED PIPELINE: Conditionally process image2 based on processSecondImage flag
-    const image1Url = allImageUrls[0] // First image (always unchanged)
-    const image2Url = allImageUrls[1] // Second image
+    // Pre-process both input images to remove existing disclaimers
+    console.log("[SEEDREAM-COMBINE] Pre-processing input images to remove disclaimers...")
+    const [processedInput1, processedInput2] = await Promise.all([
+      preprocessImageForCombine(allImageUrls[0]),
+      preprocessImageForCombine(allImageUrls[1]),
+    ])
     
-    console.log("[SEEDREAM-COMBINE] Image1 (unchanged):", image1Url)
-    console.log("[SEEDREAM-COMBINE] Image2 (original):", image2Url)
+    console.log("[SEEDREAM-COMBINE] Input images pre-processed:")
+    console.log("  - Image1:", processedInput1.startsWith('data:') ? 'base64 (' + processedInput1.length + ' chars)' : processedInput1)
+    console.log("  - Image2:", processedInput2.startsWith('data:') ? 'base64 (' + processedInput2.length + ' chars)' : processedInput2)
+
+    // ENHANCED PIPELINE: Conditionally process image2 based on processSecondImage flag
+    const image1Url = processedInput1 // First image (pre-processed)
+    const image2Url = processedInput2 // Second image (pre-processed)
+    
+    console.log("[SEEDREAM-COMBINE] Image1 (pre-processed):", image1Url.startsWith('data:') ? 'base64' : image1Url)
+    console.log("[SEEDREAM-COMBINE] Image2 (pre-processed):", image2Url.startsWith('data:') ? 'base64' : image2Url)
     console.log("[SEEDREAM-COMBINE] Process second image:", processSecondImage)
 
     let processedImage2Url: string
@@ -692,11 +707,38 @@ export async function POST(request: NextRequest) {
         height: img.height || 1024
       }))
 
+      // Add disclaimer to the combined result image
+      let finalImageUrl = images[0]?.url || images[0]
+      let originalImageUrl = finalImageUrl
+      
+      if (finalImageUrl) {
+        try {
+          console.log("[SEEDREAM-COMBINE] Adding disclaimer to final combined image...")
+          const imageWithDisclaimer = await addDisclaimerToImage(
+            finalImageUrl,
+            undefined,
+            {
+              removeExisting: false, // Already pre-processed inputs
+              preserveMethod: 'resize',
+            }
+          )
+          
+          console.log("[SEEDREAM-COMBINE] Disclaimer added successfully to final image")
+          finalImageUrl = imageWithDisclaimer
+          
+        } catch (disclaimerError) {
+          console.error("[SEEDREAM-COMBINE] Error adding disclaimer:", disclaimerError)
+          console.log("[SEEDREAM-COMBINE] Returning original image without disclaimer")
+          // Return original if disclaimer fails
+        }
+      }
+
       // Return successful response with enhanced pipeline metadata
       return NextResponse.json({
         success: true,
-        image: images[0]?.url || images[0], // Primary image for UI compatibility
-        images, // All images for completeness
+        image: finalImageUrl, // Primary image with disclaimer for UI compatibility
+        images: [{ url: finalImageUrl, width: images[0]?.width, height: images[0]?.height }], // Image with disclaimer
+        originalImageUrl, // Original without disclaimer for reference
         prompt: finalPrompt,
         originalPrompt: prompt,
         model: "fal-ai/bytedance/seedream/v4/edit",
