@@ -527,14 +527,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Add disclaimer to the result image
-    let finalImageUrl = result.data.images[0]?.url
-    let originalImageUrl = finalImageUrl
+    let resultImageUrl = result.data.images[0]?.url
+    let originalImageUrl = resultImageUrl
     
-    if (finalImageUrl) {
+    if (resultImageUrl) {
       try {
         console.log("[SeDream v4 Edit] Adding disclaimer to result image...")
         const imageWithDisclaimer = await addDisclaimerToImage(
-          finalImageUrl,
+          resultImageUrl,
           undefined,
           {
             removeExisting: false, // Input images don't have disclaimers
@@ -543,7 +543,7 @@ export async function POST(request: NextRequest) {
         )
         
         console.log("[SeDream v4 Edit] Disclaimer added successfully")
-        finalImageUrl = imageWithDisclaimer
+        resultImageUrl = imageWithDisclaimer
         
       } catch (disclaimerError) {
         console.error("[SeDream v4 Edit] Error adding disclaimer:", disclaimerError)
@@ -554,7 +554,7 @@ export async function POST(request: NextRequest) {
 
     // Return the result
     return NextResponse.json({
-      images: [{ url: finalImageUrl, width: result.data.images[0]?.width, height: result.data.images[0]?.height }],
+      images: [{ url: resultImageUrl, width: result.data.images[0]?.width, height: result.data.images[0]?.height }],
       originalImageUrl, // Original without disclaimer for reference
       prompt: finalPrompt,
       negativePrompt: negativePromptString,
