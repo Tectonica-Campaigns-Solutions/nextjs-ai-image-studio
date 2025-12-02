@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import sharp from 'sharp'
+import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 
 /**
  * POST /api/external/seedream-v4-edit
@@ -438,10 +439,37 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream v4] Successfully processed with SeDream v4")
       
+      // Add disclaimer to the result image
+      let resultImageUrl = result.data.images[0]?.url
+      let originalImageUrl = resultImageUrl
+      
+      if (resultImageUrl) {
+        try {
+          console.log("[External SeDream v4] Adding disclaimer to result image...")
+          const imageWithDisclaimer = await addDisclaimerToImage(
+            resultImageUrl,
+            undefined,
+            {
+              removeExisting: false, // Input images don't have disclaimers
+              preserveMethod: 'resize',
+            }
+          )
+          
+          console.log("[External SeDream v4] Disclaimer added successfully")
+          resultImageUrl = imageWithDisclaimer
+          
+        } catch (disclaimerError) {
+          console.error("[External SeDream v4] Error adding disclaimer:", disclaimerError)
+          console.log("[External SeDream v4] Returning original image without disclaimer")
+          // Return original if disclaimer fails
+        }
+      }
+      
       // Return the result in external API format
       return NextResponse.json({
         success: true,
-        images: result.data.images,
+        images: [{ url: resultImageUrl, width: result.data.images[0]?.width, height: result.data.images[0]?.height }],
+        originalImageUrl, // Original without disclaimer for reference
         prompt: finalPrompt,
         negativePrompt: negativePromptString,
         safetyProtections: {
