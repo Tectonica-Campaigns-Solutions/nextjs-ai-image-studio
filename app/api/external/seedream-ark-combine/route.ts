@@ -668,10 +668,12 @@ export async function POST(request: NextRequest) {
         height: img.height || 1024
       }))
 
-      // Add disclaimer to the combined result image
+      // DISCLAIMER LOGIC - Currently disabled, using original URLs
+      // To enable: uncomment the disclaimer code block below
       let finalImageUrl = images[0]?.url || images[0]
-      let originalImageUrl = finalImageUrl
+      const originalImageUrl = finalImageUrl // Keep for reference
       
+      /* DISCLAIMER PROCESSING - Commented out for now
       if (finalImageUrl) {
         try {
           console.log("[External Seedream Combine] Adding disclaimer to final combined image...")
@@ -693,6 +695,7 @@ export async function POST(request: NextRequest) {
           // Return original if disclaimer fails
         }
       }
+      */
 
       // Return successful response with enhanced pipeline metadata
       return NextResponse.json({

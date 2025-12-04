@@ -439,10 +439,12 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream v4] Successfully processed with SeDream v4")
       
-      // Add disclaimer to the result image
+      // DISCLAIMER LOGIC - Currently disabled, using original URLs
+      // To enable: uncomment the disclaimer code block below
       let resultImageUrl = result.data.images[0]?.url
-      let originalImageUrl = resultImageUrl
+      const originalImageUrl = resultImageUrl
       
+      /* DISCLAIMER PROCESSING - Commented out for now
       if (resultImageUrl) {
         try {
           console.log("[External SeDream v4] Adding disclaimer to result image...")
@@ -464,6 +466,7 @@ export async function POST(request: NextRequest) {
           // Return original if disclaimer fails
         }
       }
+      */
       
       // Return the result in external API format
       return NextResponse.json({

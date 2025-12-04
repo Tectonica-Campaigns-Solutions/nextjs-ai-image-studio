@@ -426,10 +426,13 @@ export async function POST(request: NextRequest) {
 
       console.log("[External SeDream Edit] Successfully processed with SeDream v4")
       
-      // Add disclaimer to the edited image
-      console.log("[External SeDream Edit] Adding disclaimer to edited image...")
+      // DISCLAIMER LOGIC - Currently disabled, using original URLs
+      // To enable: uncomment the disclaimer code block and change imageWithDisclaimer assignment
       const editedImage = result.data.images[0]
-      let imageWithDisclaimer: string
+      let imageWithDisclaimer: string = editedImage.url // Using original URL
+      
+      /* DISCLAIMER PROCESSING - Commented out for now
+      console.log("[External SeDream Edit] Adding disclaimer to edited image...")
       
       try {
         imageWithDisclaimer = await addDisclaimerToImage(
