@@ -427,11 +427,12 @@ export async function POST(request: NextRequest) {
       console.log("[External SeDream Edit] Successfully processed with SeDream v4")
       
       // DISCLAIMER LOGIC - Currently disabled, using original URLs
-      // To enable: uncomment the disclaimer code block and change imageWithDisclaimer assignment
+      // To enable: uncomment the disclaimer code block below
       const editedImage = result.data.images[0]
-      let imageWithDisclaimer: string = editedImage.url // Using original URL
+      const imageWithDisclaimer: string = editedImage.url // Using original URL
       
       /* DISCLAIMER PROCESSING - Commented out for now
+      let imageWithDisclaimer: string
       console.log("[External SeDream Edit] Adding disclaimer to edited image...")
       
       try {
@@ -444,39 +445,19 @@ export async function POST(request: NextRequest) {
             textColor: '#FFFFFF',
             shadowColor: '#000000',
             shadowBlur: 2,
-            removeExisting: true,    // Remove any existing disclaimer before adding new one
-            cropHeight: 80,          // Crop 80px from bottom (enough for 2-line disclaimer)
-            preserveMethod: 'resize' // Use proportional resize to maintain original dimensions
+            removeExisting: true,
+            cropHeight: 80,
+            preserveMethod: 'resize'
           }
         )
         console.log("[External SeDream Edit] Disclaimer added successfully")
       } catch (disclaimerError) {
         console.error("[External SeDream Edit] Failed to add disclaimer:", disclaimerError)
-        // If disclaimer fails, return original images without disclaimer
-        return NextResponse.json({
-          success: true,
-          images: result.data.images,
-          prompt: finalPrompt,
-          safetyProtections: {
-            negativeTermsApplied: negativePrompts.length,
-            nsfwProtection: true,
-            ageBiasProtection: true,
-            humanIntegrityProtection: true,
-            safetyCheckerEnabled: true
-          },
-          inputImage: finalImageUrl,
-          aspectRatio: aspectRatio,
-          ...(aspectRatio === "custom" && imageDimensions ? {
-            customDimensions: {
-              width: imageDimensions.width,
-              height: imageDimensions.height
-            }
-          } : {}),
-          disclaimerError: disclaimerError instanceof Error ? disclaimerError.message : "Failed to add disclaimer"
-        })
+        imageWithDisclaimer = editedImage.url // Use original on error
       }
+      */
       
-      // Update images array with disclaimer
+      // Update images array
       const imagesWithDisclaimer = [{
         url: imageWithDisclaimer,
         width: editedImage.width,
@@ -484,7 +465,7 @@ export async function POST(request: NextRequest) {
         content_type: 'image/jpeg'
       }]
       
-      // Return the result in external API format with disclaimer
+      // Return the result in external API format
       return NextResponse.json({
         success: true,
         images: imagesWithDisclaimer,
