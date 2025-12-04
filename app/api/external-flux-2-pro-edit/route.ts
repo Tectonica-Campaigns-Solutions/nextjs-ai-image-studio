@@ -445,13 +445,15 @@ export async function POST(request: NextRequest) {
 
       console.log("[External Flux 2 Pro Edit] Generated", result.data.images.length, "images")
 
-      // Add disclaimer to the result images
+      // DISCLAIMER LOGIC - Currently disabled, using original URLs
+      // To enable: uncomment the disclaimer code block and change url: originalImageUrl to url: imageUrl
       const processedImages = []
       
       for (const img of result.data.images) {
-        let imageUrl = img.url
-        const originalImageUrl = imageUrl
+        // let imageUrl = img.url
+        const originalImageUrl = img.url
         
+        /* DISCLAIMER PROCESSING - Commented out for now
         if (imageUrl) {
           try {
             console.log("[External Flux 2 Pro Edit] Adding disclaimer to result image...")
@@ -473,10 +475,10 @@ export async function POST(request: NextRequest) {
             // Continue with original if disclaimer fails
           }
         }
+        */
         
         processedImages.push({
-          url: imageUrl,
-          originalUrl: originalImageUrl,
+          url: originalImageUrl, // Using original fal.ai URL (to enable disclaimer: change to imageUrl and uncomment above)
           width: img.width || 1024,
           height: img.height || 1024
         })
