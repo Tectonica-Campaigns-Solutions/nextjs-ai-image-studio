@@ -254,9 +254,13 @@ export async function POST(request: NextRequest) {
       if (result.data && result.data.images && result.data.images.length > 0) {
         const generatedImage = result.data.images[0]
         
+        // DISCLAIMER LOGIC - Currently disabled, using original URLs
+        // To enable: uncomment the disclaimer code block below
+        const imageWithDisclaimer: string = generatedImage.url // Using original URL
+        
+        /* DISCLAIMER PROCESSING - Commented out for now
         console.log("[External Flux Ultra] Adding disclaimer to generated image...")
         
-        // Add disclaimer to the image
         let imageWithDisclaimer: string
         try {
           imageWithDisclaimer = await addDisclaimerToImage(
@@ -273,34 +277,16 @@ export async function POST(request: NextRequest) {
           console.log("[External Flux Ultra] Disclaimer added successfully")
         } catch (disclaimerError) {
           console.error("[External Flux Ultra] Failed to add disclaimer:", disclaimerError)
-          // If disclaimer fails, return original image
-          return NextResponse.json({
-            success: true,
-            image: generatedImage.url,
-            width: generatedImage.width,
-            height: generatedImage.height,
-            content_type: generatedImage.content_type || "image/jpeg",
-            finalPrompt: finalPrompt,
-            originalPrompt: prompt.trim(),
-            canonicalApplied: useGenerationCanonical && canonicalConfig !== null,
-            canonicalPrompt: useGenerationCanonical && canonicalConfig !== null ? processedPrompt : null,
-            triggerPhrase: triggerPhrase.trim(),
-            finetuneId: finetuneId.trim(),
-            finetuneStrength: clampedFinetuneStrength,
-            settings: mergedSettings,
-            model: "flux-pro/v1.1-ultra-finetuned",
-            timestamp: new Date().toISOString(),
-            disclaimerError: disclaimerError instanceof Error ? disclaimerError.message : "Failed to add disclaimer"
-          })
+          imageWithDisclaimer = generatedImage.url // Use original on error
         }
+        */
         
         return NextResponse.json({
           success: true,
-          image: imageWithDisclaimer, // Base64 image with disclaimer
-          originalImageUrl: generatedImage.url, // Original URL from Fal.ai
+          image: imageWithDisclaimer, // Original fal.ai URL (change to imageWithDisclaimer to use disclaimer)
           width: generatedImage.width,
           height: generatedImage.height,
-          content_type: "image/jpeg",
+          content_type: generatedImage.content_type || "image/jpeg",
           finalPrompt: finalPrompt,
           originalPrompt: prompt.trim(),
           canonicalApplied: useGenerationCanonical && canonicalConfig !== null,
