@@ -124,6 +124,27 @@ export default function ImageEditor() {
   const [showFlux2ProAdvanced, setShowFlux2ProAdvanced] = useState(false)
   const [flux2ProImagePreviews, setFlux2ProImagePreviews] = useState<string[]>(Array(9).fill(""))
 
+  // Flux 2 Pro Edit Create States (with 8 pre-loaded reference images)
+  const [flux2ProCreatePrompt, setFlux2ProCreatePrompt] = useState("")
+  const [flux2ProCreateUserImage, setFlux2ProCreateUserImage] = useState<File | null>(null)
+  const [flux2ProCreateImageUrl, setFlux2ProCreateImageUrl] = useState("")
+  const [flux2ProCreateBase64Image, setFlux2ProCreateBase64Image] = useState("")
+  const [flux2ProCreateSettings, setFlux2ProCreateSettings] = useState({
+    image_size: "auto",
+    safety_tolerance: "2",
+    enable_safety_checker: true,
+    output_format: "jpeg",
+    seed: "",
+    custom_width: 1024,
+    custom_height: 1024
+  })
+  const [flux2ProCreateResultUrl, setFlux2ProCreateResultUrl] = useState<string>("")
+  const [isFlux2ProCreateGenerating, setIsFlux2ProCreateGenerating] = useState(false)
+  const [flux2ProCreateError, setFlux2ProCreateError] = useState<string>("")
+  const [flux2ProCreateGeneratedPrompt, setFlux2ProCreateGeneratedPrompt] = useState<string>("")
+  const [showFlux2ProCreateAdvanced, setShowFlux2ProCreateAdvanced] = useState(false)
+  const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
+
   // Hybrid Enhancement States
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
   const [hybridStrategy, setHybridStrategy] = useState<'rag-only' | 'json-only' | 'hybrid' | 'none'>('json-only')
@@ -2690,6 +2711,148 @@ export default function ImageEditor() {
     }
   }
 
+  // Flux 2 Pro Edit Create Handlers
+  const handleFlux2ProCreateUserImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setFlux2ProCreateUserImage(file)
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFlux2ProCreateUserImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      
+      // Clear URL and Base64 if file is uploaded
+      setFlux2ProCreateImageUrl("")
+      setFlux2ProCreateBase64Image("")
+    }
+  }
+
+  const removeFlux2ProCreateUserImage = () => {
+    setFlux2ProCreateUserImage(null)
+    setFlux2ProCreateUserImagePreview("")
+    setFlux2ProCreateImageUrl("")
+    setFlux2ProCreateBase64Image("")
+  }
+
+  const handleFlux2ProCreateSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!flux2ProCreatePrompt.trim()) {
+      setFlux2ProCreateError("Please enter a prompt")
+      return
+    }
+
+    setIsFlux2ProCreateGenerating(true)
+    setFlux2ProCreateError("")
+
+    try {
+      // Prepare JSON body (not FormData)
+      const requestBody: any = {
+        prompt: flux2ProCreatePrompt,
+        orgType: "general",
+        useCanonicalPrompt: false
+      }
+      
+      // Add user image if provided (only one of these will be set)
+      if (flux2ProCreateUserImage) {
+        // Convert File to Base64
+        const reader = new FileReader()
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(flux2ProCreateUserImage)
+        })
+        
+        const base64 = await base64Promise
+        requestBody.base64Image = base64
+      } else if (flux2ProCreateImageUrl.trim()) {
+        requestBody.imageUrl = flux2ProCreateImageUrl.trim()
+      } else if (flux2ProCreateBase64Image.trim()) {
+        requestBody.base64Image = flux2ProCreateBase64Image.trim()
+      }
+      
+      // Prepare settings
+      const settings: any = { ...flux2ProCreateSettings }
+      
+      // Handle custom dimensions
+      if (settings.image_size === "custom") {
+        settings.image_size = {
+          width: settings.custom_width,
+          height: settings.custom_height
+        }
+        delete settings.custom_width
+        delete settings.custom_height
+      } else {
+        delete settings.custom_width
+        delete settings.custom_height
+      }
+      
+      // Remove empty values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert seed to number if present
+      if (settings.seed) {
+        settings.seed = parseInt(settings.seed as string)
+        if (isNaN(settings.seed)) {
+          delete settings.seed
+        }
+      }
+      
+      requestBody.settings = settings
+
+      console.log("[FRONTEND] Flux 2 Pro Edit Create - Sending request")
+      console.log("[FRONTEND] Has user image:", !!(flux2ProCreateUserImage || flux2ProCreateImageUrl || flux2ProCreateBase64Image))
+
+      const response = await fetch("/api/external/flux-2-pro-edit-create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          throw new Error(errorData.error + (errorData.details ? `: ${errorData.details}` : ''))
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      console.log("[FRONTEND] Flux 2 Pro Edit Create - Response:", {
+        success: result.success,
+        inputImages: result.inputImages,
+        referenceImages: result.referenceImages,
+        userImages: result.userImages
+      })
+      
+      if (result.prompt) {
+        setFlux2ProCreateGeneratedPrompt(result.prompt)
+      }
+      
+      if (result.images && result.images[0]?.url) {
+        setFlux2ProCreateResultUrl(result.images[0].url)
+      } else if (result.image) {
+        setFlux2ProCreateResultUrl(result.image)
+      } else {
+        throw new Error("No image received from server")
+      }
+    } catch (err) {
+      setFlux2ProCreateError(err instanceof Error ? err.message : "Failed to create image")
+    } finally {
+      setIsFlux2ProCreateGenerating(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -2725,6 +2888,7 @@ export default function ImageEditor() {
           {/* <TabsTrigger value="edit-image">Edit Image</TabsTrigger> */}
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-2-pro-edit">Flux 2 Pro Edit</TabsTrigger>
+          <TabsTrigger value="flux-2-pro-edit-create">Flux 2 Pro Create</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
         </TabsList>
 
@@ -3534,6 +3698,436 @@ export default function ImageEditor() {
                       <li>• Background replacement</li>
                       <li>• Multi-style composition</li>
                       <li>• Context-aware transformations</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Flux 2 Pro Edit Create Tab */}
+          <TabsContent value="flux-2-pro-edit-create" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Upload and Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Flux 2 Pro Create with TectonicaAI References
+                  </CardTitle>
+                  <CardDescription>
+                    Generate images using 8 pre-loaded TectonicaAI reference images + optional user image
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFlux2ProCreateSubmit} className="space-y-4">
+                    {/* Prompt */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-create-prompt">
+                        Creation Description *
+                      </Label>
+                      <Textarea
+                        id="flux2pro-create-prompt"
+                        placeholder="Describe what you want to create (e.g., 'Create a modern tech hero using styles from @image1 and @image3' or 'Combine my logo with TectonicaAI references')"
+                        value={flux2ProCreatePrompt}
+                        onChange={(e) => setFlux2ProCreatePrompt(e.target.value)}
+                        rows={3}
+                        className="text-sm"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        8 TectonicaAI references are auto-loaded. Use @image1-@image8 to reference them.
+                      </p>
+                    </div>
+
+                    {/* Reference Images Info */}
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
+                            8 Pre-loaded Reference Images
+                          </p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            TectonicaAI images (indices 0-7) are automatically included in every generation.
+                            Reference them using @image1, @image2, etc. in your prompt.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Optional User Image Upload */}
+                    <div className="space-y-3">
+                      <Label>Your Image (Optional - will be index 8)</Label>
+                      
+                      {flux2ProCreateUserImagePreview ? (
+                        <div className="relative border rounded-lg p-3 bg-muted/50">
+                          <img
+                            src={flux2ProCreateUserImagePreview}
+                            alt="User image preview"
+                            className="w-full h-40 object-cover rounded"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            className="absolute top-1 right-1"
+                            onClick={removeFlux2ProCreateUserImage}
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Remove
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            This will be @image9 in your prompt (indices 0-7 are TectonicaAI references)
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFlux2ProCreateUserImageUpload}
+                            className="cursor-pointer text-sm"
+                          />
+                          <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-background px-2 text-muted-foreground">
+                                Or
+                              </span>
+                            </div>
+                          </div>
+                          <Input
+                            placeholder="Paste image URL"
+                            value={flux2ProCreateImageUrl}
+                            onChange={(e) => {
+                              setFlux2ProCreateImageUrl(e.target.value)
+                              setFlux2ProCreateUserImage(null)
+                              setFlux2ProCreateBase64Image("")
+                            }}
+                            className="text-sm"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Optional: Add 1 more image (total 9). Leave empty to use only TectonicaAI references.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Image Size */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-create-image-size">Image Size</Label>
+                      <Select
+                        value={flux2ProCreateSettings.image_size}
+                        onValueChange={(value) => setFlux2ProCreateSettings({ ...flux2ProCreateSettings, image_size: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="auto">Auto (Recommended)</SelectItem>
+                          <SelectItem value="square_hd">Square HD</SelectItem>
+                          <SelectItem value="square">Square</SelectItem>
+                          <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
+                          <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
+                          <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
+                          <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                          <SelectItem value="custom">Custom Size</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Custom Dimensions */}
+                    {flux2ProCreateSettings.image_size === "custom" && (
+                      <div className="grid grid-cols-2 gap-4 p-3 border rounded-lg bg-muted/50">
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-create-width">Width (px)</Label>
+                          <Input
+                            id="flux2pro-create-width"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={flux2ProCreateSettings.custom_width}
+                            onChange={(e) => setFlux2ProCreateSettings({
+                              ...flux2ProCreateSettings,
+                              custom_width: parseInt(e.target.value) || 1024
+                            })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-create-height">Height (px)</Label>
+                          <Input
+                            id="flux2pro-create-height"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={flux2ProCreateSettings.custom_height}
+                            onChange={(e) => setFlux2ProCreateSettings({
+                              ...flux2ProCreateSettings,
+                              custom_height: parseInt(e.target.value) || 1024
+                            })}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-muted-foreground">
+                            Range: 512-2048 pixels
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Advanced Settings</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowFlux2ProCreateAdvanced(!showFlux2ProCreateAdvanced)}
+                      >
+                        {showFlux2ProCreateAdvanced ? (
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            Hide
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            Show
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Advanced Settings */}
+                    {showFlux2ProCreateAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                        {/* Safety Tolerance */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="flux2pro-create-safety">Safety Tolerance</Label>
+                            <span className="text-sm text-muted-foreground">
+                              {flux2ProCreateSettings.safety_tolerance}
+                            </span>
+                          </div>
+                          <Slider
+                            id="flux2pro-create-safety"
+                            min={1}
+                            max={5}
+                            step={1}
+                            value={[parseInt(flux2ProCreateSettings.safety_tolerance)]}
+                            onValueChange={(value) => setFlux2ProCreateSettings({
+                              ...flux2ProCreateSettings,
+                              safety_tolerance: value[0].toString()
+                            })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Strict (1)</span>
+                            <span>Balanced (2-3)</span>
+                            <span>Permissive (5)</span>
+                          </div>
+                        </div>
+
+                        {/* Safety Checker */}
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="flux2pro-create-safety-checker">Enable Safety Checker</Label>
+                          <Switch
+                            id="flux2pro-create-safety-checker"
+                            checked={flux2ProCreateSettings.enable_safety_checker}
+                            onCheckedChange={(checked) => setFlux2ProCreateSettings({
+                              ...flux2ProCreateSettings,
+                              enable_safety_checker: checked
+                            })}
+                          />
+                        </div>
+
+                        {/* Output Format */}
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-create-format">Output Format</Label>
+                          <Select
+                            value={flux2ProCreateSettings.output_format}
+                            onValueChange={(value) => setFlux2ProCreateSettings({
+                              ...flux2ProCreateSettings,
+                              output_format: value
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="jpeg">JPEG (Smaller file)</SelectItem>
+                              <SelectItem value="png">PNG (Higher quality)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Seed */}
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-create-seed">
+                            Seed (Optional)
+                          </Label>
+                          <Input
+                            id="flux2pro-create-seed"
+                            type="number"
+                            placeholder="Random"
+                            value={flux2ProCreateSettings.seed}
+                            onChange={(e) => setFlux2ProCreateSettings({
+                              ...flux2ProCreateSettings,
+                              seed: e.target.value
+                            })}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Use same seed for reproducible results
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error Display */}
+                    {flux2ProCreateError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{flux2ProCreateError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isFlux2ProCreateGenerating}
+                    >
+                      {isFlux2ProCreateGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Image...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Create Image
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Result</CardTitle>
+                  <CardDescription>Your created image will appear here</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {flux2ProCreateResultUrl ? (
+                    <div className="space-y-4">
+                      <div className="relative border rounded-lg overflow-hidden bg-muted/50">
+                        <img
+                          src={flux2ProCreateResultUrl}
+                          alt="Created result"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      
+                      {flux2ProCreateGeneratedPrompt && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <p className="text-xs font-medium mb-1">Prompt Used:</p>
+                          <p className="text-xs text-muted-foreground">
+                            {flux2ProCreateGeneratedPrompt}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = flux2ProCreateResultUrl
+                            link.download = `flux-2-pro-create-${Date.now()}.jpg`
+                            link.click()
+                          }}
+                          className="flex-1"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setFlux2ProCreateResultUrl("")
+                            setFlux2ProCreateGeneratedPrompt("")
+                          }}
+                          className="flex-1"
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <ImageIcon className="h-12 w-12 mb-2" />
+                      <p className="text-sm">No image created yet</p>
+                      <p className="text-xs mt-1">8 TectonicaAI references + optional user image</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Info Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Flux 2 Pro Create Features
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Pre-loaded References</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• 8 TectonicaAI images automatically included</li>
+                      <li>• Reference with @image1 through @image8</li>
+                      <li>• Optional 9th image from user (@image9)</li>
+                      <li>• Total: 8-9 reference images</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Advanced Controls</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Safety tolerance: 1 (strict) to 5 (permissive)</li>
+                      <li>• Output format: JPEG or PNG</li>
+                      <li>• Seed support for reproducibility</li>
+                      <li>• Custom dimensions: 512-2048px</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Use Cases</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Brand-consistent image generation</li>
+                      <li>• Style transfer from references</li>
+                      <li>• Multi-reference composition</li>
+                      <li>• Logo integration with brand styles</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">TectonicaAI References</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• 8 curated TectonicaAI design images</li>
+                      <li>• Optimized for brand consistency</li>
+                      <li>• Professional quality outputs</li>
+                      <li>• Zero configuration required</li>
                     </ul>
                   </div>
                 </div>
