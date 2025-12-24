@@ -4,15 +4,19 @@ import { ContentModerationService } from "@/lib/content-moderation"
 import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
+import fs from 'fs/promises'
+import path from 'path'
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
- * First image: max 4 MP (2048x2048)
- * Subsequent images: max 1 MP (1024x1024)
+ * For 8 reference images, we need to be more conservative:
+ * - All images: max 0.8 MP (approx 894x894) to stay within 9 MP total limit
+ * - This allows: 8 × 0.8 MP = 6.4 MP input + 2 MP output = 8.4 MP total
  */
 async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promise<Buffer> {
-  const maxMegapixels = isFirstImage ? 4_000_000 : 1_000_000
-  const maxDimension = isFirstImage ? 2048 : 1024
+  // Conservative limits to accommodate 8 images
+  const maxMegapixels = 800_000 // 0.8 MP for all images
+  const maxDimension = 894 // sqrt(800000) ≈ 894
   
   const metadata = await sharp(buffer).metadata()
   const currentPixels = (metadata.width || 0) * (metadata.height || 0)
@@ -117,17 +121,23 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[Flux 2 Pro Edit Create] Request received")
     
-    // Check FAL_KEY
-    const falApiKey = process.env.FAL_KEY
+    // Check FAL_API_KEY
+    const falApiKey = process.env.FAL_API_KEY
     if (!falApiKey) {
+      console.error("[Flux 2 Pro Edit Create] FAL_API_KEY not configured")
       return NextResponse.json({
         error: "Service configuration error",
-        details: "FAL_KEY not configured"
+        details: "FAL_API_KEY not configured"
       }, { status: 500 })
     }
+    
+    console.log("[Flux 2 Pro Edit Create] FAL_KEY found")
 
     // Parse JSON body
+    console.log("[Flux 2 Pro Edit Create] Parsing request body...")
     const body = await request.json()
+    console.log("[Flux 2 Pro Edit Create] Body parsed successfully")
+    
     const { 
       prompt, 
       imageUrl = null,
@@ -240,14 +250,78 @@ export async function POST(request: NextRequest) {
       // Continue with generation if moderation fails to avoid blocking users
     }
 
-    // Build site URL for reference images
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // Upload reference images to fal.ai storage
+    console.log(`[Flux 2 Pro Edit Create] Uploading ${REFERENCE_IMAGES.length} reference images to fal.ai...`)
+    const allImageUrls: string[] = []
     
-    // Start with reference images (these will be indices 0-7 in the final array)
-    const allImageUrls: string[] = REFERENCE_IMAGES.map(path => `${siteUrl}${path}`)
+    // Read and upload each reference image
+    for (let i = 0; i < REFERENCE_IMAGES.length; i++) {
+      const imagePath = REFERENCE_IMAGES[i]
+      const fullPath = path.join(process.cwd(), 'public', imagePath)
+      
+      try {
+        console.log(`[Flux 2 Pro Edit Create] Reading reference image ${i + 1}/${REFERENCE_IMAGES.length}: ${fullPath}`)
+        
+        // Read the file
+        let imageBuffer = await fs.readFile(fullPath)
+        
+        // Resize to 0.8 MP to accommodate 8 images within 9 MP limit
+        imageBuffer = await resizeImageForFalAI(imageBuffer, false)
+        
+        // Determine MIME type - always convert to JPEG after resize
+        const mimeType = 'image/jpeg'
+        
+        // Upload using 2-step process
+        const fileName = `ref-${i + 1}.jpg`
+        
+        console.log(`[Flux 2 Pro Edit Create] Uploading reference ${i + 1}: ${fileName} (${(imageBuffer.length / 1024).toFixed(1)} KB)`)
+        
+        const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Key ${falApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content_type: mimeType,
+            file_name: fileName
+          })
+        })
+        
+        if (!initiateResponse.ok) {
+          throw new Error(`Failed to initiate upload: ${initiateResponse.status}`)
+        }
+        
+        const { upload_url, file_url } = await initiateResponse.json()
+        
+        const uint8Array = new Uint8Array(imageBuffer)
+        const putResponse = await fetch(upload_url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': mimeType,
+            'Content-Length': imageBuffer.length.toString()
+          },
+          body: uint8Array
+        })
+        
+        if (!putResponse.ok) {
+          throw new Error(`Failed to PUT file: ${putResponse.status}`)
+        }
+        
+        console.log(`[Flux 2 Pro Edit Create] ✅ Uploaded reference ${i + 1}: ${file_url}`)
+        allImageUrls.push(file_url)
+        
+      } catch (uploadError) {
+        console.error(`[Flux 2 Pro Edit Create] Failed to upload reference image ${i + 1}:`, uploadError)
+        return NextResponse.json({
+          error: "Failed to upload reference images",
+          details: `Failed to upload reference image ${i + 1}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
+        }, { status: 500 })
+      }
+    }
     
-    console.log(`[Flux 2 Pro Edit Create] Added ${REFERENCE_IMAGES.length} reference images`)
-    console.log(`[Flux 2 Pro Edit Create] Reference images:`, allImageUrls)
+    console.log(`[Flux 2 Pro Edit Create] ✅ All ${allImageUrls.length} reference images uploaded`)
+    console.log(`[Flux 2 Pro Edit Create] Reference URLs:`, allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
 
     // Process user image if provided (this will be index 8)
     let userImageCount = 0
@@ -425,6 +499,11 @@ export async function POST(request: NextRequest) {
       input.seed = seed
     }
 
+    // Configure Fal.ai client
+    fal.config({
+      credentials: falApiKey,
+    })
+
     console.log("[Flux 2 Pro Edit Create] Calling fal.ai...")
     console.log("[Flux 2 Pro Edit Create] Input:", JSON.stringify({
       ...input,
@@ -523,10 +602,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("[Flux 2 Pro Edit Create] Unexpected error:", error)
+    console.error("[Flux 2 Pro Edit Create] Error stack:", error instanceof Error ? error.stack : 'No stack trace')
     
     return NextResponse.json({
       error: "Internal server error",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
+      stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
     }, { status: 500 })
   }
 }

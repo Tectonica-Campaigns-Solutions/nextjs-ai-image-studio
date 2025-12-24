@@ -2877,11 +2877,11 @@ export default function ImageEditor() {
           </div>
         </div>
 
-        <Tabs defaultValue="flux-ultra-finetuned" className="w-full max-w-6xl mx-auto">
+        <Tabs defaultValue="external-flux-ultra" className="w-full max-w-6xl mx-auto">
         <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="flux-ultra-finetuned">Generate Images</TabsTrigger>
+          <TabsTrigger value="flux-ultra-finetuned" style={{ display: 'none' }}>Generate Images</TabsTrigger>
           <TabsTrigger value="external-flux-ultra">External Generate</TabsTrigger>
-          <TabsTrigger value="flux-pro-image-combine">Combine Images</TabsTrigger>
+          <TabsTrigger value="flux-pro-image-combine" style={{ display: 'none' }}>Combine Images</TabsTrigger>
           <TabsTrigger value="external-flux-combine">External Combine</TabsTrigger>
           <TabsTrigger value="seedream-ark-combine">Seedream Combine</TabsTrigger>
           <TabsTrigger value="seedream-single-edit">Seedream Edit</TabsTrigger>
