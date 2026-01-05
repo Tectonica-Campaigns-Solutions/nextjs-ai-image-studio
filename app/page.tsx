@@ -145,6 +145,26 @@ export default function ImageEditor() {
   const [showFlux2ProCreateAdvanced, setShowFlux2ProCreateAdvanced] = useState(false)
   const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
 
+  // Flux 2 Pro Edit Apply States (4 references + 1 user image with hardcoded prompt)
+  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("Make @image5 in the style of the other images.")
+  const [flux2ProApplyUserImage, setFlux2ProApplyUserImage] = useState<File | null>(null)
+  const [flux2ProApplyImageUrl, setFlux2ProApplyImageUrl] = useState("")
+  const [flux2ProApplyBase64Image, setFlux2ProApplyBase64Image] = useState("")
+  const [flux2ProApplySettings, setFlux2ProApplySettings] = useState({
+    image_size: "auto",
+    safety_tolerance: "2",
+    enable_safety_checker: true,
+    output_format: "jpeg",
+    seed: "",
+    custom_width: 1024,
+    custom_height: 1024
+  })
+  const [flux2ProApplyResultUrl, setFlux2ProApplyResultUrl] = useState<string>("")
+  const [isFlux2ProApplyGenerating, setIsFlux2ProApplyGenerating] = useState(false)
+  const [flux2ProApplyError, setFlux2ProApplyError] = useState<string>("")
+  const [showFlux2ProApplyAdvanced, setShowFlux2ProApplyAdvanced] = useState(false)
+  const [flux2ProApplyUserImagePreview, setFlux2ProApplyUserImagePreview] = useState<string>("")
+
   // Hybrid Enhancement States
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
   const [hybridStrategy, setHybridStrategy] = useState<'rag-only' | 'json-only' | 'hybrid' | 'none'>('json-only')
@@ -768,7 +788,7 @@ export default function ImageEditor() {
   const [sedreamEnhancementPreview, setSedreamEnhancementPreview] = useState<string>("")
   const [sedreamEnhancementMeta, setSedreamEnhancementMeta] = useState<any>(null)
   const [sedreamCustomEnhancementText, setSedreamCustomEnhancementText] = useState<string>("")
-  const [sedreamAspectRatio, setSedreamAspectRatio] = useState<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom">("1:1")
+  const [sedreamAspectRatio, setSedreamAspectRatio] = useState<"original" | "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom">("original")
   const [sedreamCustomWidth, setSedreamCustomWidth] = useState(1024)
   const [sedreamCustomHeight, setSedreamCustomHeight] = useState(1024)
   const [sedreamDefaultEnhancementText, setSedreamDefaultEnhancementText] = useState<string>("")
@@ -2853,6 +2873,148 @@ export default function ImageEditor() {
     }
   }
 
+  // Flux 2 Pro Edit Apply Handlers
+  const handleFlux2ProApplyUserImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setFlux2ProApplyUserImage(file)
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFlux2ProApplyUserImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      
+      // Clear URL and Base64 if file is uploaded
+      setFlux2ProApplyImageUrl("")
+      setFlux2ProApplyBase64Image("")
+    }
+  }
+
+  const removeFlux2ProApplyUserImage = () => {
+    setFlux2ProApplyUserImage(null)
+    setFlux2ProApplyUserImagePreview("")
+    setFlux2ProApplyImageUrl("")
+    setFlux2ProApplyBase64Image("")
+  }
+
+  const handleFlux2ProApplySubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    // Validate user image is provided
+    if (!flux2ProApplyUserImage && !flux2ProApplyImageUrl.trim() && !flux2ProApplyBase64Image.trim()) {
+      setFlux2ProApplyError("Please provide an image to apply style to")
+      return
+    }
+
+    // Validate prompt
+    if (!flux2ProApplyPrompt.trim()) {
+      setFlux2ProApplyError("Please provide a prompt")
+      return
+    }
+
+    setIsFlux2ProApplyGenerating(true)
+    setFlux2ProApplyError("")
+
+    try {
+      // Prepare JSON body
+      const requestBody: any = {
+        prompt: flux2ProApplyPrompt
+      }
+      
+      // Add user image (required - only one of these will be set)
+      if (flux2ProApplyUserImage) {
+        // Convert File to Base64
+        const reader = new FileReader()
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(flux2ProApplyUserImage)
+        })
+        
+        const base64 = await base64Promise
+        requestBody.base64Image = base64
+      } else if (flux2ProApplyImageUrl.trim()) {
+        requestBody.imageUrl = flux2ProApplyImageUrl.trim()
+      } else if (flux2ProApplyBase64Image.trim()) {
+        requestBody.base64Image = flux2ProApplyBase64Image.trim()
+      }
+      
+      // Prepare settings
+      const settings: any = { ...flux2ProApplySettings }
+      
+      // Handle custom dimensions
+      if (settings.image_size === "custom") {
+        settings.image_size = {
+          width: settings.custom_width,
+          height: settings.custom_height
+        }
+        delete settings.custom_width
+        delete settings.custom_height
+      } else {
+        delete settings.custom_width
+        delete settings.custom_height
+      }
+      
+      // Remove empty values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert seed to number if present
+      if (settings.seed) {
+        settings.seed = parseInt(settings.seed as string)
+        if (isNaN(settings.seed)) {
+          delete settings.seed
+        }
+      }
+      
+      requestBody.settings = settings
+
+      console.log("[FRONTEND] Flux 2 Pro Edit Apply - Sending request")
+
+      const response = await fetch("/api/external/flux-2-pro-edit-apply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          throw new Error(errorData.error + (errorData.details ? `: ${errorData.details}` : ''))
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      console.log("[FRONTEND] Flux 2 Pro Edit Apply - Response:", {
+        success: result.success,
+        inputImages: result.inputImages,
+        styleReferences: result.styleReferences,
+        userImages: result.userImages
+      })
+      
+      if (result.images && result.images[0]?.url) {
+        setFlux2ProApplyResultUrl(result.images[0].url)
+      } else if (result.image) {
+        setFlux2ProApplyResultUrl(result.image)
+      } else {
+        throw new Error("No image received from server")
+      }
+    } catch (err) {
+      setFlux2ProApplyError(err instanceof Error ? err.message : "Failed to apply style")
+    } finally {
+      setIsFlux2ProApplyGenerating(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -2878,7 +3040,7 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="external-flux-ultra" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="flux-ultra-finetuned" style={{ display: 'none' }}>Generate Images</TabsTrigger>
           <TabsTrigger value="external-flux-ultra">External Generate</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine" style={{ display: 'none' }}>Combine Images</TabsTrigger>
@@ -2889,6 +3051,7 @@ export default function ImageEditor() {
           <TabsTrigger value="sedream-v4-edit">Apply style</TabsTrigger>
           <TabsTrigger value="flux-2-pro-edit">Flux 2 Pro Edit</TabsTrigger>
           <TabsTrigger value="flux-2-pro-edit-create">Flux 2 Pro Create</TabsTrigger>
+          <TabsTrigger value="flux-2-pro-edit-apply">Flux 2 Pro Apply</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
         </TabsList>
 
@@ -3004,11 +3167,12 @@ export default function ImageEditor() {
                       <Label htmlFor="sedream-aspect-ratio" className="font-medium">
                         Aspect Ratio
                       </Label>
-                      <Select value={sedreamAspectRatio} onValueChange={(value: "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom") => setSedreamAspectRatio(value)}>
+                      <Select value={sedreamAspectRatio} onValueChange={(value: "original" | "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "custom") => setSedreamAspectRatio(value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="original">Original Size</SelectItem>
                           <SelectItem value="1:1">Square (1:1)</SelectItem>
                           <SelectItem value="16:9">Landscape (16:9)</SelectItem>
                           <SelectItem value="9:16">Portrait (9:16)</SelectItem>
@@ -4128,6 +4292,377 @@ export default function ImageEditor() {
                       <li>• Optimized for brand consistency</li>
                       <li>• Professional quality outputs</li>
                       <li>• Zero configuration required</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Flux 2 Pro Edit Apply Tab */}
+          <TabsContent value="flux-2-pro-edit-apply" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Upload and Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Apply TectonicaAI Style
+                  </CardTitle>
+                  <CardDescription>Transform your image with 4 TectonicaAI style references (editable prompt)</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFlux2ProApplySubmit} className="space-y-4">
+                    {/* User Image Upload (REQUIRED) */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-2-pro-apply-user-image" className="flex items-center gap-2">
+                        <Upload className="h-4 w-4" />
+                        Your Image (Required)
+                      </Label>
+                      <Input
+                        id="flux-2-pro-apply-user-image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFlux2ProApplyUserImageUpload}
+                        className="cursor-pointer"
+                        disabled={isFlux2ProApplyGenerating}
+                      />
+                      {flux2ProApplyUserImagePreview && (
+                        <div className="relative mt-2">
+                          <img
+                            src={flux2ProApplyUserImagePreview}
+                            alt="User image preview"
+                            className="w-full h-32 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6"
+                            onClick={removeFlux2ProApplyUserImage}
+                            disabled={isFlux2ProApplyGenerating}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        This image will receive the TectonicaAI style (@image5)
+                      </p>
+                    </div>
+
+                    {/* Editable Prompt */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-2-pro-apply-prompt" className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Prompt
+                      </Label>
+                      <Textarea
+                        id="flux-2-pro-apply-prompt"
+                        placeholder="Describe how to use the reference images..."
+                        value={flux2ProApplyPrompt}
+                        onChange={(e) => setFlux2ProApplyPrompt(e.target.value)}
+                        className="min-h-[80px]"
+                        disabled={isFlux2ProApplyGenerating}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Reference images: @image1-@image4 (TectonicaAI) + @image5 (your image)
+                      </p>
+                    </div>
+
+                    {/* Image Size */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-2-pro-apply-image-size">Image Size</Label>
+                      <Select
+                        value={flux2ProApplySettings.image_size}
+                        onValueChange={(value) =>
+                          setFlux2ProApplySettings({ ...flux2ProApplySettings, image_size: value })
+                        }
+                        disabled={isFlux2ProApplyGenerating}
+                      >
+                        <SelectTrigger id="flux-2-pro-apply-image-size">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="auto">Auto</SelectItem>
+                          <SelectItem value="square_hd">Square HD (1024×1024)</SelectItem>
+                          <SelectItem value="square">Square (512×512)</SelectItem>
+                          <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
+                          <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
+                          <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
+                          <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                          <SelectItem value="custom">Custom Dimensions</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Custom Dimensions */}
+                    {flux2ProApplySettings.image_size === "custom" && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-2-pro-apply-custom-width">Width (px)</Label>
+                          <Input
+                            id="flux-2-pro-apply-custom-width"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={flux2ProApplySettings.custom_width}
+                            onChange={(e) =>
+                              setFlux2ProApplySettings({
+                                ...flux2ProApplySettings,
+                                custom_width: parseInt(e.target.value) || 1024
+                              })
+                            }
+                            disabled={isFlux2ProApplyGenerating}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-2-pro-apply-custom-height">Height (px)</Label>
+                          <Input
+                            id="flux-2-pro-apply-custom-height"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={flux2ProApplySettings.custom_height}
+                            onChange={(e) =>
+                              setFlux2ProApplySettings({
+                                ...flux2ProApplySettings,
+                                custom_height: parseInt(e.target.value) || 1024
+                              })
+                            }
+                            disabled={isFlux2ProApplyGenerating}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advanced Settings Toggle */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowFlux2ProApplyAdvanced(!showFlux2ProApplyAdvanced)}
+                      disabled={isFlux2ProApplyGenerating}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      {showFlux2ProApplyAdvanced ? "Hide" : "Show"} Advanced Settings
+                      {showFlux2ProApplyAdvanced ? (
+                        <ChevronUp className="ml-2 h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      )}
+                    </Button>
+
+                    {/* Advanced Settings */}
+                    {showFlux2ProApplyAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-2-pro-apply-safety-tolerance">
+                            Safety Tolerance: {flux2ProApplySettings.safety_tolerance}
+                          </Label>
+                          <Select
+                            value={flux2ProApplySettings.safety_tolerance}
+                            onValueChange={(value) =>
+                              setFlux2ProApplySettings({ ...flux2ProApplySettings, safety_tolerance: value })
+                            }
+                            disabled={isFlux2ProApplyGenerating}
+                          >
+                            <SelectTrigger id="flux-2-pro-apply-safety-tolerance">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 - Strict</SelectItem>
+                              <SelectItem value="2">2 - Default</SelectItem>
+                              <SelectItem value="3">3 - Moderate</SelectItem>
+                              <SelectItem value="4">4 - Relaxed</SelectItem>
+                              <SelectItem value="5">5 - Permissive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-2-pro-apply-output-format">Output Format</Label>
+                          <Select
+                            value={flux2ProApplySettings.output_format}
+                            onValueChange={(value: "jpeg" | "png") =>
+                              setFlux2ProApplySettings({ ...flux2ProApplySettings, output_format: value })
+                            }
+                            disabled={isFlux2ProApplyGenerating}
+                          >
+                            <SelectTrigger id="flux-2-pro-apply-output-format">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="jpeg">JPEG</SelectItem>
+                              <SelectItem value="png">PNG</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="flux-2-pro-apply-safety-checker">Enable Safety Checker</Label>
+                          <Switch
+                            id="flux-2-pro-apply-safety-checker"
+                            checked={flux2ProApplySettings.enable_safety_checker}
+                            onCheckedChange={(checked) =>
+                              setFlux2ProApplySettings({ ...flux2ProApplySettings, enable_safety_checker: checked })
+                            }
+                            disabled={isFlux2ProApplyGenerating}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="flux-2-pro-apply-seed">Seed (optional)</Label>
+                          <Input
+                            id="flux-2-pro-apply-seed"
+                            type="number"
+                            placeholder="Leave empty for random"
+                            value={flux2ProApplySettings.seed}
+                            onChange={(e) =>
+                              setFlux2ProApplySettings({ ...flux2ProApplySettings, seed: e.target.value })
+                            }
+                            disabled={isFlux2ProApplyGenerating}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error Display */}
+                    {flux2ProApplyError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{flux2ProApplyError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Submit Button */}
+                    <Button type="submit" className="w-full" disabled={isFlux2ProApplyGenerating}>
+                      {isFlux2ProApplyGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Applying Style...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Apply TectonicaAI Style
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Result</CardTitle>
+                  <CardDescription>Your styled image will appear here</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {flux2ProApplyResultUrl ? (
+                    <div className="space-y-4">
+                      <div className="relative border rounded-lg overflow-hidden bg-muted/50">
+                        <img
+                          src={flux2ProApplyResultUrl}
+                          alt="Styled result"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs font-medium mb-1">Prompt Used:</p>
+                        <p className="text-xs text-muted-foreground">
+                          {flux2ProApplyPrompt}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = flux2ProApplyResultUrl
+                            link.download = `flux-2-pro-apply-${Date.now()}.jpg`
+                            link.click()
+                          }}
+                          className="flex-1"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setFlux2ProApplyResultUrl("")
+                          }}
+                          className="flex-1"
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <ImageIcon className="h-12 w-12 mb-2" />
+                      <p className="text-sm">No image styled yet</p>
+                      <p className="text-xs mt-1">4 style references + your image</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Info Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Flux 2 Pro Apply Features
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Editable Style Transfer</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• 4 TectonicaAI style references pre-loaded</li>
+                      <li>• Automatic style application to your image</li>
+                      <li>• Default prompt with full customization</li>
+                      <li>• Use @image1-@image5 in your prompts</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Simple Workflow</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Upload your image</li>
+                      <li>• Customize prompt (or use default)</li>
+                      <li>• Choose output size</li>
+                      <li>• Download styled result</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Reference Images</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• @image1: TCTAIFront01.png</li>
+                      <li>• @image2: TCTAIFront03.png</li>
+                      <li>• @image3: TCTAIFront11.png</li>
+                      <li>• @image4: TCTAIFront18.png</li>
+                      <li>• @image5: Your uploaded image</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Output Controls</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Safety tolerance: 1-5</li>
+                      <li>• Format: JPEG or PNG</li>
+                      <li>• Custom or preset dimensions</li>
+                      <li>• Reproducible with seed</li>
                     </ul>
                   </div>
                 </div>

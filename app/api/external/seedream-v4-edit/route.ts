@@ -16,7 +16,7 @@ import { addDisclaimerToImage } from "@/lib/image-disclaimer"
  * Body parameters (JSON):
  * - base64Image (optional): Base64-encoded image data (with or without data:image prefix)
  * - imageUrl (optional): URL of image to transform
- * - aspect_ratio (optional): Output aspect ratio - one of: 1:1, 16:9, 9:16, 4:3, 3:4, custom (default: 1:1)
+ * - aspect_ratio (optional): Output aspect ratio - one of: original, 1:1, 16:9, 9:16, 4:3, 3:4, custom (default: original)
  * - custom_width (optional): Custom width in pixels (512-2048, required if aspect_ratio is 'custom')
  * - custom_height (optional): Custom height in pixels (512-2048, required if aspect_ratio is 'custom')
  *   Note: aspect_ratio is mapped to image_size parameter for the SeDream model
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const {
       base64Image = null,
       imageUrl = null,
-      aspect_ratio = '1:1',
+      aspect_ratio = 'original',
       custom_width,
       custom_height
     } = body
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     })
     
     // Validate aspect_ratio parameter
-    const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4', 'custom']
+    const validAspectRatios = ['original', '1:1', '16:9', '9:16', '4:3', '3:4', 'custom']
     if (!validAspectRatios.includes(aspectRatio)) {
       return NextResponse.json({ 
         success: false,
@@ -232,6 +232,8 @@ export async function POST(request: NextRequest) {
     // PROCESS BASE64 IMAGE (if provided)
     // ============================================================================
     let finalImageUrl = imageUrl // Start with URL if provided
+    let originalImageWidth: number | undefined = undefined
+    let originalImageHeight: number | undefined = undefined
     
     if (base64Image && !finalImageUrl) {
       console.log('[External SeDream v4] Processing Base64 image...')
@@ -248,6 +250,9 @@ export async function POST(request: NextRequest) {
         try {
           const metadata = await sharp(imageBuffer).metadata()
           console.log('[External SeDream v4] Image validation - Format:', metadata.format, 'Size:', metadata.width, 'x', metadata.height)
+          // Store original dimensions
+          originalImageWidth = metadata.width
+          originalImageHeight = metadata.height
         } catch (validationError) {
           console.error('[External SeDream v4] Invalid image data:', validationError)
           return NextResponse.json({
@@ -346,10 +351,20 @@ export async function POST(request: NextRequest) {
     console.log("[External SeDream v4] Calling fal.ai API...")
 
     // Calculate image_size from aspect ratio selection
-    let imageSize: string | { width: number; height: number }
+    let imageSize: string | { width: number; height: number } | undefined
     let imageDimensions: { width: number; height: number } | undefined
     
-    if (aspectRatio === "custom") {
+    if (aspectRatio === "original") {
+      // Use original image dimensions if available
+      if (originalImageWidth && originalImageHeight) {
+        imageDimensions = { width: originalImageWidth, height: originalImageHeight }
+        console.log("[External SeDream v4] Using original image dimensions:", imageDimensions)
+      } else {
+        // Fallback to square_hd if original dimensions couldn't be detected
+        console.warn("[External SeDream v4] Original dimensions not available, falling back to square_hd")
+        imageSize = "square_hd"
+      }
+    } else if (aspectRatio === "custom") {
       imageDimensions = { width: customWidth!, height: customHeight! }
       console.log("[External SeDream v4] Using custom dimensions:", imageDimensions)
     } else {
@@ -387,14 +402,17 @@ export async function POST(request: NextRequest) {
       enable_safety_checker: true
     }
     
-    // Add image_size (string for presets, object for custom dimensions)
-    if (aspectRatio === "custom" && imageDimensions) {
+    // Add image_size (string for presets, object for custom/original dimensions)
+    if ((aspectRatio === "custom" || aspectRatio === "original") && imageDimensions) {
       input.image_size = {
         width: imageDimensions.width,
         height: imageDimensions.height
       }
+    } else if (imageSize) {
+      input.image_size = imageSize
     } else {
-      input.image_size = imageSize!
+      // Fallback to square_hd if nothing else was set (should not happen in normal flow)
+      input.image_size = "square_hd"
     }
 
     try {
