@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
-import { ContentModerationService } from "@/lib/content-moderation"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
-import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
- * For 8 reference images, we need to be more conservative:
- * - All images: max 0.8 MP (approx 768x768) to stay within 9 MP total limit
- * - This allows: 8 × 0.59 MP = 4.72 MP input + 4 MP output = 8.72 MP total
+ * For 5 images (4 references + 1 user), use same conservative limits as create endpoint:
+ * - All images: max 0.8 MP (approx 894x894) to stay within 9 MP total limit
+ * - This allows: 5 × 0.8 MP = 4 MP input + 2 MP output = 6 MP total
  */
-async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promise<Buffer> {
-  // Conservative limits to accommodate 8 images
-  const maxMegapixels = 590_000 // 0.59 MP for all images
-  const maxDimension = 768 // sqrt(590000) ≈ 768
+async function resizeImageForFalAI(buffer: Buffer): Promise<Buffer> {
+  const maxMegapixels = 800_000 // 0.8 MP for all images
+  const maxDimension = 894 // sqrt(800000) ≈ 894
   
   const metadata = await sharp(buffer).metadata()
   const currentPixels = (metadata.width || 0) * (metadata.height || 0)
@@ -43,7 +39,7 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
     targetWidth = Math.floor(targetHeight * aspectRatio)
   }
   
-  console.log(`[Flux 2 Pro Edit Create] Resizing image from ${metadata.width}x${metadata.height} (${Math.round(currentPixels/1000000)}MP) to ${targetWidth}x${targetHeight} (${Math.round((targetWidth*targetHeight)/1000000)}MP)`)
+  console.log(`[Flux 2 Pro Edit Apply] Resizing image from ${metadata.width}x${metadata.height} (${Math.round(currentPixels/1000000)}MP) to ${targetWidth}x${targetHeight} (${Math.round((targetWidth*targetHeight)/1000000)}MP)`)
   
   return sharp(buffer)
     .resize(targetWidth, targetHeight, { 
@@ -54,38 +50,34 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
     .toBuffer()
 }
 
-// Pre-configured reference images from public/tectonicaai-reference-images/
-const REFERENCE_IMAGES = [
+// Pre-configured reference images (4 style references)
+const STYLE_REFERENCE_IMAGES = [
   'TCTAIFront01.png',
-  'TCTAIFront02.png',
   'TCTAIFront03.png',
-  'TCTAIFront06.png',
-  'TCTAIFront09.png',
   'TCTAIFront11.png',
-  'TCTAIFront15.png',
-  'TCTAIFront18.png'
+  'TCTAIFront18.png',
 ].map(filename => `/tectonicaai-reference-images/${filename}`)
 
+// Default prompt (can be customized)
+const DEFAULT_PROMPT = "Make @image5 in the style of the other images."
+
 /**
- * POST /api/external/flux-2-pro-edit-create
+ * POST /api/external/flux-2-pro-edit-apply
  * 
- * External API endpoint for FLUX.2 [pro] image creation with 8 pre-loaded reference images.
- * This endpoint automatically includes 8 reference images from the TectonicaAI collection.
+ * External API endpoint for applying TectonicaAI style to user images.
+ * This endpoint automatically applies style from 4 pre-loaded reference images to a user-provided image.
  * 
  * Features:
- * - Auto-loaded references: 8 TectonicaAI reference images always included
- * - Optional user image: Add 0-1 additional image from user
- * - Image referencing: Use @image1, @image2 syntax in prompts
- * - JSON structured prompts: Advanced control over scene, subjects, camera
- * - HEX color control: Precise color matching
+ * - Auto-loaded style references: 4 TectonicaAI images (TCTAIFront01, 03, 11, 18)
+ * - Required user image: Must provide exactly 1 image to apply style to
+ * - Editable prompt: Default "Make @image5 in the style of the other images." (can be customized)
  * - Custom and preset sizes: Full flexibility
  * - Safety controls: Configurable tolerance (1-5) and safety checker
  * - Multiple formats: JPEG or PNG output
  * - Reproducibility: Seed support
- * - Disclaimer: Automatic disclaimer overlay on results
  * 
  * Body parameters (JSON):
- * - prompt (required): Text description for the creation
+ * - prompt (optional): Custom prompt (default: "Make @image5 in the style of the other images.")
  * - imageUrl (optional): Single image URL from user
  * - base64Image (optional): Single Base64 image from user
  * - settings (optional): Object with generation settings
@@ -94,67 +86,57 @@ const REFERENCE_IMAGES = [
  *   - enable_safety_checker: boolean (default: true)
  *   - output_format: "jpeg" | "png" (default: "jpeg")
  *   - seed: number (optional)
- * - useCanonicalPrompt (optional): boolean
- * - canonicalConfig (optional): Canonical prompt configuration object
- * - orgType (optional): Organization type for moderation (default: general)
  * 
  * Response format:
  * {
  *   "success": true,
  *   "images": [{ 
- *     "url": "data:image/jpeg;base64,...", 
- *     "originalUrl": "https://fal.ai/...",
+ *     "url": "https://fal.ai/...",
  *     "width": 1024, 
  *     "height": 1024 
  *   }],
- *   "prompt": "enhanced prompt used",
- *   "originalPrompt": "user's original prompt",
+ *   "prompt": "Make @image5 in the style of the other images.",
  *   "seed": 12345,
  *   "model": "fal-ai/flux-2-pro/edit",
  *   "provider": "fal.ai",
- *   "inputImages": 9,
- *   "referenceImages": 8,
+ *   "inputImages": 5,
+ *   "styleReferences": 4,
  *   "userImages": 1
  * }
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log("[Flux 2 Pro Edit Create] Request received")
+    console.log("[Flux 2 Pro Edit Apply] Request received")
     
     // Check FAL_API_KEY
     const falApiKey = process.env.FAL_API_KEY
     if (!falApiKey) {
-      console.error("[Flux 2 Pro Edit Create] FAL_API_KEY not configured")
+      console.error("[Flux 2 Pro Edit Apply] FAL_API_KEY not configured")
       return NextResponse.json({
         error: "Service configuration error",
         details: "FAL_API_KEY not configured"
       }, { status: 500 })
     }
     
-    console.log("[Flux 2 Pro Edit Create] FAL_KEY found")
+    console.log("[Flux 2 Pro Edit Apply] FAL_API_KEY found")
 
     // Parse JSON body
-    console.log("[Flux 2 Pro Edit Create] Parsing request body...")
+    console.log("[Flux 2 Pro Edit Apply] Parsing request body...")
     const body = await request.json()
-    console.log("[Flux 2 Pro Edit Create] Body parsed successfully")
+    console.log("[Flux 2 Pro Edit Apply] Body parsed successfully")
     
     const { 
-      prompt, 
+      prompt = DEFAULT_PROMPT,
       imageUrl = null,
       base64Image = null,
-      settings = {},
-      useCanonicalPrompt = false,
-      canonicalConfig = null,
-      orgType = "general"
+      settings = {}
     } = body
 
-    console.log("[Flux 2 Pro Edit Create] Parameters:", {
-      prompt: prompt?.substring(0, 100) + '...',
+    console.log("[Flux 2 Pro Edit Apply] Parameters:", {
+      prompt: prompt,
       hasImageUrl: !!imageUrl,
       hasBase64Image: !!base64Image,
-      settings,
-      useCanonicalPrompt,
-      orgType
+      settings
     })
 
     // Extract settings
@@ -164,19 +146,18 @@ export async function POST(request: NextRequest) {
     const outputFormat = settings.output_format || settings.outputFormat || "jpeg"
     const seed = settings.seed ? parseInt(settings.seed.toString()) : undefined
 
-    // Validate prompt
-    if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+    // Validate that user provides exactly 1 image
+    if (!imageUrl && !base64Image) {
       return NextResponse.json({
-        error: "Prompt is required",
-        details: "Please provide a text description for the creation"
+        error: "User image is required",
+        details: "Please provide exactly 1 image via imageUrl or base64Image to apply style to"
       }, { status: 400 })
     }
 
-    // Validate that user provides at most 1 image
     if (imageUrl && base64Image) {
       return NextResponse.json({
         error: "Too many user images",
-        details: "Please provide either imageUrl OR base64Image, not both. Maximum 1 user image allowed."
+        details: "Please provide either imageUrl OR base64Image, not both"
       }, { status: 400 })
     }
 
@@ -228,53 +209,29 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Content moderation
-    try {
-      console.log(`[MODERATION] Checking content for Flux 2 Pro Edit Create prompt: ${prompt.substring(0, 100)}...`)
-      const moderationService = new ContentModerationService(orgType)
-      const moderationResult = await moderationService.moderateContent({ prompt })
-      
-      if (!moderationResult.safe) {
-        console.log(`[MODERATION] Content blocked: ${moderationResult.reason}`)
-        return NextResponse.json({
-          error: moderationResult.reason,
-          category: moderationResult.category,
-          blocked: true,
-          moderation: true
-        }, { status: 400 })
-      }
-      
-      console.log("[MODERATION] Content approved")
-    } catch (moderationError) {
-      console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
-      // Continue with generation if moderation fails to avoid blocking users
-    }
-
-    // Upload reference images to fal.ai storage
-    console.log(`[Flux 2 Pro Edit Create] Uploading ${REFERENCE_IMAGES.length} reference images to fal.ai...`)
+    // Upload style reference images to fal.ai storage (indices 0-2)
+    console.log(`[Flux 2 Pro Edit Apply] Uploading ${STYLE_REFERENCE_IMAGES.length} style reference images to fal.ai...`)
     const allImageUrls: string[] = []
     
-    // Read and upload each reference image
-    for (let i = 0; i < REFERENCE_IMAGES.length; i++) {
-      const imagePath = REFERENCE_IMAGES[i]
+    // Read and upload each style reference image
+    for (let i = 0; i < STYLE_REFERENCE_IMAGES.length; i++) {
+      const imagePath = STYLE_REFERENCE_IMAGES[i]
       const fullPath = path.join(process.cwd(), 'public', imagePath)
       
       try {
-        console.log(`[Flux 2 Pro Edit Create] Reading reference image ${i + 1}/${REFERENCE_IMAGES.length}: ${fullPath}`)
+        console.log(`[Flux 2 Pro Edit Apply] Reading style reference ${i + 1}/${STYLE_REFERENCE_IMAGES.length}: ${fullPath}`)
         
         // Read the file
         let imageBuffer = await fs.readFile(fullPath)
         
-        // Resize to 0.8 MP to accommodate 8 images within 9 MP limit
-        imageBuffer = await resizeImageForFalAI(imageBuffer, false)
+        // Resize to 0.8 MP to accommodate 5 images within 9 MP limit
+        imageBuffer = await resizeImageForFalAI(imageBuffer)
         
-        // Determine MIME type - always convert to JPEG after resize
+        // Upload as JPEG
         const mimeType = 'image/jpeg'
+        const fileName = `style-ref-${i + 1}.jpg`
         
-        // Upload using 2-step process
-        const fileName = `ref-${i + 1}.jpg`
-        
-        console.log(`[Flux 2 Pro Edit Create] Uploading reference ${i + 1}: ${fileName} (${(imageBuffer.length / 1024).toFixed(1)} KB)`)
+        console.log(`[Flux 2 Pro Edit Apply] Uploading style reference ${i + 1}: ${fileName} (${(imageBuffer.length / 1024).toFixed(1)} KB)`)
         
         const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
           method: 'POST',
@@ -308,27 +265,24 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to PUT file: ${putResponse.status}`)
         }
         
-        console.log(`[Flux 2 Pro Edit Create] ✅ Uploaded reference ${i + 1}: ${file_url}`)
+        console.log(`[Flux 2 Pro Edit Apply] ✅ Uploaded style reference ${i + 1}: ${file_url}`)
         allImageUrls.push(file_url)
         
       } catch (uploadError) {
-        console.error(`[Flux 2 Pro Edit Create] Failed to upload reference image ${i + 1}:`, uploadError)
+        console.error(`[Flux 2 Pro Edit Apply] Failed to upload style reference ${i + 1}:`, uploadError)
         return NextResponse.json({
-          error: "Failed to upload reference images",
-          details: `Failed to upload reference image ${i + 1}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
+          error: "Failed to upload style reference images",
+          details: `Failed to upload style reference ${i + 1}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
         }, { status: 500 })
       }
     }
     
-    console.log(`[Flux 2 Pro Edit Create] ✅ All ${allImageUrls.length} reference images uploaded`)
-    console.log(`[Flux 2 Pro Edit Create] Reference URLs:`, allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
+    console.log(`[Flux 2 Pro Edit Apply] ✅ All ${allImageUrls.length} style references uploaded`)
 
-    // Process user image if provided (this will be index 8)
-    let userImageCount = 0
+    // Process user image (this will be index 3 = @image4)
+    console.log(`[Flux 2 Pro Edit Apply] Processing user image...`)
     
     if (base64Image) {
-      console.log(`[Flux 2 Pro Edit Create] Processing user Base64 image...`)
-      
       try {
         // Parse Base64 data URL or raw Base64
         let imageBuffer: Buffer
@@ -351,37 +305,36 @@ export async function POST(request: NextRequest) {
           mimeType = 'image/jpeg'
         }
         
-        console.log(`[Flux 2 Pro Edit Create] Processing Base64 image, type: ${mimeType}`)
+        console.log(`[Flux 2 Pro Edit Apply] Processing Base64 image, type: ${mimeType}`)
         
         // Validate image integrity
         try {
           const metadata = await sharp(imageBuffer).metadata()
-          console.log(`[Flux 2 Pro Edit Create] ✅ Image validated: ${metadata.format}, ${metadata.width}x${metadata.height}`)
+          console.log(`[Flux 2 Pro Edit Apply] ✅ Image validated: ${metadata.format}, ${metadata.width}x${metadata.height}`)
         } catch (validationError) {
           const errorMsg = validationError instanceof Error ? validationError.message : String(validationError)
-          console.error(`[Flux 2 Pro Edit Create] ❌ CORRUPTED BASE64 IMAGE:`, errorMsg)
+          console.error(`[Flux 2 Pro Edit Apply] ❌ CORRUPTED BASE64 IMAGE:`, errorMsg)
           throw new Error(`Base64 image is corrupted or incomplete`)
         }
         
-        // Resize to respect fal.ai megapixel limits
-        // User image will be at index 8, so it's NOT the first image
+        // Resize to 1.5 MP
         let finalBuffer: Buffer
         let finalMimeType = 'image/jpeg'
         
         try {
-          finalBuffer = await resizeImageForFalAI(imageBuffer, false)
-          console.log(`[Flux 2 Pro Edit Create] ✅ Processed: ${(imageBuffer.length / 1024).toFixed(1)} KB → ${(finalBuffer.length / 1024).toFixed(1)} KB`)
+          finalBuffer = await resizeImageForFalAI(imageBuffer)
+          console.log(`[Flux 2 Pro Edit Apply] ✅ Processed: ${(imageBuffer.length / 1024).toFixed(1)} KB → ${(finalBuffer.length / 1024).toFixed(1)} KB`)
         } catch (sharpError) {
-          console.warn(`[Flux 2 Pro Edit Create] ⚠️  Processing failed, using original`)
+          console.warn(`[Flux 2 Pro Edit Apply] ⚠️  Processing failed, using original`)
           finalBuffer = imageBuffer
           finalMimeType = mimeType
         }
         
         // Upload using 2-step process
         const fileExtension = finalMimeType.split('/')[1] || 'jpeg'
-        const fileName = `flux2pro-create-user.${fileExtension}`
+        const fileName = `user-image.${fileExtension}`
         
-        console.log(`[Flux 2 Pro Edit Create] Uploading ${fileName}...`)
+        console.log(`[Flux 2 Pro Edit Apply] Uploading ${fileName}...`)
         
         const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
           method: 'POST',
@@ -415,12 +368,11 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to PUT file: ${putResponse.status}`)
         }
         
-        console.log(`[Flux 2 Pro Edit Create] ✅ Uploaded user image: ${file_url}`)
+        console.log(`[Flux 2 Pro Edit Apply] ✅ Uploaded user image: ${file_url}`)
         allImageUrls.push(file_url)
-        userImageCount = 1
         
       } catch (base64Error) {
-        console.error(`[Flux 2 Pro Edit Create] Failed to process Base64 image:`, base64Error)
+        console.error(`[Flux 2 Pro Edit Apply] Failed to process Base64 image:`, base64Error)
         return NextResponse.json({
           error: "Base64 image processing failed",
           details: `Failed to process Base64 image: ${base64Error instanceof Error ? base64Error.message : 'Unknown error'}`
@@ -428,7 +380,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (imageUrl) {
       // Validate and add user image URL
-      console.log(`[Flux 2 Pro Edit Create] Adding user image URL...`)
+      console.log(`[Flux 2 Pro Edit Apply] Adding user image URL...`)
       
       if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.trim()) {
         return NextResponse.json({
@@ -441,46 +393,20 @@ export async function POST(request: NextRequest) {
       try {
         new URL(imageUrl)
         allImageUrls.push(imageUrl)
-        userImageCount = 1
-        console.log(`[Flux 2 Pro Edit Create] ✅ Added user image URL: ${imageUrl}`)
+        console.log(`[Flux 2 Pro Edit Apply] ✅ Added user image URL: ${imageUrl}`)
       } catch (urlError) {
         return NextResponse.json({
           error: "Invalid image URL format",
           details: `Invalid URL: ${imageUrl}`
         }, { status: 400 })
       }
-    } else {
-      console.log(`[Flux 2 Pro Edit Create] No user image provided, using only reference images`)
     }
 
-    console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${REFERENCE_IMAGES.length} references + ${userImageCount} user)`)
-
-    // Process canonical prompt if enabled
-    let finalPrompt = prompt
-    if (useCanonicalPrompt && canonicalConfig) {
-      console.log("[Flux 2 Pro Edit Create] Processing canonical prompt...")
-      
-      try {
-        const config = typeof canonicalConfig === 'string' 
-          ? JSON.parse(canonicalConfig) 
-          : canonicalConfig
-        
-        config.userInput = prompt
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(config)
-        finalPrompt = result.canonicalPrompt
-        
-        console.log("[Flux 2 Pro Edit Create] Generated canonical prompt")
-      } catch (canonicalError) {
-        console.error("[Flux 2 Pro Edit Create] Canonical prompt error:", canonicalError)
-        console.log("[Flux 2 Pro Edit Create] Using original prompt")
-      }
-    } else {
-      console.log("[Flux 2 Pro Edit Create] Canonical prompt disabled")
-    }
+    console.log(`[Flux 2 Pro Edit Apply] Total images: ${allImageUrls.length} (4 style refs + 1 user)`)
 
     // Prepare input for fal.ai
     const input: any = {
-      prompt: finalPrompt,
+      prompt: prompt.trim() || DEFAULT_PROMPT,
       image_urls: allImageUrls,
       safety_tolerance: safetyToleranceStr,
       enable_safety_checker: enableSafetyChecker,
@@ -504,11 +430,11 @@ export async function POST(request: NextRequest) {
       credentials: falApiKey,
     })
 
-    console.log("[Flux 2 Pro Edit Create] Calling fal.ai...")
-    console.log("[Flux 2 Pro Edit Create] Input:", JSON.stringify({
+    console.log("[Flux 2 Pro Edit Apply] Calling fal.ai...")
+    console.log("[Flux 2 Pro Edit Apply] Input:", JSON.stringify({
       ...input,
-      image_urls: `[${allImageUrls.length} URLs: ${REFERENCE_IMAGES.length} references + ${userImageCount} user]`,
-      prompt: input.prompt.substring(0, 100) + '...'
+      image_urls: `[${allImageUrls.length} URLs: 4 style refs + 1 user]`,
+      prompt: input.prompt
     }, null, 2))
 
     try {
@@ -517,16 +443,16 @@ export async function POST(request: NextRequest) {
         logs: true,
         onQueueUpdate: (update) => {
           if (update.status === "IN_PROGRESS") {
-            console.log("[Flux 2 Pro Edit Create] Progress:", update.logs?.map(log => log.message).join(" ") || "Processing...")
+            console.log("[Flux 2 Pro Edit Apply] Progress:", update.logs?.map(log => log.message).join(" ") || "Processing...")
           }
         }
       })
 
-      console.log("[Flux 2 Pro Edit Create] Generation successful")
+      console.log("[Flux 2 Pro Edit Apply] Generation successful")
       
       // Validate response
       if (!result.data || !result.data.images || !Array.isArray(result.data.images) || result.data.images.length === 0) {
-        console.error("[Flux 2 Pro Edit Create] Invalid response:", result)
+        console.error("[Flux 2 Pro Edit Apply] Invalid response:", result)
         
         return NextResponse.json({
           error: "No images generated",
@@ -534,9 +460,9 @@ export async function POST(request: NextRequest) {
         }, { status: 500 })
       }
 
-      console.log("[Flux 2 Pro Edit Create] Generated", result.data.images.length, "images")
+      console.log("[Flux 2 Pro Edit Apply] Generated", result.data.images.length, "images")
 
-      // Process generated images (no disclaimer for now)
+      // Process generated images
       const processedImages = []
       
       for (const img of result.data.images) {
@@ -552,33 +478,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         images: processedImages,
-        prompt: finalPrompt,
-        originalPrompt: prompt,
+        prompt: input.prompt,
         seed: result.data.seed,
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
         inputImages: allImageUrls.length,
-        referenceImages: REFERENCE_IMAGES.length,
-        userImages: userImageCount,
+        styleReferences: STYLE_REFERENCE_IMAGES.length,
+        userImages: 1,
         settings: {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
           enable_safety_checker: enableSafetyChecker,
-          output_format: outputFormat,
-          use_canonical_prompt: useCanonicalPrompt
+          output_format: outputFormat
         },
         timestamp: new Date().toISOString()
       })
 
     } catch (falError) {
-      console.error("[Flux 2 Pro Edit Create] fal.ai API error:", falError)
+      console.error("[Flux 2 Pro Edit Apply] fal.ai API error:", falError)
       
       // Log full error for debugging
       if ((falError as any)?.body) {
-        console.error("[Flux 2 Pro Edit Create] Full error body:", JSON.stringify((falError as any).body, null, 2))
+        console.error("[Flux 2 Pro Edit Apply] Full error body:", JSON.stringify((falError as any).body, null, 2))
       }
       
-      let errorMessage = "Failed to create image with Flux 2 Pro"
+      let errorMessage = "Failed to apply style with Flux 2 Pro"
       let errorDetails = falError instanceof Error ? falError.message : "Unknown error"
       
       // Extract validation errors
@@ -601,8 +525,8 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[Flux 2 Pro Edit Create] Unexpected error:", error)
-    console.error("[Flux 2 Pro Edit Create] Error stack:", error instanceof Error ? error.stack : 'No stack trace')
+    console.error("[Flux 2 Pro Edit Apply] Unexpected error:", error)
+    console.error("[Flux 2 Pro Edit Apply] Error stack:", error instanceof Error ? error.stack : 'No stack trace')
     
     return NextResponse.json({
       error: "Internal server error",
@@ -613,65 +537,61 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/external/flux-2-pro-edit-create
+ * GET /api/external/flux-2-pro-edit-apply
  * 
  * Returns API documentation and usage information
  */
 export async function GET() {
   return NextResponse.json({
-    name: "FLUX.2 [pro] Edit Create API",
-    description: "Create images using FLUX.2 [pro] with 8 pre-loaded TectonicaAI reference images",
+    name: "FLUX.2 [pro] Style Apply API",
+    description: "Apply TectonicaAI style to user images using 4 pre-loaded style references",
     version: "1.0.0",
-    endpoint: "/api/external/flux-2-pro-edit-create",
+    endpoint: "/api/external/flux-2-pro-edit-apply",
     method: "POST",
     contentType: "application/json",
     
     features: [
-      "8 pre-loaded TectonicaAI reference images always included",
-      "Optional: Add 0-1 user image (via URL or Base64)",
-      "Total: 8-9 images sent to FLUX.2 [pro] edit",
-      "Image referencing in prompts (@image1, @image2, etc.)",
-      "JSON structured prompts for advanced control",
-      "HEX color control for precise matching",
+      "4 pre-loaded TectonicaAI style reference images",
+      "Required: 1 user image to apply style to",
+      "Total: 5 images (4 style refs + 1 user)",
+      "Editable prompt with default: 'Make @image5 in the style of the other images.'",
       "Custom and preset sizes",
       "Configurable safety tolerance (1-5)",
       "JPEG or PNG output",
       "Seed support for reproducibility"
     ],
     
-    referenceImages: {
-      count: 8,
+    styleReferences: {
+      count: 4,
       location: "/public/tectonicaai-reference-images/",
       files: [
-        "TCTAIFront01.png",
-        "TCTAIFront02.png",
-        "TCTAIFront03.png",
-        "TCTAIFront06.png",
-        "TCTAIFront09.png",
-        "TCTAIFront11.png",
-        "TCTAIFront15.png",
-        "TCTAIFront18.png"
+        "TCTAIFront01.png (index 0 = @image1)",
+        "TCTAIFront03.png (index 1 = @image2)",
+        "TCTAIFront11.png (index 2 = @image3)",
+        "TCTAIFront18.png (index 3 = @image4)"
       ],
-      note: "These images are automatically included at indices 0-7"
+      note: "User image is automatically placed at index 4 (@image5)"
     },
+    
+    defaultPrompt: "Make @image5 in the style of the other images.",
     
     parameters: {
       prompt: {
         type: "string",
-        required: true,
-        description: "Text description for image creation. Can reference @image1-@image9",
-        example: "Create a modern tech website hero using the style from @image1 and @image2"
+        required: false,
+        description: "Custom prompt for image generation (uses default if not provided)",
+        default: "Make @image5 in the style of the other images."
       },
       imageUrl: {
         type: "string",
-        required: false,
-        description: "Optional single image URL from user (will be index 8)",
+        required: "one of imageUrl or base64Image",
+        description: "User image URL (will be @image5)",
         alternative: "Can use base64Image instead"
       },
       base64Image: {
         type: "string",
-        required: false,
-        description: "Optional single Base64 image from user (will be index 8)",
+        required: "one of imageUrl or base64Image",
+        description: "User Base64 image (will be @image5)",
         alternative: "Can use imageUrl instead"
       },
       settings: {
@@ -704,21 +624,6 @@ export async function GET() {
             description: "For reproducible results"
           }
         }
-      },
-      useCanonicalPrompt: {
-        type: "boolean",
-        default: false,
-        description: "Enable canonical prompt processing"
-      },
-      canonicalConfig: {
-        type: "object",
-        required: false,
-        description: "Configuration for canonical prompt (when useCanonicalPrompt is true)"
-      },
-      orgType: {
-        type: "string",
-        default: "general",
-        description: "Organization type for content moderation"
       }
     },
     
@@ -732,67 +637,61 @@ export async function GET() {
             height: 1024
           }
         ],
-        prompt: "Final processed prompt",
-        originalPrompt: "User's original prompt",
+        prompt: "Make @image5 in the style of the other images.",
         seed: 12345,
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
-        inputImages: 9,
-        referenceImages: 8,
+        inputImages: 5,
+        styleReferences: 4,
         userImages: 1,
         settings: {},
         timestamp: "2025-12-24T00:00:00.000Z"
       },
       error: {
         error: "Error description",
-        details: "Additional details",
-        blocked: "Boolean (for moderation)",
-        category: "String (for moderation)"
+        details: "Additional details"
       }
     },
     
     examples: {
-      basic: {
-        description: "Using only reference images (no user image)",
+      withUrl: {
+        description: "Applying style to user image via URL (will be @image5)",
         request: {
-          prompt: "Create a vibrant tech website hero combining styles from @image1, @image3, and @image5",
+          prompt: "Make @image5 in the style of the other images.",
+          imageUrl: "https://example.com/my-image.jpg",
           settings: {
-            image_size: "landscape_16_9",
-            safety_tolerance: 3,
+            image_size: "square_hd",
             output_format: "jpeg"
           }
         }
       },
-      withUserImage: {
-        description: "Adding user's image as 9th reference",
+      withBase64: {
+        description: "Applying style to user Base64 image (will be @image5)",
         request: {
-          prompt: "Combine my brand logo (@image9) with the TectonicaAI styles from @image1-@image8",
-          imageUrl: "https://example.com/my-logo.png",
-          settings: {
-            image_size: "square_hd",
-            output_format: "png"
-          }
-        }
-      },
-      base64: {
-        description: "Using Base64 user image",
-        request: {
-          prompt: "Create a website mockup using @image9 (my design) and TectonicaAI references",
+          prompt: "Transform @image5 to match @image1, @image2, @image3, and @image4 style",
           base64Image: "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
           settings: {
             image_size: { width: 1920, height: 1080 }
           }
         }
+      },
+      withCustomPrompt: {
+        description: "Using custom prompt",
+        request: {
+          prompt: "Create a cohesive image set where @image5 adopts the visual language of the references",
+          imageUrl: "https://example.com/my-image.jpg"
+        }
       }
     },
     
     notes: [
-      "Reference images (indices 0-7) are always included automatically",
-      "User can optionally add 1 more image (index 8)",
-      "Maximum total: 9 images (8 references + 1 user)",
-      "Use @image1-@image9 syntax in prompts to reference specific images",
-      "Processing time: 20-40 seconds depending on complexity",
-      "Built-in content moderation for safe results"
+      "Style reference images (indices 0-3) are always the same 4 TectonicaAI images",
+      "User image must be provided (becomes index 4 = @image5)",
+      "Prompt is editable with a sensible default",
+      "Use @image1 through @image5 to reference specific images in your prompt",
+      "Processing time: 15-30 seconds depending on image size",
+      "Maximum total: 5 images (4 style refs + 1 user)",
+      "All images automatically resized to 0.8 MP for optimal performance"
     ]
   })
 }
