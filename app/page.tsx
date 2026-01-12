@@ -146,7 +146,7 @@ export default function ImageEditor() {
   const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
 
   // Flux 2 Pro Edit Apply States (4 references + 1 user image with hardcoded prompt)
-  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("Make @image5 in the style of the other images.")
+  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose.")
   const [flux2ProApplyUserImage, setFlux2ProApplyUserImage] = useState<File | null>(null)
   const [flux2ProApplyImageUrl, setFlux2ProApplyImageUrl] = useState("")
   const [flux2ProApplyBase64Image, setFlux2ProApplyBase64Image] = useState("")
@@ -164,6 +164,27 @@ export default function ImageEditor() {
   const [flux2ProApplyError, setFlux2ProApplyError] = useState<string>("")
   const [showFlux2ProApplyAdvanced, setShowFlux2ProApplyAdvanced] = useState(false)
   const [flux2ProApplyUserImagePreview, setFlux2ProApplyUserImagePreview] = useState<string>("")
+
+  // Flux 2 Pro Combine States (2 images)
+  const [flux2ProCombinePrompt, setFlux2ProCombinePrompt] = useState("")
+  const [flux2ProCombineImages, setFlux2ProCombineImages] = useState<(File | null)[]>([null, null])
+  const [flux2ProCombineImageUrls, setFlux2ProCombineImageUrls] = useState<string[]>(["", ""])
+  const [flux2ProCombineBase64Images, setFlux2ProCombineBase64Images] = useState<string[]>(["", ""])
+  const [flux2ProCombineSettings, setFlux2ProCombineSettings] = useState({
+    image_size: "auto",
+    safety_tolerance: "2",
+    enable_safety_checker: true,
+    output_format: "jpeg",
+    seed: "",
+    custom_width: 1024,
+    custom_height: 1024
+  })
+  const [flux2ProCombineResultUrl, setFlux2ProCombineResultUrl] = useState<string>("")
+  const [isFlux2ProCombineGenerating, setIsFlux2ProCombineGenerating] = useState(false)
+  const [flux2ProCombineError, setFlux2ProCombineError] = useState<string>("")
+  const [flux2ProCombineGeneratedPrompt, setFlux2ProCombineGeneratedPrompt] = useState<string>("")
+  const [showFlux2ProCombineAdvanced, setShowFlux2ProCombineAdvanced] = useState(false)
+  const [flux2ProCombineImagePreviews, setFlux2ProCombineImagePreviews] = useState<string[]>(["", ""])
 
   // Hybrid Enhancement States
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
@@ -2698,7 +2719,7 @@ export default function ImageEditor() {
 
       console.log("[FRONTEND] Flux 2 Pro Edit - Sending request with", totalImages, "images")
 
-      const response = await fetch("/api/flux-2-pro-edit", {
+      const response = await fetch("/api/external/flux-2-pro-edit-edit", {
         method: "POST",
         body: formData,
       })
@@ -3015,6 +3036,168 @@ export default function ImageEditor() {
     }
   }
 
+  // Flux 2 Pro Combine Handlers
+  const handleFlux2ProCombineImageUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const newImages = [...flux2ProCombineImages]
+      newImages[index] = file
+      setFlux2ProCombineImages(newImages)
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const newPreviews = [...flux2ProCombineImagePreviews]
+        newPreviews[index] = reader.result as string
+        setFlux2ProCombineImagePreviews(newPreviews)
+      }
+      reader.readAsDataURL(file)
+      
+      // Clear URL and Base64 if file is uploaded
+      const newUrls = [...flux2ProCombineImageUrls]
+      newUrls[index] = ""
+      setFlux2ProCombineImageUrls(newUrls)
+      
+      const newBase64 = [...flux2ProCombineBase64Images]
+      newBase64[index] = ""
+      setFlux2ProCombineBase64Images(newBase64)
+    }
+  }
+
+  const removeFlux2ProCombineImage = (index: number) => {
+    const newImages = [...flux2ProCombineImages]
+    newImages[index] = null
+    setFlux2ProCombineImages(newImages)
+    
+    const newPreviews = [...flux2ProCombineImagePreviews]
+    newPreviews[index] = ""
+    setFlux2ProCombineImagePreviews(newPreviews)
+    
+    const newUrls = [...flux2ProCombineImageUrls]
+    newUrls[index] = ""
+    setFlux2ProCombineImageUrls(newUrls)
+    
+    const newBase64 = [...flux2ProCombineBase64Images]
+    newBase64[index] = ""
+    setFlux2ProCombineBase64Images(newBase64)
+  }
+
+  const handleFlux2ProCombineSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    // Count total images provided
+    let totalImages = 0
+    flux2ProCombineImages.forEach(img => { if (img) totalImages++ })
+    flux2ProCombineImageUrls.forEach(url => { if (url.trim()) totalImages++ })
+    flux2ProCombineBase64Images.forEach(b64 => { if (b64.trim()) totalImages++ })
+
+    if (totalImages !== 2) {
+      setFlux2ProCombineError(`Please provide exactly 2 images (you have ${totalImages})`)
+      return
+    }
+
+    if (!flux2ProCombinePrompt.trim()) {
+      setFlux2ProCombineError("Please provide a prompt describing how to combine the images")
+      return
+    }
+
+    setIsFlux2ProCombineGenerating(true)
+    setFlux2ProCombineError("")
+
+    try {
+      const formData = new FormData()
+      formData.append("prompt", flux2ProCombinePrompt)
+
+      // Add image files
+      flux2ProCombineImages.forEach((image, index) => {
+        if (image) {
+          formData.append(`image${index}`, image)
+        }
+      })
+      
+      // Add image URLs
+      flux2ProCombineImageUrls.forEach((url, index) => {
+        if (url.trim()) {
+          formData.append(`imageUrl${index}`, url)
+        }
+      })
+      
+      // Add Base64 images
+      flux2ProCombineBase64Images.forEach((b64, index) => {
+        if (b64.trim()) {
+          formData.append(`imageBase64${index}`, b64)
+        }
+      })
+      
+      // Prepare settings
+      const settings: any = { ...flux2ProCombineSettings }
+      
+      // Handle custom dimensions
+      if (settings.image_size === "custom") {
+        settings.image_size = {
+          width: settings.custom_width,
+          height: settings.custom_height
+        }
+        delete settings.custom_width
+        delete settings.custom_height
+      } else {
+        delete settings.custom_width
+        delete settings.custom_height
+      }
+      
+      // Remove empty values
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === "") {
+          delete settings[key]
+        }
+      })
+      
+      // Convert seed to number if present
+      if (settings.seed) {
+        settings.seed = parseInt(settings.seed as string)
+      }
+      
+      formData.append("settings", JSON.stringify(settings))
+      formData.append("orgType", "general")
+      formData.append("useCanonicalPrompt", "false")
+
+      console.log("[FRONTEND] Flux 2 Pro Combine - Sending request with 2 images")
+
+      const response = await fetch("/api/external/flux-2-pro-edit-combine", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (response.status === 400 && errorData?.error) {
+          throw new Error(errorData.error + (errorData.details ? `: ${errorData.details}` : ''))
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+      
+      console.log("[FRONTEND] Flux 2 Pro Combine - Response:", {
+        success: result.success,
+        inputImages: result.inputImages
+      })
+      
+      if (result.images && result.images[0]?.url) {
+        setFlux2ProCombineResultUrl(result.images[0].url)
+        setFlux2ProCombineGeneratedPrompt(result.prompt)
+      } else if (result.image) {
+        setFlux2ProCombineResultUrl(result.image)
+      } else {
+        throw new Error("No image received from server")
+      }
+    } catch (err) {
+      setFlux2ProCombineError(err instanceof Error ? err.message : "Failed to combine images")
+    } finally {
+      setIsFlux2ProCombineGenerating(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -3052,6 +3235,7 @@ export default function ImageEditor() {
           <TabsTrigger value="flux-2-pro-edit">Flux 2 Pro Edit</TabsTrigger>
           <TabsTrigger value="flux-2-pro-edit-create">Flux 2 Pro Create</TabsTrigger>
           <TabsTrigger value="flux-2-pro-edit-apply">Flux 2 Pro Apply</TabsTrigger>
+          <TabsTrigger value="flux-2-pro-combine">Flux 2 Pro Combine</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
         </TabsList>
 
@@ -3469,10 +3653,10 @@ export default function ImageEditor() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Edit className="h-5 w-5" />
-                    Flux 2 Pro Multi-Reference Edit
+                    Flux 2 Pro Edit
                   </CardTitle>
                   <CardDescription>
-                    Production-grade image editing with up to 9 reference images
+                    Professional image editing with AI
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -3484,74 +3668,59 @@ export default function ImageEditor() {
                       </Label>
                       <Textarea
                         id="flux2pro-prompt"
-                        placeholder="Describe the edit (e.g., 'Change the jacket to red while keeping the original lighting' or 'Replace background with @image2')"
+                        placeholder="Describe the edit (e.g., 'Change the jacket to red while keeping the original lighting')"
                         value={flux2ProPrompt}
                         onChange={(e) => setFlux2ProPrompt(e.target.value)}
                         rows={3}
                         className="text-sm"
                         required
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Use @image1, @image2, etc. to reference specific images
-                      </p>
                     </div>
 
-                    {/* Multi-Image Upload */}
+                    {/* Single Image Upload */}
                     <div className="space-y-3">
-                      <Label>Reference Images (1-9) *</Label>
+                      <Label>Image to Edit *</Label>
                       
-                      {/* Image Upload Slots */}
-                      <div className="grid grid-cols-2 gap-3">
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
-                          <div key={index} className="space-y-2">
-                            <Label htmlFor={`flux2pro-image-${index}`} className="text-xs">
-                              Image {index + 1}
-                            </Label>
-                            
-                            {flux2ProImagePreviews[index] ? (
-                              <div className="relative border rounded-lg p-2 bg-muted/50">
-                                <img
-                                  src={flux2ProImagePreviews[index]}
-                                  alt={`Preview ${index + 1}`}
-                                  className="w-full h-24 object-cover rounded"
-                                />
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="destructive"
-                                  className="absolute top-1 right-1 h-6 w-6 p-0"
-                                  onClick={() => removeFlux2ProImage(index)}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <div>
-                                <Input
-                                  id={`flux2pro-image-${index}`}
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleFlux2ProImageUpload(e, index)}
-                                  className="cursor-pointer text-xs"
-                                />
-                                <Input
-                                  placeholder="Or paste URL"
-                                  value={flux2ProImageUrls[index]}
-                                  onChange={(e) => {
-                                    const newUrls = [...flux2ProImageUrls]
-                                    newUrls[index] = e.target.value
-                                    setFlux2ProImageUrls(newUrls)
-                                  }}
-                                  className="mt-1 text-xs"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      {flux2ProImagePreviews[0] ? (
+                        <div className="relative border rounded-lg p-2 bg-muted/50">
+                          <img
+                            src={flux2ProImagePreviews[0]}
+                            alt="Preview"
+                            className="w-full h-48 object-cover rounded"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            className="absolute top-3 right-3 h-8 w-8 p-0"
+                            onClick={() => removeFlux2ProImage(0)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Input
+                            id="flux2pro-image-0"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleFlux2ProImageUpload(e, 0)}
+                            className="cursor-pointer"
+                          />
+                          <Input
+                            placeholder="Or paste image URL"
+                            value={flux2ProImageUrls[0]}
+                            onChange={(e) => {
+                              const newUrls = [...flux2ProImageUrls]
+                              newUrls[0] = e.target.value
+                              setFlux2ProImageUrls(newUrls)
+                            }}
+                          />
+                        </div>
+                      )}
                       
                       <p className="text-xs text-muted-foreground">
-                        Upload files, paste URLs, or use Base64. Maximum 9 images (9 MP total).
+                        Upload a file or paste an image URL (max 4 MP)
                       </p>
                     </div>
 
@@ -4366,7 +4535,7 @@ export default function ImageEditor() {
                         disabled={isFlux2ProApplyGenerating}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Reference images: @image1-@image4 (TectonicaAI) + @image5 (your image)
+                        @image1 (your image) + @image2 (TectonicaAI style reference)
                       </p>
                     </div>
 
@@ -4662,6 +4831,415 @@ export default function ImageEditor() {
                       <li>• Safety tolerance: 1-5</li>
                       <li>• Format: JPEG or PNG</li>
                       <li>• Custom or preset dimensions</li>
+                      <li>• Reproducible with seed</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Flux 2 Pro Combine Tab */}
+          <TabsContent value="flux-2-pro-combine" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Upload and Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit className="h-5 w-5" />
+                    Flux 2 Pro Combine
+                  </CardTitle>
+                  <CardDescription>
+                    Combine 2 images with AI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFlux2ProCombineSubmit} className="space-y-4">
+                    {/* Prompt */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-combine-prompt">
+                        Combination Description *
+                      </Label>
+                      <Textarea
+                        id="flux2pro-combine-prompt"
+                        placeholder="Describe how to combine the images (e.g., 'Merge @image1 and @image2 into a single cohesive scene')"
+                        value={flux2ProCombinePrompt}
+                        onChange={(e) => setFlux2ProCombinePrompt(e.target.value)}
+                        rows={3}
+                        className="text-sm"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Use @image1 and @image2 to reference the images
+                      </p>
+                    </div>
+
+                    {/* Two Image Upload Fields */}
+                    <div className="space-y-3">
+                      <Label>Images to Combine (2 required) *</Label>
+                      
+                      {[0, 1].map((index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg">
+                          <Label className="text-sm font-medium">Image {index + 1}</Label>
+                          
+                          {flux2ProCombineImagePreviews[index] ? (
+                            <div className="relative border rounded-lg p-2 bg-muted/50">
+                              <img
+                                src={flux2ProCombineImagePreviews[index]}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-32 object-cover rounded"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-3 right-3 h-8 w-8 p-0"
+                                onClick={() => removeFlux2ProCombineImage(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <Input
+                                id={`flux2pro-combine-image-${index}`}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFlux2ProCombineImageUpload(e, index)}
+                                className="cursor-pointer text-xs"
+                              />
+                              <Input
+                                placeholder="Or paste image URL"
+                                value={flux2ProCombineImageUrls[index]}
+                                onChange={(e) => {
+                                  const newUrls = [...flux2ProCombineImageUrls]
+                                  newUrls[index] = e.target.value
+                                  setFlux2ProCombineImageUrls(newUrls)
+                                }}
+                                className="text-xs"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        First image: max 4 MP, Second image: max 1 MP
+                      </p>
+                    </div>
+
+                    {/* Image Size */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-combine-image-size">Image Size</Label>
+                      <Select
+                        value={flux2ProCombineSettings.image_size}
+                        onValueChange={(value) => setFlux2ProCombineSettings({ ...flux2ProCombineSettings, image_size: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="auto">Auto (Recommended)</SelectItem>
+                          <SelectItem value="square_hd">Square HD</SelectItem>
+                          <SelectItem value="square">Square</SelectItem>
+                          <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
+                          <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
+                          <SelectItem value="landscape_4_3">Landscape 4:3</SelectItem>
+                          <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                          <SelectItem value="custom">Custom Size</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Custom Dimensions */}
+                    {flux2ProCombineSettings.image_size === "custom" && (
+                      <div className="grid grid-cols-2 gap-4 p-3 border rounded-lg bg-muted/50">
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-combine-width">Width (px)</Label>
+                          <Input
+                            id="flux2pro-combine-width"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={flux2ProCombineSettings.custom_width}
+                            onChange={(e) => setFlux2ProCombineSettings({
+                              ...flux2ProCombineSettings,
+                              custom_width: parseInt(e.target.value) || 1024
+                            })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-combine-height">Height (px)</Label>
+                          <Input
+                            id="flux2pro-combine-height"
+                            type="number"
+                            min={512}
+                            max={2048}
+                            value={flux2ProCombineSettings.custom_height}
+                            onChange={(e) => setFlux2ProCombineSettings({
+                              ...flux2ProCombineSettings,
+                              custom_height: parseInt(e.target.value) || 1024
+                            })}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-muted-foreground">
+                            Range: 512-2048 pixels
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Advanced Settings</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowFlux2ProCombineAdvanced(!showFlux2ProCombineAdvanced)}
+                      >
+                        {showFlux2ProCombineAdvanced ? (
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            Hide
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            Show
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Advanced Settings */}
+                    {showFlux2ProCombineAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                        {/* Safety Tolerance */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="flux2pro-combine-safety">Safety Tolerance</Label>
+                            <span className="text-sm text-muted-foreground">
+                              {flux2ProCombineSettings.safety_tolerance}
+                            </span>
+                          </div>
+                          <Slider
+                            id="flux2pro-combine-safety"
+                            min={1}
+                            max={5}
+                            step={1}
+                            value={[parseInt(flux2ProCombineSettings.safety_tolerance)]}
+                            onValueChange={(value) => setFlux2ProCombineSettings({
+                              ...flux2ProCombineSettings,
+                              safety_tolerance: value[0].toString()
+                            })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Strict (1)</span>
+                            <span>Balanced (2-3)</span>
+                            <span>Permissive (5)</span>
+                          </div>
+                        </div>
+
+                        {/* Safety Checker */}
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="flux2pro-combine-safety-checker">Enable Safety Checker</Label>
+                          <Switch
+                            id="flux2pro-combine-safety-checker"
+                            checked={flux2ProCombineSettings.enable_safety_checker}
+                            onCheckedChange={(checked) => setFlux2ProCombineSettings({
+                              ...flux2ProCombineSettings,
+                              enable_safety_checker: checked
+                            })}
+                          />
+                        </div>
+
+                        {/* Output Format */}
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-combine-format">Output Format</Label>
+                          <Select
+                            value={flux2ProCombineSettings.output_format}
+                            onValueChange={(value) => setFlux2ProCombineSettings({
+                              ...flux2ProCombineSettings,
+                              output_format: value
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="jpeg">JPEG (Smaller file)</SelectItem>
+                              <SelectItem value="png">PNG (Higher quality)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Seed */}
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2pro-combine-seed">
+                            Seed (Optional)
+                          </Label>
+                          <Input
+                            id="flux2pro-combine-seed"
+                            type="number"
+                            placeholder="Random"
+                            value={flux2ProCombineSettings.seed}
+                            onChange={(e) => setFlux2ProCombineSettings({
+                              ...flux2ProCombineSettings,
+                              seed: e.target.value
+                            })}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Use same seed for reproducible results
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error Display */}
+                    {flux2ProCombineError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{flux2ProCombineError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isFlux2ProCombineGenerating}
+                    >
+                      {isFlux2ProCombineGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Combining Images...
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Combine Images
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Result</CardTitle>
+                  <CardDescription>Your combined image will appear here</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {flux2ProCombineResultUrl ? (
+                    <div className="space-y-4">
+                      <div className="relative border rounded-lg overflow-hidden bg-muted/50">
+                        <img
+                          src={flux2ProCombineResultUrl}
+                          alt="Combined result"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      
+                      {flux2ProCombineGeneratedPrompt && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <p className="text-xs font-medium mb-1">Prompt Used:</p>
+                          <p className="text-xs text-muted-foreground">
+                            {flux2ProCombineGeneratedPrompt}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const link = document.createElement('a')
+                            link.href = flux2ProCombineResultUrl
+                            link.download = `flux-2-pro-combine-${Date.now()}.jpg`
+                            link.click()
+                          }}
+                          className="flex-1"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setFlux2ProCombineResultUrl("")
+                            setFlux2ProCombineGeneratedPrompt("")
+                          }}
+                          className="flex-1"
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <ImageIcon className="h-12 w-12 mb-2" />
+                      <p className="text-sm">No combined image yet</p>
+                      <p className="text-xs mt-1">Upload 2 images to combine</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Info Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Edit className="h-5 w-5" />
+                  Flux 2 Pro Combine Features
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Dual Image Combining</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Exactly 2 images required</li>
+                      <li>• First image: max 4 MP (2048x2048)</li>
+                      <li>• Second image: max 1 MP (1024x1024)</li>
+                      <li>• Use @image1 and @image2 in prompts</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Input Options</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Upload local files</li>
+                      <li>• Paste image URLs</li>
+                      <li>• Multiple format support</li>
+                      <li>• Automatic resizing</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Size Presets</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Auto (recommended)</li>
+                      <li>• Square HD, Square</li>
+                      <li>• Portrait 4:3, 16:9</li>
+                      <li>• Landscape 4:3, 16:9</li>
+                      <li>• Custom dimensions (512-2048px)</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Advanced Controls</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>• Safety tolerance: 1-5</li>
+                      <li>• Format: JPEG or PNG</li>
+                      <li>• Safety checker toggle</li>
                       <li>• Reproducible with seed</li>
                     </ul>
                   </div>
