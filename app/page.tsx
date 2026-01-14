@@ -146,7 +146,7 @@ export default function ImageEditor() {
   const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
 
   // Flux 2 Pro Edit Apply States (4 references + 1 user image with hardcoded prompt)
-  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose.")
+  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose. Do not add subject from @image2 to @image1.")
   const [flux2ProApplyUserImage, setFlux2ProApplyUserImage] = useState<File | null>(null)
   const [flux2ProApplyImageUrl, setFlux2ProApplyImageUrl] = useState("")
   const [flux2ProApplyBase64Image, setFlux2ProApplyBase64Image] = useState("")

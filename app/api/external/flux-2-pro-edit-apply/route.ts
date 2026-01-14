@@ -57,7 +57,7 @@ const STYLE_REFERENCE_IMAGES = [
 ].map(filename => `/tectonicaai-reference-images/${filename}`)
 
 // Default prompt (can be customized)
-const DEFAULT_PROMPT = "Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose."
+const DEFAULT_PROMPT = "Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose. Do not add subject from @image2 to @image1."
 
 /**
  * POST /api/external/flux-2-pro-edit-apply
