@@ -7,9 +7,9 @@ import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs/promises'
 
-// Configuration: TectonicaAI style reference
-const STYLE_REFERENCE_IMAGE = 'TCTAIFront11.png'
-const STYLE_REFERENCE_PROMPT_SUFFIX = 'Combine the subject from @image1 and @image2 with the artistic style and atmosphere of @image3. Do not modify the subject pose.'
+// Configuration: TectonicaAI style reference (always added as @image3)
+const STYLE_REFERENCE_IMAGE = 'TCT-AI-Landmark-3.png'
+const STYLE_REFERENCE_PROMPT_SUFFIX = '. Use the artistic style, atmosphere and color palette of @image3 but don\'t combine any element of it.'
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
@@ -60,11 +60,11 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  * POST /api/external/flux-2-pro-edit-combine
  * 
  * External API endpoint for FLUX.2 [pro] image combining.
- * Combines 2 images using AI with advanced editing capabilities.
+ * Combines 2 user images + 1 automatic style reference using AI with advanced editing capabilities.
  * 
  * Features:
- * - Dual image combining: Exactly 2 input images (4 MP + 1 MP)
- * - Image referencing: Use @image1, @image2 syntax in prompts
+ * - Dual image combining: Exactly 2 input images (4 MP + 1 MP) + 1 style reference (@image3)
+ * - Image referencing: Use @image1, @image2 syntax in prompts (@image3 is auto-added style reference)
  * - JSON structured prompts: Advanced control over scene, subjects, camera
  * - HEX color control: Precise color matching
  * - Custom and preset sizes: Full flexibility
@@ -103,7 +103,9 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  *   "seed": 12345,
  *   "model": "fal-ai/flux-2-pro/edit",
  *   "provider": "fal.ai",
- *   "inputImages": 2
+ *   "inputImages": 3,
+ *   "userImages": 2,
+ *   "styleReference": "TCT-AI-Landmark-3.png"
  * }
  */
 export async function POST(request: NextRequest) {
@@ -132,7 +134,6 @@ export async function POST(request: NextRequest) {
     let orgType: string
     let settings: any = {}
     let useCanonicalPrompt = false
-    let useStyleReference = false
     let canonicalConfig: CanonicalPromptConfig | null = null
     let imageFiles: File[] = []
     let imageUrls: string[] = []
@@ -148,7 +149,6 @@ export async function POST(request: NextRequest) {
       orgType = jsonBody.orgType || "general"
       settings = jsonBody.settings || {}
       useCanonicalPrompt = jsonBody.useCanonicalPrompt === true || jsonBody.useCanonicalPrompt === "true"
-      useStyleReference = jsonBody.useStyleReference === true || jsonBody.useStyleReference === "true"
       
       if (jsonBody.canonicalConfig) {
         canonicalConfig = jsonBody.canonicalConfig
@@ -194,7 +194,6 @@ export async function POST(request: NextRequest) {
 
         // Canonical Prompt parameters
         useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
-        useStyleReference = formData.get("useStyleReference") === "true"
         const canonicalConfigStr = formData.get("canonicalConfig") as string
         if (canonicalConfigStr) {
           try {
@@ -570,13 +569,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`[External Flux 2 Pro Combine] Total images ready: ${allImageUrls.length}`)
 
-    // Add TectonicaAI style reference image if enabled
-    if (useStyleReference) {
-      console.log(`[External Flux 2 Pro Combine] Adding TectonicaAI style reference: ${STYLE_REFERENCE_IMAGE}`)
-      
-      try {
-        const publicPath = path.join(process.cwd(), 'public', 'tectonicaai-reference-images')
-        const fullPath = path.join(publicPath, STYLE_REFERENCE_IMAGE)
+    // Add TectonicaAI style reference image (always added as @image3)
+    console.log(`[External Flux 2 Pro Combine] Adding TectonicaAI style reference as @image3: ${STYLE_REFERENCE_IMAGE}`)
+    
+    try {
+      const publicPath = path.join(process.cwd(), 'public', 'tectonicaai-reference-images')
+      const fullPath = path.join(publicPath, STYLE_REFERENCE_IMAGE)
         
         // Read the reference image
         let imageBuffer = await fs.readFile(fullPath)
@@ -622,13 +620,15 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to PUT file: ${putResponse.status}`)
         }
         
-        console.log(`[External Flux 2 Pro Combine] ✅ Uploaded style reference: ${file_url}`)
-        allImageUrls.push(file_url)
-        
-      } catch (uploadError) {
-        console.error(`[External Flux 2 Pro Combine] Failed to upload style reference:`, uploadError)
-        // Continue without reference image if upload fails
-      }
+      console.log(`[External Flux 2 Pro Combine] ✅ Uploaded style reference (@image3): ${file_url}`)
+      allImageUrls.push(file_url)
+      
+    } catch (uploadError) {
+      console.error(`[External Flux 2 Pro Combine] Failed to upload style reference:`, uploadError)
+      return NextResponse.json({
+        error: "Failed to upload style reference image",
+        details: `Could not upload ${STYLE_REFERENCE_IMAGE}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
+      }, { status: 500 })
     }
 
     console.log(`[External Flux 2 Pro Combine] Final total images: ${allImageUrls.length}`)
@@ -636,10 +636,12 @@ export async function POST(request: NextRequest) {
     // Process canonical prompt if enabled
     let finalPrompt = prompt
     
-    // Add style reference suffix if enabled
-    if (useStyleReference && allImageUrls.length === 3) {
-      finalPrompt = prompt + ' ' + STYLE_REFERENCE_PROMPT_SUFFIX
-      console.log(`[External Flux 2 Pro Combine] Added style reference suffix to prompt`)
+    // Add style reference suffix (always, since @image3 is always added)
+    if (allImageUrls.length === 3) {
+      finalPrompt = prompt + STYLE_REFERENCE_PROMPT_SUFFIX
+      console.log(`[External Flux 2 Pro Combine] Added style reference suffix for @image3`)
+    } else {
+      console.warn(`[External Flux 2 Pro Combine] Warning: Expected 3 images but got ${allImageUrls.length}`)
     }
     
     if (useCanonicalPrompt && canonicalConfig) {
@@ -743,6 +745,8 @@ export async function POST(request: NextRequest) {
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
         inputImages: allImageUrls.length,
+        userImages: 2,
+        styleReference: STYLE_REFERENCE_IMAGE,
         settings: {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
