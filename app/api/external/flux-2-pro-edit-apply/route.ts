@@ -51,32 +51,56 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
     .toBuffer()
 }
 
-// Pre-configured reference images (1 style reference)
-const STYLE_REFERENCE_IMAGES = [
-  'TCTAIFront11.png',
-].map(filename => `/tectonicaai-reference-images/${filename}`)
+// Scene type configurations
+type SceneType = 'people' | 'landscape' | 'urban' | 'monument'
 
-// Default prompt (can be customized)
-const DEFAULT_PROMPT = "Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose. Do not add subject from @image2 to @image1."
+interface SceneConfig {
+  referenceImage: string
+  defaultPrompt: string
+}
+
+const SCENE_CONFIGS: Record<SceneType, SceneConfig> = {
+  people: {
+    referenceImage: 'TCT-AI-Individual-Hispanic-Female-Young.png',
+    defaultPrompt: "Combine the subject or subjects from @image1 with the artistic style and atmosphere of @image2. Do not modify the subjects pose and anatomical features. Do not add subjects from @image2 to @image1. Respect @image2 color scale."
+  },
+  landscape: {
+    referenceImage: 'TCT-AI-Landmark-2.png',
+    defaultPrompt: "Combine the natural landscape scene from @image1 with the artistic style, color palette, lighting mood, and surface textures of @image2. Preserve the exact composition, viewpoint, horizon line, scale, and all geographical features from @image1 (mountains, coastline, rivers, trees, clouds). Do not add, remove, or relocate any elements. Do not introduce animals, people, buildings, or objects from @image2. Keep all shapes and contours unchanged; apply only stylistic rendering (brushwork/material feel), atmosphere, and color grading. Respect @image2 color scale."
+  },
+  urban: {
+    referenceImage: 'TCT-AI-Landmark-3.png',
+    defaultPrompt: "Combine the urban cityscape from @image1 with the artistic style and atmosphere of @image2. Strictly preserve @image1's geometry, perspective lines, building silhouettes, street layout, signage placement, windows/doors proportions, and all object positions. Do not add or remove buildings, vehicles, people, street furniture, or text. Do not import any recognizable objects, landmarks, or patterns from @image2. Apply only stylistic transformation: color palette, lighting mood, material/texture rendering, and overall artistic treatment while keeping the scene structure identical. Respect @image2 color scale."
+  },
+  monument: {
+    referenceImage: 'TCT-AI-Landmark.png',
+    defaultPrompt: "Combine the monument and its surroundings from @image1 with the artistic style and atmosphere of @image2. Preserve the monument's exact architecture and proportions: silhouette, edges, carvings/reliefs placement, material boundaries, inscriptions, and all structural details. Keep the camera angle, framing, and perspective identical to @image1. Do not add or remove architectural elements, statues, people, flags, or decorative features. Do not bring any landmark features from @image2 into @image1. Apply only stylistic rendering (texture/brushwork), lighting mood, and color palette, without altering the monument's geometry. Respect @image2 color scale."
+  }
+}
+
+// Default scene type
+const DEFAULT_SCENE_TYPE: SceneType = 'people'
 
 /**
  * POST /api/external/flux-2-pro-edit-apply
  * 
- * External API endpoint for applying TectonicaAI style to user images.
- * This endpoint combines a user-provided image with 1 pre-loaded reference image.
+ * External API endpoint for applying TectonicaAI style to user images with scene-specific optimization.
+ * This endpoint combines a user-provided image with a scene-appropriate reference image and prompt.
  * 
  * Features:
- * - Auto-loaded style reference: 1 TectonicaAI image (TCTAIFront11.png)
+ * - Scene-based style transfer: 4 scene types (people, landscape, urban, monument)
+ * - Auto-selected reference image based on scene type
+ * - Scene-optimized prompts with optional custom additions
  * - Required user image: Must provide exactly 1 image (@image1)
- * - Reference image: Automatically loaded as @image2
- * - Editable prompt: Default "Combine the subject from @image1 with the artistic style and atmosphere of @image2" (can be customized)
+ * - Reference image: Automatically loaded as @image2 based on sceneType
  * - Custom and preset sizes: Full flexibility
  * - Safety controls: Configurable tolerance (1-5) and safety checker
  * - Multiple formats: JPEG or PNG output
  * - Reproducibility: Seed support
  * 
  * Body parameters (JSON):
- * - prompt (optional): Custom prompt (default: "Combine the subject from @image1 with the artistic style and atmosphere of @image2")
+ * - sceneType (optional): "people" | "landscape" | "urban" | "monument" (default: "people")
+ * - prompt (optional): Custom prompt to APPEND after the mandatory scene-based prompt
  * - imageUrl (optional): Single image URL from user
  * - base64Image (optional): Single Base64 image from user
  * - settings (optional): Object with generation settings
@@ -94,12 +118,15 @@ const DEFAULT_PROMPT = "Combine the subject from @image1 with the artistic style
  *     "width": 1024, 
  *     "height": 1024 
  *   }],
- *   "prompt": "Combine the subject from @image1 with the artistic style and atmosphere of @image2",
+ *   "sceneType": "people",
+ *   "prompt": "[full prompt with base + custom]",
+ *   "basePrompt": "[scene-specific base prompt]",
+ *   "customPrompt": "[custom addition or null]",
  *   "seed": 12345,
  *   "model": "fal-ai/flux-2-pro/edit",
  *   "provider": "fal.ai",
- *   "inputImages": 5,
- *   "styleReferences": 4,
+ *   "inputImages": 2,
+ *   "referenceImage": "TCT-AI-Individual-Hispanic-Female-Young.png",
  *   "userImages": 1
  * }
  */
@@ -125,14 +152,32 @@ export async function POST(request: NextRequest) {
     console.log("[Flux 2 Pro Edit Apply] Body parsed successfully")
     
     const { 
-      prompt = DEFAULT_PROMPT,
+      sceneType: rawSceneType,
+      prompt: customPrompt,
       imageUrl = null,
       base64Image = null,
       settings = {}
     } = body
 
+    // Normalize and validate sceneType
+    const sceneType: SceneType = (rawSceneType && typeof rawSceneType === 'string' && 
+                                   ['people', 'landscape', 'urban', 'monument'].includes(rawSceneType.toLowerCase())) 
+                                   ? rawSceneType.toLowerCase() as SceneType 
+                                   : DEFAULT_SCENE_TYPE
+    
+    // Get scene configuration
+    const sceneConfig = SCENE_CONFIGS[sceneType]
+    
+    // Build final prompt: mandatory scene prompt + optional custom prompt at the end
+    const finalPrompt = customPrompt && typeof customPrompt === 'string' && customPrompt.trim()
+                        ? `${sceneConfig.defaultPrompt} ${customPrompt.trim()}`
+                        : sceneConfig.defaultPrompt
+
     console.log("[Flux 2 Pro Edit Apply] Parameters:", {
-      prompt: prompt,
+      sceneType: sceneType,
+      basePrompt: sceneConfig.defaultPrompt.substring(0, 80) + '...',
+      hasCustomPrompt: !!customPrompt,
+      finalPromptLength: finalPrompt.length,
       hasImageUrl: !!imageUrl,
       hasBase64Image: !!base64Image,
       settings
@@ -339,9 +384,10 @@ export async function POST(request: NextRequest) {
     }
 
     // SECOND: Upload style reference image (this will be @image2)
-    console.log(`[Flux 2 Pro Edit Apply] Uploading style reference image (will be @image2)...`)
+    console.log(`[Flux 2 Pro Edit Apply] Uploading style reference image for scene type '${sceneType}' (will be @image2)...`)
     
-    const imagePath = STYLE_REFERENCE_IMAGES[0]
+    const referenceImageFilename = sceneConfig.referenceImage
+    const imagePath = `/tectonicaai-reference-images/${referenceImageFilename}`
     const fullPath = path.join(process.cwd(), 'public', imagePath)
     
     try {
@@ -406,7 +452,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare input for fal.ai
     const input: any = {
-      prompt: prompt.trim() || DEFAULT_PROMPT,
+      prompt: finalPrompt,
       image_urls: allImageUrls,
       safety_tolerance: safetyToleranceStr,
       enable_safety_checker: enableSafetyChecker,
@@ -478,12 +524,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         images: processedImages,
+        sceneType: sceneType,
         prompt: input.prompt,
+        basePrompt: sceneConfig.defaultPrompt,
+        customPrompt: customPrompt || null,
         seed: result.data.seed,
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
         inputImages: allImageUrls.length,
-        styleReferences: STYLE_REFERENCE_IMAGES.length,
+        referenceImage: referenceImageFilename,
         userImages: 1,
         settings: {
           image_size: input.image_size,
@@ -543,55 +592,74 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   return NextResponse.json({
-    name: "FLUX.2 [pro] Style Apply API",
-    description: "Apply TectonicaAI style to user images using 4 pre-loaded style references",
-    version: "1.0.0",
+    name: "FLUX.2 [pro] Scene-Based Style Apply API",
+    description: "Apply TectonicaAI style to user images with scene-specific reference images and prompts",
+    version: "2.0.0",
     endpoint: "/api/external/flux-2-pro-edit-apply",
     method: "POST",
     contentType: "application/json",
     
     features: [
-      "4 pre-loaded TectonicaAI style reference images",
+      "4 scene types with optimized reference images and prompts",
+      "Scene-specific style transfer (people, landscape, urban, monument)",
       "Required: 1 user image to apply style to",
-      "Total: 5 images (4 style refs + 1 user)",
-      "Editable prompt with default: 'Make @image5 in the style of the other images.'",
+      "Total: 2 images (1 style ref + 1 user)",
+      "Mandatory scene-based prompt with optional custom additions",
       "Custom and preset sizes",
       "Configurable safety tolerance (1-5)",
       "JPEG or PNG output",
       "Seed support for reproducibility"
     ],
     
-    styleReferences: {
-      count: 4,
-      location: "/public/tectonicaai-reference-images/",
-      files: [
-        "TCTAIFront01.png (index 0 = @image1)",
-        "TCTAIFront03.png (index 1 = @image2)",
-        "TCTAIFront11.png (index 2 = @image3)",
-        "TCTAIFront18.png (index 3 = @image4)"
-      ],
-      note: "User image is automatically placed at index 4 (@image5)"
+    sceneTypes: {
+      people: {
+        referenceImage: "TCT-AI-Individual-Hispanic-Female-Young.png",
+        description: "For portraits and images with people",
+        defaultPrompt: "Combine the subject or subjects from @image1 with the artistic style and atmosphere of @image2. Do not modify the subjects pose and anatomical features. Do not add subjects from @image2 to @image1."
+      },
+      landscape: {
+        referenceImage: "TCT-AI-Landmark-2.png",
+        description: "For natural landscapes and outdoor scenes",
+        defaultPrompt: "Combine the natural landscape scene from @image1 with the artistic style, color palette, lighting mood, and surface textures of @image2. Preserve exact composition, viewpoint, horizon line, scale, and all geographical features. Apply only stylistic rendering, atmosphere, and color grading."
+      },
+      urban: {
+        referenceImage: "TCT-AI-Landmark-3.png",
+        description: "For cityscapes and urban environments",
+        defaultPrompt: "Combine the urban cityscape from @image1 with the artistic style and atmosphere of @image2. Preserve geometry, perspective lines, building silhouettes, and street layout. Apply only stylistic transformation: color palette, lighting mood, and material rendering."
+      },
+      monument: {
+        referenceImage: "TCT-AI-Landmark.png",
+        description: "For monuments, statues, and architectural landmarks",
+        defaultPrompt: "Combine the monument and its surroundings from @image1 with the artistic style and atmosphere of @image2. Preserve exact architecture, proportions, and structural details. Apply only stylistic rendering, lighting mood, and color palette."
+      }
     },
     
-    defaultPrompt: "Make @image5 in the style of the other images.",
+    defaultSceneType: "people",
     
     parameters: {
+      sceneType: {
+        type: "string",
+        required: false,
+        options: ["people", "landscape", "urban", "monument"],
+        default: "people",
+        description: "Type of scene to apply style transfer for (determines reference image and base prompt)"
+      },
       prompt: {
         type: "string",
         required: false,
-        description: "Custom prompt for image generation (uses default if not provided)",
-        default: "Make @image5 in the style of the other images."
+        description: "Optional custom prompt to APPEND at the end of the mandatory scene-based prompt",
+        note: "Scene base prompt is always included. Custom prompt adds additional instructions."
       },
       imageUrl: {
         type: "string",
         required: "one of imageUrl or base64Image",
-        description: "User image URL (will be @image5)",
+        description: "User image URL (will be @image1)",
         alternative: "Can use base64Image instead"
       },
       base64Image: {
         type: "string",
         required: "one of imageUrl or base64Image",
-        description: "User Base64 image (will be @image5)",
+        description: "User Base64 image (will be @image1)",
         alternative: "Can use imageUrl instead"
       },
       settings: {
@@ -637,15 +705,18 @@ export async function GET() {
             height: 1024
           }
         ],
-        prompt: "Make @image5 in the style of the other images.",
+        sceneType: "people",
+        prompt: "[Full prompt including base + custom]",
+        basePrompt: "[Scene-specific base prompt]",
+        customPrompt: "[User's custom addition or null]",
         seed: 12345,
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
-        inputImages: 5,
-        styleReferences: 4,
+        inputImages: 2,
+        referenceImage: "TCT-AI-Individual-Hispanic-Female-Young.png",
         userImages: 1,
         settings: {},
-        timestamp: "2025-12-24T00:00:00.000Z"
+        timestamp: "2026-01-20T00:00:00.000Z"
       },
       error: {
         error: "Error description",
@@ -654,44 +725,54 @@ export async function GET() {
     },
     
     examples: {
-      withUrl: {
-        description: "Applying style to user image via URL (will be @image5)",
+      peopleSceneUrl: {
+        description: "Applying people style to portrait via URL",
         request: {
-          prompt: "Make @image5 in the style of the other images.",
-          imageUrl: "https://example.com/my-image.jpg",
+          sceneType: "people",
+          imageUrl: "https://example.com/portrait.jpg",
           settings: {
-            image_size: "square_hd",
+            image_size: "portrait_4_3",
             output_format: "jpeg"
           }
         }
       },
-      withBase64: {
-        description: "Applying style to user Base64 image (will be @image5)",
+      landscapeSceneBase64: {
+        description: "Applying landscape style to nature photo",
         request: {
-          prompt: "Transform @image5 to match @image1, @image2, @image3, and @image4 style",
+          sceneType: "landscape",
           base64Image: "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
           settings: {
-            image_size: { width: 1920, height: 1080 }
+            image_size: "landscape_16_9"
           }
         }
       },
-      withCustomPrompt: {
-        description: "Using custom prompt",
+      urbanWithCustomPrompt: {
+        description: "Urban scene with custom prompt addition",
         request: {
-          prompt: "Create a cohesive image set where @image5 adopts the visual language of the references",
-          imageUrl: "https://example.com/my-image.jpg"
+          sceneType: "urban",
+          prompt: "Add vibrant sunset lighting",
+          imageUrl: "https://example.com/cityscape.jpg"
+        },
+        note: "Final prompt will be: [urban base prompt] + 'Add vibrant sunset lighting'"
+      },
+      monumentDefault: {
+        description: "Monument style with default settings",
+        request: {
+          sceneType: "monument",
+          imageUrl: "https://example.com/statue.jpg"
         }
       }
     },
     
     notes: [
-      "Style reference images (indices 0-3) are always the same 4 TectonicaAI images",
-      "User image must be provided (becomes index 4 = @image5)",
-      "Prompt is editable with a sensible default",
-      "Use @image1 through @image5 to reference specific images in your prompt",
+      "Each sceneType uses a specific optimized reference image (@image2)",
+      "User image is always @image1, reference image is @image2",
+      "Base prompt from sceneType is MANDATORY and always included",
+      "Custom prompt (if provided) is APPENDED to the base prompt",
+      "Default sceneType is 'people' if not specified or invalid",
       "Processing time: 15-30 seconds depending on image size",
-      "Maximum total: 5 images (4 style refs + 1 user)",
-      "All images automatically resized to 0.8 MP for optimal performance"
+      "Total: 2 images (1 user + 1 scene-specific reference)",
+      "Images automatically resized to respect fal.ai megapixel limits"
     ]
   })
 }

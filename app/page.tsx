@@ -145,8 +145,9 @@ export default function ImageEditor() {
   const [showFlux2ProCreateAdvanced, setShowFlux2ProCreateAdvanced] = useState(false)
   const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
 
-  // Flux 2 Pro Edit Apply States (4 references + 1 user image with hardcoded prompt)
-  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("Combine the subject from @image1 with the artistic style and atmosphere of @image2. Do not modify the subject's pose. Do not add subject from @image2 to @image1.")
+  // Flux 2 Pro Edit Apply States (scene-based style transfer with sceneType)
+  const [flux2ProApplySceneType, setFlux2ProApplySceneType] = useState<'people' | 'landscape' | 'urban' | 'monument'>('people')
+  const [flux2ProApplyPrompt, setFlux2ProApplyPrompt] = useState("")
   const [flux2ProApplyUserImage, setFlux2ProApplyUserImage] = useState<File | null>(null)
   const [flux2ProApplyImageUrl, setFlux2ProApplyImageUrl] = useState("")
   const [flux2ProApplyBase64Image, setFlux2ProApplyBase64Image] = useState("")
@@ -2929,19 +2930,18 @@ export default function ImageEditor() {
       return
     }
 
-    // Validate prompt
-    if (!flux2ProApplyPrompt.trim()) {
-      setFlux2ProApplyError("Please provide a prompt")
-      return
-    }
-
     setIsFlux2ProApplyGenerating(true)
     setFlux2ProApplyError("")
 
     try {
       // Prepare JSON body
       const requestBody: any = {
-        prompt: flux2ProApplyPrompt
+        sceneType: flux2ProApplySceneType
+      }
+      
+      // Add custom prompt if provided (will be appended to scene-based prompt)
+      if (flux2ProApplyPrompt.trim()) {
+        requestBody.prompt = flux2ProApplyPrompt.trim()
       }
       
       // Add user image (required - only one of these will be set)
@@ -4478,10 +4478,38 @@ export default function ImageEditor() {
                     <Sparkles className="h-5 w-5" />
                     Apply TectonicaAI Style
                   </CardTitle>
-                  <CardDescription>Transform your image with 4 TectonicaAI style references (editable prompt)</CardDescription>
+                  <CardDescription>Scene-based style transfer with optimized reference images (people, landscape, urban, monument)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <form onSubmit={handleFlux2ProApplySubmit} className="space-y-4">
+                    {/* Scene Type Selector */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-2-pro-apply-scene-type">Scene Type</Label>
+                      <Select
+                        value={flux2ProApplySceneType}
+                        onValueChange={(value: 'people' | 'landscape' | 'urban' | 'monument') =>
+                          setFlux2ProApplySceneType(value)
+                        }
+                        disabled={isFlux2ProApplyGenerating}
+                      >
+                        <SelectTrigger id="flux-2-pro-apply-scene-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="people">👤 People (Portraits)</SelectItem>
+                          <SelectItem value="landscape">🏞️ Landscape (Nature)</SelectItem>
+                          <SelectItem value="urban">🏙️ Urban (Cityscape)</SelectItem>
+                          <SelectItem value="monument">🏛️ Monument (Architecture)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {flux2ProApplySceneType === 'people' && 'Optimized for portraits and images with people'}
+                        {flux2ProApplySceneType === 'landscape' && 'Optimized for natural landscapes and outdoor scenes'}
+                        {flux2ProApplySceneType === 'urban' && 'Optimized for cityscapes and urban environments'}
+                        {flux2ProApplySceneType === 'monument' && 'Optimized for monuments, statues, and architectural landmarks'}
+                      </p>
+                    </div>
+
                     {/* User Image Upload (REQUIRED) */}
                     <div className="space-y-2">
                       <Label htmlFor="flux-2-pro-apply-user-image" className="flex items-center gap-2">
@@ -4520,22 +4548,22 @@ export default function ImageEditor() {
                       </p>
                     </div>
 
-                    {/* Editable Prompt */}
+                    {/* Custom Prompt (Optional) */}
                     <div className="space-y-2">
                       <Label htmlFor="flux-2-pro-apply-prompt" className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        Prompt
+                        Custom Prompt (Optional)
                       </Label>
                       <Textarea
                         id="flux-2-pro-apply-prompt"
-                        placeholder="Describe how to use the reference images..."
+                        placeholder="Add custom instructions (will be appended to scene-based prompt)..."
                         value={flux2ProApplyPrompt}
                         onChange={(e) => setFlux2ProApplyPrompt(e.target.value)}
                         className="min-h-[80px]"
                         disabled={isFlux2ProApplyGenerating}
                       />
                       <p className="text-xs text-muted-foreground">
-                        @image1 (your image) + @image2 (TectonicaAI style reference)
+                        Scene-based prompt is mandatory. Your custom text will be added at the end.
                       </p>
                     </div>
 

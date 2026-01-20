@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Flux 2 Pro Edit Apply - Scene Types</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .scene-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .scene-type-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .scene-type-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .scene-type-option.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .scene-type-option input[type="radio"] {
+            display: none;
+        }
+
+        .scene-type-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .scene-type-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .scene-type-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f8f9fa;
+        }
+
+        .result.success {
+            border: 2px solid #4caf50;
+        }
+
+        .result.error {
+            border: 2px solid #f44336;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .result img {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .result-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .result-info-item {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .result-info-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 140px;
+        }
+
+        .result-info-value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .image-preview {
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Flux 2 Pro Edit Apply</h1>
+            <p>Scene-Based Style Transfer with TectonicaAI</p>
+        </div>
+
+        <div class="content">
+            <form id="testForm">
+                <!-- Scene Type Selection -->
+                <div class="form-group">
+                    <label>Scene Type</label>
+                    <div class="scene-type-grid">
+                        <label class="scene-type-option active">
+                            <input type="radio" name="sceneType" value="people" checked>
+                            <div class="scene-type-icon">👤</div>
+                            <div class="scene-type-title">People</div>
+                            <div class="scene-type-desc">Portraits & humans</div>
+                        </label>
+
+                        <label class="scene-type-option">
+                            <input type="radio" name="sceneType" value="landscape">
+                            <div class="scene-type-icon">🏞️</div>
+                            <div class="scene-type-title">Landscape</div>
+                            <div class="scene-type-desc">Nature & outdoor</div>
+                        </label>
+
+                        <label class="scene-type-option">
+                            <input type="radio" name="sceneType" value="urban">
+                            <div class="scene-type-icon">🏙️</div>
+                            <div class="scene-type-title">Urban</div>
+                            <div class="scene-type-desc">Cities & streets</div>
+                        </label>
+
+                        <label class="scene-type-option">
+                            <input type="radio" name="sceneType" value="monument">
+                            <div class="scene-type-icon">🏛️</div>
+                            <div class="scene-type-title">Monument</div>
+                            <div class="scene-type-desc">Architecture & landmarks</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="imageInput">Upload Image</label>
+                    <input type="file" id="imageInput" accept="image/*" required>
+                    <div class="help-text">This image will receive the TectonicaAI style</div>
+                    <div id="imagePreview" class="image-preview" style="display: none;"></div>
+                </div>
+
+                <!-- Custom Prompt (Optional) -->
+                <div class="form-group">
+                    <label for="customPrompt">Custom Prompt (Optional)</label>
+                    <textarea id="customPrompt" placeholder="Add custom instructions (will be appended to the scene-based prompt)..."></textarea>
+                    <div class="help-text">Scene-based prompt is mandatory. Your custom text will be added at the end.</div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn">
+                    🚀 Apply Style
+                </button>
+            </form>
+
+            <!-- Results -->
+            <div id="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Scene type selection
+        document.querySelectorAll('.scene-type-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.scene-type-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+
+        // Image preview
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            const sceneType = document.querySelector('input[name="sceneType"]:checked').value;
+            const customPrompt = document.getElementById('customPrompt').value.trim();
+            const imageFile = document.getElementById('imageInput').files[0];
+
+            if (!imageFile) {
+                alert('Please select an image');
+                return;
+            }
+
+            // Show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Processing...';
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Applying ${sceneType} style to your image...</p>
+                </div>
+            `;
+
+            try {
+                // Convert image to Base64
+                const base64Image = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(imageFile);
+                });
+
+                // Prepare request
+                const requestBody = {
+                    sceneType: sceneType,
+                    base64Image: base64Image,
+                    settings: {
+                        image_size: 'square_hd',
+                        output_format: 'jpeg'
+                    }
+                };
+
+                if (customPrompt) {
+                    requestBody.prompt = customPrompt;
+                }
+
+                // Send request
+                const response = await fetch('/api/external/flux-2-pro-edit-apply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.details || errorData.error || 'Request failed');
+                }
+
+                const result = await response.json();
+
+                // Show success
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Success!</h3>
+                    <img src="${result.images[0].url}" alt="Generated Image">
+                    <div class="result-info">
+                        <div class="result-info-item">
+                            <span class="result-info-label">Scene Type:</span>
+                            <span class="result-info-value">${result.sceneType}</span>
+                        </div>
+                        <div class="result-info-item">
+                            <span class="result-info-label">Reference Image:</span>
+                            <span class="result-info-value">${result.referenceImage}</span>
+                        </div>
+                        <div class="result-info-item">
+                            <span class="result-info-label">Custom Prompt:</span>
+                            <span class="result-info-value">${result.customPrompt || '(none)'}</span>
+                        </div>
+                        <div class="result-info-item">
+                            <span class="result-info-label">Image Size:</span>
+                            <span class="result-info-value">${result.images[0].width}x${result.images[0].height}</span>
+                        </div>
+                        <div class="result-info-item">
+                            <span class="result-info-label">Seed:</span>
+                            <span class="result-info-value">${result.seed}</span>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                // Show error
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Apply Style';
+            }
+        });
+    </script>
+</body>
+</html>
