@@ -19,16 +19,16 @@ import fs from 'fs/promises'
 //   description: 'Apply the artistic style, color palette, and visual treatment from @image1. Match the tone, mood, and aesthetic qualities. Preserve the composition and subject matter from both images.'
 // }
 
-// ACTIVE: Simplified @image1 style reference
-const TECTONICA_STYLE_PRESET = {
-  description: 'Use the artistic style and atmosphere of @image1 and respect @image1 color scale.'
-}
+// COMMENTED: Simplified @image1 style reference (backup)
+// const TECTONICA_STYLE_PRESET = {
+//   description: 'Use the style and atmosphere of @image1 and respect @image1 color scale.'
+// }
 
 /**
- * Builds a prompt with TectonicaAI style preset
+ * Builds a prompt (currently disabled - returns user prompt as-is)
  */
 function buildStyleTransferPrompt(userPrompt: string): string {
-  return `${userPrompt}. ${TECTONICA_STYLE_PRESET.description}`
+  return userPrompt
 }
 
 /**
