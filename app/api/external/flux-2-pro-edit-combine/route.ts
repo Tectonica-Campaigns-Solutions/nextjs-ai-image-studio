@@ -8,17 +8,27 @@ import path from 'path'
 import fs from 'fs/promises'
 
 // Configuration: TectonicaAI style preset (text-based, no reference image)
+// COMMENTED: Text-based style description approach (backup)
+// const TECTONICA_STYLE_PRESET = {
+//   description: 'Risograph printing style with duotone color scheme. Dominant saturated indigo/violet ink. Sunset gradient sky in pink, lilac and warm orange tones. Visible halftone dot screening texture, slight ink registration offset. Bold graphic illustration, simplified shapes, high contrast. Preserve the original composition and subject details.',
+//   avoid: 'photorealistic look, full-color palette, glossy HDR, heavy shadows, neon greens, realistic skin texture, extra objects, added text/logos, paper borders, poster frame'
+// }
+
+// COMMENTED: @image1 style reference approach (backup)
+// const TECTONICA_STYLE_PRESET = {
+//   description: 'Apply the artistic style, color palette, and visual treatment from @image1. Match the tone, mood, and aesthetic qualities. Preserve the composition and subject matter from both images.'
+// }
+
+// ACTIVE: Simplified @image1 style reference
 const TECTONICA_STYLE_PRESET = {
-  description: 'Duotone risograph/screen-print poster aesthetic. Dominant saturated indigo/violet ink with crisp white highlights. Sunset gradient sky in pastel pink, lilac and warm orange tones. Visible halftone screening (dot/diagonal-line texture), subtle paper grain, slight wavy distortion/moiré. Bold graphic illustration, simplified shapes, high contrast. Preserve the original composition and subject details.',
-  avoid: 'photorealistic look, full-color palette, glossy HDR, heavy shadows, neon greens, realistic skin texture, extra objects, added text/logos'
+  description: 'Use the artistic style and atmosphere of @image1 and respect @image1 color scale.'
 }
 
 /**
- * Builds a prompt with TectonicaAI style preset (text-based)
- * Avoids using reference images to prevent unwanted element mixing
+ * Builds a prompt with TectonicaAI style preset
  */
 function buildStyleTransferPrompt(userPrompt: string): string {
-  return `${userPrompt}. STYLE: ${TECTONICA_STYLE_PRESET.description}. AVOID: ${TECTONICA_STYLE_PRESET.avoid}`
+  return `${userPrompt}. ${TECTONICA_STYLE_PRESET.description}`
 }
 
 /**
