@@ -7,9 +7,19 @@ import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs/promises'
 
-// Configuration: TectonicaAI style reference (always added as @image3)
-const STYLE_REFERENCE_IMAGE = 'TCT-AI-Landmark-3.png'
-const STYLE_REFERENCE_PROMPT_SUFFIX = '. Use the artistic style, atmosphere and color palette of @image3 but don\'t combine any element of it.'
+// Configuration: TectonicaAI style preset (text-based, no reference image)
+const TECTONICA_STYLE_PRESET = {
+  description: 'Duotone risograph/screen-print poster aesthetic. Dominant saturated indigo/violet ink with crisp white highlights. Sunset gradient sky in pastel pink, lilac and warm orange tones. Visible halftone screening (dot/diagonal-line texture), subtle paper grain, slight wavy distortion/moiré. Bold graphic illustration, simplified shapes, high contrast. Preserve the original composition and subject details.',
+  avoid: 'photorealistic look, full-color palette, glossy HDR, heavy shadows, neon greens, realistic skin texture, extra objects, added text/logos'
+}
+
+/**
+ * Builds a prompt with TectonicaAI style preset (text-based)
+ * Avoids using reference images to prevent unwanted element mixing
+ */
+function buildStyleTransferPrompt(userPrompt: string): string {
+  return `${userPrompt}. STYLE: ${TECTONICA_STYLE_PRESET.description}. AVOID: ${TECTONICA_STYLE_PRESET.avoid}`
+}
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
@@ -569,80 +579,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`[External Flux 2 Pro Combine] Total images ready: ${allImageUrls.length}`)
 
-    // Add TectonicaAI style reference image (always added as @image3)
-    console.log(`[External Flux 2 Pro Combine] Adding TectonicaAI style reference as @image3: ${STYLE_REFERENCE_IMAGE}`)
-    
-    try {
-      const publicPath = path.join(process.cwd(), 'public', 'tectonicaai-reference-images')
-      const fullPath = path.join(publicPath, STYLE_REFERENCE_IMAGE)
-        
-        // Read the reference image
-        let imageBuffer = await fs.readFile(fullPath)
-        
-        // Resize reference image (max 1 MP)
-        imageBuffer = await resizeImageForFalAI(imageBuffer, false)
-        
-        // Upload as JPEG
-        const mimeType = 'image/jpeg'
-        const fileName = `style-ref-${STYLE_REFERENCE_IMAGE}.jpg`
-        
-        console.log(`[External Flux 2 Pro Combine] Uploading style reference: ${fileName} (${(imageBuffer.length / 1024).toFixed(1)} KB)`)
-        
-        const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Key ${falApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            content_type: mimeType,
-            file_name: fileName
-          })
-        })
-        
-        if (!initiateResponse.ok) {
-          throw new Error(`Failed to initiate upload: ${initiateResponse.status}`)
-        }
-        
-        const { upload_url, file_url } = await initiateResponse.json()
-        
-        const uint8Array = new Uint8Array(imageBuffer)
-        const putResponse = await fetch(upload_url, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': mimeType,
-            'Content-Length': imageBuffer.length.toString()
-          },
-          body: uint8Array
-        })
-        
-        if (!putResponse.ok) {
-          throw new Error(`Failed to PUT file: ${putResponse.status}`)
-        }
-        
-      console.log(`[External Flux 2 Pro Combine] ✅ Uploaded style reference (@image3): ${file_url}`)
-      allImageUrls.push(file_url)
-      
-    } catch (uploadError) {
-      console.error(`[External Flux 2 Pro Combine] Failed to upload style reference:`, uploadError)
-      return NextResponse.json({
-        error: "Failed to upload style reference image",
-        details: `Could not upload ${STYLE_REFERENCE_IMAGE}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
-      }, { status: 500 })
-    }
-
-    console.log(`[External Flux 2 Pro Combine] Final total images: ${allImageUrls.length}`)
-
-    // Process canonical prompt if enabled
-    let finalPrompt = prompt
-    
-    // Add style reference suffix (always, since @image3 is always added)
-    if (allImageUrls.length === 3) {
-      finalPrompt = prompt + STYLE_REFERENCE_PROMPT_SUFFIX
-      console.log(`[External Flux 2 Pro Combine] Added style reference suffix for @image3`)
-    } else {
-      console.warn(`[External Flux 2 Pro Combine] Warning: Expected 3 images but got ${allImageUrls.length}`)
-    }
+    // Build the final prompt with style preset (text-based, no reference image)
+    let finalPrompt = buildStyleTransferPrompt(prompt)
+    console.log(`[External Flux 2 Pro Combine] Built prompt with TectonicaAI style preset`)
     
     if (useCanonicalPrompt && canonicalConfig) {
       console.log("[External Flux 2 Pro Combine] Processing canonical prompt...")
@@ -746,7 +685,7 @@ export async function POST(request: NextRequest) {
         provider: "fal.ai",
         inputImages: allImageUrls.length,
         userImages: 2,
-        styleReference: STYLE_REFERENCE_IMAGE,
+        stylePreset: "TectonicaAI Risograph",
         settings: {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
