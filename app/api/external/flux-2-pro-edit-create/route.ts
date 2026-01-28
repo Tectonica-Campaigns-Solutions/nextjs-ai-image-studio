@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 import fs from 'fs/promises'
@@ -143,17 +142,23 @@ export async function POST(request: NextRequest) {
       imageUrl = null,
       base64Image = null,
       settings = {},
-      useCanonicalPrompt = false,
-      canonicalConfig = null,
-      orgType = "general"
+      orgType: rawOrgType,
+      clientInfo = {}
     } = body
+    
+    // Extract and validate orgType and clientInfo
+    const orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+    const client_id = clientInfo.client_id && clientInfo.client_id.trim() ? clientInfo.client_id : "Tectonica"
+    const user_email = clientInfo.user_email || ""
+    const user_id = clientInfo.user_id || ""
+    
+    console.log("[Flux 2 Pro Edit Create] Client info:", { orgType, client_id, user_email, user_id })
 
     console.log("[Flux 2 Pro Edit Create] Parameters:", {
       prompt: prompt?.substring(0, 100) + '...',
       hasImageUrl: !!imageUrl,
       hasBase64Image: !!base64Image,
       settings,
-      useCanonicalPrompt,
       orgType
     })
 
@@ -455,28 +460,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${REFERENCE_IMAGES.length} references + ${userImageCount} user)`)
 
-    // Process canonical prompt if enabled
+    // Use prompt as-is
     let finalPrompt = prompt
-    if (useCanonicalPrompt && canonicalConfig) {
-      console.log("[Flux 2 Pro Edit Create] Processing canonical prompt...")
-      
-      try {
-        const config = typeof canonicalConfig === 'string' 
-          ? JSON.parse(canonicalConfig) 
-          : canonicalConfig
-        
-        config.userInput = prompt
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(config)
-        finalPrompt = result.canonicalPrompt
-        
-        console.log("[Flux 2 Pro Edit Create] Generated canonical prompt")
-      } catch (canonicalError) {
-        console.error("[Flux 2 Pro Edit Create] Canonical prompt error:", canonicalError)
-        console.log("[Flux 2 Pro Edit Create] Using original prompt")
-      }
-    } else {
-      console.log("[Flux 2 Pro Edit Create] Canonical prompt disabled")
-    }
 
     // Prepare input for fal.ai
     const input: any = {
@@ -564,8 +549,7 @@ export async function POST(request: NextRequest) {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
           enable_safety_checker: enableSafetyChecker,
-          output_format: outputFormat,
-          use_canonical_prompt: useCanonicalPrompt
+          output_format: outputFormat
         },
         timestamp: new Date().toISOString()
       })

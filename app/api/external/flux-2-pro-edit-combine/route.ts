@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 import path from 'path'
@@ -153,8 +152,6 @@ export async function POST(request: NextRequest) {
     let prompt: string
     let orgType: string
     let settings: any = {}
-    let useCanonicalPrompt = false
-    let canonicalConfig: CanonicalPromptConfig | null = null
     let imageFiles: File[] = []
     let imageUrls: string[] = []
     let base64Images: string[] = []
@@ -166,13 +163,18 @@ export async function POST(request: NextRequest) {
       const jsonBody = await request.json()
       
       prompt = jsonBody.prompt
-      orgType = jsonBody.orgType || "general"
-      settings = jsonBody.settings || {}
-      useCanonicalPrompt = jsonBody.useCanonicalPrompt === true || jsonBody.useCanonicalPrompt === "true"
+      const rawOrgType = jsonBody.orgType
+      const clientInfo = jsonBody.clientInfo || {}
       
-      if (jsonBody.canonicalConfig) {
-        canonicalConfig = jsonBody.canonicalConfig
-      }
+      // Extract and validate orgType and clientInfo
+      orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+      const client_id = clientInfo.client_id && clientInfo.client_id.trim() ? clientInfo.client_id : "Tectonica"
+      const user_email = clientInfo.user_email || ""
+      const user_id = clientInfo.user_id || ""
+      
+      console.log("[External Flux 2 Pro Combine] Client info:", { orgType, client_id, user_email, user_id })
+      
+      settings = jsonBody.settings || {}
       
       // Extract image URLs and Base64 from JSON
       if (jsonBody.imageUrls && Array.isArray(jsonBody.imageUrls)) {
@@ -197,8 +199,25 @@ export async function POST(request: NextRequest) {
         prompt = formData.get("prompt") as string
         console.log("[External Flux 2 Pro Combine] Prompt extracted:", prompt?.substring(0, 50))
         
-        orgType = formData.get("orgType") as string || "general"
-        console.log("[External Flux 2 Pro Combine] orgType:", orgType)
+        const rawOrgType = formData.get("orgType") as string
+        const clientInfoStr = formData.get("clientInfo") as string
+        let clientInfo: any = {}
+        
+        if (clientInfoStr) {
+          try {
+            clientInfo = JSON.parse(clientInfoStr)
+          } catch (error) {
+            console.warn("[External Flux 2 Pro Combine] Failed to parse clientInfo:", error)
+          }
+        }
+        
+        // Extract and validate orgType and clientInfo
+        orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+        const client_id = clientInfo.client_id && clientInfo.client_id.trim() ? clientInfo.client_id : "Tectonica"
+        const user_email = clientInfo.user_email || ""
+        const user_id = clientInfo.user_id || ""
+        
+        console.log("[External Flux 2 Pro Combine] Client info:", { orgType, client_id, user_email, user_id })
       
         // Parse settings
         const settingsStr = formData.get("settings") as string
@@ -209,17 +228,6 @@ export async function POST(request: NextRequest) {
             console.log("[External Flux 2 Pro Combine] Settings parsed successfully")
           } catch (error) {
             console.warn("[External Flux 2 Pro Combine] Failed to parse settings:", error)
-          }
-        }
-
-        // Canonical Prompt parameters
-        useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
-        const canonicalConfigStr = formData.get("canonicalConfig") as string
-        if (canonicalConfigStr) {
-          try {
-            canonicalConfig = JSON.parse(canonicalConfigStr)
-          } catch (error) {
-            console.warn("[External Flux 2 Pro Combine] Failed to parse canonical config:", error)
           }
         }
         
@@ -260,7 +268,6 @@ export async function POST(request: NextRequest) {
       imageUrlsCount: imageUrls.length,
       base64ImagesCount: base64Images.length,
       settings,
-      useCanonicalPrompt,
       orgType
     })
 
@@ -592,27 +599,6 @@ export async function POST(request: NextRequest) {
     // Build the final prompt with style preset (text-based, no reference image)
     let finalPrompt = buildStyleTransferPrompt(prompt)
     console.log(`[External Flux 2 Pro Combine] Built prompt with TectonicaAI style preset`)
-    
-    if (useCanonicalPrompt && canonicalConfig) {
-      console.log("[External Flux 2 Pro Combine] Processing canonical prompt...")
-      
-      try {
-        const config = typeof canonicalConfig === 'string' 
-          ? JSON.parse(canonicalConfig) 
-          : canonicalConfig
-        
-        config.userInput = prompt
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(config)
-        finalPrompt = result.canonicalPrompt
-        
-        console.log("[External Flux 2 Pro Combine] Generated canonical prompt")
-      } catch (canonicalError) {
-        console.error("[External Flux 2 Pro Combine] Canonical prompt error:", canonicalError)
-        console.log("[External Flux 2 Pro Combine] Using original prompt")
-      }
-    } else {
-      console.log("[External Flux 2 Pro Combine] Canonical prompt disabled")
-    }
 
     // Prepare input for fal.ai
     const input: any = {
@@ -700,8 +686,7 @@ export async function POST(request: NextRequest) {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
           enable_safety_checker: enableSafetyChecker,
-          output_format: outputFormat,
-          use_canonical_prompt: useCanonicalPrompt
+          output_format: outputFormat
         },
         timestamp: new Date().toISOString()
       })

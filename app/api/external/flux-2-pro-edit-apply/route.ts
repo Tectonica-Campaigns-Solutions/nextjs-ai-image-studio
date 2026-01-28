@@ -55,26 +55,82 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
 type SceneType = 'people' | 'landscape' | 'urban' | 'monument'
 
 interface SceneConfig {
-  referenceImage: string
   defaultPrompt: string
 }
 
 const SCENE_CONFIGS: Record<SceneType, SceneConfig> = {
   people: {
-    referenceImage: 'TCT-AI-Individual-Hispanic-Female-Young.png',
     defaultPrompt: "Combine the subject or subjects from @image1 with the artistic style and atmosphere of @image2. Do not modify the subjects pose and anatomical features. Do not add subjects from @image2 to @image1. Respect @image2 color scale."
   },
   landscape: {
-    referenceImage: 'TCT-AI-Landmark-2.png',
     defaultPrompt: "Combine the natural landscape scene from @image1 with the artistic style, color palette, lighting mood, and surface textures of @image2. Preserve the exact composition, viewpoint, horizon line, scale, and all geographical features from @image1 (mountains, coastline, rivers, trees, clouds). Do not add, remove, or relocate any elements. Do not introduce animals, people, buildings, or objects from @image2. Keep all shapes and contours unchanged; apply only stylistic rendering (brushwork/material feel), atmosphere, and color grading. Respect @image2 color scale."
   },
   urban: {
-    referenceImage: 'TCT-AI-Landmark-3.png',
     defaultPrompt: "Combine the urban cityscape from @image1 with the artistic style and atmosphere of @image2. Strictly preserve @image1's geometry, perspective lines, building silhouettes, street layout, signage placement, windows/doors proportions, and all object positions. Do not add or remove buildings, vehicles, people, street furniture, or text. Do not import any recognizable objects, landmarks, or patterns from @image2. Apply only stylistic transformation: color palette, lighting mood, material/texture rendering, and overall artistic treatment while keeping the scene structure identical. Respect @image2 color scale."
   },
   monument: {
-    referenceImage: 'TCT-AI-Landmark.png',
     defaultPrompt: "Combine the monument and its surroundings from @image1 with the artistic style and atmosphere of @image2. Preserve the monument's exact architecture and proportions: silhouette, edges, carvings/reliefs placement, material boundaries, inscriptions, and all structural details. Keep the camera angle, framing, and perspective identical to @image1. Do not add or remove architectural elements, statues, people, flags, or decorative features. Do not bring any landmark features from @image2 into @image1. Apply only stylistic rendering (texture/brushwork), lighting mood, and color palette, without altering the monument's geometry. Respect @image2 color scale."
+  }
+}
+
+// Default Tectonica reference images (fallback)
+const TECTONICA_REFERENCE_IMAGES: Record<SceneType, string> = {
+  people: 'TCT-AI-Individual-Hispanic-Female-Young.png',
+  landscape: 'TCT-AI-Landmark-2.png',
+  urban: 'TCT-AI-Landmark-3.png',
+  monument: 'TCT-AI-Landmark.png'
+}
+
+/**
+ * Get reference image filename for a client and scene type.
+ * Implements hybrid approach with fallback:
+ * 1. Try to load client's config.json
+ * 2. Fall back to naming convention: {sceneType}.png or {sceneType}.jpg
+ * 3. Fall back to Tectonica's reference images
+ */
+async function getClientReferenceImage(
+  orgType: string, 
+  sceneType: SceneType
+): Promise<{ filename: string; folderName: string }> {
+  const folderName = `${orgType.toLowerCase()}-reference-images`
+  const folderPath = path.join(process.cwd(), 'public', folderName)
+  
+  // Step 1: Try to load config.json
+  try {
+    const configPath = path.join(folderPath, 'config.json')
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    
+    if (config[sceneType] && typeof config[sceneType] === 'string') {
+      console.log(`[Flux 2 Pro Edit Apply] Using config.json mapping: ${sceneType} -> ${config[sceneType]}`)
+      return { filename: config[sceneType], folderName }
+    }
+  } catch (error) {
+    // Config.json doesn't exist or is invalid, continue to next strategy
+    console.log(`[Flux 2 Pro Edit Apply] No config.json found for ${orgType}, trying naming convention...`)
+  }
+  
+  // Step 2: Try naming convention: {sceneType}.png or {sceneType}.jpg
+  const extensions = ['png', 'jpg', 'jpeg']
+  for (const ext of extensions) {
+    const conventionFilename = `${sceneType}.${ext}`
+    const conventionPath = path.join(folderPath, conventionFilename)
+    
+    try {
+      await fs.access(conventionPath)
+      console.log(`[Flux 2 Pro Edit Apply] Found by convention: ${conventionFilename}`)
+      return { filename: conventionFilename, folderName }
+    } catch {
+      // File doesn't exist, try next extension
+    }
+  }
+  
+  // Step 3: Fallback to Tectonica
+  console.log(`[Flux 2 Pro Edit Apply] No reference image found for ${orgType}, falling back to Tectonica`)
+  const tectonicaFilename = TECTONICA_REFERENCE_IMAGES[sceneType]
+  return { 
+    filename: tectonicaFilename, 
+    folderName: 'tectonicaai-reference-images' 
   }
 }
 
@@ -156,8 +212,18 @@ export async function POST(request: NextRequest) {
       prompt: customPrompt,
       imageUrl = null,
       base64Image = null,
-      settings = {}
+      settings = {},
+      orgType: rawOrgType,
+      clientInfo = {}
     } = body
+    
+    // Extract and validate orgType and clientInfo
+    const orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+    const client_id = clientInfo.client_id && clientInfo.client_id.trim() ? clientInfo.client_id : "Tectonica"
+    const user_email = clientInfo.user_email || ""
+    const user_id = clientInfo.user_id || ""
+    
+    console.log("[Flux 2 Pro Edit Apply] Client info:", { orgType, client_id, user_email, user_id })
 
     // Normalize and validate sceneType
     const sceneType: SceneType = (rawSceneType && typeof rawSceneType === 'string' && 
@@ -386,9 +452,12 @@ export async function POST(request: NextRequest) {
     // SECOND: Upload style reference image (this will be @image2)
     console.log(`[Flux 2 Pro Edit Apply] Uploading style reference image for scene type '${sceneType}' (will be @image2)...`)
     
-    const referenceImageFilename = sceneConfig.referenceImage
-    const imagePath = `/tectonicaai-reference-images/${referenceImageFilename}`
+    // Get reference image using hybrid approach (config.json -> convention -> fallback)
+    const { filename: referenceImageFilename, folderName } = await getClientReferenceImage(orgType, sceneType)
+    const imagePath = `/${folderName}/${referenceImageFilename}`
     const fullPath = path.join(process.cwd(), 'public', imagePath)
+    
+    console.log(`[Flux 2 Pro Edit Apply] Using reference: ${folderName}/${referenceImageFilename}`)
     
     try {
       console.log(`[Flux 2 Pro Edit Apply] Reading style reference: ${fullPath}`)
