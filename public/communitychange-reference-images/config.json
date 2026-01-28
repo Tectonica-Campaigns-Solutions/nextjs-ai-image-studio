@@ -2,5 +2,8 @@
   "people": "web-assets-11.png",
   "landscape": "TCT-AI-Landmark-2.png",
   "urban": "TCT-AI-Landmark-3.png",
-  "monument": "TCT-AI-Landmark.png"
+  "monument": "TCT-AI-Landmark.png",
+  "create": [
+    "web-assets-11.png"
+  ]
 }

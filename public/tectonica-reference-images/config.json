@@ -2,5 +2,15 @@
   "people": "TCT-AI-Individual-Hispanic-Female-Young.png",
   "landscape": "TCT-AI-Landmark-2.png",
   "urban": "TCT-AI-Landmark-3.png",
-  "monument": "TCT-AI-Landmark.png"
+  "monument": "TCT-AI-Landmark.png",
+  "create": [
+    "TCTAIFront01.png",
+    "TCTAIFront02.png",
+    "TCTAIFront03.png",
+    "TCTAIFront06.png",
+    "TCTAIFront09.png",
+    "TCTAIFront11.png",
+    "TCTAIFront15.png",
+    "TCTAIFront18.png"
+  ]
 }

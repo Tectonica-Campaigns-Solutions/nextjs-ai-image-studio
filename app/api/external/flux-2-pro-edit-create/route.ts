@@ -53,8 +53,8 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
     .toBuffer()
 }
 
-// Pre-configured reference images from public/tectonicaai-reference-images/
-const REFERENCE_IMAGES = [
+// Fallback reference images (used if no config.json found)
+const FALLBACK_REFERENCE_IMAGES = [
   'TCTAIFront01.png',
   'TCTAIFront02.png',
   'TCTAIFront03.png',
@@ -63,16 +63,51 @@ const REFERENCE_IMAGES = [
   'TCTAIFront11.png',
   'TCTAIFront15.png',
   'TCTAIFront18.png'
-].map(filename => `/tectonicaai-reference-images/${filename}`)
+]
+
+/**
+ * Get reference images for a client from config.json
+ * Implements hybrid approach with fallback:
+ * 1. Try to load client's config.json and read "create" array
+ * 2. Fall back to naming convention: look for numbered files
+ * 3. Fall back to Tectonica's reference images
+ */
+async function getClientReferenceImages(orgType: string): Promise<{ filenames: string[]; folderName: string }> {
+  const folderName = `${orgType.toLowerCase()}-reference-images`
+  const folderPath = path.join(process.cwd(), 'public', folderName)
+  
+  // Step 1: Try to load config.json
+  try {
+    const configPath = path.join(folderPath, 'config.json')
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    
+    if (config.create && Array.isArray(config.create) && config.create.length > 0) {
+      console.log(`[Flux 2 Pro Edit Create] Using config.json: ${config.create.length} images from ${folderName}`)
+      return { filenames: config.create, folderName }
+    }
+  } catch (error) {
+    // Config.json doesn't exist or doesn't have "create" array
+    console.log(`[Flux 2 Pro Edit Create] No config.json or "create" array found for ${orgType}, falling back...`)
+  }
+  
+  // Step 2: Fallback to Tectonica
+  console.log(`[Flux 2 Pro Edit Create] Using fallback Tectonica reference images`)
+  return { 
+    filenames: FALLBACK_REFERENCE_IMAGES, 
+    folderName: 'tectonica-reference-images' 
+  }
+}
 
 /**
  * POST /api/external/flux-2-pro-edit-create
  * 
- * External API endpoint for FLUX.2 [pro] image creation with 8 pre-loaded reference images.
- * This endpoint automatically includes 8 reference images from the TectonicaAI collection.
+ * External API endpoint for FLUX.2 [pro] image creation with organization-specific reference images.
+ * This endpoint automatically loads reference images based on the organization's config.json.
  * 
  * Features:
- * - Auto-loaded references: 8 TectonicaAI reference images always included
+ * - Organization-specific references: Loads images from {orgType}-reference-images/config.json
+ * - Fallback support: Uses Tectonica images if organization config not found
  * - Optional user image: Add 0-1 additional image from user
  * - Image referencing: Use @image1, @image2 syntax in prompts
  * - JSON structured prompts: Advanced control over scene, subjects, camera
@@ -87,6 +122,7 @@ const REFERENCE_IMAGES = [
  * - prompt (required): Text description for the creation
  * - imageUrl (optional): Single image URL from user
  * - base64Image (optional): Single Base64 image from user
+ * - orgType (optional): Organization identifier (default: "Tectonica")
  * - settings (optional): Object with generation settings
  *   - image_size: "auto" | "square_hd" | "square" | "portrait_4_3" | "portrait_16_9" | "landscape_4_3" | "landscape_16_9" | {width, height}
  *   - safety_tolerance: 1-5 (default: 2)
@@ -95,7 +131,7 @@ const REFERENCE_IMAGES = [
  *   - seed: number (optional)
  * - useCanonicalPrompt (optional): boolean
  * - canonicalConfig (optional): Canonical prompt configuration object
- * - orgType (optional): Organization type for moderation (default: general)
+ * - clientInfo (optional): Client information object
  * 
  * Response format:
  * {
@@ -255,17 +291,20 @@ export async function POST(request: NextRequest) {
       // Continue with generation if moderation fails to avoid blocking users
     }
 
+    // Get reference images for this organization
+    const { filenames: referenceImageFilenames, folderName } = await getClientReferenceImages(orgType)
+    
     // Upload reference images to fal.ai storage
-    console.log(`[Flux 2 Pro Edit Create] Uploading ${REFERENCE_IMAGES.length} reference images to fal.ai...`)
+    console.log(`[Flux 2 Pro Edit Create] Uploading ${referenceImageFilenames.length} reference images from ${folderName}...`)
     const allImageUrls: string[] = []
     
     // Read and upload each reference image
-    for (let i = 0; i < REFERENCE_IMAGES.length; i++) {
-      const imagePath = REFERENCE_IMAGES[i]
-      const fullPath = path.join(process.cwd(), 'public', imagePath)
+    for (let i = 0; i < referenceImageFilenames.length; i++) {
+      const filename = referenceImageFilenames[i]
+      const fullPath = path.join(process.cwd(), 'public', folderName, filename)
       
       try {
-        console.log(`[Flux 2 Pro Edit Create] Reading reference image ${i + 1}/${REFERENCE_IMAGES.length}: ${fullPath}`)
+        console.log(`[Flux 2 Pro Edit Create] Reading reference image ${i + 1}/${referenceImageFilenames.length}: ${filename}`)
         
         // Read the file
         let imageBuffer = await fs.readFile(fullPath)
@@ -458,7 +497,7 @@ export async function POST(request: NextRequest) {
       console.log(`[Flux 2 Pro Edit Create] No user image provided, using only reference images`)
     }
 
-    console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${REFERENCE_IMAGES.length} references + ${userImageCount} user)`)
+    console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${referenceImageFilenames.length} references + ${userImageCount} user)`)
 
     // Use prompt as-is
     let finalPrompt = prompt
@@ -492,7 +531,7 @@ export async function POST(request: NextRequest) {
     console.log("[Flux 2 Pro Edit Create] Calling fal.ai...")
     console.log("[Flux 2 Pro Edit Create] Input:", JSON.stringify({
       ...input,
-      image_urls: `[${allImageUrls.length} URLs: ${REFERENCE_IMAGES.length} references + ${userImageCount} user]`,
+      image_urls: `[${allImageUrls.length} URLs: ${referenceImageFilenames.length} references + ${userImageCount} user]`,
       prompt: input.prompt.substring(0, 100) + '...'
     }, null, 2))
 
@@ -543,7 +582,7 @@ export async function POST(request: NextRequest) {
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
         inputImages: allImageUrls.length,
-        referenceImages: REFERENCE_IMAGES.length,
+        referenceImages: referenceImageFilenames.length,
         userImages: userImageCount,
         settings: {
           image_size: input.image_size,
