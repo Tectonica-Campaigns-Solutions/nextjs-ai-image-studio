@@ -48,27 +48,9 @@ export default function Modal({
     setIsLoading(true);
 
     try {
-      const imageResponse = await fetch(imageUrl);
-      const blob = await imageResponse.blob();
-
-      const formData = new FormData();
-      formData.append("image", blob, "image.png");
-      formData.append("prompt", promptValue);
-      formData.append("useRag", "true");
-      formData.append("outputSize", imageSize);
-
-      const url =
-        process.env.NODE_ENV === "development"
-          ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/edit-image`
-          : `https://qwen-image-editor-production-49d4.up.railway.app//api/external/edit-image`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-      });
-      const responseValues = await response.json();
-
-      setResponseImage(responseValues.image);
+      // NOTE: /api/external/edit-image endpoint has been removed
+      // This functionality is no longer available
+      console.error("Edit image endpoint has been removed");
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);

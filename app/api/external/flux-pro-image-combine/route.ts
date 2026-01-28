@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 
 // Route segment config for App Router
 export const maxDuration = 300 // 5 minutes for long-running AI operations
@@ -110,20 +109,6 @@ export async function POST(request: NextRequest) {
       body.prompt = formData.get("prompt") as string
       body.useRAG = false // Disabled for simplicity
       body.useJSONEnhancement = formData.get("useJSONEnhancement") === "true" || false // Default false
-      body.useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true" // Default false
-      
-      // Parse canonical config if provided
-      const canonicalConfigStr = formData.get("canonicalConfig") as string
-      if (canonicalConfigStr) {
-        try {
-          body.canonicalConfig = JSON.parse(canonicalConfigStr)
-        } catch (error) {
-          console.warn("[External Flux Combine] Failed to parse canonical config:", error)
-          body.canonicalConfig = {}
-        }
-      } else {
-        body.canonicalConfig = {}
-      }
       
       // Parse JSON options if provided
       const jsonOptionsStr = formData.get("jsonOptions") as string
@@ -191,8 +176,6 @@ export async function POST(request: NextRequest) {
       // Set defaults for JSON requests
       body.useRAG = false // Disabled for simplicity  
       body.useJSONEnhancement = body.useJSONEnhancement !== undefined ? body.useJSONEnhancement : false // Default false
-      body.useCanonicalPrompt = body.useCanonicalPrompt !== undefined ? body.useCanonicalPrompt : false // Default false
-      body.canonicalConfig = body.canonicalConfig || {}
       body.jsonOptions = body.jsonOptions || {}
       
       // Extract Base64 images from JSON body
@@ -285,8 +268,6 @@ export async function POST(request: NextRequest) {
       prompt,
       useRAG = false, // RAG disabled for image combination
       useJSONEnhancement,
-      useCanonicalPrompt,
-      canonicalConfig,
       jsonOptions = {},
       settings = {}
     } = body
@@ -306,9 +287,7 @@ export async function POST(request: NextRequest) {
     console.log("  - Total images:", totalImages)
     console.log("  - Use RAG:", useRAG, "(disabled for combination)")
     console.log("  - Use JSON Enhancement:", useJSONEnhancement)
-    console.log("  - Use Canonical Prompt:", useCanonicalPrompt)
     console.log("  - JSON Options:", defaultJsonOptions)
-    console.log("  - Canonical Config:", canonicalConfig)
     console.log("  - Settings:", settings)
 
     // Basic content moderation
@@ -339,25 +318,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Process prompt using canonical or JSON enhancement
+    // Process prompt using JSON enhancement
     let finalPrompt = prompt
 
-    // Check if canonical prompt should be used
-    if (useCanonicalPrompt) {
-      // Use canonical prompt processor (same as internal endpoint)
-      console.log("[External Flux Combine] Using canonical prompt structure")
-      console.log("[External Flux Combine] Canonical config:", canonicalConfig)
-      
-      // Set user input from original prompt
-      const completeCanonicalConfig = { ...canonicalConfig, userInput: prompt }
-      
-      // Generate canonical prompt
-      const result = canonicalPromptProcessor.generateCanonicalPrompt(completeCanonicalConfig)
-      finalPrompt = result.canonicalPrompt
-      
-      console.log("[External Flux Combine] Generated canonical prompt:", finalPrompt)
-      console.log("[External Flux Combine] Processed user input:", result.processedUserInput)
-    } else if (useJSONEnhancement) {
+    // Check if JSON enhancement should be used
+    if (useJSONEnhancement) {
       // Apply JSON enhancement with enhancement_text (legacy method)
       let enhancementText = defaultJsonOptions.customText
       

@@ -1,8 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
-import { getSedreamEnhancementText } from "@/lib/json-enhancement"
 import {
   addDisclaimerToImage,
   preprocessImageForCombine,
@@ -105,7 +103,6 @@ export async function POST(request: NextRequest) {
     const prompt: string = body.prompt
     const orgType: string = body.orgType || "general"
     const useCanonicalPrompt = body.useCanonicalPrompt === true || body.useCanonicalPrompt === "true"
-    const canonicalConfig: CanonicalPromptConfig | undefined = body.canonicalConfig
     
     // Extract settings (support both body.settings.* and body.* for backward compatibility)
     const aspectRatio = body.settings?.aspect_ratio || body.aspect_ratio || "1:1"
@@ -401,33 +398,6 @@ export async function POST(request: NextRequest) {
 
     // Process canonical prompt if enabled
     let finalPrompt = prompt
-    let tempCanonicalConfig = canonicalConfig
-    if (useCanonicalPrompt) {
-      console.log("[External Seedream Combine] Processing canonical prompt...")
-      console.log("[External Seedream Combine] Original prompt:", prompt)
-      console.log("[External Seedream Combine] Canonical config:", JSON.stringify(tempCanonicalConfig, null, 2))
-      
-      // Set user input from original prompt
-      if (!tempCanonicalConfig) {
-        tempCanonicalConfig = {}
-      }
-      tempCanonicalConfig.userInput = prompt
-      
-      try {
-        // Generate canonical prompt
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(tempCanonicalConfig)
-        finalPrompt = result.canonicalPrompt
-        
-        console.log("[External Seedream Combine] Generated canonical prompt:", finalPrompt)
-        console.log("[External Seedream Combine] Processed user input:", result.processedUserInput)
-      } catch (canonicalError) {
-        console.error("[External Seedream Combine] Error processing canonical prompt:", canonicalError)
-        console.log("[External Seedream Combine] Falling back to original prompt")
-        // Fall back to original prompt if canonical processing fails
-      }
-    } else {
-      console.log("[External Seedream Combine] Canonical prompt disabled, using original prompt")
-    }
 
     console.log("[External Seedream Combine] All image URLs ready:", allImageUrls)
     console.log("[External Seedream Combine] Starting enhanced pipeline: seedream → combine")
@@ -480,7 +450,7 @@ export async function POST(request: NextRequest) {
       
       try {
         // Get sedream enhancement text from configuration
-        sedreamPrompt = await getSedreamEnhancementText() || ""
+        sedreamPrompt = ""
       
       if (!sedreamPrompt) {
         console.error("[External Seedream Combine] No sedream_enhancement_text configured")

@@ -1,8 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
-import { getSedreamEnhancementText } from "@/lib/json-enhancement"
 import {
   addDisclaimerToImage,
   preprocessImageForCombine,
@@ -65,7 +63,6 @@ export async function POST(request: NextRequest) {
     let orgType: string
     let settings: any = {}
     let useCanonicalPrompt = false
-    let canonicalConfig: CanonicalPromptConfig | undefined
     let imageFiles: File[] = []
     let imageUrls: string[] = []
     let base64Images: string[] = []
@@ -80,10 +77,6 @@ export async function POST(request: NextRequest) {
       orgType = jsonBody.orgType || "general"
       settings = jsonBody.settings || {}
       useCanonicalPrompt = jsonBody.useCanonicalPrompt === true || jsonBody.useCanonicalPrompt === "true"
-      
-      if (jsonBody.canonicalConfig) {
-        canonicalConfig = jsonBody.canonicalConfig
-      }
       
       // Extract image URLs and Base64 from JSON
       if (jsonBody.imageUrls && Array.isArray(jsonBody.imageUrls)) {
@@ -120,17 +113,6 @@ export async function POST(request: NextRequest) {
           console.warn("[SEEDREAM-COMBINE] Failed to parse settings:", error)
         }
       }
-
-      // Canonical Prompt parameters
-      useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
-      const canonicalConfigStr = formData.get("canonicalConfig") as string
-      if (canonicalConfigStr) {
-        try {
-          canonicalConfig = JSON.parse(canonicalConfigStr)
-        } catch (error) {
-          console.warn("[SEEDREAM-COMBINE] Failed to parse canonical config:", error)
-        }
-      }
       
       // Get image files (image0, image1, etc.)
       for (const [key, value] of formData.entries()) {
@@ -153,10 +135,6 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    
-    console.log("[SEEDREAM-COMBINE] Canonical prompt parameters:")
-    console.log("  - useCanonicalPrompt:", useCanonicalPrompt)
-    console.log("  - canonicalConfig:", JSON.stringify(canonicalConfig, null, 2))
     
     // Extract fal.ai specific settings
     const aspectRatio = settings.aspect_ratio || "1:1"
@@ -453,34 +431,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Process canonical prompt if enabled
     let finalPrompt = prompt
-    if (useCanonicalPrompt) {
-      console.log("[SEEDREAM-COMBINE] Processing canonical prompt...")
-      console.log("[SEEDREAM-COMBINE] Original prompt:", prompt)
-      console.log("[SEEDREAM-COMBINE] Canonical config:", JSON.stringify(canonicalConfig, null, 2))
-      
-      // Set user input from original prompt
-      if (!canonicalConfig) {
-        canonicalConfig = {}
-      }
-      canonicalConfig.userInput = prompt
-      
-      try {
-        // Generate canonical prompt
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(canonicalConfig)
-        finalPrompt = result.canonicalPrompt
-        
-        console.log("[SEEDREAM-COMBINE] Generated canonical prompt:", finalPrompt)
-        console.log("[SEEDREAM-COMBINE] Processed user input:", result.processedUserInput)
-      } catch (canonicalError) {
-        console.error("[SEEDREAM-COMBINE] Error processing canonical prompt:", canonicalError)
-        console.log("[SEEDREAM-COMBINE] Falling back to original prompt")
-        // Fall back to original prompt if canonical processing fails
-      }
-    } else {
-      console.log("[SEEDREAM-COMBINE] Canonical prompt disabled, using original prompt")
-    }
 
     console.log("[SEEDREAM-COMBINE] All image URLs ready:", allImageUrls)
     console.log("[SEEDREAM-COMBINE] Starting pipeline with processSecondImage:", processSecondImage)
@@ -513,7 +464,7 @@ export async function POST(request: NextRequest) {
       
       try {
         // Get sedream enhancement text from configuration
-        sedreamPrompt = await getSedreamEnhancementText() || ""
+        sedreamPrompt = ""
       
       if (!sedreamPrompt) {
         console.error("[SEEDREAM-COMBINE] No sedream_enhancement_text configured")

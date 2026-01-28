@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { canonicalPromptProcessor, type CanonicalPromptConfig } from "@/lib/canonical-prompt"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 
@@ -80,8 +79,6 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  *   - enable_safety_checker: boolean (default: true)
  *   - output_format: "jpeg" | "png" (default: "jpeg")
  *   - seed: number (optional, for reproducibility)
- * - useCanonicalPrompt (optional): boolean (enable canonical prompt processing)
- * - canonicalConfig (optional): JSON string with canonical prompt configuration
  * - orgType (optional): Organization type for moderation (default: general)
  * 
  * Response format:
@@ -110,8 +107,6 @@ export async function POST(request: NextRequest) {
     let prompt: string
     let orgType: string
     let settings: any = {}
-    let useCanonicalPrompt = false
-    let canonicalConfig: CanonicalPromptConfig | undefined
     let imageFiles: File[] = []
     let imageUrls: string[] = []
     let base64Images: string[] = []
@@ -125,11 +120,6 @@ export async function POST(request: NextRequest) {
       prompt = jsonBody.prompt
       orgType = jsonBody.orgType || "general"
       settings = jsonBody.settings || {}
-      useCanonicalPrompt = jsonBody.useCanonicalPrompt === true || jsonBody.useCanonicalPrompt === "true"
-      
-      if (jsonBody.canonicalConfig) {
-        canonicalConfig = jsonBody.canonicalConfig
-      }
       
       // Extract image URLs and Base64 from JSON
       if (jsonBody.imageUrls && Array.isArray(jsonBody.imageUrls)) {
@@ -166,17 +156,6 @@ export async function POST(request: NextRequest) {
           console.warn("[Flux 2 Pro Edit] Failed to parse settings:", error)
         }
       }
-
-      // Canonical Prompt parameters
-      useCanonicalPrompt = formData.get("useCanonicalPrompt") === "true"
-      const canonicalConfigStr = formData.get("canonicalConfig") as string
-      if (canonicalConfigStr) {
-        try {
-          canonicalConfig = JSON.parse(canonicalConfigStr)
-        } catch (error) {
-          console.warn("[Flux 2 Pro Edit] Failed to parse canonical config:", error)
-        }
-      }
       
       // Get image files (image0, image1, ..., image8)
       for (let i = 0; i < 9; i++) {
@@ -202,10 +181,6 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    
-    console.log("[Flux 2 Pro Edit] Canonical prompt parameters:")
-    console.log("  - useCanonicalPrompt:", useCanonicalPrompt)
-    console.log("  - canonicalConfig:", JSON.stringify(canonicalConfig, null, 2))
     
     // Extract settings
     const imageSize = settings.image_size || settings.imageSize || "auto"
@@ -511,33 +486,9 @@ export async function POST(request: NextRequest) {
     console.log(`[Flux 2 Pro Edit] Total images ready: ${allImageUrls.length}`)
     console.log("[Flux 2 Pro Edit] Image URLs:", allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
 
-    // Process canonical prompt if enabled
-    let finalPrompt = prompt
-    if (useCanonicalPrompt) {
-      console.log("[Flux 2 Pro Edit] Processing canonical prompt...")
-      console.log("[Flux 2 Pro Edit] Original prompt:", prompt)
-      
-      if (!canonicalConfig) {
-        canonicalConfig = {}
-      }
-      canonicalConfig.userInput = prompt
-      
-      try {
-        const result = canonicalPromptProcessor.generateCanonicalPrompt(canonicalConfig)
-        finalPrompt = result.canonicalPrompt
-        
-        console.log("[Flux 2 Pro Edit] Generated canonical prompt:", finalPrompt)
-      } catch (canonicalError) {
-        console.error("[Flux 2 Pro Edit] Error processing canonical prompt:", canonicalError)
-        console.log("[Flux 2 Pro Edit] Falling back to original prompt")
-      }
-    } else {
-      console.log("[Flux 2 Pro Edit] Canonical prompt disabled, using original prompt")
-    }
-
     // Prepare input for fal.ai Flux 2 Pro Edit
     const input: any = {
-      prompt: finalPrompt,
+      prompt: prompt,
       image_urls: allImageUrls,
       safety_tolerance: safetyToleranceStr,
       enable_safety_checker: enableSafetyChecker,
@@ -637,8 +588,7 @@ export async function POST(request: NextRequest) {
         success: true,
         images: [{ url: resultImageUrl, width: images[0]?.width, height: images[0]?.height }],
         originalImageUrl, // Original without disclaimer for reference
-        prompt: finalPrompt,
-        originalPrompt: prompt,
+        prompt: prompt,
         seed: result.data.seed,
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
@@ -647,8 +597,7 @@ export async function POST(request: NextRequest) {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
           enable_safety_checker: enableSafetyChecker,
-          output_format: outputFormat,
-          use_canonical_prompt: useCanonicalPrompt
+          output_format: outputFormat
         },
         timestamp: new Date().toISOString()
       })
