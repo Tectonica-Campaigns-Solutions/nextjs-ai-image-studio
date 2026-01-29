@@ -82,18 +82,20 @@ const TECTONICA_REFERENCE_IMAGES: Record<SceneType, string> = {
 }
 
 /**
- * Get reference image filename for a client and scene type.
+ * Get reference image filename and scene prompt for a client and scene type.
  * Implements hybrid approach with fallback:
- * 1. Try to load client's config.json
+ * 1. Try to load client's config.json (with prompts support)
  * 2. Fall back to naming convention: {sceneType}.png or {sceneType}.jpg
  * 3. Fall back to Tectonica's reference images
+ * 4. Prompts fallback to SCENE_CONFIGS if not in config.json
  */
-async function getClientReferenceImage(
+async function getClientSceneConfig(
   orgType: string, 
   sceneType: SceneType
-): Promise<{ filename: string; folderName: string }> {
+): Promise<{ filename: string; folderName: string; prompt: string }> {
   const folderName = `${orgType.toLowerCase()}-reference-images`
   const folderPath = path.join(process.cwd(), 'public', folderName)
+  let customPrompt: string | null = null
   
   // Step 1: Try to load config.json
   try {
@@ -101,9 +103,19 @@ async function getClientReferenceImage(
     const configContent = await fs.readFile(configPath, 'utf-8')
     const config = JSON.parse(configContent)
     
+    // Check for custom prompt in config.json
+    if (config.prompts && config.prompts[sceneType]) {
+      customPrompt = config.prompts[sceneType]
+      console.log(`[Flux 2 Pro Edit Apply] Using custom prompt from config.json for ${sceneType}`)
+    }
+    
     if (config[sceneType] && typeof config[sceneType] === 'string') {
       console.log(`[Flux 2 Pro Edit Apply] Using config.json mapping: ${sceneType} -> ${config[sceneType]}`)
-      return { filename: config[sceneType], folderName }
+      return { 
+        filename: config[sceneType], 
+        folderName,
+        prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
+      }
     }
   } catch (error) {
     // Config.json doesn't exist or is invalid, continue to next strategy
@@ -119,7 +131,11 @@ async function getClientReferenceImage(
     try {
       await fs.access(conventionPath)
       console.log(`[Flux 2 Pro Edit Apply] Found by convention: ${conventionFilename}`)
-      return { filename: conventionFilename, folderName }
+      return { 
+        filename: conventionFilename, 
+        folderName,
+        prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
+      }
     } catch {
       // File doesn't exist, try next extension
     }
@@ -130,7 +146,8 @@ async function getClientReferenceImage(
   const tectonicaFilename = TECTONICA_REFERENCE_IMAGES[sceneType]
   return { 
     filename: tectonicaFilename, 
-    folderName: 'tectonicaai-reference-images' 
+    folderName: 'tectonicaai-reference-images',
+    prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
   }
 }
 
@@ -231,17 +248,18 @@ export async function POST(request: NextRequest) {
                                    ? rawSceneType.toLowerCase() as SceneType 
                                    : DEFAULT_SCENE_TYPE
     
-    // Get scene configuration
-    const sceneConfig = SCENE_CONFIGS[sceneType]
+    // Get scene configuration (image and prompt) for this client
+    const sceneConfig = await getClientSceneConfig(orgType, sceneType)
     
-    // Build final prompt: mandatory scene prompt + optional custom prompt at the end
+    // Build final prompt: base scene prompt + optional custom prompt at the end
+    const basePrompt = sceneConfig.prompt
     const finalPrompt = customPrompt && typeof customPrompt === 'string' && customPrompt.trim()
-                        ? `${sceneConfig.defaultPrompt} ${customPrompt.trim()}`
-                        : sceneConfig.defaultPrompt
+                        ? `${basePrompt} ${customPrompt.trim()}`
+                        : basePrompt
 
     console.log("[Flux 2 Pro Edit Apply] Parameters:", {
       sceneType: sceneType,
-      basePrompt: sceneConfig.defaultPrompt.substring(0, 80) + '...',
+      basePrompt: basePrompt.substring(0, 80) + '...',
       hasCustomPrompt: !!customPrompt,
       finalPromptLength: finalPrompt.length,
       hasImageUrl: !!imageUrl,
@@ -452,8 +470,9 @@ export async function POST(request: NextRequest) {
     // SECOND: Upload style reference image (this will be @image2)
     console.log(`[Flux 2 Pro Edit Apply] Uploading style reference image for scene type '${sceneType}' (will be @image2)...`)
     
-    // Get reference image using hybrid approach (config.json -> convention -> fallback)
-    const { filename: referenceImageFilename, folderName } = await getClientReferenceImage(orgType, sceneType)
+    // Use the reference image from the scene config we already retrieved
+    const referenceImageFilename = sceneConfig.filename
+    const folderName = sceneConfig.folderName
     const imagePath = `/${folderName}/${referenceImageFilename}`
     const fullPath = path.join(process.cwd(), 'public', imagePath)
     
@@ -595,7 +614,7 @@ export async function POST(request: NextRequest) {
         images: processedImages,
         sceneType: sceneType,
         prompt: input.prompt,
-        basePrompt: sceneConfig.defaultPrompt,
+        basePrompt: basePrompt,
         customPrompt: customPrompt || null,
         seed: result.data.seed,
         model: "fal-ai/flux-2-pro/edit",
