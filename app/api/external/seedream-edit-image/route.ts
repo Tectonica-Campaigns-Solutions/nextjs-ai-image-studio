@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { getClientApiKey } from "@/lib/api-keys"
 import sharp from 'sharp'
 
 /**
@@ -54,22 +55,6 @@ export async function POST(request: NextRequest) {
       }, { status: 415 }) // 415 Unsupported Media Type
     }
     
-    // Check if Fal.ai API key is available
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      return NextResponse.json({ 
-        success: false,
-        error: "FAL_API_KEY not configured" 
-      }, { status: 500 })
-    }
-    
-    console.log("[External SeDream Edit] Fal API Key exists:", !!falApiKey)
-    
-    // Configure fal.ai client with API key
-    fal.config({
-      credentials: falApiKey,
-    })
-    
     // ============================================================================
     // JSON-ONLY PARSER: Accepts only Base64 images and URLs
     // ============================================================================
@@ -77,6 +62,17 @@ export async function POST(request: NextRequest) {
     
     // Support both direct parameters and nested settings object
     const settings = body.settings || {}
+    const orgType = body.orgType || 'general'
+    
+    // Get organization-specific API key
+    const falApiKey = getClientApiKey(orgType)
+    
+    console.log("[External SeDream Edit] Fal API Key exists:", !!falApiKey)
+    
+    // Configure fal.ai client with API key
+    fal.config({
+      credentials: falApiKey,
+    })
     
     const base64Image = body.base64Image || null
     const imageUrl = body.imageUrl || null

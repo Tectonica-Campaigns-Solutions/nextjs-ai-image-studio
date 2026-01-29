@@ -3,6 +3,7 @@ import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import sharp from 'sharp'
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { getClientApiKey } from '@/lib/api-keys'
 
 /**
  * POST /api/external/seedream-v4-edit
@@ -53,25 +54,7 @@ export async function POST(request: NextRequest) {
       }, { status: 415 }) // 415 Unsupported Media Type
     }
     
-    // Check if Fal.ai API key is available
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      return NextResponse.json({ 
-        success: false,
-        error: "FAL_API_KEY not configured" 
-      }, { status: 500 })
-    }
-    
-    console.log("[External SeDream v4] Fal API Key exists:", !!falApiKey)
-    
-    // Configure fal.ai client with API key
-    fal.config({
-      credentials: falApiKey,
-    })
-    
-    // ============================================================================
-    // JSON-ONLY PARSER: Accepts only Base64 images and URLs
-    // ============================================================================
+    // Parse JSON body first to get orgType
     const body = await request.json()
     
     const {
@@ -79,8 +62,35 @@ export async function POST(request: NextRequest) {
       imageUrl = null,
       aspect_ratio = 'original',
       custom_width,
-      custom_height
+      custom_height,
+      orgType: rawOrgType
     } = body
+    
+    // Extract and validate orgType
+    const orgType = rawOrgType && typeof rawOrgType === 'string' && rawOrgType.trim() 
+      ? rawOrgType.trim() 
+      : "Tectonica"
+    
+    // Get client-specific API key
+    let falApiKey: string
+    try {
+      falApiKey = getClientApiKey(orgType)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "API key not configured"
+      console.error(`[External SeDream v4] ${errorMsg}`)
+      return NextResponse.json({
+        success: false,
+        error: "API key configuration error",
+        details: errorMsg
+      }, { status: 500 })
+    }
+    
+    console.log(`[External SeDream v4] API key retrieved for organization: ${orgType}`)
+    
+    // Configure fal.ai client with API key
+    fal.config({
+      credentials: falApiKey,
+    })
     
     const aspectRatio = aspect_ratio
     const customWidth = custom_width ? parseInt(custom_width.toString()) : undefined

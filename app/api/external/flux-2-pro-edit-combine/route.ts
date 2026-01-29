@@ -5,6 +5,7 @@ import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs/promises'
+import { getClientApiKey } from '@/lib/api-keys'
 
 // Configuration: TectonicaAI style preset (text-based, no reference image)
 // COMMENTED: Text-based style description approach (backup)
@@ -131,18 +132,6 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[External Flux 2 Pro Combine] Request received")
     
-    // Check FAL_API_KEY
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      console.error("[External Flux 2 Pro Combine] FAL_API_KEY not configured")
-      return NextResponse.json({
-        error: "Service configuration error",
-        details: "FAL_API_KEY not configured"
-      }, { status: 500 })
-    }
-    
-    console.log("[External Flux 2 Pro Combine] FAL_API_KEY found")
-
     // Check Content-Type to determine if JSON or FormData
     const contentType = request.headers.get('content-type') || ''
     const isJSON = contentType.includes('application/json')
@@ -164,15 +153,9 @@ export async function POST(request: NextRequest) {
       
       prompt = jsonBody.prompt
       const rawOrgType = jsonBody.orgType
-      const clientInfo = jsonBody.clientInfo || {}
       
-      // Extract and validate orgType and clientInfo
+      // Extract and validate orgType
       orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
-      const client_id = clientInfo.client_id && clientInfo.client_id.trim() ? clientInfo.client_id : "Tectonica"
-      const user_email = clientInfo.user_email || ""
-      const user_id = clientInfo.user_id || ""
-      
-      console.log("[External Flux 2 Pro Combine] Client info:", { orgType, client_id, user_email, user_id })
       
       settings = jsonBody.settings || {}
       
@@ -261,6 +244,21 @@ export async function POST(request: NextRequest) {
         throw formDataError
       }
     }
+
+    // Get client-specific API key (after orgType is determined)
+    let falApiKey: string
+    try {
+      falApiKey = getClientApiKey(orgType)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "API key not configured"
+      console.error(`[External Flux 2 Pro Combine] ${errorMsg}`)
+      return NextResponse.json({
+        error: "API key configuration error",
+        details: errorMsg
+      }, { status: 500 })
+    }
+    
+    console.log(`[External Flux 2 Pro Combine] API key retrieved for organization: ${orgType}`)
 
     console.log("[External Flux 2 Pro Combine] Parameters:", {
       prompt: prompt?.substring(0, 100) + '...',

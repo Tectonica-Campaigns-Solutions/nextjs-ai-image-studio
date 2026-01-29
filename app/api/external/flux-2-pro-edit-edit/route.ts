@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { getClientApiKey } from "@/lib/api-keys"
 import sharp from 'sharp'
 
 /**
@@ -103,18 +104,6 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
 export async function POST(request: NextRequest) {
   try {
     console.log("[External Flux 2 Pro Edit] Request received")
-    
-    // Check FAL_API_KEY
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      console.error("[External Flux 2 Pro Edit] FAL_API_KEY not configured")
-      return NextResponse.json({
-        error: "Service configuration error",
-        details: "FAL_API_KEY not configured"
-      }, { status: 500 })
-    }
-    
-    console.log("[External Flux 2 Pro Edit] FAL_API_KEY found")
 
     // Check Content-Type to determine if JSON or FormData
     const contentType = request.headers.get('content-type') || ''
@@ -137,6 +126,7 @@ export async function POST(request: NextRequest) {
       
       prompt = jsonBody.prompt
       const rawOrgType = jsonBody.orgType
+      orgType = rawOrgType || 'general'
       const clientInfo = jsonBody.clientInfo || {}
       
       // Extract and validate orgType and clientInfo
@@ -342,6 +332,9 @@ export async function POST(request: NextRequest) {
       console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
       // Continue with generation if moderation fails to avoid blocking users
     }
+
+    // Get organization-specific API key
+    const falApiKey = getClientApiKey(orgType)
 
     // Process images - upload to fal.ai storage
     const allImageUrls: string[] = []
@@ -591,7 +584,7 @@ export async function POST(request: NextRequest) {
       input.seed = seed
     }
 
-    // Configure Fal.ai client
+    // Configure Fal.ai client (falApiKey already obtained after moderation)
     fal.config({
       credentials: falApiKey,
     })

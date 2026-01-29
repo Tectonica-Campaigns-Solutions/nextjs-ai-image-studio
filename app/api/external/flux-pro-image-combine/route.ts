@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
+import { getClientApiKey } from '@/lib/api-keys'
 
 // Route segment config for App Router
 export const maxDuration = 300 // 5 minutes for long-running AI operations
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
       
       // Extract basic parameters
       body.prompt = formData.get("prompt") as string
+      body.orgType = (formData.get("orgType") as string) || "general"
       body.useRAG = false // Disabled for simplicity
       body.useJSONEnhancement = formData.get("useJSONEnhancement") === "true" || false // Default false
       
@@ -174,6 +176,7 @@ export async function POST(request: NextRequest) {
       imageUrls = body.imageUrls || []
       
       // Set defaults for JSON requests
+      body.orgType = body.orgType || "general"
       body.useRAG = false // Disabled for simplicity  
       body.useJSONEnhancement = body.useJSONEnhancement !== undefined ? body.useJSONEnhancement : false // Default false
       body.jsonOptions = body.jsonOptions || {}
@@ -195,6 +198,23 @@ export async function POST(request: NextRequest) {
       // Store base64Images for later processing
       body.base64Images = base64Images
     }
+    
+    // Get client-specific API key (after orgType is determined)
+    const orgType = body.orgType || "general"
+    let falApiKey: string
+    try {
+      falApiKey = getClientApiKey(orgType)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "API key not configured"
+      console.error(`[External Flux Combine] ${errorMsg}`)
+      return NextResponse.json({
+        success: false,
+        error: "API key configuration error",
+        details: errorMsg
+      }, { status: 500 })
+    }
+    
+    console.log(`[External Flux Combine] API key retrieved for organization: ${orgType}`)
     
     // Validate required parameters
     if (!body.prompt || typeof body.prompt !== 'string' || !body.prompt.trim()) {
@@ -302,19 +322,6 @@ export async function POST(request: NextRequest) {
           category: moderationResult.category
         },
         { status: 400 }
-      )
-    }
-
-    // Check if Fal.ai API key is available
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Service configuration error",
-          details: "Image generation service not available"
-        },
-        { status: 500 }
       )
     }
 

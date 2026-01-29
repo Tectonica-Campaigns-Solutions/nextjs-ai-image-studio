@@ -3,6 +3,7 @@ import { fal } from "@fal-ai/client"
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
+import { getClientApiKey } from '@/lib/api-keys'
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
@@ -207,19 +208,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("[Flux 2 Pro Edit Apply] Request received")
     
-    // Check FAL_API_KEY
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      console.error("[Flux 2 Pro Edit Apply] FAL_API_KEY not configured")
-      return NextResponse.json({
-        error: "Service configuration error",
-        details: "FAL_API_KEY not configured"
-      }, { status: 500 })
-    }
-    
-    console.log("[Flux 2 Pro Edit Apply] FAL_API_KEY found")
-
-    // Parse JSON body
+    // Parse JSON body first to get orgType
     console.log("[Flux 2 Pro Edit Apply] Parsing request body...")
     const body = await request.json()
     console.log("[Flux 2 Pro Edit Apply] Body parsed successfully")
@@ -236,6 +225,21 @@ export async function POST(request: NextRequest) {
     
     // Extract and validate orgType and clientInfo
     const orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+    
+    // Get client-specific API key
+    let falApiKey: string
+    try {
+      falApiKey = getClientApiKey(orgType)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "API key not configured"
+      console.error(`[Flux 2 Pro Edit Apply] ${errorMsg}`)
+      return NextResponse.json({
+        error: "API key configuration error",
+        details: errorMsg
+      }, { status: 500 })
+    }
+    
+    console.log(`[Flux 2 Pro Edit Apply] API key retrieved for organization: ${orgType}`)
     const client_id = clientInfo.client_id && clientInfo.client_id.trim() ? clientInfo.client_id : "Tectonica"
     const user_email = clientInfo.user_email || ""
     const user_id = clientInfo.user_id || ""

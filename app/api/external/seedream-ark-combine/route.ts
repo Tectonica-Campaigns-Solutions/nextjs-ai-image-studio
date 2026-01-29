@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { getClientApiKey } from "@/lib/api-keys"
 import {
   addDisclaimerToImage,
   preprocessImageForCombine,
@@ -231,14 +232,8 @@ export async function POST(request: NextRequest) {
       console.warn("[MODERATION] Moderation check failed, proceeding with generation:", moderationError)
     }
 
-    // Check if Fal.ai API key is available
-    const falApiKey = process.env.FAL_API_KEY
-    if (!falApiKey) {
-      return NextResponse.json({ 
-        success: false,
-        error: "FAL_API_KEY not configured" 
-      }, { status: 500 })
-    }
+    // Get organization-specific API key
+    const falApiKey = getClientApiKey(orgType)
 
     // Configure Fal.ai client
     fal.config({
@@ -252,11 +247,7 @@ export async function POST(request: NextRequest) {
     if (base64Images.length > 0) {
       console.log(`[External Seedream Combine] Processing ${base64Images.length} Base64 images...`)
       
-      // Get FAL API key
-      const falApiKey = process.env.FAL_API_KEY
-      if (!falApiKey) {
-        throw new Error("FAL_API_KEY environment variable is not set")
-      }
+      // Note: falApiKey is already set from getClientApiKey(orgType) above
       
       for (let i = 0; i < base64Images.length; i++) {
         const base64Data = base64Images[i]
