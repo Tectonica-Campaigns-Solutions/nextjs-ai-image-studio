@@ -48,12 +48,12 @@ async function checkAdminRole(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Solo proteger rutas de páginas /admin/* (no APIs, no login, no accept-invitation, no auth callbacks)
+  // Solo proteger rutas de páginas /dashboard/* (no APIs, no login, no accept-invitation, no auth callbacks)
   if (
-    pathname.startsWith("/admin") &&
-    !pathname.startsWith("/admin/login") &&
-    !pathname.startsWith("/admin/accept-invitation") &&
-    !pathname.startsWith("/admin/auth/callback") &&
+    pathname.startsWith("/dashboard") &&
+    !pathname.startsWith("/dashboard/login") &&
+    !pathname.startsWith("/dashboard/accept-invitation") &&
+    !pathname.startsWith("/dashboard/auth/callback") &&
     !pathname.startsWith("/api")
   ) {
     let response = NextResponse.next({
@@ -92,7 +92,7 @@ export async function middleware(request: NextRequest) {
 
     if (userError || !user) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
+      url.pathname = "/dashboard/login";
       return NextResponse.redirect(url);
     }
 
@@ -100,7 +100,7 @@ export async function middleware(request: NextRequest) {
     const isAdmin = await checkAdminRole(user.id, request);
     if (!isAdmin) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
+      url.pathname = "/dashboard/login";
       url.searchParams.set("error", "admin_required");
       return NextResponse.redirect(url);
     }
