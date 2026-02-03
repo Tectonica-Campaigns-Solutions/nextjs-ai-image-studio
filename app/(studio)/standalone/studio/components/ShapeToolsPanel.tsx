@@ -124,8 +124,16 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
             min={0}
             max={20}
             step={1}
-            className="w-full"
             disabled={!isRectSelected}
+            className={cn(
+              "w-full",
+              // Parte inactiva
+              "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+              // Parte activa
+              "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+              // Esfera / handle
+              "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+            )}
           />
         </div>
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
@@ -146,7 +154,7 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
             onClick={() => setSnapEnabled(!snapEnabled)}
             disabled={!isRectSelected}
             className={cn(
-              "h-[32px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
+              "h-[32px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 text-white",
               snapEnabled && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
             )}
           >
@@ -166,8 +174,16 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
                 min={1}
                 max={20}
                 step={1}
-                className="w-full"
                 disabled={!isRectSelected}
+                className={cn(
+                  "w-full",
+                  // Parte inactiva
+                  "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+                  // Parte activa
+                  "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+                  // Esfera / handle
+                  "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+                )}
               />
             </div>
             <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">

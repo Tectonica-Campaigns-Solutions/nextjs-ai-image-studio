@@ -137,10 +137,10 @@ export function AssetGallery({
                           size="sm"
                           onClick={() => handleSetPrimary(asset.id)}
                           disabled={asset.is_primary}
-                          title={asset.is_primary ? "Ya es primary" : "Marcar como primary"}
+                          title={asset.is_primary ? "Already primary" : "Mark as Primary"}
                         >
                           <Star
-                            className={`h-4 w-4 ${asset.is_primary ? "fill-yellow-400 text-yellow-400" : ""
+                            className={`h-4 w-4 ${asset.is_primary ? "fill-yellow-400 text-yellow-400" : "fill-gray-400 text-gray-400"
                               }`}
                           />
                         </Button>

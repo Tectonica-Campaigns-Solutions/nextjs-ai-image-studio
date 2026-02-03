@@ -385,3 +385,14 @@ textarea:focus,
   border: 1px solid #d1d1d1 !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
+
+#sidebar [data-slot="card"] {
+  border: none !important;
+}
+
+#sidebar [data-slot="input"] {
+  border-radius: 10px;
+  border: 1px solid rgba(74, 74, 74, 0.50) !important;
+  background: #0D0D0D !important;
+  color: #FFF !important;
+}

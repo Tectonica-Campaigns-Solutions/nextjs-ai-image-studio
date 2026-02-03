@@ -213,6 +213,7 @@ export function ClientDetailClient({
                   id="is_active"
                   checked={isActive}
                   onCheckedChange={setIsActive}
+                  className="data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-gray-200"
                 />
               </div>
             </div>

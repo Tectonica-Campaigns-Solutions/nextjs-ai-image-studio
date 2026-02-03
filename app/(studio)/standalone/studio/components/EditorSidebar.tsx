@@ -57,8 +57,8 @@ export function EditorSidebar({
       >
         <AccordionItem value="text-tools" className="border-0">
           <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center">
+            <CardContent className="p-0 bg-[#191919]">
+              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-[15px]">
                     <div className="w-[35px] h-[35px] bg-[#C1C9FF] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
@@ -79,8 +79,8 @@ export function EditorSidebar({
 
         <AccordionItem value="logo-tools" className="border-0">
           <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center">
+            <CardContent className="p-0 bg-[#191919]">
+              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center bg-[#191919] [&>svg]:text-white">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-[15px]">
                     <div className="w-[35px] h-[35px] bg-[#FFCA9B] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
@@ -101,8 +101,8 @@ export function EditorSidebar({
 
         <AccordionItem value="qr-tools" className="border-0">
           <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center">
+            <CardContent className="p-0 bg-[#191919]">
+              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-[15px]">
                     <div className="w-[35px] h-[35px] bg-[#D5B5FF] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
@@ -123,8 +123,8 @@ export function EditorSidebar({
 
         <AccordionItem value="shape-tools" className="border-0">
           <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center">
+            <CardContent className="p-0 bg-[#191919]">
+              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-[15px]">
                     <div className="w-[35px] h-[35px] bg-[#9BFFCA] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">

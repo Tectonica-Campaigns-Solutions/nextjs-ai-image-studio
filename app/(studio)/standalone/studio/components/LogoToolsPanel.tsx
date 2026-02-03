@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { LogoAsset } from "../types/image-editor-types";
+import { cn } from "@/lib/utils";
 
 export interface LogoToolsPanelProps {
   logoStyle: string;
@@ -60,7 +61,11 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           >
             {availableVariants.map((variant) => (
               <div key={variant} className="flex items-center space-x-2">
-                <RadioGroupItem value={variant} id={`variant-${variant}`} />
+                <RadioGroupItem value={variant} id={`variant-${variant}`}
+                  // 
+                  className="bg-[#0D0D0D] border-[#2D2D2D] [&_svg]:fill-[#5C38F3]"
+                // 
+                />
                 <Label
                   htmlFor={`variant-${variant}`}
                   className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer"
@@ -147,6 +152,15 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           min={50}
           max={400}
           step={10}
+          className={cn(
+            "w-full",
+            // Parte inactiva
+            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+            // Parte activa
+            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+            // Esfera / handle
+            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+          )}
         />
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
           {logoSize}px
@@ -162,6 +176,15 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           min={10}
           max={100}
           step={5}
+          className={cn(
+            "w-full",
+            // Parte inactiva
+            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+            // Parte activa
+            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+            // Esfera / handle
+            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+          )}
         />
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
           {logoOpacity}%

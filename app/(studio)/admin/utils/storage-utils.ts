@@ -218,9 +218,9 @@ export async function deleteAsset(
  * No authentication required, build the URL directly
  */
 export function getPublicUrl(storagePath: string): string {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL_ADMIN_V2;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL_ADMIN_V2 is not set");
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set");
   }
   return `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${storagePath}`;
 }

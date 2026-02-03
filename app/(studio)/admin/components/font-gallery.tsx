@@ -141,7 +141,7 @@ export function FontGallery({
                   title={font.is_primary ? "Already primary" : "Mark as Primary"}
                 >
                   <Star
-                    className={`h-4 w-4 ${font.is_primary ? "fill-yellow-400 text-yellow-400" : ""
+                    className={`h-4 w-4 ${font.is_primary ? "fill-yellow-400 text-yellow-400" : "fill-gray-400 text-gray-400"
                       }`}
                   />
                 </Button>

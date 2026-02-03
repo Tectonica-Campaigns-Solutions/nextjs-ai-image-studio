@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Upload } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface QrToolsPanelProps {
   qrUrl: string;
@@ -90,6 +91,15 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           min={50}
           max={400}
           step={10}
+          className={cn(
+            "w-full",
+            // Parte inactiva
+            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+            // Parte activa
+            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+            // Esfera / handle
+            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+          )}
         />
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
           {qrSize}px
@@ -105,6 +115,15 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           min={10}
           max={100}
           step={5}
+          className={cn(
+            "w-full",
+            // Parte inactiva
+            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+            // Parte activa
+            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+            // Esfera / handle
+            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+          )}
         />
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
           {qrOpacity}%

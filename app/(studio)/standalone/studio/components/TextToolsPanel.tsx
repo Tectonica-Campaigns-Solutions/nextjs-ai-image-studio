@@ -162,8 +162,16 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
             min={12}
             max={72}
             step={1}
-            className="w-full"
             disabled={!selectedObject}
+            className={cn(
+              "w-full",
+              // Parte inactiva
+              "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+              // Parte activa
+              "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+              // Esfera / handle
+              "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+            )}
           />
         </div>
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
@@ -181,6 +189,15 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
           max={3.0}
           step={0.1}
           disabled={!selectedObject}
+          className={cn(
+            "w-full",
+            // Parte inactiva
+            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+            // Parte activa
+            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+            // Esfera / handle
+            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+          )}
         />
         <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
           <span>{lineHeight.toFixed(1)}</span>

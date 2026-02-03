@@ -64,7 +64,7 @@ export function ClientForm({
       return;
     }
 
-    // Validar formato de email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       setError("Email is not valid");
@@ -174,6 +174,7 @@ export function ClientForm({
             id="is_active"
             checked={isActive}
             onCheckedChange={setIsActive}
+            className="data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-gray-200"
           />
         </div>
 
