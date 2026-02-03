@@ -4,31 +4,45 @@
 @import 'tw-animate-css';
 
 :root {
-  --background: oklch(1 0 0); /* Blanco puro */
-  --foreground: oklch(0.09 0 0); /* Texto muy oscuro para máximo contraste */
-  --card: oklch(1 0 0); /* Cards con fondo blanco */
+  --background: oklch(1 0 0);
+  /* Blanco puro */
+  --foreground: oklch(0.09 0 0);
+  /* Texto muy oscuro para máximo contraste */
+  --card: oklch(1 0 0);
+  /* Cards con fondo blanco */
   --card-foreground: oklch(0.09 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.09 0 0);
-  --primary: oklch(0.12 0 0); /* Botones primarios muy oscuros */
-  --primary-foreground: oklch(1 0 0); /* Texto blanco en botones */
-  --secondary: oklch(0.92 0 0); /* Tabs y botones secundarios en gris más visible */
-  --secondary-foreground: oklch(0.15 0 0); /* Texto más contrastante */
-  --muted: oklch(0.94 0 0); /* Fondos sutiles pero más visibles */
-  --muted-foreground: oklch(0.35 0 0); /* Texto muted más visible */
-  --accent: oklch(0.91 0 0); /* Acentos más contrastantes */
+  --primary: oklch(0.12 0 0);
+  /* Botones primarios muy oscuros */
+  --primary-foreground: oklch(1 0 0);
+  /* Texto blanco en botones */
+  --secondary: oklch(0.92 0 0);
+  /* Tabs y botones secundarios en gris más visible */
+  --secondary-foreground: oklch(0.15 0 0);
+  /* Texto más contrastante */
+  --muted: oklch(0.94 0 0);
+  /* Fondos sutiles pero más visibles */
+  --muted-foreground: oklch(0.35 0 0);
+  /* Texto muted más visible */
+  --accent: oklch(0.91 0 0);
+  /* Acentos más contrastantes */
   --accent-foreground: oklch(0.12 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.84 0 0); /* Bordes mucho más visibles */
-  --input: oklch(1 0 0); /* Campos de input con fondo blanco puro */
-  --ring: oklch(0.4 0 0); /* Focus ring más visible */
+  --border: oklch(0.84 0 0);
+  /* Bordes mucho más visibles */
+  --input: oklch(1 0 0);
+  /* Campos de input con fondo blanco puro */
+  --ring: oklch(0.4 0 0);
+  /* Focus ring más visible */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.5rem; /* Bordes ligeramente menos redondeados */
+  --radius: 0.5rem;
+  /* Bordes ligeramente menos redondeados */
   --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.09 0 0);
   --sidebar-primary: oklch(0.12 0 0);
@@ -40,25 +54,38 @@
 }
 
 .dark {
-  --background: oklch(0.04 0 0); /* Fondo muy oscuro */
-  --foreground: oklch(0.96 0 0); /* Texto muy claro */
-  --card: oklch(0.07 0 0); /* Cards ligeramente más claros que el fondo */
+  --background: oklch(0.04 0 0);
+  /* Fondo muy oscuro */
+  --foreground: oklch(0.96 0 0);
+  /* Texto muy claro */
+  --card: oklch(0.07 0 0);
+  /* Cards ligeramente más claros que el fondo */
   --card-foreground: oklch(0.96 0 0);
   --popover: oklch(0.07 0 0);
   --popover-foreground: oklch(0.96 0 0);
-  --primary: oklch(0.92 0 0); /* Botones primarios muy claros en modo oscuro */
-  --primary-foreground: oklch(0.04 0 0); /* Texto muy oscuro en botones claros */
-  --secondary: oklch(0.13 0 0); /* Tabs grises más visibles en modo oscuro */
-  --secondary-foreground: oklch(0.85 0 0); /* Texto claro en secundario */
-  --muted: oklch(0.11 0 0); /* Fondos sutiles más visibles */
-  --muted-foreground: oklch(0.65 0 0); /* Texto muted más legible */
-  --accent: oklch(0.13 0 0); /* Acentos más visibles */
+  --primary: oklch(0.92 0 0);
+  /* Botones primarios muy claros en modo oscuro */
+  --primary-foreground: oklch(0.04 0 0);
+  /* Texto muy oscuro en botones claros */
+  --secondary: oklch(0.13 0 0);
+  /* Tabs grises más visibles en modo oscuro */
+  --secondary-foreground: oklch(0.85 0 0);
+  /* Texto claro en secundario */
+  --muted: oklch(0.11 0 0);
+  /* Fondos sutiles más visibles */
+  --muted-foreground: oklch(0.65 0 0);
+  /* Texto muted más legible */
+  --accent: oklch(0.13 0 0);
+  /* Acentos más visibles */
   --accent-foreground: oklch(0.92 0 0);
   --destructive: oklch(0.628 0.236 27.325);
   --destructive-foreground: oklch(0.96 0 0);
-  --border: oklch(0.22 0 0); /* Bordes mucho más visibles */
-  --input: oklch(0.08 0 0); /* Campos de input con fondo diferenciado */
-  --ring: oklch(0.65 0 0); /* Focus ring muy visible */
+  --border: oklch(0.22 0 0);
+  /* Bordes mucho más visibles */
+  --input: oklch(0.08 0 0);
+  /* Campos de input con fondo diferenciado */
+  --ring: oklch(0.65 0 0);
+  /* Focus ring muy visible */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -120,6 +147,78 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Studio styles */
+  /* Ensure canvas is responsive on small screens */
+  #canvas-area canvas {
+    max-width: 100% !important;
+    height: auto;
+    display: block;
+  }
+
+  /* Fabric wraps the canvas in a `.canvas-container` with inline sizes */
+  #canvas-area .canvas-container {
+    max-width: 100% !important;
+  }
+
+  @media (max-width: 400px) {
+    #canvas-area .canvas-container {
+      width: 100% !important;
+    }
+
+    #canvas-area canvas {
+      width: 100% !important;
+    }
+  }
+
+  /* Custom scrollbar styling for mobile navigation */
+  .mobile-nav-scroll::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .mobile-nav-scroll::-webkit-scrollbar-track {
+    background: #0d0d0d;
+  }
+
+  .mobile-nav-scroll::-webkit-scrollbar-thumb {
+    background: #2d2d2d;
+    border-radius: 10px;
+  }
+
+  .mobile-nav-scroll::-webkit-scrollbar-thumb:hover {
+    background: #3d3d3d;
+  }
+
+  /* Firefox scrollbar styling */
+  .mobile-nav-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #2d2d2d #0d0d0d;
+  }
+
+  /* Themed scrollbar (dark UI) */
+  .themed-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #2d2d2d #0d0d0d;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar-track {
+    background: #0d0d0d;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar-thumb {
+    background: #2d2d2d;
+    border-radius: 999px;
+    border: 2px solid #0d0d0d;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #3d3d3d;
   }
 }
 
@@ -217,57 +316,71 @@ button[data-variant="secondary"],
 }
 
 /* Forzar contraste en todo el texto */
-body, html {
+body,
+html {
   color: #121212 !important;
   background-color: #ffffff !important;
 }
 
 /* Forzar estilos de botones primarios */
-button, .btn, [role="button"] {
+button,
+.btn,
+[role="button"] {
   font-weight: 500 !important;
 }
 
-button.bg-primary, button[class*="bg-primary"], .bg-primary {
+button.bg-primary,
+button[class*="bg-primary"],
+.bg-primary {
   background-color: #1a1a1a !important;
   color: #ffffff !important;
   border: 1px solid #333333 !important;
 }
 
 /* Forzar estilos de tabs */
-[role="tablist"] button, [data-slot="tabs-trigger"] {
+[role="tablist"] button,
+[data-slot="tabs-trigger"] {
   background-color: #f1f1f1 !important;
   color: #2a2a2a !important;
   border: 1px solid #d1d1d1 !important;
 }
 
-[role="tablist"] button[data-state="active"], [data-slot="tabs-trigger"][data-state="active"] {
+[role="tablist"] button[data-state="active"],
+[data-slot="tabs-trigger"][data-state="active"] {
   background-color: #ffffff !important;
   color: #121212 !important;
   border: 1px solid #1a1a1a !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Forzar estilos de inputs */
-input, textarea, [data-slot="input"] {
+input,
+textarea,
+[data-slot="input"] {
   background-color: #ffffff !important;
   border: 1px solid #d1d1d1 !important;
   color: #121212 !important;
 }
 
-input:focus, textarea:focus, [data-slot="input"]:focus {
+input:focus,
+textarea:focus,
+[data-slot="input"]:focus {
   border-color: #666666 !important;
   box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2) !important;
 }
 
 /* Forzar contraste en cards y contenedores */
-.card, [data-slot="card"] {
+.card,
+[data-slot="card"] {
   background-color: #ffffff !important;
   border: 1px solid #e5e5e5 !important;
   color: #121212 !important;
 }
 
 /* Asegurar que los dropdowns sean visibles */
-[role="menu"], [role="listbox"], .dropdown-content {
+[role="menu"],
+[role="listbox"],
+.dropdown-content {
   background-color: #ffffff !important;
   border: 1px solid #d1d1d1 !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
