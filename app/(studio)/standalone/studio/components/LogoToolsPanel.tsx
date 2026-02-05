@@ -28,6 +28,8 @@ export interface LogoToolsPanelProps {
   setLogoOpacity: (n: number) => void;
   handleInsertDefaultLogo: (path: string) => void;
   handleLogoFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** When false, size and opacity controls are disabled (no logo overlay selected on canvas). */
+  isLogoSelected?: boolean;
 }
 
 export const LogoToolsPanel = React.memo(function LogoToolsPanel({
@@ -43,6 +45,7 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
   setLogoOpacity,
   handleInsertDefaultLogo,
   handleLogoFileUpload,
+  isLogoSelected = false,
 }: LogoToolsPanelProps) {
   return (
     <div className="space-y-4">
@@ -142,7 +145,12 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
         />
       </div>
 
-      <div className="grid grid-cols-[auto_1fr_50px] gap-[11px] items-center">
+      <div
+        className={cn(
+          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
+          !isLogoSelected && "opacity-50 pointer-events-none"
+        )}
+      >
         <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
           Size
         </Label>
@@ -152,6 +160,7 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           min={50}
           max={400}
           step={10}
+          disabled={!isLogoSelected}
           className={cn(
             "w-full",
             // Parte inactiva
@@ -166,7 +175,12 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           {logoSize}px
         </div>
       </div>
-      <div className="grid grid-cols-[auto_1fr_50px] gap-[11px] items-center">
+      <div
+        className={cn(
+          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
+          !isLogoSelected && "opacity-50 pointer-events-none"
+        )}
+      >
         <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
           Opacity
         </Label>
@@ -176,6 +190,7 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           min={10}
           max={100}
           step={5}
+          disabled={!isLogoSelected}
           className={cn(
             "w-full",
             // Parte inactiva

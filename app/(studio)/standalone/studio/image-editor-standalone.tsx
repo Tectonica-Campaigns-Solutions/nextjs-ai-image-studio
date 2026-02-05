@@ -225,6 +225,32 @@ export default function ImageEditorStandalone({
     history.saveState(false);
   }, [logoTools.logoSize, logoTools.logoOpacity]);
 
+  // Sync logo panel (size/opacity) when user selects a different logo overlay
+  useEffect(() => {
+    const obj = selection.selectedObject;
+    if (!obj || !(obj as any).isLogo) return;
+    const logoObj = obj as any;
+    const w = logoObj.getScaledWidth?.() ?? 0;
+    const h = logoObj.getScaledHeight?.() ?? 0;
+    const maxDim = Math.max(w, h);
+    if (maxDim > 0) logoTools.setLogoSize(Math.round(maxDim));
+    const op = logoObj.opacity;
+    if (typeof op === "number") logoTools.setLogoOpacity(Math.round(op * 100));
+  }, [selection.selectedObject]);
+
+  // Sync QR panel (size/opacity) when user selects a different QR overlay
+  useEffect(() => {
+    const obj = selection.selectedObject;
+    if (!obj || !(obj as any).isQR) return;
+    const qrObj = obj as any;
+    const w = qrObj.getScaledWidth?.() ?? 0;
+    const h = qrObj.getScaledHeight?.() ?? 0;
+    const maxDim = Math.max(w, h);
+    if (maxDim > 0) qrTools.setQrSize(Math.round(maxDim));
+    const op = qrObj.opacity;
+    if (typeof op === "number") qrTools.setQrOpacity(Math.round(op * 100));
+  }, [selection.selectedObject]);
+
   // Handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -428,6 +454,11 @@ export default function ImageEditorStandalone({
     [selection.selectedObject, fontAssets, textTools]
   );
 
+  const isLogoSelected =
+    !!selection.selectedObject && !!(selection.selectedObject as any).isLogo;
+  const isQrSelected =
+    !!selection.selectedObject && !!(selection.selectedObject as any).isQR;
+
   const logoToolsPanel = useMemo(
     () => (
       <LogoToolsPanel
@@ -443,9 +474,10 @@ export default function ImageEditorStandalone({
         setLogoOpacity={logoTools.setLogoOpacity}
         handleInsertDefaultLogo={logoTools.handleInsertDefaultLogo}
         handleLogoFileUpload={logoTools.handleLogoFileUpload}
+        isLogoSelected={isLogoSelected}
       />
     ),
-    [logoTools]
+    [logoTools, isLogoSelected]
   );
 
   const qrToolsPanel = useMemo(
@@ -459,9 +491,10 @@ export default function ImageEditorStandalone({
         setQrSize={qrTools.setQrSize}
         qrOpacity={qrTools.qrOpacity}
         setQrOpacity={qrTools.setQrOpacity}
+        isQrSelected={isQrSelected}
       />
     ),
-    [qrTools]
+    [qrTools, isQrSelected]
   );
 
   const isRectSelected =

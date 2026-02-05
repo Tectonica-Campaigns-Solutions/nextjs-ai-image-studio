@@ -17,6 +17,8 @@ export interface QrToolsPanelProps {
   setQrSize: (n: number) => void;
   qrOpacity: number;
   setQrOpacity: (n: number) => void;
+  /** When false, size and opacity controls are disabled (no QR overlay selected on canvas). */
+  isQrSelected?: boolean;
 }
 
 export const QrToolsPanel = React.memo(function QrToolsPanel({
@@ -28,6 +30,7 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
   setQrSize,
   qrOpacity,
   setQrOpacity,
+  isQrSelected = false,
 }: QrToolsPanelProps) {
   return (
     <div className="space-y-4">
@@ -81,7 +84,12 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           className="sr-only w-fit"
         />
       </div>
-      <div className="grid grid-cols-[auto_1fr_50px] gap-[11px] items-center">
+      <div
+        className={cn(
+          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
+          !isQrSelected && "opacity-50 pointer-events-none"
+        )}
+      >
         <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
           Size
         </Label>
@@ -91,6 +99,7 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           min={50}
           max={400}
           step={10}
+          disabled={!isQrSelected}
           className={cn(
             "w-full",
             // Parte inactiva
@@ -105,7 +114,12 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           {qrSize}px
         </div>
       </div>
-      <div className="grid grid-cols-[auto_1fr_50px] gap-[11px] items-center">
+      <div
+        className={cn(
+          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
+          !isQrSelected && "opacity-50 pointer-events-none"
+        )}
+      >
         <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
           Opacity
         </Label>
@@ -115,6 +129,7 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           min={10}
           max={100}
           step={5}
+          disabled={!isQrSelected}
           className={cn(
             "w-full",
             // Parte inactiva

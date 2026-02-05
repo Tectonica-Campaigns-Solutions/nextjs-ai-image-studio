@@ -115,10 +115,11 @@ export function useLogoTools(options: UseLogoToolsOptions) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const objects = canvas.getObjects();
-    const logoObject = objects.find((obj: any) => obj.isLogo === true);
-    if (!logoObject) return;
+    // Update the currently selected logo (active object), not the first one
+    const active = canvas.getActiveObject();
+    if (!active || !(active as any).isLogo) return;
 
+    const logoObject = active as any;
     const currentWidth = logoObject.getScaledWidth();
     const currentHeight = logoObject.getScaledHeight();
     const maxDimension = Math.max(currentWidth, currentHeight);

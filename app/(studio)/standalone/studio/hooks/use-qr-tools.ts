@@ -95,10 +95,11 @@ export function useQRTools(options: UseQRToolsOptions) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const objects = canvas.getObjects();
-    const qrObject = objects.find((obj: any) => obj.isQR === true);
-    if (!qrObject) return;
+    // Update the currently selected QR (active object), not the first one
+    const active = canvas.getActiveObject();
+    if (!active || !(active as any).isQR) return;
 
+    const qrObject = active as any;
     const currentWidth = qrObject.getScaledWidth();
     const currentHeight = qrObject.getScaledHeight();
     const maxDimension = Math.max(currentWidth, currentHeight);
