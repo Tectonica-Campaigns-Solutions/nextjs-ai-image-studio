@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const url = new URL("/dashboard/login", requestUrl.origin);
     url.searchParams.set(
       "error",
-      error === "access_denied" ? "invitation_expired" : error
+      error === "access_denied" ? "invitation_expired" : error,
     );
     if (errorDescription) {
       url.searchParams.set("error_description", errorDescription);
@@ -32,9 +32,8 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   if (code) {
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-      code
-    );
+    const { error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
       console.error("Error exchanging code for session:", exchangeError);

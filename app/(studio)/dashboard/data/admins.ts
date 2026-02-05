@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import type { Admin } from "@/app/(studio)/dashboard/types";
 
 export async function getAdmins(): Promise<Admin[] | null> {
   const check = await requireAdmin();
   if (!check.success) return null;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: adminRoles, error: rolesError } = await supabase
     .from("user_roles")
     .select("id, user_id, role, granted_by, granted_at, expires_at, is_active")
@@ -28,7 +28,7 @@ export async function getAdmins(): Promise<Admin[] | null> {
     if (role.granted_by) {
       try {
         const { data: granterData } = await supabase.auth.admin.getUserById(
-          role.granted_by
+          role.granted_by,
         );
         if (granterData?.user) grantedByEmail = granterData.user.email ?? null;
       } catch {
@@ -53,7 +53,7 @@ export async function getAdmins(): Promise<Admin[] | null> {
 export async function getAdminById(id: string): Promise<Admin | null> {
   const check = await requireAdmin();
   if (!check.success) return null;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: role, error: roleError } = await supabase
     .from("user_roles")
     .select("*")
@@ -75,7 +75,7 @@ export async function getAdminById(id: string): Promise<Admin | null> {
   if (role.granted_by) {
     try {
       const { data: granterData } = await supabase.auth.admin.getUserById(
-        role.granted_by
+        role.granted_by,
       );
       if (granterData?.user) grantedByEmail = granterData.user.email ?? null;
     } catch {

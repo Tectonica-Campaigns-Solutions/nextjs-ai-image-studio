@@ -18,23 +18,30 @@ export function AcceptInvitationForm({ userEmail }: AcceptInvitationFormProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log("[AcceptInvitationForm] Render", { userEmail: userEmail ?? "(null)" });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[AcceptInvitationForm] handleSubmit");
     setError(null);
     if (!password.trim()) {
+      console.log("[AcceptInvitationForm] Validation: password required");
       setError("Password is required");
       return;
     }
     if (password !== confirmPassword) {
+      console.log("[AcceptInvitationForm] Validation: passwords do not match");
       setError("Passwords do not match");
       return;
     }
     setSaving(true);
+    console.log("[AcceptInvitationForm] Calling setupPasswordAction");
     const result = await setupPasswordAction({
       password,
       confirmPassword,
     });
     setSaving(false);
+    console.log("[AcceptInvitationForm] setupPasswordAction result:", result?.error ? { error: result.error } : "ok");
     if (result?.error) {
       setError(result.error);
       return;

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AcceptInvitationForm } from "../components/accept-invitation-form";
+import { AcceptInvitationHashHandler } from "../components/accept-invitation-hash-handler";
 
 export default async function AcceptInvitationPage() {
   const supabase = await createClient();
@@ -10,15 +11,9 @@ export default async function AcceptInvitationPage() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return (
-      <div className="min-h-screen bg-[#f0f1f2] flex items-center justify-center p-6">
-        <div className="w-full max-w-md p-8 bg-white rounded-3xl border-0 shadow-drop-shadow text-center">
-          <p className="text-destructive text-sm [font-family:'Manrope',Helvetica]">
-            Invitation session is invalid or expired. Please request a new invitation.
-          </p>
-        </div>
-      </div>
-    );
+    // Token may be in the URL hash (invite link); the server never sees it.
+    // Let the client component try to set the session from the hash, then reload.
+    return <AcceptInvitationHashHandler />;
   }
 
   return <AcceptInvitationForm userEmail={user.email ?? null} />;
