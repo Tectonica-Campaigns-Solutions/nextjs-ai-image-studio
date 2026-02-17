@@ -1,17 +1,17 @@
 {
-  "people": "TCT-AI-Individual-Hispanic-Female-Young.png",
+  "people": "TctAIGeneration09.jpg",
   "landscape": "TCT-AI-Landmark-2.png",
   "urban": "TCT-AI-Landmark-3.png",
   "monument": "TCT-AI-Landmark.png",
   "create": [
-    "TCTAIFront01.png",
-    "TCTAIFront02.png",
-    "TCTAIFront03.png",
-    "TCTAIFront06.png",
-    "TCTAIFront09.png",
-    "TCTAIFront11.png",
-    "TCTAIFront15.png",
-    "TCTAIFront18.png"
+    "TctAIGeneration01.jpg",
+    "TctAIGeneration02.jpg",
+    "TctAIGeneration03.jpg",
+    "TctAIGeneration04.jpg",
+    "TctAIGeneration05.jpg",
+    "TctAIGeneration06.jpg",
+    "TctAIGeneration07.jpg",
+    "TctAIGeneration08.jpg"
   ],
   "prompts": {
     "people": "Combine the subject or subjects from @image1 with the artistic style and atmosphere of @image2. Do not modify the subjects pose and anatomical features. Do not add subjects from @image2 to @image1. Respect @image2 color scale.",

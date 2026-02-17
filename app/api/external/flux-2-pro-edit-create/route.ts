@@ -56,14 +56,14 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
 
 // Fallback reference images (used if no config.json found)
 const FALLBACK_REFERENCE_IMAGES = [
-  'TCTAIFront01.png',
-  'TCTAIFront02.png',
-  'TCTAIFront03.png',
-  'TCTAIFront06.png',
-  'TCTAIFront09.png',
-  'TCTAIFront11.png',
-  'TCTAIFront15.png',
-  'TCTAIFront18.png'
+  'TctAIGeneration01.jpg',
+  'TctAIGeneration02.jpg',
+  'TctAIGeneration03.jpg',
+  'TctAIGeneration04.jpg',
+  'TctAIGeneration05.jpg',
+  'TctAIGeneration06.jpg',
+  'TctAIGeneration07.jpg',
+  'TctAIGeneration08.jpg'
 ]
 
 /**
