@@ -14,6 +14,9 @@ export const maxDuration = 300 // 5 minutes for processing
  * making the watermark imperceptible to the human eye while allowing extraction later.
  */
 
+// Magic number to identify watermarked images (ASCII "WM01" = 0x574D3031)
+const WATERMARK_MAGIC = 0x574D3031
+
 /**
  * Embed invisible watermark into image using LSB steganography
  */
@@ -21,19 +24,43 @@ async function embedWatermark(imageBuffer: Buffer, watermarkText: string): Promi
   // Get image metadata and pixel data
   const image = sharp(imageBuffer)
   const metadata = await image.metadata()
+  
+  console.log(`[Watermark Embed] Image metadata:`, {
+    format: metadata.format,
+    width: metadata.width,
+    height: metadata.height,
+    channels: metadata.channels,
+    hasAlpha: metadata.hasAlpha
+  })
+  
   const { data, info } = await image
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true })
 
+  console.log(`[Watermark Embed] Raw data info:`, {
+    dataLength: data.length,
+    width: info.width,
+    height: info.height,
+    channels: info.channels
+  })
+
   // Convert watermark text to binary
   const watermarkBinary = textToBinary(watermarkText)
   
-  // Add length prefix (32 bits for text length)
+  // Build complete watermark data:
+  // 1. Magic number (32 bits) - to identify watermarked images
+  // 2. Text length (32 bits)
+  // 3. Text data (variable length)
+  const magicBinary = numberToBinary(WATERMARK_MAGIC, 32)
   const lengthBinary = numberToBinary(watermarkText.length, 32)
-  const fullWatermark = lengthBinary + watermarkBinary
+  const fullWatermark = magicBinary + lengthBinary + watermarkBinary
   
-  console.log(`[Watermark Embed] Text length: ${watermarkText.length}, Binary length: ${fullWatermark.length} bits`)
+  console.log(`[Watermark Embed] Text: "${watermarkText}"`)
+  console.log(`[Watermark Embed] Magic number: ${WATERMARK_MAGIC.toString(16)} (${magicBinary})`)
+  console.log(`[Watermark Embed] Text length: ${watermarkText.length}`)
+  console.log(`[Watermark Embed] Length binary: ${lengthBinary}`)
+  console.log(`[Watermark Embed] Total bits to embed: ${fullWatermark.length} (magic: 32, length: 32, text: ${watermarkBinary.length})`)
   
   // Check if image has enough capacity
   const maxCapacity = (data.length / info.channels) * 3 // Use RGB channels only
@@ -58,6 +85,7 @@ async function embedWatermark(imageBuffer: Buffer, watermarkText: string): Promi
   console.log(`[Watermark Embed] Embedded ${bitIndex} bits into image`)
   
   // Convert back to image
+  // IMPORTANT: Use compressionLevel 0 to preserve LSBs exactly
   return sharp(data, {
     raw: {
       width: info.width,
@@ -65,7 +93,11 @@ async function embedWatermark(imageBuffer: Buffer, watermarkText: string): Promi
       channels: info.channels
     }
   })
-    .png({ compressionLevel: 9, quality: 100 })
+    .png({ 
+      compressionLevel: 0,  // No compression to preserve LSBs
+      adaptiveFiltering: false,  // Disable filtering
+      palette: false  // Disable palette
+    })
     .toBuffer()
 }
 
@@ -73,49 +105,93 @@ async function embedWatermark(imageBuffer: Buffer, watermarkText: string): Promi
  * Extract invisible watermark from image using LSB steganography
  */
 async function extractWatermark(imageBuffer: Buffer): Promise<string> {
-  // Get pixel data
+  // Get image info first
+  const metadata = await sharp(imageBuffer).metadata()
+  console.log(`[Watermark Extract] Image metadata:`, {
+    format: metadata.format,
+    width: metadata.width,
+    height: metadata.height,
+    channels: metadata.channels,
+    hasAlpha: metadata.hasAlpha
+  })
+  
+  // Get pixel data - ensure we process it the same way as embedding
   const { data, info } = await sharp(imageBuffer)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true })
   
-  // Extract length (first 32 bits)
-  let binaryString = ''
-  let bitIndex = 0
+  console.log(`[Watermark Extract] Raw data info:`, {
+    dataLength: data.length,
+    width: info.width,
+    height: info.height,
+    channels: info.channels,
+    totalPixels: info.width * info.height,
+    bytesPerPixel: info.channels
+  })
   
-  for (let i = 0; i < data.length && bitIndex < 32; i++) {
-    if (info.channels === 4 && (i % 4 === 3)) {
+  // Extract all bits in one pass
+  let bitIndex = 0
+  let byteIndex = 0
+  const extractedBits: string[] = []
+  
+  // Extract enough bits for magic (32) + length (32) + max text (10000 * 8)
+  const maxBitsToExtract = 64 + (10000 * 8)
+  
+  while (byteIndex < data.length && extractedBits.length < maxBitsToExtract) {
+    // Skip alpha channel
+    if (info.channels === 4 && (byteIndex % 4 === 3)) {
+      byteIndex++
       continue
     }
-    binaryString += (data[i] & 1).toString()
-    bitIndex++
+    
+    // Extract LSB
+    extractedBits.push((data[byteIndex] & 1).toString())
+    byteIndex++
   }
   
-  const textLength = parseInt(binaryString, 2)
-  console.log(`[Watermark Extract] Text length: ${textLength}`)
+  console.log(`[Watermark Extract] Extracted ${extractedBits.length} bits from ${byteIndex} bytes`)
+  
+  // Parse magic number (bits 0-31)
+  const magicBinary = extractedBits.slice(0, 32).join('')
+  const extractedMagic = parseInt(magicBinary, 2)
+  
+  console.log(`[Watermark Extract] Magic number: ${extractedMagic.toString(16)} (expected: ${WATERMARK_MAGIC.toString(16)})`)
+  console.log(`[Watermark Extract] Magic binary: ${magicBinary}`)
+  
+  if (extractedMagic !== WATERMARK_MAGIC) {
+    throw new Error(`Invalid watermark magic number. Expected ${WATERMARK_MAGIC.toString(16)}, got ${extractedMagic.toString(16)}. This image may not contain a watermark or was compressed/modified.`)
+  }
+  
+  // Parse length (bits 32-63)
+  const lengthBinary = extractedBits.slice(32, 64).join('')
+  const textLength = parseInt(lengthBinary, 2)
+  
+  console.log(`[Watermark Extract] Length binary (bits 32-63): ${lengthBinary}`)
+  console.log(`[Watermark Extract] Decoded text length: ${textLength}`)
   
   if (textLength <= 0 || textLength > 10000) {
-    throw new Error('Invalid watermark or watermark not found')
+    throw new Error(`Invalid watermark text length: ${textLength}. Expected 1-10000.`)
   }
   
-  // Extract watermark text
-  binaryString = ''
+  // Parse text data (bits 64 onwards)
   const bitsNeeded = textLength * 8
+  const textBinary = extractedBits.slice(64, 64 + bitsNeeded).join('')
   
-  for (let i = 0; i < data.length && bitIndex < 32 + bitsNeeded; i++) {
-    if (info.channels === 4 && (i % 4 === 3)) {
-      continue
-    }
-    if (bitIndex >= 32) {
-      binaryString += (data[i] & 1).toString()
-    }
-    bitIndex++
+  console.log(`[Watermark Extract] Extracting ${bitsNeeded} bits for text`)
+  console.log(`[Watermark Extract] Extracted ${textBinary.length} bits (expected ${bitsNeeded})`)
+  console.log(`[Watermark Extract] First 64 bits of text: ${textBinary.substring(0, 64)}`)
+  
+  if (textBinary.length < bitsNeeded) {
+    throw new Error(`Insufficient data. Expected ${bitsNeeded} bits, got ${textBinary.length} bits.`)
   }
-  
-  console.log(`[Watermark Extract] Extracted ${binaryString.length} bits`)
   
   // Convert binary back to text
-  return binaryToText(binaryString)
+  const extractedText = binaryToText(textBinary)
+  console.log(`[Watermark Extract] Extracted text: "${extractedText}"`)
+  console.log(`[Watermark Extract] Text char codes:`, extractedText.split('').map(c => c.charCodeAt(0)))
+  
+  return extractedText
 }
 
 /**
@@ -156,6 +232,11 @@ function numberToBinary(num: number, bits: number): string {
  * This endpoint embeds imperceptible watermarks into images locally using Sharp,
  * without relying on external AI services.
  * 
+ * SMART RE-WATERMARKING PREVENTION:
+ * Before embedding, the endpoint checks if the image already contains a valid watermark.
+ * If a watermark is detected, the original image URL is returned without processing,
+ * preventing watermark overwriting in chained operations (apply → edit → edit).
+ * 
  * IMPORTANT: This endpoint ONLY accepts JSON payloads with Content-Type: application/json
  * 
  * Body parameters (JSON):
@@ -165,6 +246,7 @@ function numberToBinary(num: number, bits: number): string {
  * - extract (optional): If true, extract watermark instead of embedding (default: false)
  * 
  * The watermarked image is uploaded to FAL storage and the URL is returned.
+ * If a watermark already exists, the original URL is returned without upload.
  * 
  * Response format (embed):
  * Success: { 
@@ -172,7 +254,9 @@ function numberToBinary(num: number, bits: number): string {
  *   watermarkedImageUrl: string,
  *   watermark: string,
  *   originalImageUrl: string,
- *   method: "LSB Steganography"
+ *   method: "LSB Steganography",
+ *   alreadyWatermarked?: boolean,  // Present if watermark was already embedded
+ *   skippedUpload?: boolean  // Present if upload was skipped
  * }
  * 
  * Response format (extract):
@@ -300,6 +384,35 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Check if image already has a watermark to avoid re-watermarking
+    console.log("[External Watermark Anything] Checking for existing watermark...")
+    try {
+      const existingWatermark = await extractWatermark(imageBuffer)
+      console.log(`[External Watermark Anything] Image already watermarked with: "${existingWatermark}"`)
+      console.log(`[External Watermark Anything] Skipping embed to avoid overwriting existing watermark`)
+      
+      // Return original image URL without processing
+      return NextResponse.json({
+        success: true,
+        watermarkedImageUrl: imageUrl,
+        watermark: existingWatermark,
+        originalImageUrl: imageUrl,
+        method: "LSB Steganography",
+        alreadyWatermarked: true,
+        skippedUpload: true,
+        serviceMetadata: {
+          technique: "Skipped - Already Watermarked",
+          existingWatermark: existingWatermark,
+          watermarkLength: existingWatermark.length,
+          reason: "Image already contains a valid watermark"
+        }
+      })
+    } catch (extractError: any) {
+      // No valid watermark found (or watermark corrupted/truncated)
+      console.log(`[External Watermark Anything] No valid watermark detected: ${extractError.message}`)
+      console.log(`[External Watermark Anything] Proceeding with watermark embedding...`)
+    }
+
     console.log("[External Watermark Anything] Embedding watermark...")
     let watermarkedBuffer: Buffer
     try {
@@ -419,12 +532,14 @@ export async function GET(request: NextRequest) {
     responses: {
       embed: {
         success: "boolean",
-        watermarkedImageUrl: "URL of the watermarked image in FAL storage",
-        watermark: "Text that was embedded",
+        watermarkedImageUrl: "URL of the watermarked image in FAL storage (or original URL if already watermarked)",
+        watermark: "Text that was embedded (or existing watermark if already present)",
         originalImageUrl: "Original input image URL",
         method: "LSB Steganography",
+        alreadyWatermarked: "boolean (optional) - true if image already had a watermark and processing was skipped",
+        skippedUpload: "boolean (optional) - true if FAL upload was skipped due to existing watermark",
         serviceMetadata: {
-          technique: "Least Significant Bit Steganography",
+          technique: "Least Significant Bit Steganography (or 'Skipped - Already Watermarked')",
           local: "true (processed server-side)",
           orgType: "Organization type used",
           originalSize: "Original image size in bytes",
@@ -447,7 +562,9 @@ export async function GET(request: NextRequest) {
       "Extraction capability to verify watermarks",
       "Supports up to 1000 characters",
       "PNG output for lossless watermark preservation",
-      "Automatic upload to FAL storage"
+      "Automatic upload to FAL storage",
+      "Smart detection: skips re-watermarking if watermark already exists",
+      "Idempotent: safe to call multiple times on same image"
     ],
     notes: [
       "Uses Least Significant Bit (LSB) technique to embed text in image pixels",
@@ -455,7 +572,10 @@ export async function GET(request: NextRequest) {
       "Best preserved with PNG format (lossless)",
       "Use 'extract: true' parameter to retrieve embedded watermark",
       "More reliable than external AI services (no downtime)",
-      "Alternative to fal-ai/invisible-watermark service"
+      "Alternative to fal-ai/invisible-watermark service",
+      "Automatically detects existing watermarks to prevent overwriting",
+      "Returns original URL if watermark already exists (saves processing time)",
+      "Check 'alreadyWatermarked' field in response to know if processing was skipped"
     ],
     limitations: [
       "Maximum watermark length: 1000 characters",
