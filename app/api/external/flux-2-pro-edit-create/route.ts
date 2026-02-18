@@ -73,7 +73,11 @@ const FALLBACK_REFERENCE_IMAGES = [
  * 2. Fall back to naming convention: look for numbered files
  * 3. Fall back to Tectonica's reference images
  */
-async function getClientReferenceImages(orgType: string): Promise<{ filenames: string[]; folderName: string }> {
+async function getClientReferenceImages(orgType: string): Promise<{ 
+  filenames: string[]; 
+  folderName: string;
+  userImagePrompt?: string;
+}> {
   const folderName = `${orgType.toLowerCase()}-reference-images`
   const folderPath = path.join(process.cwd(), 'public', folderName)
   
@@ -85,7 +89,15 @@ async function getClientReferenceImages(orgType: string): Promise<{ filenames: s
     
     if (config.create && Array.isArray(config.create) && config.create.length > 0) {
       console.log(`[Flux 2 Pro Edit Create] Using config.json: ${config.create.length} images from ${folderName}`)
-      return { filenames: config.create, folderName }
+      
+      // Extract userImagePrompt if available
+      const userImagePrompt = config.prompts?.createWithUserImage
+      
+      return { 
+        filenames: config.create, 
+        folderName,
+        userImagePrompt
+      }
     }
   } catch (error) {
     // Config.json doesn't exist or doesn't have "create" array
@@ -94,9 +106,14 @@ async function getClientReferenceImages(orgType: string): Promise<{ filenames: s
   
   // Step 2: Fallback to Tectonica
   console.log(`[Flux 2 Pro Edit Create] Using fallback Tectonica reference images`)
+  
+  // Default prompt for fallback
+  const defaultUserImagePrompt = "IMPORTANT: Image @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+  
   return { 
     filenames: FALLBACK_REFERENCE_IMAGES, 
-    folderName: 'tectonica-reference-images' 
+    folderName: 'tectonica-reference-images',
+    userImagePrompt: defaultUserImagePrompt
   }
 }
 
@@ -109,6 +126,7 @@ async function getClientReferenceImages(orgType: string): Promise<{ filenames: s
  * Features:
  * - Organization-specific references: Loads images from {orgType}-reference-images/config.json
  * - Fallback support: Uses Tectonica images if organization config not found
+ * - Smart reference selection: Uses 8 images when no user image, 4 random images when user provides image
  * - Optional user image: Add 0-1 additional image from user
  * - Image referencing: Use @image1, @image2 syntax in prompts
  * - JSON structured prompts: Advanced control over scene, subjects, camera
@@ -296,7 +314,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Get reference images for this organization
-    const { filenames: referenceImageFilenames, folderName } = await getClientReferenceImages(orgType)
+    const { filenames: allReferenceFilenames, folderName, userImagePrompt } = await getClientReferenceImages(orgType)
+    
+    // Determine if user provided an image
+    const hasUserImage = !!(imageUrl || base64Image)
+    
+    // Select reference images based on whether user provided an image
+    let referenceImageFilenames: string[]
+    if (hasUserImage) {
+      // User provided image: use only 4 random reference images
+      console.log(`[Flux 2 Pro Edit Create] User image detected, selecting 4 random reference images from ${allReferenceFilenames.length} available`)
+      
+      // Shuffle array and take first 4
+      const shuffled = [...allReferenceFilenames].sort(() => Math.random() - 0.5)
+      referenceImageFilenames = shuffled.slice(0, 4)
+      
+      console.log(`[Flux 2 Pro Edit Create] Selected reference images:`, referenceImageFilenames)
+    } else {
+      // No user image: use all reference images
+      console.log(`[Flux 2 Pro Edit Create] No user image, using all ${allReferenceFilenames.length} reference images`)
+      referenceImageFilenames = allReferenceFilenames
+    }
     
     // Upload reference images to fal.ai storage
     console.log(`[Flux 2 Pro Edit Create] Uploading ${referenceImageFilenames.length} reference images from ${folderName}...`)
@@ -503,8 +541,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${referenceImageFilenames.length} references + ${userImageCount} user)`)
 
-    // Use prompt as-is
+    // Prepare final prompt
     let finalPrompt = prompt
+    
+    // If user provided an image, append the user image instruction
+    if (hasUserImage && userImagePrompt) {
+      finalPrompt = `${prompt} ${userImagePrompt}`
+      console.log(`[Flux 2 Pro Edit Create] User image detected, appending instruction to prompt`)
+    }
 
     // Prepare input for fal.ai
     const input: any = {
@@ -654,9 +698,10 @@ export async function GET() {
     contentType: "application/json",
     
     features: [
-      "8 pre-loaded TectonicaAI reference images always included",
+      "Smart reference image selection: 8 images without user image, 4 random images with user image",
       "Optional: Add 0-1 user image (via URL or Base64)",
-      "Total: 8-9 images sent to FLUX.2 [pro] edit",
+      "Automatic main subject preservation: User image instructions prepended to prompt",
+      "Total: 4-8 images sent to FLUX.2 [pro] edit",
       "Image referencing in prompts (@image1, @image2, etc.)",
       "JSON structured prompts for advanced control",
       "HEX color control for precise matching",
@@ -667,7 +712,7 @@ export async function GET() {
     ],
     
     referenceImages: {
-      count: 8,
+      count: "4 (with user image) or 8 (without user image)",
       location: "/public/tectonicaai-reference-images/",
       files: [
         "TCTAIFront01.png",
@@ -679,7 +724,7 @@ export async function GET() {
         "TCTAIFront15.png",
         "TCTAIFront18.png"
       ],
-      note: "These images are automatically included at indices 0-7"
+      note: "If user provides an image: 4 random images selected. If no user image: all 8 images used. Random selection ensures variety across requests."
     },
     
     parameters: {
@@ -814,9 +859,11 @@ export async function GET() {
     },
     
     notes: [
-      "Reference images (indices 0-7) are always included automatically",
-      "User can optionally add 1 more image (index 8)",
-      "Maximum total: 9 images (8 references + 1 user)",
+      "Without user image: All 8 reference images are used",
+      "With user image: Only 4 random reference images are used (for variety and API limits)",
+      "User image is always placed at @image5 position",
+      "Automatic subject preservation: When user provides an image, an instruction is prepended to ensure the main subject is preserved",
+      "Maximum total: 8 images (4 references + 1 user, or 8 references alone)",
       "Use @image1-@image9 syntax in prompts to reference specific images",
       "Processing time: 20-40 seconds depending on complexity",
       "Built-in content moderation for safe results"
