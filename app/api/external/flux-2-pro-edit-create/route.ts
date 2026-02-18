@@ -203,7 +203,11 @@ export async function POST(request: NextRequest) {
     } = body
     
     // Extract and validate orgType
-    const orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+    // Map 'general' to 'Tectonica' for backward compatibility
+    let orgType = rawOrgType && rawOrgType.trim() ? rawOrgType : "Tectonica"
+    if (orgType.toLowerCase() === 'general') {
+      orgType = 'Tectonica'
+    }
     
     // Get client-specific API key
     let falApiKey: string
