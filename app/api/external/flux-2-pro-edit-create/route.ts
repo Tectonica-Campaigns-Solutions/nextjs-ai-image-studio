@@ -76,8 +76,11 @@ const FALLBACK_REFERENCE_IMAGES = [
 async function getClientReferenceImages(orgType: string): Promise<{ 
   filenames: string[]; 
   folderName: string;
-  userImagePrompt?: string;
+  userImagePrompt: string;
 }> {
+  // Default prompt for user image preservation
+  const defaultUserImagePrompt = "IMPORTANT: Image @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+  
   const folderName = `${orgType.toLowerCase()}-reference-images`
   const folderPath = path.join(process.cwd(), 'public', folderName)
   
@@ -90,8 +93,14 @@ async function getClientReferenceImages(orgType: string): Promise<{
     if (config.create && Array.isArray(config.create) && config.create.length > 0) {
       console.log(`[Flux 2 Pro Edit Create] Using config.json: ${config.create.length} images from ${folderName}`)
       
-      // Extract userImagePrompt if available
-      const userImagePrompt = config.prompts?.createWithUserImage
+      // Extract userImagePrompt if available, otherwise use default
+      const userImagePrompt = config.prompts?.createWithUserImage || defaultUserImagePrompt
+      
+      if (config.prompts?.createWithUserImage) {
+        console.log(`[Flux 2 Pro Edit Create] Using custom user image prompt from config.json`)
+      } else {
+        console.log(`[Flux 2 Pro Edit Create] No custom user image prompt found, using default`)
+      }
       
       return { 
         filenames: config.create, 
@@ -105,10 +114,7 @@ async function getClientReferenceImages(orgType: string): Promise<{
   }
   
   // Step 2: Fallback to Tectonica
-  console.log(`[Flux 2 Pro Edit Create] Using fallback Tectonica reference images`)
-  
-  // Default prompt for fallback
-  const defaultUserImagePrompt = "IMPORTANT: Image @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+  console.log(`[Flux 2 Pro Edit Create] Using fallback Tectonica reference images with default prompt`)
   
   return { 
     filenames: FALLBACK_REFERENCE_IMAGES, 
@@ -545,9 +551,10 @@ export async function POST(request: NextRequest) {
     let finalPrompt = prompt
     
     // If user provided an image, append the user image instruction
-    if (hasUserImage && userImagePrompt) {
+    if (hasUserImage) {
       finalPrompt = `${prompt} ${userImagePrompt}`
-      console.log(`[Flux 2 Pro Edit Create] User image detected, appending instruction to prompt`)
+      console.log(`[Flux 2 Pro Edit Create] User image detected, appending preservation instruction`)
+      console.log(`[Flux 2 Pro Edit Create] Preservation instruction: ${userImagePrompt}`)
     }
 
     // Prepare input for fal.ai
