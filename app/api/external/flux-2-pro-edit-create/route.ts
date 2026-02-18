@@ -90,16 +90,22 @@ async function getClientReferenceImages(orgType: string): Promise<{
     const configContent = await fs.readFile(configPath, 'utf-8')
     const config = JSON.parse(configContent)
     
+    console.log(`[Flux 2 Pro Edit Create] Config loaded:`, JSON.stringify(config, null, 2))
+    
     if (config.create && Array.isArray(config.create) && config.create.length > 0) {
       console.log(`[Flux 2 Pro Edit Create] Using config.json: ${config.create.length} images from ${folderName}`)
+      
+      // Log the prompts object
+      console.log(`[Flux 2 Pro Edit Create] Prompts object:`, config.prompts)
+      console.log(`[Flux 2 Pro Edit Create] createWithUserImage value:`, config.prompts?.createWithUserImage)
       
       // Extract userImagePrompt if available, otherwise use default
       const userImagePrompt = config.prompts?.createWithUserImage || defaultUserImagePrompt
       
       if (config.prompts?.createWithUserImage) {
-        console.log(`[Flux 2 Pro Edit Create] Using custom user image prompt from config.json`)
+        console.log(`[Flux 2 Pro Edit Create] ✅ Using custom user image prompt from config.json:`, userImagePrompt)
       } else {
-        console.log(`[Flux 2 Pro Edit Create] No custom user image prompt found, using default`)
+        console.log(`[Flux 2 Pro Edit Create] ⚠️ No custom user image prompt found, using default:`, defaultUserImagePrompt)
       }
       
       return { 
@@ -111,6 +117,7 @@ async function getClientReferenceImages(orgType: string): Promise<{
   } catch (error) {
     // Config.json doesn't exist or doesn't have "create" array
     console.log(`[Flux 2 Pro Edit Create] No config.json or "create" array found for ${orgType}, falling back...`)
+    console.error(`[Flux 2 Pro Edit Create] Error loading config:`, error)
   }
   
   // Step 2: Fallback to Tectonica
