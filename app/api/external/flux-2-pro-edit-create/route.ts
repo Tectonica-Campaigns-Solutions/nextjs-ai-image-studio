@@ -561,10 +561,10 @@ export async function POST(request: NextRequest) {
     // Prepare final prompt
     let finalPrompt = prompt
     
-    // If user provided an image, append the user image instruction
+    // If user provided an image, prepend the user image instruction
     if (hasUserImage) {
-      finalPrompt = `${prompt} ${userImagePrompt}`
-      console.log(`[Flux 2 Pro Edit Create] User image detected, appending preservation instruction`)
+      finalPrompt = `${userImagePrompt} ${prompt}`
+      console.log(`[Flux 2 Pro Edit Create] User image detected, prepending preservation instruction`)
       console.log(`[Flux 2 Pro Edit Create] Preservation instruction: ${userImagePrompt}`)
     }
 
@@ -718,7 +718,7 @@ export async function GET() {
     features: [
       "Smart reference image selection: 8 images without user image, 4 random images with user image",
       "Optional: Add 0-1 user image (via URL or Base64)",
-      "Automatic main subject preservation: User image instructions prepended to prompt",
+      "Automatic main subject preservation: User image instructions prepended at start of prompt",
       "Total: 4-8 images sent to FLUX.2 [pro] edit",
       "Image referencing in prompts (@image1, @image2, etc.)",
       "JSON structured prompts for advanced control",
@@ -880,7 +880,7 @@ export async function GET() {
       "Without user image: All 8 reference images are used",
       "With user image: Only 4 random reference images are used (for variety and API limits)",
       "User image is always placed at @image5 position",
-      "Automatic subject preservation: When user provides an image, an instruction is prepended to ensure the main subject is preserved",
+      "Automatic subject preservation: When user provides an image, a preservation instruction is prepended at the start of the prompt",
       "Maximum total: 8 images (4 references + 1 user, or 8 references alone)",
       "Use @image1-@image9 syntax in prompts to reference specific images",
       "Processing time: 20-40 seconds depending on complexity",
