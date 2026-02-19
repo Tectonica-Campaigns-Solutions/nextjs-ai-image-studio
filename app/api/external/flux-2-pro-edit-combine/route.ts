@@ -25,6 +25,30 @@ import { getClientApiKey } from '@/lib/api-keys'
 // }
 
 /**
+ * Get combine with branding prompt suffix from organization's config.json
+ * Returns the combineWithBranding field from prompts if available, null otherwise
+ */
+async function getCombineWithBrandingSuffix(orgType: string): Promise<string | null> {
+  try {
+    const folderName = `${orgType.toLowerCase()}-reference-images`
+    const folderPath = path.join(process.cwd(), 'public', folderName)
+    const configPath = path.join(folderPath, 'config.json')
+    
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    
+    if (config.prompts?.combineWithBranding && typeof config.prompts.combineWithBranding === 'string') {
+      console.log(`[External Flux 2 Pro Combine] Using combine with branding suffix from config.json: ${config.prompts.combineWithBranding}`)
+      return config.prompts.combineWithBranding
+    }
+  } catch (error) {
+    console.log(`[External Flux 2 Pro Combine] No combineWithBranding found in config.json for ${orgType}`)
+  }
+  
+  return null
+}
+
+/**
  * Builds a prompt (currently disabled - returns user prompt as-is)
  */
 function buildStyleTransferPrompt(userPrompt: string): string {
@@ -596,6 +620,16 @@ export async function POST(request: NextRequest) {
 
     // Build the final prompt with style preset (text-based, no reference image)
     let finalPrompt = buildStyleTransferPrompt(prompt)
+    
+    // If images were provided via URL, append the combine with branding suffix from config.json
+    if (imageUrls.length > 0) {
+      const brandingSuffix = await getCombineWithBrandingSuffix(orgType)
+      if (brandingSuffix) {
+        finalPrompt = `${finalPrompt} ${brandingSuffix}`
+        console.log(`[External Flux 2 Pro Combine] Added combine with branding suffix to prompt`)
+      }
+    }
+    
     console.log(`[External Flux 2 Pro Combine] Built prompt with TectonicaAI style preset`)
 
     // Prepare input for fal.ai

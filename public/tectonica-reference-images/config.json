@@ -1,5 +1,5 @@
 {
-  "people": "TctAIGeneration09.jpg",
+  "people": "TCT-AI-Individual-Hispanic-Female-Young.png",
   "landscape": "TCT-AI-Landmark-2.png",
   "urban": "TCT-AI-Landmark-3.png",
   "monument": "TCT-AI-Landmark.png",
@@ -18,6 +18,7 @@
     "landscape": "Combine the natural landscape scene from @image1 with the artistic style, color palette, lighting mood, and surface textures of @image2. Preserve the exact composition, viewpoint, horizon line, scale, and all geographical features from @image1 (mountains, coastline, rivers, trees, clouds). Do not add, remove, or relocate any elements. Do not introduce animals, people, buildings, or objects from @image2. Keep all shapes and contours unchanged; apply only stylistic rendering (brushwork/material feel), atmosphere, and color grading. Respect @image2 color scale.",
     "urban": "Combine the urban cityscape from @image1 with the artistic style and atmosphere of @image2. Strictly preserve @image1's geometry, perspective lines, building silhouettes, street layout, signage placement, windows/doors proportions, and all object positions. Do not add or remove buildings, vehicles, people, street furniture, or text. Do not import any recognizable objects, landmarks, or patterns from @image2. Apply only stylistic transformation: color palette, lighting mood, material/texture rendering, and overall artistic treatment while keeping the scene structure identical. Respect @image2 color scale.",
     "monument": "Combine the monument and its surroundings from @image1 with the artistic style and atmosphere of @image2. Preserve the monument's exact architecture and proportions: silhouette, edges, carvings/reliefs placement, material boundaries, inscriptions, and all structural details. Keep the camera angle, framing, and perspective identical to @image1. Do not add or remove architectural elements, statues, people, flags, or decorative features. Do not bring any landmark features from @image2 into @image1. Apply only stylistic rendering (texture/brushwork), lighting mood, and color palette, without altering the monument's geometry. Respect @image2 color scale.",
-    "createWithUserImage": "IMPORTANT: Image @image5 contains the main subjects that must be present and recognizable in the final result, integrate them with the reference styles keeping their pose and anatomical features intact. Do not add subjects from @image1, @image2, @image3 and @image4."
+    "createWithUserImage": "IMPORTANT: @image5 contains the main subjects that must be present and recognizable in the final result, integrate them keeping their pose and anatomical features intact. Use the artistic style and atmosphere of @image1, @image2, @image3, and @image4 but DO NOT add subjects from them.",
+    "combineWithBranding": "Apply the artistic style and atmosphere of @image2. Respect @image2 color scale."
   }
 }
