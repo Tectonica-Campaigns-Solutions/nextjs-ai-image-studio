@@ -339,12 +339,12 @@ export async function POST(request: NextRequest) {
     // Select reference images based on whether user provided an image
     let referenceImageFilenames: string[]
     if (hasUserImage) {
-      // User provided image: use only 4 random reference images
-      console.log(`[Flux 2 Pro Edit Create] User image detected, selecting 4 random reference images from ${allReferenceFilenames.length} available`)
+      // User provided image: use only 3 random reference images (user image will be @image1)
+      console.log(`[Flux 2 Pro Edit Create] User image detected, selecting 3 random reference images from ${allReferenceFilenames.length} available`)
       
-      // Shuffle array and take first 4
+      // Shuffle array and take first 3
       const shuffled = [...allReferenceFilenames].sort(() => Math.random() - 0.5)
-      referenceImageFilenames = shuffled.slice(0, 4)
+      referenceImageFilenames = shuffled.slice(0, 3)
       
       console.log(`[Flux 2 Pro Edit Create] Selected reference images:`, referenceImageFilenames)
     } else {
@@ -426,7 +426,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Flux 2 Pro Edit Create] ✅ All ${allImageUrls.length} reference images uploaded`)
     console.log(`[Flux 2 Pro Edit Create] Reference URLs:`, allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
 
-    // Process user image if provided (this will be index 8)
+    // Process user image if provided (when present, it is inserted at index 0 → @image1)
     let userImageCount = 0
     
     if (base64Image) {
@@ -518,8 +518,8 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to PUT file: ${putResponse.status}`)
         }
         
-        console.log(`[Flux 2 Pro Edit Create] ✅ Uploaded user image: ${file_url}`)
-        allImageUrls.push(file_url)
+        console.log(`[Flux 2 Pro Edit Create] ✅ Uploaded user image: ${file_url} → inserted as @image1`)
+        allImageUrls.unshift(file_url)  // User image FIRST → @image1
         userImageCount = 1
         
       } catch (base64Error) {
@@ -543,9 +543,9 @@ export async function POST(request: NextRequest) {
       // Basic URL validation
       try {
         new URL(imageUrl)
-        allImageUrls.push(imageUrl)
+        allImageUrls.unshift(imageUrl)  // User image FIRST → @image1
         userImageCount = 1
-        console.log(`[Flux 2 Pro Edit Create] ✅ Added user image URL: ${imageUrl}`)
+        console.log(`[Flux 2 Pro Edit Create] ✅ Added user image URL as @image1: ${imageUrl}`)
       } catch (urlError) {
         return NextResponse.json({
           error: "Invalid image URL format",
