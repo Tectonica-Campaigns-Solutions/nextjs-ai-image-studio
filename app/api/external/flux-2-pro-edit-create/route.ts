@@ -184,6 +184,27 @@ async function getClientReferenceImages(orgType: string): Promise<{
  *   "userImages": 1
  * }
  */
+
+/**
+ * Get the text associated with a composition rule from the organization's config.json.
+ * Returns null if the rule is not found or the config cannot be read.
+ */
+async function getCompositionRuleText(orgType: string, compositionRule: string): Promise<string | null> {
+  try {
+    const folderName = `${orgType.toLowerCase()}-reference-images`
+    const folderPath = path.join(process.cwd(), 'public', folderName)
+    const configPath = path.join(folderPath, 'config.json')
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    if (config.prompts?.compositionRules && typeof config.prompts.compositionRules[compositionRule] === 'string') {
+      return config.prompts.compositionRules[compositionRule]
+    }
+  } catch {
+    // Config not found or unreadable — silently ignore
+  }
+  return null
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log("[Flux 2 Pro Edit Create] Request received")
@@ -199,7 +220,8 @@ export async function POST(request: NextRequest) {
       base64Image = null,
       settings = {},
       orgType: rawOrgType,
-      clientInfo = {}
+      clientInfo = {},
+      compositionRule = null
     } = body
     
     // Extract and validate orgType
@@ -566,6 +588,13 @@ export async function POST(request: NextRequest) {
       finalPrompt = `${userImagePrompt} ${prompt}`
       console.log(`[Flux 2 Pro Edit Create] User image detected, prepending preservation instruction`)
       console.log(`[Flux 2 Pro Edit Create] Preservation instruction: ${userImagePrompt}`)
+    }
+
+    // Apply composition rule if provided
+    const compositionRuleText = compositionRule ? await getCompositionRuleText(orgType, compositionRule) : null
+    if (compositionRuleText) {
+      finalPrompt = `${finalPrompt}\n${compositionRuleText}`
+      console.log(`[Flux 2 Pro Edit Create] Applied composition rule '${compositionRule}'`)
     }
 
     // Prepare input for fal.ai

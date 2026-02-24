@@ -56,6 +56,26 @@ function buildStyleTransferPrompt(userPrompt: string): string {
 }
 
 /**
+ * Get the text associated with a composition rule from the organization's config.json.
+ * Returns null if the rule is not found or the config cannot be read.
+ */
+async function getCompositionRuleText(orgType: string, compositionRule: string): Promise<string | null> {
+  try {
+    const folderName = `${orgType.toLowerCase()}-reference-images`
+    const folderPath = path.join(process.cwd(), 'public', folderName)
+    const configPath = path.join(folderPath, 'config.json')
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    if (config.prompts?.compositionRules && typeof config.prompts.compositionRules[compositionRule] === 'string') {
+      return config.prompts.compositionRules[compositionRule]
+    }
+  } catch {
+    // Config not found or unreadable — silently ignore
+  }
+  return null
+}
+
+/**
  * Helper: Resize image to respect fal.ai megapixel limits
  * First image: max 4 MP (2048x2048)
  * Second and third images: max 1 MP (1024x1024)
@@ -168,6 +188,7 @@ export async function POST(request: NextRequest) {
     let imageFiles: File[] = []
     let imageUrls: string[] = []
     let base64Images: string[] = []
+    let compositionRule: string | null = null
     
     if (isJSON) {
       // JSON payload
@@ -176,6 +197,7 @@ export async function POST(request: NextRequest) {
       const jsonBody = await request.json()
       
       prompt = jsonBody.prompt
+      compositionRule = jsonBody.compositionRule || null
       const rawOrgType = jsonBody.orgType
       
       // Extract and validate orgType
@@ -204,6 +226,7 @@ export async function POST(request: NextRequest) {
         
         // Extract parameters
         prompt = formData.get("prompt") as string
+        compositionRule = (formData.get("compositionRule") as string) || null
         console.log("[External Flux 2 Pro Combine] Prompt extracted:", prompt?.substring(0, 50))
         
         const rawOrgType = formData.get("orgType") as string
@@ -628,6 +651,13 @@ export async function POST(request: NextRequest) {
         finalPrompt = `${finalPrompt} ${brandingSuffix}`
         console.log(`[External Flux 2 Pro Combine] Added combine with branding suffix to prompt`)
       }
+    }
+
+    // Apply composition rule if provided
+    const compositionRuleText = compositionRule ? await getCompositionRuleText(orgType, compositionRule) : null
+    if (compositionRuleText) {
+      finalPrompt = `${finalPrompt}\n${compositionRuleText}`
+      console.log(`[External Flux 2 Pro Combine] Applied composition rule '${compositionRule}'`)
     }
     
     console.log(`[External Flux 2 Pro Combine] Built prompt with TectonicaAI style preset`)

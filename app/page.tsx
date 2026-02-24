@@ -17,6 +17,20 @@ import { Slider } from "@/components/ui/slider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { CanonicalPromptConfig } from "@/lib/canonical-prompt"
 
+const COMPOSITION_RULES: { value: string; label: string }[] = [
+  { value: "ruleOfThirdsUpper",          label: "Rule of Thirds – Upper" },
+  { value: "ruleOfThirdsVerticalUpper",   label: "Rule of Thirds – Vertical Upper" },
+  { value: "diagonalSquareLowerRight",    label: "Diagonal – Square Lower Right" },
+  { value: "ruleOfThirdsSquareBottom",    label: "Rule of Thirds – Square Bottom" },
+  { value: "ruleOfThirdsWideRight",       label: "Rule of Thirds – Wide Right" },
+  { value: "goldenSpiralWideTopleft",     label: "Golden Spiral – Wide Top Left" },
+  { value: "ruleOfThirdsWideBottom",      label: "Rule of Thirds – Wide Bottom" },
+  { value: "ruleOfThirdsWideRightColumn", label: "Rule of Thirds – Wide Right Column" },
+  { value: "ruleOfThirdsPortraitBottom",  label: "Rule of Thirds – Portrait Bottom" },
+  { value: "ruleOfThirdsPortraitUpper",   label: "Rule of Thirds – Portrait Upper" },
+  { value: "ruleOfThirdsRallySignTop",    label: "Rule of Thirds – Rally Sign Top" },
+]
+
 export default function ImageEditor() {
   // Flux LoRA Text-to-Image States
   const [fluxProPrompt, setFluxProPrompt] = useState("")
@@ -123,6 +137,12 @@ export default function ImageEditor() {
   const [flux2ProApplyError, setFlux2ProApplyError] = useState<string>("")
   const [showFlux2ProApplyAdvanced, setShowFlux2ProApplyAdvanced] = useState(false)
   const [flux2ProApplyUserImagePreview, setFlux2ProApplyUserImagePreview] = useState<string>("")
+
+  // Composition Rule States (one per Flux 2 Pro tab)
+  const [flux2ProEditCompositionRule, setFlux2ProEditCompositionRule] = useState("")
+  const [flux2ProCreateCompositionRule, setFlux2ProCreateCompositionRule] = useState("")
+  const [flux2ProApplyCompositionRule, setFlux2ProApplyCompositionRule] = useState("")
+  const [flux2ProCombineCompositionRule, setFlux2ProCombineCompositionRule] = useState("")
 
   // Flux 2 Pro Combine States (2 images)
   const [flux2ProCombinePrompt, setFlux2ProCombinePrompt] = useState("")
@@ -1286,6 +1306,9 @@ export default function ImageEditor() {
       formData.append("settings", JSON.stringify(settings))
       formData.append("orgType", "general")
       formData.append("useCanonicalPrompt", "false")
+      if (flux2ProEditCompositionRule) {
+        formData.append("compositionRule", flux2ProEditCompositionRule)
+      }
 
       console.log("[FRONTEND] Flux 2 Pro Edit - Sending request with", totalImages, "images")
 
@@ -1417,6 +1440,10 @@ export default function ImageEditor() {
       }
       
       requestBody.settings = settings
+
+      if (flux2ProCreateCompositionRule) {
+        requestBody.compositionRule = flux2ProCreateCompositionRule
+      }
 
       console.log("[FRONTEND] Flux 2 Pro Edit Create - Sending request")
       console.log("[FRONTEND] Has user image:", !!(flux2ProCreateUserImage || flux2ProCreateImageUrl || flux2ProCreateBase64Image))
@@ -1563,6 +1590,10 @@ export default function ImageEditor() {
       }
       
       requestBody.settings = settings
+
+      if (flux2ProApplyCompositionRule) {
+        requestBody.compositionRule = flux2ProApplyCompositionRule
+      }
 
       console.log("[FRONTEND] Flux 2 Pro Edit Apply - Sending request")
 
@@ -1729,6 +1760,9 @@ export default function ImageEditor() {
       formData.append("settings", JSON.stringify(settings))
       formData.append("orgType", "general")
       formData.append("useCanonicalPrompt", "false")
+      if (flux2ProCombineCompositionRule) {
+        formData.append("compositionRule", flux2ProCombineCompositionRule)
+      }
 
       console.log("[FRONTEND] Flux 2 Pro Combine - Sending request with 2 images")
 
@@ -2200,6 +2234,26 @@ export default function ImageEditor() {
                       </p>
                     </div>
 
+                    {/* Composition Rule */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-edit-composition-rule">Composition Rule (Optional)</Label>
+                      <Select
+                        value={flux2ProEditCompositionRule || "none"}
+                        onValueChange={(value) => setFlux2ProEditCompositionRule(value === "none" ? "" : value)}
+                      >
+                        <SelectTrigger id="flux2pro-edit-composition-rule">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {COMPOSITION_RULES.map((rule) => (
+                            <SelectItem key={rule.value} value={rule.value}>{rule.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Adds a composition directive to the prompt</p>
+                    </div>
+
                     {/* Image Size */}
                     <div className="space-y-2">
                       <Label htmlFor="flux2pro-image-size">Image Size</Label>
@@ -2625,6 +2679,26 @@ export default function ImageEditor() {
                       )}
                     </div>
 
+                    {/* Composition Rule */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-create-composition-rule">Composition Rule (Optional)</Label>
+                      <Select
+                        value={flux2ProCreateCompositionRule || "none"}
+                        onValueChange={(value) => setFlux2ProCreateCompositionRule(value === "none" ? "" : value)}
+                      >
+                        <SelectTrigger id="flux2pro-create-composition-rule">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {COMPOSITION_RULES.map((rule) => (
+                            <SelectItem key={rule.value} value={rule.value}>{rule.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Adds a composition directive to the prompt</p>
+                    </div>
+
                     {/* Image Size */}
                     <div className="space-y-2">
                       <Label htmlFor="flux2pro-create-image-size">Image Size</Label>
@@ -3043,6 +3117,27 @@ export default function ImageEditor() {
                       </p>
                     </div>
 
+                    {/* Composition Rule */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux-2-pro-apply-composition-rule">Composition Rule (Optional)</Label>
+                      <Select
+                        value={flux2ProApplyCompositionRule || "none"}
+                        onValueChange={(value) => setFlux2ProApplyCompositionRule(value === "none" ? "" : value)}
+                        disabled={isFlux2ProApplyGenerating}
+                      >
+                        <SelectTrigger id="flux-2-pro-apply-composition-rule">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {COMPOSITION_RULES.map((rule) => (
+                            <SelectItem key={rule.value} value={rule.value}>{rule.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Adds a composition directive to the prompt</p>
+                    </div>
+
                     {/* Image Size */}
                     <div className="space-y-2">
                       <Label htmlFor="flux-2-pro-apply-image-size">Image Size</Label>
@@ -3427,6 +3522,26 @@ export default function ImageEditor() {
                       <p className="text-xs text-muted-foreground">
                         First image: max 4 MP, Second image: max 1 MP
                       </p>
+                    </div>
+
+                    {/* Composition Rule */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2pro-combine-composition-rule">Composition Rule (Optional)</Label>
+                      <Select
+                        value={flux2ProCombineCompositionRule || "none"}
+                        onValueChange={(value) => setFlux2ProCombineCompositionRule(value === "none" ? "" : value)}
+                      >
+                        <SelectTrigger id="flux2pro-combine-composition-rule">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {COMPOSITION_RULES.map((rule) => (
+                            <SelectItem key={rule.value} value={rule.value}>{rule.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Adds a composition directive to the prompt</p>
                     </div>
 
                     {/* Image Size */}

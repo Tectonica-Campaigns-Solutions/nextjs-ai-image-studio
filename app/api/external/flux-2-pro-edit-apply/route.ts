@@ -152,6 +152,26 @@ async function getClientSceneConfig(
   }
 }
 
+/**
+ * Get the text associated with a composition rule from the organization's config.json.
+ * Returns null if the rule is not found or the config cannot be read.
+ */
+async function getCompositionRuleText(orgType: string, compositionRule: string): Promise<string | null> {
+  try {
+    const folderName = `${orgType.toLowerCase()}-reference-images`
+    const folderPath = path.join(process.cwd(), 'public', folderName)
+    const configPath = path.join(folderPath, 'config.json')
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    if (config.prompts?.compositionRules && typeof config.prompts.compositionRules[compositionRule] === 'string') {
+      return config.prompts.compositionRules[compositionRule]
+    }
+  } catch {
+    // Config not found or unreadable — silently ignore
+  }
+  return null
+}
+
 // Default scene type
 const DEFAULT_SCENE_TYPE: SceneType = 'people'
 
@@ -220,7 +240,8 @@ export async function POST(request: NextRequest) {
       base64Image = null,
       settings = {},
       orgType: rawOrgType,
-      clientInfo = {}
+      clientInfo = {},
+      compositionRule = null
     } = body
     
     // Extract and validate orgType and clientInfo
@@ -257,9 +278,16 @@ export async function POST(request: NextRequest) {
     
     // Build final prompt: base scene prompt + optional custom prompt at the end
     const basePrompt = sceneConfig.prompt
-    const finalPrompt = customPrompt && typeof customPrompt === 'string' && customPrompt.trim()
+    let finalPrompt = customPrompt && typeof customPrompt === 'string' && customPrompt.trim()
                         ? `${basePrompt} ${customPrompt.trim()}`
                         : basePrompt
+
+    // Apply composition rule if provided
+    const compositionRuleText = compositionRule ? await getCompositionRuleText(orgType, compositionRule) : null
+    if (compositionRuleText) {
+      finalPrompt = `${finalPrompt}\n${compositionRuleText}`
+      console.log(`[Flux 2 Pro Edit Apply] Applied composition rule '${compositionRule}'`)
+    }
 
     console.log("[Flux 2 Pro Edit Apply] Parameters:", {
       sceneType: sceneType,
