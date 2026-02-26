@@ -47,7 +47,7 @@ export interface ContentModerationConfig {
 
 // Default configuration
 export const defaultModerationConfig: ContentModerationConfig = {
-  enabled: true,
+  enabled: false,
   strictnessLevel: 'medium',
   
   blockedTerms: {
