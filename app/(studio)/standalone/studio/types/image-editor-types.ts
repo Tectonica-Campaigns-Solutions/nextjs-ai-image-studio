@@ -18,6 +18,24 @@ export interface HistoryState {
 export interface ImageEditorStandaloneParams {
   imageUrl?: string;
   user_id?: string;
+  session_id?: string;
+}
+
+export interface CanvasSessionData {
+  id: string;
+  background_url: string;
+  overlay_json: Record<string, unknown>;
+  metadata: Record<number, ObjectMetadata>;
+  name: string | null;
+}
+
+export interface CanvasSessionSummary {
+  id: string;
+  name: string | null;
+  thumbnail_url: string | null;
+  background_url: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LogoAsset {
@@ -37,6 +55,7 @@ export interface ImageEditorStandaloneProps {
   params: ImageEditorStandaloneParams;
   logoAssets: LogoAsset[];
   fontAssets?: FontAsset[];
+  sessionData?: CanvasSessionData | null;
 }
 
 export type DisclaimerPosition =

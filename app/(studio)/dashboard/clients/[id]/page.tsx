@@ -4,6 +4,7 @@ import {
   getClientAssets,
   getClientFonts,
   getClientVariants,
+  getClientCanvasSessions,
 } from "@/app/(studio)/dashboard/data/clients";
 import { ClientDetailClient } from "@/app/(studio)/dashboard/components/client-detail-client";
 
@@ -13,11 +14,12 @@ interface PageProps {
 
 export default async function ClientDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [client, assets, fonts, variants] = await Promise.all([
+  const [client, assets, fonts, variants, canvasSessions] = await Promise.all([
     getClientById(id),
     getClientAssets(id, "logo"),
     getClientFonts(id),
     getClientVariants(id),
+    getClientCanvasSessions(id),
   ]);
 
   if (client === null) {
@@ -30,6 +32,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
       assets={assets ?? []}
       fonts={fonts ?? []}
       variants={variants ?? []}
+      canvasSessions={canvasSessions ?? []}
     />
   );
 }

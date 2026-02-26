@@ -18,6 +18,7 @@ import type {
   DisclaimerPosition,
   ImageEditorStandaloneProps,
 } from "./types/image-editor-types";
+import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_FONTS, EXPORT, UI_COLORS } from "./constants/editor-constants";
 
 // Import custom hooks
@@ -35,8 +36,11 @@ export default function ImageEditorStandalone({
   params,
   logoAssets,
   fontAssets = [],
+  sessionData = null,
 }: ImageEditorStandaloneProps) {
-  const imageUrlFromParams = params.imageUrl;
+  const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
+
+  const { toast } = useToast();
 
   // Header ref
   const headerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +55,10 @@ export default function ImageEditorStandalone({
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState<boolean>(false);
   const [disclaimerPosition, setDisclaimerPosition] = useState<DisclaimerPosition>(EXPORT.DEFAULT_DISCLAIMER_POSITION);
+
+  // Save state
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
 
   // Determine image URL
   const imageUrl = imageUrlFromParams || uploadedImageUrl;
@@ -170,6 +178,35 @@ export default function ImageEditorStandalone({
     originalImageUrlRefStable.current = canvasEditor.originalImageUrlRef.current;
     originalImageDimensionsRefStable.current = canvasEditor.originalImageDimensions;
   }, [canvasEditor.canvas, canvasEditor.originalImageUrlRef, canvasEditor.originalImageDimensions]);
+
+  // Restore session overlays once the canvas and background image are ready.
+  // originalImageDimensions is set only after the background image finishes loading,
+  // making it a reliable reactive trigger.
+  const sessionRestoredRef = useRef(false);
+  useEffect(() => {
+    if (!sessionData || sessionRestoredRef.current) return;
+    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+
+    sessionRestoredRef.current = true;
+
+    const overlayJSON = JSON.stringify(sessionData.overlay_json);
+    const fakeEntry = {
+      overlayJSON,
+      metadata: sessionData.metadata,
+    };
+
+    (async () => {
+      try {
+        await history.loadOverlaysFromJSON(canvasEditor.canvas!, overlayJSON);
+        history.applyEntryMetadataToCanvas(fakeEntry as any);
+        canvasEditor.canvas!.renderAll();
+        history.saveState(true);
+      } catch (err) {
+        console.error("[session-restore] failed:", err);
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
 
   // Update text on style change
   useEffect(() => {
@@ -415,6 +452,93 @@ export default function ImageEditorStandalone({
     history.saveState(true);
   };
 
+  // Save canvas session to database
+  const handleSave = async () => {
+    if (!canvasEditor.canvas || !imageUrl) return;
+    setIsSaving(true);
+
+    try {
+      const currentEntry = history.historyState.entries[history.historyState.currentIndex];
+      const overlayJson = currentEntry
+        ? JSON.parse(currentEntry.overlayJSON)
+        : { version: "5.3.0", objects: [] };
+
+      const metadataToSave = currentEntry ? currentEntry.metadata : {};
+
+      const caUserId = params.user_id ?? "";
+
+      const body: Record<string, unknown> = {
+        ca_user_id: caUserId,
+        background_url: imageUrl,
+        overlay_json: overlayJson,
+        metadata: metadataToSave,
+      };
+      if (sessionId) body.session_id = sessionId;
+
+      const res = await fetch("/api/external/canvas-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        toast({
+          title: "Save failed",
+          description: data.error ?? "Could not save the session.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newSessionId: string = data.id;
+      setSessionId(newSessionId);
+
+      // Update URL with session_id so the user can reload and resume
+      const url = new URL(window.location.href);
+      url.searchParams.set("session_id", newSessionId);
+      window.history.replaceState({}, "", url.toString());
+
+      toast({
+        title: "Saved",
+        description: "Session saved successfully.",
+        className: "bg-[#1a1a1a] border-[#333] text-white",
+      });
+
+      // Upload thumbnail to Supabase Storage in the background (non-blocking)
+      const caUserIdForThumb = params.user_id ?? "";
+      const currentWidth = canvasEditor.canvas.width;
+      const thumbMultiplier = Math.min(1, 300 / currentWidth);
+      const thumbnailBase64 = canvasEditor.canvas.toDataURL({
+        format: "jpeg",
+        quality: 0.6,
+        multiplier: thumbMultiplier,
+      });
+      fetch("/api/external/canvas-sessions/thumbnail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: newSessionId,
+          ca_user_id: caUserIdForThumb,
+          image_base64: thumbnailBase64,
+        }),
+      }).catch((err) => {
+        console.warn("[handleSave] thumbnail upload failed (non-critical):", err);
+      });
+    } catch (err) {
+      console.error("[handleSave] error:", err);
+      toast({
+        title: "Save failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+        className: "bg-red-600 border-red-700 text-white",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Show upload prompt if no image
   if (showUploadPrompt) {
     return <UploadPromptCard onFileChange={handleImageUpload} />;
@@ -569,7 +693,9 @@ export default function ImageEditorStandalone({
                 redo={history.redo}
                 deleteSelected={deleteSelected}
                 handleExportClick={handleExportClick}
+                handleSave={handleSave}
                 isExporting={isExporting}
+                isSaving={isSaving}
                 historyState={history.historyState}
                 selectedObject={selection.selectedObject}
                 variant="mobile"
@@ -582,7 +708,9 @@ export default function ImageEditorStandalone({
             redo={history.redo}
             deleteSelected={deleteSelected}
             handleExportClick={handleExportClick}
+            handleSave={handleSave}
             isExporting={isExporting}
+            isSaving={isSaving}
             historyState={history.historyState}
             selectedObject={selection.selectedObject}
             variant="desktop"

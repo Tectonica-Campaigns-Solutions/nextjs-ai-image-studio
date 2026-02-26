@@ -10,8 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { AssetGallery } from "./asset-gallery";
 import { FontGallery } from "./font-gallery";
+import { CanvasSessionGallery } from "./CanvasSessionGallery";
 import { getGoogleFontsUrl, generateFontFaceCSS } from "../../standalone/studio/utils/studio-utils";
-import type { Client, ClientAsset, ClientFont } from "@/app/(studio)/dashboard/types";
+import type { Client, ClientAsset, ClientFont, CanvasSessionSummary } from "@/app/(studio)/dashboard/types";
 import { updateClientAction } from "@/app/(studio)/dashboard/actions/clients";
 
 interface ClientDetailClientProps {
@@ -19,6 +20,7 @@ interface ClientDetailClientProps {
   assets: ClientAsset[];
   fonts: ClientFont[];
   variants: string[];
+  canvasSessions: CanvasSessionSummary[];
 }
 
 export function ClientDetailClient({
@@ -26,6 +28,7 @@ export function ClientDetailClient({
   assets,
   fonts,
   variants,
+  canvasSessions,
 }: ClientDetailClientProps) {
   const router = useRouter();
   const [name, setName] = useState(client.name);
@@ -238,6 +241,20 @@ export function ClientDetailClient({
           <FontGallery
             clientId={client.id}
             fonts={fonts}
+            onRefresh={() => router.refresh()}
+          />
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Canvas Sessions
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Saved editor sessions for this client. Each session stores the canvas overlays and can be reopened in the editor.
+          </p>
+          <CanvasSessionGallery
+            clientId={client.id}
+            sessions={canvasSessions}
             onRefresh={() => router.refresh()}
           />
         </div>
