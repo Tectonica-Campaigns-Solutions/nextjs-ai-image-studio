@@ -88,7 +88,7 @@ export const LOGO_RANGES = {
 
 // Shape (Rectangle) Defaults
 export const SHAPE_DEFAULTS = {
-  FILL_COLOR: { r: 0, g: 0, b: 0, a: 0.3 },
+  FILL_COLOR: { r: 255, g: 255, b: 255, a: 1 },
   STROKE_COLOR: { r: 0, g: 0, b: 0, a: 1 },
   STROKE_WIDTH: 2,
   FILL_OPACITY: 100,

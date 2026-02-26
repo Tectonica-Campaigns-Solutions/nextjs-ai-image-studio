@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { PlusIcon } from "lucide-react";
-import { RgbaColorPicker } from "react-colorful";
+import { HexColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -14,6 +14,19 @@ import {
 } from "@/components/ui/popover";
 import type { RgbaColor } from "../types/image-editor-types";
 import { rgbaToString } from "../utils/image-editor-utils";
+
+function rgbaToHex(color: RgbaColor): string {
+  const toHex = (n: number) => n.toString(16).padStart(2, "0");
+  return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`;
+}
+
+function hexToRgba(hex: string, a = 1): RgbaColor {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return { r, g, b, a };
+}
 import { SHAPE_RANGES } from "../constants/editor-constants";
 
 export interface ShapeToolsPanelProps {
@@ -91,7 +104,10 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-3">
-              <RgbaColorPicker color={rectFillColor} onChange={setRectFillColor} />
+              <HexColorPicker
+                color={rgbaToHex(rectFillColor)}
+                onChange={(hex) => setRectFillColor(hexToRgba(hex, 1))}
+              />
             </PopoverContent>
           </Popover>
         </div>
@@ -118,7 +134,10 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-3">
-              <RgbaColorPicker color={rectStrokeColor} onChange={setRectStrokeColor} />
+              <HexColorPicker
+                color={rgbaToHex(rectStrokeColor)}
+                onChange={(hex) => setRectStrokeColor(hexToRgba(hex, 1))}
+              />
             </PopoverContent>
           </Popover>
         </div>
