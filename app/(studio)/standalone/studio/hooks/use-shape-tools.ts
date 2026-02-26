@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { SnappyRect } from "../utils/fabric-snappy-rect";
+import { Rect } from "fabric";
 import { rgbaToString } from "../utils/image-editor-utils";
 import type { RgbaColor } from "../types/image-editor-types";
 import { SHAPE_DEFAULTS } from "../constants/editor-constants";
@@ -23,25 +23,19 @@ export function useShapeTools(options: UseShapeToolsOptions) {
   const [rectStrokeWidth, setRectStrokeWidth] = useState<number>(
     SHAPE_DEFAULTS.STROKE_WIDTH
   );
-  const [snapEnabled, setSnapEnabled] = useState<boolean>(
-    SHAPE_DEFAULTS.SNAP_ENABLED
-  );
-  const [snapThreshold, setSnapThreshold] = useState<number>(
-    SHAPE_DEFAULTS.SNAP_THRESHOLD
+  const [rectOpacity, setRectOpacity] = useState<number>(
+    SHAPE_DEFAULTS.FILL_OPACITY
   );
 
   const isRectSelected = (obj: any) =>
-    obj &&
-    (obj.type === "rect" ||
-      obj.type === "snappy-rect" ||
-      (obj as any).snapEnabled !== undefined);
+    obj && obj.type === "rect" && (obj as any).isRect === true;
 
-  const addSnappyRect = useCallback(() => {
+  const addRect = useCallback(() => {
     const canvas = canvasRef.current;
     const saveState = saveStateRef.current;
     if (!canvas) return;
 
-    const rect = new SnappyRect({
+    const rect = new Rect({
       left: canvas.width! / 2 - SHAPE_DEFAULTS.WIDTH / 2,
       top: canvas.height! / 2 - SHAPE_DEFAULTS.HEIGHT / 2,
       width: SHAPE_DEFAULTS.WIDTH,
@@ -49,17 +43,18 @@ export function useShapeTools(options: UseShapeToolsOptions) {
       fill: rgbaToString(rectFillColor),
       stroke: rgbaToString(rectStrokeColor),
       strokeWidth: rectStrokeWidth,
+      opacity: rectOpacity / 100,
       selectable: true,
       evented: true,
-      snapEnabled,
-      snapThreshold,
     });
 
-    rect._setCanvas(canvas);
+    (rect as any).isRect = true;
     (rect as any).isEditable = true;
 
-    canvas.add(rect as any);
-    canvas.setActiveObject(rect as any);
+    canvas.add(rect);
+    // Place rect just above the background image (index 0), below all other overlays
+    canvas.moveObjectTo(rect, 1);
+    canvas.setActiveObject(rect);
     canvas.renderAll();
     saveState(true);
   }, [
@@ -68,8 +63,7 @@ export function useShapeTools(options: UseShapeToolsOptions) {
     rectFillColor,
     rectStrokeColor,
     rectStrokeWidth,
-    snapEnabled,
-    snapThreshold,
+    rectOpacity,
   ]);
 
   const updateSelectedRect = useCallback(() => {
@@ -78,21 +72,12 @@ export function useShapeTools(options: UseShapeToolsOptions) {
     const active = canvas.getActiveObject();
     if (!active || !isRectSelected(active)) return;
 
-    const isSnappyRect =
-      active.type === "snappy-rect" ||
-      (active as any).snapEnabled !== undefined;
-
-    const rectObj = active as unknown as SnappyRect;
-    rectObj.set({
+    active.set({
       fill: rgbaToString(rectFillColor),
       stroke: rgbaToString(rectStrokeColor),
       strokeWidth: rectStrokeWidth,
+      opacity: rectOpacity / 100,
     });
-
-    if (isSnappyRect) {
-      rectObj.snapEnabled = snapEnabled;
-      rectObj.snapThreshold = snapThreshold;
-    }
 
     canvas.renderAll();
   }, [
@@ -100,8 +85,7 @@ export function useShapeTools(options: UseShapeToolsOptions) {
     rectFillColor,
     rectStrokeColor,
     rectStrokeWidth,
-    snapEnabled,
-    snapThreshold,
+    rectOpacity,
   ]);
 
   return {
@@ -111,12 +95,10 @@ export function useShapeTools(options: UseShapeToolsOptions) {
     setRectStrokeColor,
     rectStrokeWidth,
     setRectStrokeWidth,
-    snapEnabled,
-    setSnapEnabled,
-    snapThreshold,
-    setSnapThreshold,
+    rectOpacity,
+    setRectOpacity,
     isRectSelected,
-    addSnappyRect,
+    addRect,
     updateSelectedRect,
   };
 }

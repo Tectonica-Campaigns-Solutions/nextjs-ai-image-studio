@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Canvas } from "fabric";
-import { SnappyRect } from "../utils/fabric-snappy-rect";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
 import type {
   HistoryEntry,
@@ -194,11 +193,6 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
         width: 1,
         height: 1,
       });
-      (tempCanvas as any).registerCustomClass =
-        (tempCanvas as any).registerCustomClass || {};
-      if (typeof window !== "undefined" && (window as any).fabric) {
-        (window as any).fabric.SnappyRect = SnappyRect;
-      }
       await tempCanvas.loadFromJSON(overlayJSON);
       const overlayObjects = tempCanvas.getObjects();
       overlayObjects.forEach((obj) => {
@@ -237,11 +231,6 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
           obj.isQR = meta.isQR;
           obj.isLogo = meta.isLogo;
           obj.isEditable = meta.isEditable;
-
-          if (obj.type === "snappy-rect" || obj.snapEnabled !== undefined) {
-            const snappyRect = obj as unknown as SnappyRect;
-            snappyRect._setCanvas(canvas);
-          }
 
           if (meta.isQR && obj.type === "image") {
             const scaledWidth = obj.getScaledWidth();

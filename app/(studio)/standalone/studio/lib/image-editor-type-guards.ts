@@ -1,8 +1,8 @@
 import type {
   FabricObjectWithMetadata,
   FabricCanvas,
-  SnappyRectObject,
-} from "@/app/standalone/studio/types/image-editor-types";
+  RectObject,
+} from "@/app/(studio)/standalone/studio/types/image-editor-types";
 
 /**
  * Type guard to check if an object is a Fabric image
@@ -19,13 +19,10 @@ export function isTextObject(obj: any): obj is FabricObjectWithMetadata {
 }
 
 /**
- * Type guard to check if an object is a SnappyRect
+ * Type guard to check if an object is a rect shape
  */
-export function isSnappyRect(obj: any): obj is SnappyRectObject {
-  return (
-    obj &&
-    (obj.type === "snappy-rect" || obj.type === "rect" || "snapEnabled" in obj)
-  );
+export function isRect(obj: any): obj is RectObject {
+  return obj && obj.type === "rect" && obj.isRect === true;
 }
 
 /**

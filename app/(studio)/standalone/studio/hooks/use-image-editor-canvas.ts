@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Canvas } from "fabric";
-import { SnappyRect } from "../utils/fabric-snappy-rect";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
 
@@ -180,13 +179,8 @@ export function useImageEditorCanvas(
         width: maxDisplayWidth,
         height: maxDisplayHeight,
         backgroundColor: "#f8f9fa",
+        preserveObjectStacking: true,
       });
-
-      (fabricCanvas as any).registerCustomClass =
-        (fabricCanvas as any).registerCustomClass || {};
-      if (typeof window !== "undefined" && (window as any).fabric) {
-        (window as any).fabric.SnappyRect = SnappyRect;
-      }
 
       const canvasElement = fabricCanvas.getElement();
       const canvasWrapper = canvasElement.parentElement;
@@ -310,35 +304,6 @@ export function useImageEditorCanvas(
           return false;
         }
       });
-
-      fabricCanvas.on("object:added", (e) => {
-        const obj = e.target;
-        if (
-          obj &&
-          (obj.type === "snappy-rect" || (obj as any).snapEnabled !== undefined)
-        ) {
-          const snappyRect = obj as unknown as SnappyRect;
-          snappyRect._setCanvas(fabricCanvas);
-        }
-      });
-
-      const originalRenderAll = fabricCanvas.renderAll.bind(fabricCanvas);
-      fabricCanvas.renderAll = function () {
-        originalRenderAll();
-        const objects = fabricCanvas.getObjects();
-        objects.forEach((obj) => {
-          if (
-            obj.type === "snappy-rect" ||
-            (obj as any).snapEnabled !== undefined
-          ) {
-            const snappyRect = obj as unknown as SnappyRect;
-            const ctx = fabricCanvas.getContext();
-            if (ctx && snappyRect._drawGuides) {
-              snappyRect._drawGuides(ctx);
-            }
-          }
-        });
-      };
 
       fabricCanvas.on("object:modified", (e) => {
         const obj = e.target;

@@ -86,11 +86,9 @@ export interface FabricCanvas {
   loadFromJSON(json: string | any): Promise<void>;
 }
 
-export interface SnappyRectObject extends FabricObjectWithMetadata {
-  snapEnabled: boolean;
-  snapThreshold: number;
+export interface RectObject extends FabricObjectWithMetadata {
+  isRect: boolean;
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
-  _setCanvas(canvas: FabricCanvas): void;
 }
