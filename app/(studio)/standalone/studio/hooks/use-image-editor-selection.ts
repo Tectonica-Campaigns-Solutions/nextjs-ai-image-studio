@@ -15,10 +15,10 @@ export interface UseImageEditorSelectionOptions {
   setIsUnderline: (b: boolean) => void;
   setLineHeight: (n: number) => void;
   setLetterSpacing: (n: number) => void;
-  setRectFillColor: (c: RgbaColor) => void;
-  setRectStrokeColor: (c: RgbaColor) => void;
-  setRectStrokeWidth: (n: number) => void;
-  setRectOpacity: (n: number) => void;
+  setShapeFillColor: (c: RgbaColor) => void;
+  setShapeStrokeColor: (c: RgbaColor) => void;
+  setShapeStrokeWidth: (n: number) => void;
+  setShapeOpacity: (n: number) => void;
 }
 
 export function useImageEditorSelection(
@@ -35,10 +35,10 @@ export function useImageEditorSelection(
     setIsUnderline,
     setLineHeight,
     setLetterSpacing,
-    setRectFillColor,
-    setRectStrokeColor,
-    setRectStrokeWidth,
-    setRectOpacity,
+    setShapeFillColor,
+    setShapeStrokeColor,
+    setShapeStrokeWidth,
+    setShapeOpacity,
   } = options;
 
   const [selectedObject, setSelectedObject] = useState<any>(null);
@@ -106,25 +106,22 @@ export function useImageEditorSelection(
     setLetterSpacing,
   ]);
 
-  // Sync rect UI from selected rect object
+  // Sync shape UI from selected shape object
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !selectedObject) return;
 
-    const isRectSelected =
-      selectedObject.type === "rect" && (selectedObject as any).isRect === true;
+    if (!(selectedObject as any).isShape) return;
 
-    if (!isRectSelected) return;
+    const shapeObj = selectedObject as any;
 
-    const rectObj = selectedObject as any;
-
-    const fillColor = rectObj.fill as string;
+    const fillColor = shapeObj.fill as string;
     if (fillColor && fillColor.startsWith("rgba")) {
       const match = fillColor.match(
         /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
       );
       if (match) {
-        setRectFillColor({
+        setShapeFillColor({
           r: Number.parseInt(match[1]),
           g: Number.parseInt(match[2]),
           b: Number.parseInt(match[3]),
@@ -133,13 +130,13 @@ export function useImageEditorSelection(
       }
     }
 
-    const strokeColor = rectObj.stroke as string;
+    const strokeColor = shapeObj.stroke as string;
     if (strokeColor && strokeColor.startsWith("rgba")) {
       const match = strokeColor.match(
         /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
       );
       if (match) {
-        setRectStrokeColor({
+        setShapeStrokeColor({
           r: Number.parseInt(match[1]),
           g: Number.parseInt(match[2]),
           b: Number.parseInt(match[3]),
@@ -148,17 +145,17 @@ export function useImageEditorSelection(
       }
     }
 
-    setRectStrokeWidth(rectObj.strokeWidth || 2);
+    setShapeStrokeWidth(shapeObj.strokeWidth || 2);
 
-    const opacity = typeof rectObj.opacity === "number" ? rectObj.opacity : 1;
-    setRectOpacity(Math.round(opacity * 100));
+    const opacity = typeof shapeObj.opacity === "number" ? shapeObj.opacity : 1;
+    setShapeOpacity(Math.round(opacity * 100));
   }, [
     selectedObject,
     canvasRef,
-    setRectFillColor,
-    setRectStrokeColor,
-    setRectStrokeWidth,
-    setRectOpacity,
+    setShapeFillColor,
+    setShapeStrokeColor,
+    setShapeStrokeWidth,
+    setShapeOpacity,
   ]);
 
   return {

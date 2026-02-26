@@ -91,10 +91,10 @@ export default function ImageEditorStandalone({
     setIsUnderline: () => { },
     setLineHeight: () => { },
     setLetterSpacing: () => { },
-    setRectFillColor: () => { },
-    setRectStrokeColor: () => { },
-    setRectStrokeWidth: () => { },
-    setRectOpacity: () => { },
+    setShapeFillColor: () => { },
+    setShapeStrokeColor: () => { },
+    setShapeStrokeWidth: () => { },
+    setShapeOpacity: () => { },
   });
 
   // Initialize tools hooks with stable refs
@@ -131,10 +131,10 @@ export default function ImageEditorStandalone({
     (selection as any).setIsUnderline = textTools.setIsUnderline;
     (selection as any).setLineHeight = textTools.setLineHeight;
     (selection as any).setLetterSpacing = textTools.setLetterSpacing;
-    (selection as any).setRectFillColor = shapeTools.setRectFillColor;
-    (selection as any).setRectStrokeColor = shapeTools.setRectStrokeColor;
-    (selection as any).setRectStrokeWidth = shapeTools.setRectStrokeWidth;
-    (selection as any).setRectOpacity = shapeTools.setRectOpacity;
+    (selection as any).setShapeFillColor = shapeTools.setShapeFillColor;
+    (selection as any).setShapeStrokeColor = shapeTools.setShapeStrokeColor;
+    (selection as any).setShapeStrokeWidth = shapeTools.setShapeStrokeWidth;
+    (selection as any).setShapeOpacity = shapeTools.setShapeOpacity;
   }, []);
 
   // Initialize history hook with stable refs
@@ -242,23 +242,19 @@ export default function ImageEditorStandalone({
     textTools.letterSpacing,
   ]);
 
-  // Update rect on style change
+  // Update shape on style change
   useEffect(() => {
     if (!canvasEditor.canvas || !selection.selectedObject) return;
 
-    const isRectSelected =
-      selection.selectedObject.type === "rect" &&
-      (selection.selectedObject as any).isRect === true;
+    if (!shapeTools.isShapeSelected(selection.selectedObject)) return;
 
-    if (!isRectSelected) return;
-
-    shapeTools.updateSelectedRect();
+    shapeTools.updateSelectedShape();
     history.saveState(false);
   }, [
-    shapeTools.rectFillColor,
-    shapeTools.rectStrokeColor,
-    shapeTools.rectStrokeWidth,
-    shapeTools.rectOpacity,
+    shapeTools.shapeFillColor,
+    shapeTools.shapeStrokeColor,
+    shapeTools.shapeStrokeWidth,
+    shapeTools.shapeOpacity,
   ]);
 
   // Update QR on size/opacity change
@@ -668,27 +664,24 @@ export default function ImageEditorStandalone({
     [frameTools, canvasEditor.aspectRatio, isFrameSelected]
   );
 
-  const isRectSelected =
-    selection.selectedObject &&
-    selection.selectedObject.type === "rect" &&
-    (selection.selectedObject as any).isRect === true;
+  const isShapeSelected = shapeTools.isShapeSelected(selection.selectedObject);
 
   const shapeToolsPanel = useMemo(
     () => (
       <ShapeToolsPanel
-        isRectSelected={!!isRectSelected}
-        addRect={shapeTools.addRect}
-        rectFillColor={shapeTools.rectFillColor}
-        setRectFillColor={shapeTools.setRectFillColor}
-        rectStrokeColor={shapeTools.rectStrokeColor}
-        setRectStrokeColor={shapeTools.setRectStrokeColor}
-        rectStrokeWidth={shapeTools.rectStrokeWidth}
-        setRectStrokeWidth={shapeTools.setRectStrokeWidth}
-        rectOpacity={shapeTools.rectOpacity}
-        setRectOpacity={shapeTools.setRectOpacity}
+        isShapeSelected={!!isShapeSelected}
+        addShape={shapeTools.addShape}
+        shapeFillColor={shapeTools.shapeFillColor}
+        setShapeFillColor={shapeTools.setShapeFillColor}
+        shapeStrokeColor={shapeTools.shapeStrokeColor}
+        setShapeStrokeColor={shapeTools.setShapeStrokeColor}
+        shapeStrokeWidth={shapeTools.shapeStrokeWidth}
+        setShapeStrokeWidth={shapeTools.setShapeStrokeWidth}
+        shapeOpacity={shapeTools.shapeOpacity}
+        setShapeOpacity={shapeTools.setShapeOpacity}
       />
     ),
-    [isRectSelected, shapeTools]
+    [isShapeSelected, shapeTools]
   );
 
   return (

@@ -114,8 +114,23 @@ export interface FabricCanvas {
   loadFromJSON(json: string | any): Promise<void>;
 }
 
-export interface RectObject extends FabricObjectWithMetadata {
-  isRect: boolean;
+export type ShapeType =
+  | "rectangle"
+  | "square"
+  | "circle"
+  | "half-circle-right"
+  | "half-circle-left"
+  | "triangle"
+  | "star"
+  | "arrow"
+  | "diamond"
+  | "hexagon"
+  | "cross"
+  | "rounded-rectangle";
+
+export interface ShapeObject extends FabricObjectWithMetadata {
+  isShape: boolean;
+  shapeType: ShapeType;
   fill?: string;
   stroke?: string;
   strokeWidth?: number;

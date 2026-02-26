@@ -98,7 +98,7 @@ export const FRAME_RANGES = {
   OPACITY_STEP: 5,
 } as const;
 
-// Shape (Rectangle) Defaults
+// Shape Defaults
 export const SHAPE_DEFAULTS = {
   FILL_COLOR: { r: 255, g: 255, b: 255, a: 1 },
   STROKE_COLOR: { r: 0, g: 0, b: 0, a: 1 },
@@ -106,9 +106,12 @@ export const SHAPE_DEFAULTS = {
   FILL_OPACITY: 100,
   WIDTH: 150,
   HEIGHT: 150,
+  RADIUS: 75,
+  STAR_OUTER_RADIUS: 75,
+  STAR_INNER_RADIUS: 30,
 } as const;
 
-// Shape (Rectangle) Ranges
+// Shape Ranges
 export const SHAPE_RANGES = {
   STROKE_WIDTH_MIN: 0,
   STROKE_WIDTH_MAX: 20,
