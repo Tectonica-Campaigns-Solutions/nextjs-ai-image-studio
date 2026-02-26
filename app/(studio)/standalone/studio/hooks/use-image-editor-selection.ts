@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import type { IText } from "fabric";
-import { SnappyRect } from "../utils/fabric-snappy-rect";
 import type { ObjectMetadata, RgbaColor } from "../types/image-editor-types";
 
 export interface UseImageEditorSelectionOptions {
@@ -19,8 +18,7 @@ export interface UseImageEditorSelectionOptions {
   setRectFillColor: (c: RgbaColor) => void;
   setRectStrokeColor: (c: RgbaColor) => void;
   setRectStrokeWidth: (n: number) => void;
-  setSnapEnabled: (b: boolean) => void;
-  setSnapThreshold: (n: number) => void;
+  setRectOpacity: (n: number) => void;
 }
 
 export function useImageEditorSelection(
@@ -40,8 +38,7 @@ export function useImageEditorSelection(
     setRectFillColor,
     setRectStrokeColor,
     setRectStrokeWidth,
-    setSnapEnabled,
-    setSnapThreshold,
+    setRectOpacity,
   } = options;
 
   const [selectedObject, setSelectedObject] = useState<any>(null);
@@ -115,13 +112,11 @@ export function useImageEditorSelection(
     if (!canvas || !selectedObject) return;
 
     const isRectSelected =
-      selectedObject.type === "rect" ||
-      selectedObject.type === "snappy-rect" ||
-      (selectedObject as any).snapEnabled !== undefined;
+      selectedObject.type === "rect" && (selectedObject as any).isRect === true;
 
     if (!isRectSelected) return;
 
-    const rectObj = selectedObject as unknown as SnappyRect;
+    const rectObj = selectedObject as any;
 
     const fillColor = rectObj.fill as string;
     if (fillColor && fillColor.startsWith("rgba")) {
@@ -155,18 +150,15 @@ export function useImageEditorSelection(
 
     setRectStrokeWidth(rectObj.strokeWidth || 2);
 
-    if (isRectSelected && rectObj.snapEnabled !== undefined) {
-      setSnapEnabled(rectObj.snapEnabled);
-      setSnapThreshold(rectObj.snapThreshold || 5);
-    }
+    const opacity = typeof rectObj.opacity === "number" ? rectObj.opacity : 1;
+    setRectOpacity(Math.round(opacity * 100));
   }, [
     selectedObject,
     canvasRef,
     setRectFillColor,
     setRectStrokeColor,
     setRectStrokeWidth,
-    setSnapEnabled,
-    setSnapThreshold,
+    setRectOpacity,
   ]);
 
   return {

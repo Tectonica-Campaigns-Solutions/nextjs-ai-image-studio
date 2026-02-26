@@ -91,8 +91,7 @@ export const SHAPE_DEFAULTS = {
   FILL_COLOR: { r: 0, g: 0, b: 0, a: 0.3 },
   STROKE_COLOR: { r: 0, g: 0, b: 0, a: 1 },
   STROKE_WIDTH: 2,
-  SNAP_ENABLED: true,
-  SNAP_THRESHOLD: 5,
+  FILL_OPACITY: 100,
   WIDTH: 150,
   HEIGHT: 150,
 } as const;
@@ -101,8 +100,8 @@ export const SHAPE_DEFAULTS = {
 export const SHAPE_RANGES = {
   STROKE_WIDTH_MIN: 0,
   STROKE_WIDTH_MAX: 20,
-  SNAP_THRESHOLD_MIN: 1,
-  SNAP_THRESHOLD_MAX: 20,
+  OPACITY_MIN: 0,
+  OPACITY_MAX: 100,
 } as const;
 
 // Export/Disclaimer Configuration

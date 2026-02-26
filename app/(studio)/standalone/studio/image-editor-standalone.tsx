@@ -82,8 +82,7 @@ export default function ImageEditorStandalone({
     setRectFillColor: () => { },
     setRectStrokeColor: () => { },
     setRectStrokeWidth: () => { },
-    setSnapEnabled: () => { },
-    setSnapThreshold: () => { },
+    setRectOpacity: () => { },
   });
 
   // Initialize tools hooks with stable refs
@@ -123,8 +122,7 @@ export default function ImageEditorStandalone({
     (selection as any).setRectFillColor = shapeTools.setRectFillColor;
     (selection as any).setRectStrokeColor = shapeTools.setRectStrokeColor;
     (selection as any).setRectStrokeWidth = shapeTools.setRectStrokeWidth;
-    (selection as any).setSnapEnabled = shapeTools.setSnapEnabled;
-    (selection as any).setSnapThreshold = shapeTools.setSnapThreshold;
+    (selection as any).setRectOpacity = shapeTools.setRectOpacity;
   }, []);
 
   // Initialize history hook with stable refs
@@ -195,9 +193,8 @@ export default function ImageEditorStandalone({
     if (!canvasEditor.canvas || !selection.selectedObject) return;
 
     const isRectSelected =
-      selection.selectedObject.type === "rect" ||
-      selection.selectedObject.type === "snappy-rect" ||
-      (selection.selectedObject as any).snapEnabled !== undefined;
+      selection.selectedObject.type === "rect" &&
+      (selection.selectedObject as any).isRect === true;
 
     if (!isRectSelected) return;
 
@@ -207,8 +204,7 @@ export default function ImageEditorStandalone({
     shapeTools.rectFillColor,
     shapeTools.rectStrokeColor,
     shapeTools.rectStrokeWidth,
-    shapeTools.snapEnabled,
-    shapeTools.snapThreshold,
+    shapeTools.rectOpacity,
   ]);
 
   // Update QR on size/opacity change
@@ -499,25 +495,22 @@ export default function ImageEditorStandalone({
 
   const isRectSelected =
     selection.selectedObject &&
-    (selection.selectedObject.type === "rect" ||
-      selection.selectedObject.type === "snappy-rect" ||
-      (selection.selectedObject as any).snapEnabled !== undefined);
+    selection.selectedObject.type === "rect" &&
+    (selection.selectedObject as any).isRect === true;
 
   const shapeToolsPanel = useMemo(
     () => (
       <ShapeToolsPanel
         isRectSelected={!!isRectSelected}
-        addSnappyRect={shapeTools.addSnappyRect}
+        addRect={shapeTools.addRect}
         rectFillColor={shapeTools.rectFillColor}
         setRectFillColor={shapeTools.setRectFillColor}
         rectStrokeColor={shapeTools.rectStrokeColor}
         setRectStrokeColor={shapeTools.setRectStrokeColor}
         rectStrokeWidth={shapeTools.rectStrokeWidth}
         setRectStrokeWidth={shapeTools.setRectStrokeWidth}
-        snapEnabled={shapeTools.snapEnabled}
-        setSnapEnabled={shapeTools.setSnapEnabled}
-        snapThreshold={shapeTools.snapThreshold}
-        setSnapThreshold={shapeTools.setSnapThreshold}
+        rectOpacity={shapeTools.rectOpacity}
+        setRectOpacity={shapeTools.setRectOpacity}
       />
     ),
     [isRectSelected, shapeTools]
