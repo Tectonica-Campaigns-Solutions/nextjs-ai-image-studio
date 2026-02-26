@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { AssetGallery } from "./asset-gallery";
+import { FrameGallery } from "./frame-gallery";
 import { FontGallery } from "./font-gallery";
 import { CanvasSessionGallery } from "./CanvasSessionGallery";
 import { getGoogleFontsUrl, generateFontFaceCSS } from "../../standalone/studio/utils/studio-utils";
@@ -18,6 +19,7 @@ import { updateClientAction } from "@/app/(studio)/dashboard/actions/clients";
 interface ClientDetailClientProps {
   client: Client;
   assets: ClientAsset[];
+  frames: ClientAsset[];
   fonts: ClientFont[];
   variants: string[];
   canvasSessions: CanvasSessionSummary[];
@@ -26,6 +28,7 @@ interface ClientDetailClientProps {
 export function ClientDetailClient({
   client,
   assets,
+  frames,
   fonts,
   variants,
   canvasSessions,
@@ -232,6 +235,20 @@ export function ClientDetailClient({
               onRefresh={() => router.refresh()}
             />
           </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Client Frames
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Frame images overlaid on the canvas. Tag each frame with an aspect ratio (e.g. <strong>16:9</strong>, <strong>1:1</strong>) so it only appears when the canvas matches that proportion.
+          </p>
+          <FrameGallery
+            clientId={client.id}
+            frames={frames}
+            onRefresh={() => router.refresh()}
+          />
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-8">

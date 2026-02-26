@@ -14,9 +14,10 @@ interface PageProps {
 
 export default async function ClientDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [client, assets, fonts, variants, canvasSessions] = await Promise.all([
+  const [client, assets, frames, fonts, variants, canvasSessions] = await Promise.all([
     getClientById(id),
     getClientAssets(id, "logo"),
+    getClientAssets(id, "frame"),
     getClientFonts(id),
     getClientVariants(id),
     getClientCanvasSessions(id),
@@ -30,6 +31,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
     <ClientDetailClient
       client={client}
       assets={assets ?? []}
+      frames={frames ?? []}
       fonts={fonts ?? []}
       variants={variants ?? []}
       canvasSessions={canvasSessions ?? []}

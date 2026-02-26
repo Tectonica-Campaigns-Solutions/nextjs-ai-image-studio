@@ -2,6 +2,7 @@ export interface ObjectMetadata {
   isBackground?: boolean;
   isQR?: boolean;
   isLogo?: boolean;
+  isFrame?: boolean;
   isEditable?: boolean;
 }
 
@@ -44,6 +45,12 @@ export interface LogoAsset {
   variant: string | null;
 }
 
+export interface FrameAsset {
+  url: string;
+  display_name: string;
+  variant: string | null;
+}
+
 export interface FontAsset {
   font_source: "google" | "custom";
   font_family: string;
@@ -54,6 +61,7 @@ export interface FontAsset {
 export interface ImageEditorStandaloneProps {
   params: ImageEditorStandaloneParams;
   logoAssets: LogoAsset[];
+  frameAssets?: FrameAsset[];
   fontAssets?: FontAsset[];
   sessionData?: CanvasSessionData | null;
 }
@@ -76,6 +84,7 @@ export interface FabricObjectWithMetadata {
   isBackground?: boolean;
   isQR?: boolean;
   isLogo?: boolean;
+  isFrame?: boolean;
   isEditable?: boolean;
   type: string;
   getScaledWidth(): number;

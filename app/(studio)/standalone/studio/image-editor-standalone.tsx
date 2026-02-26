@@ -8,6 +8,7 @@ import {
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
+  FrameToolsPanel,
   LogoToolsPanel,
   QrToolsPanel,
   ShapeToolsPanel,
@@ -28,6 +29,7 @@ import { useImageEditorSelection } from "./hooks/use-image-editor-selection";
 import { useTextTools } from "./hooks/use-text-tools";
 import { useQRTools } from "./hooks/use-qr-tools";
 import { useLogoTools } from "./hooks/use-logo-tools";
+import { useFrameTools } from "./hooks/use-frame-tools";
 import { useShapeTools } from "./hooks/use-shape-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
@@ -35,6 +37,7 @@ import { useEditorFonts } from "./hooks/use-editor-fonts";
 export default function ImageEditorStandalone({
   params,
   logoAssets,
+  frameAssets = [],
   fontAssets = [],
   sessionData = null,
 }: ImageEditorStandaloneProps) {
@@ -74,6 +77,7 @@ export default function ImageEditorStandalone({
   const originalImageUrlRefStable = useRef<string | null>(null);
   const originalImageDimensionsRefStable = useRef<{ width: number; height: number } | null>(null);
   const saveStateRef = useRef<(immediate?: boolean) => void>(() => { });
+  const setFrameOpacityRef = useRef<(n: number) => void>(() => { });
 
   // Initialize selection hook first (provides setters needed by other hooks)
   const selection = useImageEditorSelection({
@@ -159,11 +163,24 @@ export default function ImageEditorStandalone({
     setSelectedObject: selection.setSelectedObject,
     setQrSize: qrTools.setQrSize,
     setLogoSize: logoTools.setLogoSize,
+    setFrameOpacity: (n: number) => setFrameOpacityRef.current(n),
     saveState: history.saveState,
     moveSaveTimeoutRef: history.moveSaveTimeoutRef,
     saveStateTimeoutRef: history.saveStateTimeoutRef,
     preventContextMenu,
   });
+
+  const frameTools = useFrameTools({
+    canvasRef: canvasRefStable,
+    frameAssets,
+    aspectRatio: canvasEditor.aspectRatio,
+    saveStateRef,
+  });
+
+  // Keep setFrameOpacityRef in sync so the canvas hook can call it
+  useEffect(() => {
+    setFrameOpacityRef.current = frameTools.setFrameOpacity;
+  }, [frameTools.setFrameOpacity]);
 
   // Mobile panel hook
   const mobilePanel = useMobilePanel();
@@ -257,6 +274,22 @@ export default function ImageEditorStandalone({
     logoTools.updateLogo();
     history.saveState(false);
   }, [logoTools.logoSize, logoTools.logoOpacity]);
+
+  // Update frame on opacity change
+  useEffect(() => {
+    if (!canvasEditor.canvas) return;
+    frameTools.updateFrame();
+    history.saveState(false);
+  }, [frameTools.frameOpacity]);
+
+  // Sync frame panel (opacity) when user selects a frame overlay
+  useEffect(() => {
+    const obj = selection.selectedObject;
+    if (!obj || !(obj as any).isFrame) return;
+    const frameObj = obj as any;
+    const op = frameObj.opacity;
+    if (typeof op === "number") frameTools.setFrameOpacity(Math.round(op * 100));
+  }, [selection.selectedObject]);
 
   // Sync logo panel (size/opacity) when user selects a different logo overlay
   useEffect(() => {
@@ -617,6 +650,24 @@ export default function ImageEditorStandalone({
     [qrTools, isQrSelected]
   );
 
+  const isFrameSelected =
+    !!selection.selectedObject && !!(selection.selectedObject as any).isFrame;
+
+  const frameToolsPanel = useMemo(
+    () => (
+      <FrameToolsPanel
+        filteredFrameAssets={frameTools.filteredFrameAssets}
+        hasFrameAssets={frameTools.hasFrameAssets}
+        aspectRatio={canvasEditor.aspectRatio}
+        frameOpacity={frameTools.frameOpacity}
+        setFrameOpacity={frameTools.setFrameOpacity}
+        insertFrame={frameTools.insertFrame}
+        isFrameSelected={isFrameSelected}
+      />
+    ),
+    [frameTools, canvasEditor.aspectRatio, isFrameSelected]
+  );
+
   const isRectSelected =
     selection.selectedObject &&
     selection.selectedObject.type === "rect" &&
@@ -657,6 +708,7 @@ export default function ImageEditorStandalone({
                 logoToolsPanel={logoToolsPanel}
                 qrToolsPanel={qrToolsPanel}
                 shapeToolsPanel={shapeToolsPanel}
+                frameToolsPanel={frameToolsPanel}
                 activeTab={mobilePanel.activeTab}
                 handleTabClick={mobilePanel.handleTabClick}
                 isPanelVisible={mobilePanel.isPanelVisible}

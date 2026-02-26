@@ -86,6 +86,18 @@ export const LOGO_RANGES = {
   OPACITY_STEP: 5,
 } as const;
 
+// Frame Defaults
+export const FRAME_DEFAULTS = {
+  OPACITY: 100,
+} as const;
+
+// Frame Ranges
+export const FRAME_RANGES = {
+  OPACITY_MIN: 10,
+  OPACITY_MAX: 100,
+  OPACITY_STEP: 5,
+} as const;
+
 // Shape (Rectangle) Defaults
 export const SHAPE_DEFAULTS = {
   FILL_COLOR: { r: 255, g: 255, b: 255, a: 1 },

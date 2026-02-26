@@ -1,4 +1,4 @@
-import type { LogoAsset, FontAsset } from "../types/image-editor-types";
+import type { LogoAsset, FontAsset, FrameAsset } from "../types/image-editor-types";
 import { DEFAULT_LOGO_ASSETS } from "../constants/editor-constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,11 +11,12 @@ function getDefaultLogoAssets(): LogoAsset[] {
 
 export async function getEditorAssetsForUser(
   caUserId: string | undefined
-): Promise<{ logoAssets: LogoAsset[]; fontAssets: FontAsset[] }> {
+): Promise<{ logoAssets: LogoAsset[]; fontAssets: FontAsset[]; frameAssets: FrameAsset[] }> {
   if (!caUserId?.trim()) {
     return {
       logoAssets: getDefaultLogoAssets(),
       fontAssets: [],
+      frameAssets: [],
     };
   }
 
@@ -23,6 +24,7 @@ export async function getEditorAssetsForUser(
     const supabase = await createClient();
     let logoAssets: LogoAsset[] = getDefaultLogoAssets();
     let fontAssets: FontAsset[] = [];
+    let frameAssets: FrameAsset[] = [];
 
     // Logos: try RPC first, then fallback to direct queries
     const { data: logos, error: rpcError } = await supabase.rpc(
@@ -143,12 +145,73 @@ export async function getEditorAssetsForUser(
       }
     }
 
-    return { logoAssets, fontAssets };
+    // Frames: try RPC first, then fallback to direct query
+    const { data: frames, error: framesRpcError } = await supabase.rpc(
+      "get_client_assets_by_ca_user_id",
+      {
+        p_ca_user_id: caUserId,
+        p_asset_type: "frame",
+        p_variant: null,
+      }
+    );
+
+    if (!framesRpcError && frames && Array.isArray(frames) && frames.length > 0) {
+      frameAssets = (
+        frames as {
+          file_url: string;
+          display_name: string;
+          variant: string | null;
+        }[]
+      )
+        .map((frame) => ({
+          url: frame.file_url,
+          display_name: frame.display_name,
+          variant: frame.variant ?? null,
+        }))
+        .filter((frame) => frame.url);
+    } else if (framesRpcError) {
+      console.warn("RPC function failed for frames, trying direct query:", framesRpcError);
+
+      const { data: client, error: clientError } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("ca_user_id", caUserId)
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .single();
+
+      if (!clientError && client) {
+        const { data: directFrames, error: framesError } = await supabase
+          .from("client_assets")
+          .select("file_url, display_name, name, variant")
+          .eq("client_id", client.id)
+          .eq("asset_type", "frame")
+          .is("deleted_at", null)
+          .order("is_primary", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (!framesError && directFrames && directFrames.length > 0) {
+          frameAssets = directFrames
+            .map((frame) => ({
+              url: frame.file_url,
+              display_name: frame.display_name,
+              variant: frame.variant ?? null,
+            }))
+            .filter((frame) => frame.url);
+        } else if (framesError) {
+          console.error("Error fetching client frames:", framesError);
+        }
+      }
+    }
+
+    return { logoAssets, fontAssets, frameAssets };
   } catch (error) {
     console.error("Error in getEditorAssetsForUser:", error);
     return {
       logoAssets: getDefaultLogoAssets(),
       fontAssets: [],
+      frameAssets: [],
     };
   }
 }
