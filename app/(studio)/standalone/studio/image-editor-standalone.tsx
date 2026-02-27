@@ -79,25 +79,12 @@ export default function ImageEditorStandalone({
   const saveStateRef = useRef<(immediate?: boolean) => void>(() => { });
   const setFrameOpacityRef = useRef<(n: number) => void>(() => { });
 
-  // Initialize selection hook first (provides setters needed by other hooks)
-  const selection = useImageEditorSelection({
-    canvasRef: canvasRefStable,
-    setFontSize: () => { },
-    setFontFamily: () => { },
-    setTextColor: () => { },
-    setBackgroundColor: () => { },
-    setIsBold: () => { },
-    setIsItalic: () => { },
-    setIsUnderline: () => { },
-    setLineHeight: () => { },
-    setLetterSpacing: () => { },
-    setShapeFillColor: () => { },
-    setShapeStrokeColor: () => { },
-    setShapeStrokeWidth: () => { },
-    setShapeOpacity: () => { },
-  });
+  // Ref to track when shape state is being synced from a canvas selection change
+  // (as opposed to a user interaction). Used to prevent updateSelectedShape from
+  // overwriting the newly-selected shape with stale panel values.
+  const shapeSyncingRef = useRef(false);
 
-  // Initialize tools hooks with stable refs
+  // Initialize tools hooks first so their setters can be passed to the selection hook
   const textTools = useTextTools({
     canvasRef: canvasRefStable,
     saveStateRef,
@@ -120,22 +107,25 @@ export default function ImageEditorStandalone({
     saveStateRef,
   });
 
-  // Update selection hook setters to use tool hooks
-  useEffect(() => {
-    (selection as any).setFontSize = textTools.setFontSize;
-    (selection as any).setFontFamily = textTools.setFontFamily;
-    (selection as any).setTextColor = textTools.setTextColor;
-    (selection as any).setBackgroundColor = textTools.setBackgroundColor;
-    (selection as any).setIsBold = textTools.setIsBold;
-    (selection as any).setIsItalic = textTools.setIsItalic;
-    (selection as any).setIsUnderline = textTools.setIsUnderline;
-    (selection as any).setLineHeight = textTools.setLineHeight;
-    (selection as any).setLetterSpacing = textTools.setLetterSpacing;
-    (selection as any).setShapeFillColor = shapeTools.setShapeFillColor;
-    (selection as any).setShapeStrokeColor = shapeTools.setShapeStrokeColor;
-    (selection as any).setShapeStrokeWidth = shapeTools.setShapeStrokeWidth;
-    (selection as any).setShapeOpacity = shapeTools.setShapeOpacity;
-  }, []);
+  // Initialize selection hook with real setters wired directly
+  const selection = useImageEditorSelection({
+    canvasRef: canvasRefStable,
+    setFontSize: textTools.setFontSize,
+    setFontFamily: textTools.setFontFamily,
+    setTextColor: textTools.setTextColor,
+    setBackgroundColor: textTools.setBackgroundColor,
+    setIsBold: textTools.setIsBold,
+    setIsItalic: textTools.setIsItalic,
+    setIsUnderline: textTools.setIsUnderline,
+    setLineHeight: textTools.setLineHeight,
+    setLetterSpacing: textTools.setLetterSpacing,
+    setShapeFillColor: shapeTools.setShapeFillColor,
+    setShapeStrokeColor: shapeTools.setShapeStrokeColor,
+    setShapeStrokeWidth: shapeTools.setShapeStrokeWidth,
+    setShapeOpacity: shapeTools.setShapeOpacity,
+    onShapeSyncStart: () => { shapeSyncingRef.current = true; },
+    onShapeSyncEnd: () => { shapeSyncingRef.current = false; },
+  });
 
   // Initialize history hook with stable refs
   const history = useImageEditorHistory({
@@ -242,10 +232,10 @@ export default function ImageEditorStandalone({
     textTools.letterSpacing,
   ]);
 
-  // Update shape on style change
+  // Update shape on style change — skip when the change came from a selection sync
   useEffect(() => {
+    if (shapeSyncingRef.current) return;
     if (!canvasEditor.canvas || !selection.selectedObject) return;
-
     if (!shapeTools.isShapeSelected(selection.selectedObject)) return;
 
     shapeTools.updateSelectedShape();

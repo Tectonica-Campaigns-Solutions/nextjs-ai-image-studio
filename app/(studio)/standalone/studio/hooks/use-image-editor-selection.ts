@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { IText } from "fabric";
 import type { ObjectMetadata, RgbaColor } from "../types/image-editor-types";
 
@@ -19,6 +19,8 @@ export interface UseImageEditorSelectionOptions {
   setShapeStrokeColor: (c: RgbaColor) => void;
   setShapeStrokeWidth: (n: number) => void;
   setShapeOpacity: (n: number) => void;
+  onShapeSyncStart?: () => void;
+  onShapeSyncEnd?: () => void;
 }
 
 export function useImageEditorSelection(
@@ -39,7 +41,24 @@ export function useImageEditorSelection(
     setShapeStrokeColor,
     setShapeStrokeWidth,
     setShapeOpacity,
+    onShapeSyncStart,
+    onShapeSyncEnd,
   } = options;
+
+  // Keep setter refs always up-to-date so late-wired real setters are always called
+  const setShapeFillColorRef = useRef(setShapeFillColor);
+  const setShapeStrokeColorRef = useRef(setShapeStrokeColor);
+  const setShapeStrokeWidthRef = useRef(setShapeStrokeWidth);
+  const setShapeOpacityRef = useRef(setShapeOpacity);
+  const onShapeSyncStartRef = useRef(onShapeSyncStart);
+  const onShapeSyncEndRef = useRef(onShapeSyncEnd);
+
+  useEffect(() => { setShapeFillColorRef.current = setShapeFillColor; }, [setShapeFillColor]);
+  useEffect(() => { setShapeStrokeColorRef.current = setShapeStrokeColor; }, [setShapeStrokeColor]);
+  useEffect(() => { setShapeStrokeWidthRef.current = setShapeStrokeWidth; }, [setShapeStrokeWidth]);
+  useEffect(() => { setShapeOpacityRef.current = setShapeOpacity; }, [setShapeOpacity]);
+  useEffect(() => { onShapeSyncStartRef.current = onShapeSyncStart; }, [onShapeSyncStart]);
+  useEffect(() => { onShapeSyncEndRef.current = onShapeSyncEnd; }, [onShapeSyncEnd]);
 
   const [selectedObject, setSelectedObject] = useState<any>(null);
   const [objectMetadata, setObjectMetadata] = useState<
@@ -115,13 +134,17 @@ export function useImageEditorSelection(
 
     const shapeObj = selectedObject as any;
 
+    // Signal that the following state changes are from a selection sync,
+    // not from user interaction — so the updateSelectedShape effect should skip.
+    onShapeSyncStartRef.current?.();
+
     const fillColor = shapeObj.fill as string;
     if (fillColor && fillColor.startsWith("rgba")) {
       const match = fillColor.match(
         /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
       );
       if (match) {
-        setShapeFillColor({
+        setShapeFillColorRef.current({
           r: Number.parseInt(match[1]),
           g: Number.parseInt(match[2]),
           b: Number.parseInt(match[3]),
@@ -136,7 +159,7 @@ export function useImageEditorSelection(
         /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
       );
       if (match) {
-        setShapeStrokeColor({
+        setShapeStrokeColorRef.current({
           r: Number.parseInt(match[1]),
           g: Number.parseInt(match[2]),
           b: Number.parseInt(match[3]),
@@ -145,18 +168,15 @@ export function useImageEditorSelection(
       }
     }
 
-    setShapeStrokeWidth(shapeObj.strokeWidth || 2);
+    setShapeStrokeWidthRef.current(shapeObj.strokeWidth ?? 2);
 
     const opacity = typeof shapeObj.opacity === "number" ? shapeObj.opacity : 1;
-    setShapeOpacity(Math.round(opacity * 100));
-  }, [
-    selectedObject,
-    canvasRef,
-    setShapeFillColor,
-    setShapeStrokeColor,
-    setShapeStrokeWidth,
-    setShapeOpacity,
-  ]);
+    setShapeOpacityRef.current(Math.round(opacity * 100));
+
+    // Signal sync complete — the effect in standalone will check this flag
+    // after the current render cycle via a microtask
+    Promise.resolve().then(() => onShapeSyncEndRef.current?.());
+  }, [selectedObject, canvasRef]);
 
   return {
     selectedObject,

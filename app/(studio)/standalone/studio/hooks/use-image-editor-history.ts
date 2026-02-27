@@ -141,7 +141,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       historyState.currentIndex,
       historyState.entries.length,
       setObjectMetadata,
-    ]
+    ],
   );
 
   const addBackgroundFromUrl = useCallback(
@@ -154,7 +154,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       const displayScale = Math.min(
         1,
         cw / dimensions.width,
-        ch / dimensions.height
+        ch / dimensions.height,
       );
       const img = await loadImageWithCORS(url);
       img.set({
@@ -177,7 +177,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       targetCanvas.add(img);
       targetCanvas.sendObjectToBack(img);
     },
-    [originalImageUrlRef, originalImageDimensionsRef]
+    [originalImageUrlRef, originalImageDimensionsRef],
   );
 
   const loadOverlaysFromJSON = useCallback(
@@ -200,7 +200,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       });
       tempCanvas.dispose();
     },
-    []
+    [],
   );
 
   const applyEntryMetadataToCanvas = useCallback(
@@ -248,7 +248,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
         }
       });
     },
-    [canvasRef, setQrSize, setQrOpacity, setLogoSize, setLogoOpacity]
+    [canvasRef, setQrSize, setQrOpacity, setLogoSize, setLogoOpacity],
   );
 
   const undo = useCallback(() => {

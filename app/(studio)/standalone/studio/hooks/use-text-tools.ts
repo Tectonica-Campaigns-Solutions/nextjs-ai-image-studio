@@ -27,16 +27,16 @@ export function useTextTools(options: UseTextToolsOptions) {
   const [fontFamily, setFontFamily] = useState(defaultFontFamily);
   const [textColor, setTextColor] = useState<RgbaColor>(TEXT_DEFAULTS.COLOR);
   const [backgroundColor, setBackgroundColor] = useState<RgbaColor>(
-    TEXT_DEFAULTS.BG_COLOR
+    TEXT_DEFAULTS.BG_COLOR,
   );
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [lineHeight, setLineHeight] = useState<number>(
-    TEXT_DEFAULTS.LINE_HEIGHT
+    TEXT_DEFAULTS.LINE_HEIGHT,
   );
   const [letterSpacing, setLetterSpacing] = useState<number>(
-    TEXT_DEFAULTS.LETTER_SPACING
+    TEXT_DEFAULTS.LETTER_SPACING,
   );
 
   const addText = useCallback(() => {

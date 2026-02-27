@@ -250,12 +250,18 @@ export function useShapeTools(options: UseShapeToolsOptions) {
       const saveState = saveStateRef.current;
       if (!canvas) return;
 
+      // Always create new shapes with defaults so each shape starts fresh
+      const defaultFill = SHAPE_DEFAULTS.FILL_COLOR;
+      const defaultStroke = SHAPE_DEFAULTS.STROKE_COLOR;
+      const defaultStrokeWidth = SHAPE_DEFAULTS.STROKE_WIDTH;
+      const defaultOpacity = SHAPE_DEFAULTS.FILL_OPACITY;
+
       const shape = buildFabricShape(
         type,
-        rgbaToString(shapeFillColor),
-        rgbaToString(shapeStrokeColor),
-        shapeStrokeWidth,
-        shapeOpacity,
+        rgbaToString(defaultFill),
+        rgbaToString(defaultStroke),
+        defaultStrokeWidth,
+        defaultOpacity,
         canvas.width!,
         canvas.height!
       );
@@ -269,15 +275,14 @@ export function useShapeTools(options: UseShapeToolsOptions) {
       canvas.setActiveObject(shape);
       canvas.renderAll();
       saveState(true);
+
+      // Reset panel controls to defaults so they match the new shape
+      setShapeFillColor(defaultFill);
+      setShapeStrokeColor(defaultStroke);
+      setShapeStrokeWidth(defaultStrokeWidth);
+      setShapeOpacity(defaultOpacity);
     },
-    [
-      canvasRef,
-      saveStateRef,
-      shapeFillColor,
-      shapeStrokeColor,
-      shapeStrokeWidth,
-      shapeOpacity,
-    ]
+    [canvasRef, saveStateRef]
   );
 
   const updateSelectedShape = useCallback(() => {
