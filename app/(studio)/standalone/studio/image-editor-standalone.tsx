@@ -494,7 +494,7 @@ export default function ImageEditorStandalone({
       };
       if (sessionId) body.session_id = sessionId;
 
-      const res = await fetch("/api/external/canvas-sessions", {
+      const res = await fetch("/api/studio/canvas-sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -534,7 +534,7 @@ export default function ImageEditorStandalone({
         quality: 0.6,
         multiplier: thumbMultiplier,
       });
-      fetch("/api/external/canvas-sessions/thumbnail", {
+      fetch("/api/studio/canvas-sessions/thumbnail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
