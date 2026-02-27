@@ -116,6 +116,7 @@ export default function ImageEditor() {
   const [flux2ProCreateGeneratedPrompt, setFlux2ProCreateGeneratedPrompt] = useState<string>("")
   const [showFlux2ProCreateAdvanced, setShowFlux2ProCreateAdvanced] = useState(false)
   const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
+  const [flux2ProCreateWithBranding, setFlux2ProCreateWithBranding] = useState(true)
 
   // Flux 2 Pro Edit Apply States (scene-based style transfer with sceneType)
   const [flux2ProApplySceneType, setFlux2ProApplySceneType] = useState<'people' | 'landscape' | 'urban' | 'monument'>('people')
@@ -1440,12 +1441,14 @@ export default function ImageEditor() {
       }
       
       requestBody.settings = settings
+      requestBody.withBranding = flux2ProCreateWithBranding
 
       if (flux2ProCreateCompositionRule) {
         requestBody.compositionRule = flux2ProCreateCompositionRule
       }
 
       console.log("[FRONTEND] Flux 2 Pro Edit Create - Sending request")
+      console.log("[FRONTEND] withBranding:", flux2ProCreateWithBranding)
       console.log("[FRONTEND] Has user image:", !!(flux2ProCreateUserImage || flux2ProCreateImageUrl || flux2ProCreateBase64Image))
 
       const response = await fetch("/api/external/flux-2-pro-edit-create", {
@@ -2868,6 +2871,29 @@ export default function ImageEditor() {
                         </div>
                       </div>
                     )}
+
+                    {/* Branding Toggle */}
+                    <div className="flex items-center gap-3 rounded-lg border p-3">
+                      <Checkbox
+                        id="flux2pro-create-with-branding"
+                        checked={flux2ProCreateWithBranding}
+                        onCheckedChange={(checked) => setFlux2ProCreateWithBranding(checked === true)}
+                        disabled={isFlux2ProCreateGenerating}
+                      />
+                      <div className="space-y-0.5">
+                        <Label
+                          htmlFor="flux2pro-create-with-branding"
+                          className="cursor-pointer font-medium"
+                        >
+                          Apply branding
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          {flux2ProCreateWithBranding
+                            ? "Uses fal-ai/flux-2-pro/edit with reference images (branded)"
+                            : "Uses fal-ai/flux-2-pro — pure text-to-image, no reference images"}
+                        </p>
+                      </div>
+                    </div>
 
                     {/* Error Display */}
                     {flux2ProCreateError && (

@@ -221,8 +221,11 @@ export async function POST(request: NextRequest) {
       settings = {},
       orgType: rawOrgType,
       clientInfo = {},
-      compositionRule = null
+      compositionRule = null,
+      withBranding = true
     } = body
+    
+    const useBranding = withBranding !== false
     
     // Extract and validate orgType
     // Map 'general' to 'Tectonica' for backward compatibility
@@ -352,35 +355,44 @@ export async function POST(request: NextRequest) {
       // Continue with generation if moderation fails to avoid blocking users
     }
 
-    // Get reference images for this organization
-    const { filenames: allReferenceFilenames, folderName, userImagePrompt } = await getClientReferenceImages(orgType)
-    
-    // Determine if user provided an image
-    const hasUserImage = !!(imageUrl || base64Image)
-    
-    // Select reference images based on whether user provided an image
-    let referenceImageFilenames: string[]
-    if (hasUserImage) {
-      // User provided image: use only 3 random reference images (user image will be @image1)
-      console.log(`[Flux 2 Pro Edit Create] User image detected, selecting 3 random reference images from ${allReferenceFilenames.length} available`)
-      
-      // Shuffle array and take first 3
-      const shuffled = [...allReferenceFilenames].sort(() => Math.random() - 0.5)
-      referenceImageFilenames = shuffled.slice(0, 3)
-      
-      console.log(`[Flux 2 Pro Edit Create] Selected reference images:`, referenceImageFilenames)
-    } else {
-      // No user image: use all reference images
-      console.log(`[Flux 2 Pro Edit Create] No user image, using all ${allReferenceFilenames.length} reference images`)
-      referenceImageFilenames = allReferenceFilenames
-    }
-    
-    // Upload reference images to fal.ai storage
-    console.log(`[Flux 2 Pro Edit Create] Uploading ${referenceImageFilenames.length} reference images from ${folderName}...`)
+    // ── Branding path: load and upload reference images ──────────────────────
+    let allReferenceFilenames: string[] = []
+    let folderName = ''
+    let userImagePrompt = ''
+    let referenceImageFilenames: string[] = []
     const allImageUrls: string[] = []
     
+    // Determine if user provided an image (only relevant when branding is active)
+    const hasUserImage = useBranding && !!(imageUrl || base64Image)
+
+    if (useBranding) {
+      // Get reference images for this organization
+      const refResult = await getClientReferenceImages(orgType);
+      allReferenceFilenames = refResult.filenames
+      folderName = refResult.folderName
+      userImagePrompt = refResult.userImagePrompt
+
+      // Select reference images based on whether user provided an image
+      if (hasUserImage) {
+        // User provided image: use only 3 random reference images (user image will be @image1)
+        console.log(`[Flux 2 Pro Edit Create] User image detected, selecting 3 random reference images from ${allReferenceFilenames.length} available`)
+        const shuffled = [...allReferenceFilenames].sort(() => Math.random() - 0.5)
+        referenceImageFilenames = shuffled.slice(0, 3)
+        console.log(`[Flux 2 Pro Edit Create] Selected reference images:`, referenceImageFilenames)
+      } else {
+        // No user image: use all reference images
+        console.log(`[Flux 2 Pro Edit Create] No user image, using all ${allReferenceFilenames.length} reference images`)
+        referenceImageFilenames = allReferenceFilenames
+      }
+
+      // Upload reference images to fal.ai storage
+      console.log(`[Flux 2 Pro Edit Create] Uploading ${referenceImageFilenames.length} reference images from ${folderName}...`)
+    } else {
+      console.log(`[Flux 2 Pro Edit Create] withBranding=false — skipping reference images, will use fal-ai/flux-2-pro`)
+    }
+    
     // Read and upload each reference image
-    for (let i = 0; i < referenceImageFilenames.length; i++) {
+    for (let i = 0; useBranding && i < referenceImageFilenames.length; i++) {
       const filename = referenceImageFilenames[i]
       const fullPath = path.join(process.cwd(), 'public', folderName, filename)
       
@@ -445,13 +457,16 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    console.log(`[Flux 2 Pro Edit Create] ✅ All ${allImageUrls.length} reference images uploaded`)
-    console.log(`[Flux 2 Pro Edit Create] Reference URLs:`, allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
+    if (useBranding) {
+      console.log(`[Flux 2 Pro Edit Create] ✅ All ${allImageUrls.length} reference images uploaded`)
+      console.log(`[Flux 2 Pro Edit Create] Reference URLs:`, allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
+    }
 
     // Process user image if provided (when present, it is inserted at index 0 → @image1)
+    // Only relevant when branding is active (fal-ai/flux-2-pro does not accept image_urls)
     let userImageCount = 0
     
-    if (base64Image) {
+    if (useBranding && base64Image) {
       console.log(`[Flux 2 Pro Edit Create] Processing user Base64 image...`)
       
       try {
@@ -551,7 +566,7 @@ export async function POST(request: NextRequest) {
           details: `Failed to process Base64 image: ${base64Error instanceof Error ? base64Error.message : 'Unknown error'}`
         }, { status: 400 })
       }
-    } else if (imageUrl) {
+    } else if (useBranding && imageUrl) {
       // Validate and add user image URL
       console.log(`[Flux 2 Pro Edit Create] Adding user image URL...`)
       
@@ -574,6 +589,8 @@ export async function POST(request: NextRequest) {
           details: `Invalid URL: ${imageUrl}`
         }, { status: 400 })
       }
+    } else if (!useBranding) {
+      console.log(`[Flux 2 Pro Edit Create] withBranding=false — no images attached to request`)
     } else {
       console.log(`[Flux 2 Pro Edit Create] No user image provided, using only reference images`)
     }
@@ -600,10 +617,14 @@ export async function POST(request: NextRequest) {
     // Prepare input for fal.ai
     const input: any = {
       prompt: finalPrompt,
-      image_urls: allImageUrls,
       safety_tolerance: safetyToleranceStr,
       enable_safety_checker: enableSafetyChecker,
       output_format: outputFormat
+    }
+    
+    // Only include image_urls when branding is active (fal-ai/flux-2-pro/edit)
+    if (useBranding) {
+      input.image_urls = allImageUrls
     }
     
     // Add image_size
@@ -630,8 +651,11 @@ export async function POST(request: NextRequest) {
       prompt: input.prompt.substring(0, 100) + '...'
     }, null, 2))
 
+    const falModel = useBranding ? "fal-ai/flux-2-pro/edit" : "fal-ai/flux-2-pro"
+    console.log(`[Flux 2 Pro Edit Create] Using model: ${falModel}`)
+
     try {
-      const result = await fal.subscribe("fal-ai/flux-2-pro/edit", {
+      const result = await fal.subscribe(falModel, {
         input,
         logs: true,
         onQueueUpdate: (update) => {
@@ -674,11 +698,12 @@ export async function POST(request: NextRequest) {
         prompt: finalPrompt,
         originalPrompt: prompt,
         seed: result.data.seed,
-        model: "fal-ai/flux-2-pro/edit",
+        model: falModel,
         provider: "fal.ai",
         inputImages: allImageUrls.length,
         referenceImages: referenceImageFilenames.length,
         userImages: userImageCount,
+        withBranding: useBranding,
         settings: {
           image_size: input.image_size,
           safety_tolerance: safetyToleranceStr,
@@ -712,7 +737,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: errorMessage,
         details: errorDetails,
-        model: "fal-ai/flux-2-pro/edit",
+        model: falModel,
         provider: "fal.ai",
         status: (falError as any)?.status
       }, { status: 500 })
