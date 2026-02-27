@@ -4,6 +4,7 @@ import type {
   Client,
   ClientAsset,
   ClientFont,
+  CanvasSessionSummary,
 } from "@/app/(studio)/dashboard/types";
 
 export async function getClients(caUserId?: string): Promise<Client[] | null> {
@@ -72,6 +73,22 @@ export async function getClientFonts(
     .order("created_at", { ascending: true });
   if (error) return null;
   return (data ?? []) as ClientFont[];
+}
+
+export async function getClientCanvasSessions(
+  clientId: string
+): Promise<CanvasSessionSummary[] | null> {
+  const check = await requireAdmin();
+  if (!check.success) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("client_canvas_sessions")
+    .select("id, client_id, ca_user_id, name, thumbnail_url, background_url, created_at, updated_at")
+    .eq("client_id", clientId)
+    .is("deleted_at", null)
+    .order("updated_at", { ascending: false });
+  if (error) return null;
+  return (data ?? []) as CanvasSessionSummary[];
 }
 
 export async function getClientVariants(

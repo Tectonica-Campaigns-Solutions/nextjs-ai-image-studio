@@ -102,6 +102,21 @@ export function QRItem() {
   );
 }
 
+export function FrameItem() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <rect x="1" y="1" width="14" height="14" rx="1.5" stroke="#0A6B4A" strokeWidth="1.5" fill="none" />
+      <rect x="3.5" y="3.5" width="9" height="9" rx="0.5" stroke="#0A6B4A" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
 export function ShapeItem() {
   return (
     <svg

@@ -2,6 +2,7 @@ export interface ObjectMetadata {
   isBackground?: boolean;
   isQR?: boolean;
   isLogo?: boolean;
+  isFrame?: boolean;
   isEditable?: boolean;
 }
 
@@ -18,9 +19,33 @@ export interface HistoryState {
 export interface ImageEditorStandaloneParams {
   imageUrl?: string;
   user_id?: string;
+  session_id?: string;
+}
+
+export interface CanvasSessionData {
+  id: string;
+  background_url: string;
+  overlay_json: Record<string, unknown>;
+  metadata: Record<number, ObjectMetadata>;
+  name: string | null;
+}
+
+export interface CanvasSessionSummary {
+  id: string;
+  name: string | null;
+  thumbnail_url: string | null;
+  background_url: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LogoAsset {
+  url: string;
+  display_name: string;
+  variant: string | null;
+}
+
+export interface FrameAsset {
   url: string;
   display_name: string;
   variant: string | null;
@@ -36,7 +61,9 @@ export interface FontAsset {
 export interface ImageEditorStandaloneProps {
   params: ImageEditorStandaloneParams;
   logoAssets: LogoAsset[];
+  frameAssets?: FrameAsset[];
   fontAssets?: FontAsset[];
+  sessionData?: CanvasSessionData | null;
 }
 
 export type DisclaimerPosition =
@@ -57,6 +84,7 @@ export interface FabricObjectWithMetadata {
   isBackground?: boolean;
   isQR?: boolean;
   isLogo?: boolean;
+  isFrame?: boolean;
   isEditable?: boolean;
   type: string;
   getScaledWidth(): number;
@@ -86,8 +114,23 @@ export interface FabricCanvas {
   loadFromJSON(json: string | any): Promise<void>;
 }
 
-export interface RectObject extends FabricObjectWithMetadata {
-  isRect: boolean;
+export type ShapeType =
+  | "rectangle"
+  | "square"
+  | "circle"
+  | "half-circle-right"
+  | "half-circle-left"
+  | "triangle"
+  | "star"
+  | "arrow"
+  | "diamond"
+  | "hexagon"
+  | "cross"
+  | "rounded-rectangle";
+
+export interface ShapeObject extends FabricObjectWithMetadata {
+  isShape: boolean;
+  shapeType: ShapeType;
   fill?: string;
   stroke?: string;
   strokeWidth?: number;

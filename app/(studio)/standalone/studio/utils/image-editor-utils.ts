@@ -32,7 +32,7 @@ export async function loadImageWithCORS(url: string): Promise<FabricImage> {
   } catch (error) {
     console.warn(
       "Failed to load image with CORS, trying without crossOrigin:",
-      error
+      error,
     );
     try {
       return await FabricImage.fromURL(url);

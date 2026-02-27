@@ -1,7 +1,7 @@
 import type {
   FabricObjectWithMetadata,
   FabricCanvas,
-  RectObject,
+  ShapeObject,
 } from "@/app/(studio)/standalone/studio/types/image-editor-types";
 
 /**
@@ -19,10 +19,10 @@ export function isTextObject(obj: any): obj is FabricObjectWithMetadata {
 }
 
 /**
- * Type guard to check if an object is a rect shape
+ * Type guard to check if an object is a shape
  */
-export function isRect(obj: any): obj is RectObject {
-  return obj && obj.type === "rect" && obj.isRect === true;
+export function isShape(obj: any): obj is ShapeObject {
+  return obj && obj.isShape === true;
 }
 
 /**

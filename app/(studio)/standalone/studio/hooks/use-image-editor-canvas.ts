@@ -14,10 +14,20 @@ export interface UseImageEditorCanvasOptions {
   setSelectedObject: (obj: any) => void;
   setQrSize: (n: number) => void;
   setLogoSize: (n: number) => void;
+  setFrameOpacity?: (n: number) => void;
   saveState: (immediate?: boolean) => void;
   moveSaveTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   saveStateTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   preventContextMenu: (e: MouseEvent) => false;
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+function computeAspectRatio(width: number, height: number): string {
+  const divisor = gcd(Math.round(width), Math.round(height));
+  return `${Math.round(width) / divisor}:${Math.round(height) / divisor}`;
 }
 
 export function useImageEditorCanvas(
@@ -53,6 +63,7 @@ export function useImageEditorCanvas(
     width: number;
     height: number;
   } | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<string | null>(null);
 
   // Resize effect
   useEffect(() => {
@@ -199,6 +210,7 @@ export function useImageEditorCanvas(
           width: originalWidth,
           height: originalHeight,
         });
+        setAspectRatio(computeAspectRatio(originalWidth, originalHeight));
 
         const displayScale = Math.min(
           1,
@@ -318,6 +330,11 @@ export function useImageEditorCanvas(
             const scaledHeight = obj.getScaledHeight();
             const maxDimension = Math.max(scaledWidth, scaledHeight);
             opts.setLogoSize(Math.round(maxDimension));
+          } else if ((obj as any).isFrame && opts.setFrameOpacity) {
+            const op = (obj as any).opacity;
+            if (typeof op === "number") {
+              opts.setFrameOpacity(Math.round(op * 100));
+            }
           }
         }
         if (opts.moveSaveTimeoutRef.current) {
@@ -392,5 +409,6 @@ export function useImageEditorCanvas(
     canvasDimensions,
     setCanvasDimensions,
     originalImageUrlRef,
+    aspectRatio,
   };
 }
