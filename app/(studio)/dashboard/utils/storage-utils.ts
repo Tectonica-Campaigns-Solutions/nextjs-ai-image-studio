@@ -158,7 +158,15 @@ export async function uploadAsset(
       });
 
     if (error) {
-      console.error("Error uploading file:", error);
+      console.error("[uploadAsset] Supabase storage error:", {
+        message: error.message,
+        name: error.name,
+        cause: (error as any).cause,
+        originalError: (error as any).originalError,
+        statusCode: (error as any).statusCode,
+        filePath,
+        bucket: BUCKET_NAME,
+      });
       return {
         success: false,
         error: error.message || "Error uploading file",

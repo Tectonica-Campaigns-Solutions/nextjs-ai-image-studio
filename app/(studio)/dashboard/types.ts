@@ -44,6 +44,17 @@ export interface ClientFont {
   created_at: string;
 }
 
+export interface CanvasSessionSummary {
+  id: string;
+  client_id: string;
+  ca_user_id: string;
+  name: string | null;
+  thumbnail_url: string | null;
+  background_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Admin {
   id: string;
   user_id: string;

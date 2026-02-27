@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import type { HistoryState } from "../types/image-editor-types";
 
 export interface EditorToolbarProps {
@@ -9,7 +9,9 @@ export interface EditorToolbarProps {
   redo: () => void;
   deleteSelected: () => void;
   handleExportClick: () => void;
+  handleSave: () => void;
   isExporting: boolean;
+  isSaving: boolean;
   historyState: HistoryState;
   selectedObject: any;
   /** When true, show mobile layout (inline buttons with labels); when false, desktop (icon-only column) */
@@ -28,6 +30,14 @@ const RedoIcon = () => (
   </svg>
 );
 
+const SaveIcon = ({ size = 18 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 18 18" fill="none">
+    <path d="M14.25 15.75H3.75C3.35218 15.75 2.97064 15.592 2.68934 15.3107C2.40804 15.0294 2.25 14.6478 2.25 14.25V3.75C2.25 3.35218 2.40804 2.97064 2.68934 2.68934C2.97064 2.40804 3.35218 2.25 3.75 2.25H12L15.75 6V14.25C15.75 14.6478 15.592 15.0294 15.3107 15.3107C15.0294 15.592 14.6478 15.75 14.25 15.75Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12.75 15.75V10.5H5.25V15.75" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5.25 2.25V6H11.25" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const DeleteIcon = ({ size = 22 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 22 22" fill="none">
     <path d="M3.6665 5.66176H18.3332M9.1665 15.3676V9.54412M12.8332 15.3676V9.54412M14.6665 19.25H7.33317C6.32065 19.25 5.49984 18.3809 5.49984 17.3088V6.63235C5.49984 6.09631 5.91024 5.66176 6.4165 5.66176H15.5832C16.0894 5.66176 16.4998 6.09631 16.4998 6.63235V17.3088C16.4998 18.3809 15.679 19.25 14.6665 19.25ZM9.1665 5.66176H12.8332C13.3394 5.66176 13.7498 5.22722 13.7498 4.69118V3.72059C13.7498 3.18455 13.3394 2.75 12.8332 2.75H9.1665C8.66024 2.75 8.24984 3.18455 8.24984 3.72059V4.69118C8.24984 5.22722 8.66024 5.66176 9.1665 5.66176Z" stroke="#FF0022" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -39,7 +49,9 @@ export function EditorToolbar({
   redo,
   deleteSelected,
   handleExportClick,
+  handleSave,
   isExporting,
+  isSaving,
   historyState,
   selectedObject,
   variant,
@@ -79,6 +91,13 @@ export function EditorToolbar({
           className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#FFC9D3] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed flex-1 md:flex-none transition-all hover:bg-[#FFC9D3]/80 disabled:hover:bg-[#FFC9D3] disabled:hover:scale-100"
         >
           <DeleteIcon size={22} />
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed flex-1 md:flex-none transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <SaveIcon size={18} />}
         </Button>
         <Button
           onClick={handleExportClick}
@@ -127,6 +146,15 @@ export function EditorToolbar({
         className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#FFC9D3] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#FFC9D3]/80 disabled:hover:bg-[#FFC9D3] disabled:hover:scale-100"
       >
         <DeleteIcon size={17} />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSave}
+        disabled={isSaving}
+        className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
+      >
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon size={17} />}
       </Button>
     </div>
   );

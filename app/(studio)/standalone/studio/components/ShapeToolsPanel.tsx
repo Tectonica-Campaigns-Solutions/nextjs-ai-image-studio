@@ -1,10 +1,8 @@
 "use client";
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { PlusIcon } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import {
@@ -12,8 +10,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { RgbaColor } from "../types/image-editor-types";
+import { Button } from "@/components/ui/button";
+import type { RgbaColor, ShapeType } from "../types/image-editor-types";
 import { rgbaToString } from "../utils/image-editor-utils";
+import { SHAPE_RANGES } from "../constants/editor-constants";
 
 function rgbaToHex(color: RgbaColor): string {
   const toHex = (n: number) => n.toString(16).padStart(2, "0");
@@ -27,19 +27,18 @@ function hexToRgba(hex: string, a = 1): RgbaColor {
   const b = parseInt(clean.substring(4, 6), 16);
   return { r, g, b, a };
 }
-import { SHAPE_RANGES } from "../constants/editor-constants";
 
 export interface ShapeToolsPanelProps {
-  isRectSelected: boolean;
-  addRect: () => void;
-  rectFillColor: RgbaColor;
-  setRectFillColor: (c: RgbaColor) => void;
-  rectStrokeColor: RgbaColor;
-  setRectStrokeColor: (c: RgbaColor) => void;
-  rectStrokeWidth: number;
-  setRectStrokeWidth: (n: number) => void;
-  rectOpacity: number;
-  setRectOpacity: (n: number) => void;
+  isShapeSelected: boolean;
+  addShape: (type: ShapeType) => void;
+  shapeFillColor: RgbaColor;
+  setShapeFillColor: (c: RgbaColor) => void;
+  shapeStrokeColor: RgbaColor;
+  setShapeStrokeColor: (c: RgbaColor) => void;
+  shapeStrokeWidth: number;
+  setShapeStrokeWidth: (n: number) => void;
+  shapeOpacity: number;
+  setShapeOpacity: (n: number) => void;
 }
 
 const sliderClassName = cn(
@@ -55,27 +54,238 @@ const labelClassName =
 const valueBoxClassName =
   "p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]";
 
+// SVG previews for each shape type
+const ShapeSVGPreview: React.FC<{ type: ShapeType }> = ({ type }) => {
+  const size = 40;
+  const stroke = "#9BFFCA";
+  const fill = "rgba(155,255,202,0.15)";
+  const sw = 1.5;
+
+  switch (type) {
+    case "rectangle":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <rect x="4" y="10" width="32" height="20" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "square":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <rect x="8" y="8" width="24" height="24" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "rounded-rectangle":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <rect x="4" y="10" width="32" height="20" rx="6" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "circle":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="14" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "half-circle-right":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <path d="M20 6 A14 14 0 0 1 20 34 Z" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "half-circle-left":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <path d="M20 6 A14 14 0 0 0 20 34 Z" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "triangle":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon points="20,6 36,34 4,34" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "star":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon
+            points="20,4 23.8,14.9 35.5,14.9 26.1,21.5 29.9,32.4 20,25.8 10.1,32.4 13.9,21.5 4.5,14.9 16.2,14.9"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={sw}
+          />
+        </svg>
+      );
+    case "arrow":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <path d="M4 16 L26 16 L26 10 L36 20 L26 30 L26 24 L4 24 Z" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "diamond":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon points="20,4 36,20 20,36 4,20" fill={fill} stroke={stroke} strokeWidth={sw} />
+        </svg>
+      );
+    case "hexagon":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <polygon
+            points="20,4 33.9,12 33.9,28 20,36 6.1,28 6.1,12"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={sw}
+          />
+        </svg>
+      );
+    case "cross":
+      return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <path
+            d="M15 4 L25 4 L25 15 L36 15 L36 25 L25 25 L25 36 L15 36 L15 25 L4 25 L4 15 L15 15 Z"
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={sw}
+          />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
+
+const SHAPES: { type: ShapeType; label: string }[] = [
+  { type: "rectangle", label: "Rectangle" },
+  { type: "square", label: "Square" },
+  { type: "circle", label: "Circle" },
+  { type: "rounded-rectangle", label: "Rounded Rect" },
+  { type: "triangle", label: "Triangle" },
+  { type: "star", label: "Star" },
+  { type: "diamond", label: "Diamond" },
+  { type: "hexagon", label: "Hexagon" },
+  { type: "half-circle-right", label: "Half Right" },
+  { type: "half-circle-left", label: "Half Left" },
+  { type: "arrow", label: "Arrow" },
+  { type: "cross", label: "Cross" },
+];
+
+function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, [ref]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [ref, update]);
+
+  return { canScrollLeft, canScrollRight };
+}
+
 export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
-  isRectSelected,
-  addRect,
-  rectFillColor,
-  setRectFillColor,
-  rectStrokeColor,
-  setRectStrokeColor,
-  rectStrokeWidth,
-  setRectStrokeWidth,
-  rectOpacity,
-  setRectOpacity,
+  isShapeSelected,
+  addShape,
+  shapeFillColor,
+  setShapeFillColor,
+  shapeStrokeColor,
+  setShapeStrokeColor,
+  shapeStrokeWidth,
+  setShapeStrokeWidth,
+  shapeOpacity,
+  setShapeOpacity,
 }: ShapeToolsPanelProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { canScrollLeft, canScrollRight } = useScrollState(scrollRef);
+
+  const scroll = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({ left: dir === "right" ? 120 : -120, behavior: "smooth" });
+  };
+
   return (
     <div className="space-y-5 w-full">
-      <Button
-        onClick={addRect}
-        className="w-full h-[44px] bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) rounded-[10px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg active:scale-[0.98]"
-      >
-        <PlusIcon />
-        Add Rectangle
-      </Button>
+      {/* Shape carousel */}
+      <div>
+        <Label className={cn(labelClassName, "mb-3")}>Add Shape</Label>
+        <div className="relative">
+          {/* Left fade + arrow */}
+          <div
+            className={cn(
+              "absolute left-0 top-0 bottom-0 z-10 flex items-center pointer-events-none transition-opacity duration-200",
+              canScrollLeft ? "opacity-100" : "opacity-0"
+            )}
+          >
+            <div className="w-8 h-full bg-gradient-to-r from-[#0D0D0D] to-transparent" />
+            <button
+              onClick={() => scroll("left")}
+              className="pointer-events-auto absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#2A2A2A] border border-[#3D3D3D] text-[#9BFFCA] hover:bg-[#333] transition-colors cursor-pointer"
+              aria-label="Scroll left"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M6.5 2L3.5 5L6.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Scrollable row */}
+          <div
+            ref={scrollRef}
+            className="flex gap-2 overflow-x-auto scroll-smooth pb-1"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {SHAPES.map(({ type, label }) => (
+              <button
+                key={type}
+                onClick={() => addShape(type)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1.5 py-3 rounded-[8px] border transition-all cursor-pointer flex-shrink-0",
+                  "bg-[#1A1A1A] border-[#2D2D2D]",
+                  "hover:border-[#9BFFCA] hover:bg-[#1F2B24]",
+                  "active:scale-[0.96]",
+                  "w-[72px]"
+                )}
+              >
+                <ShapeSVGPreview type={type} />
+                <span className="text-[10px] font-medium text-[#929292] font-(family-name:--font-manrope) leading-none text-center px-1">
+                  {label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Right fade + arrow */}
+          <div
+            className={cn(
+              "absolute right-0 top-0 bottom-0 z-10 flex items-center pointer-events-none transition-opacity duration-200",
+              canScrollRight ? "opacity-100" : "opacity-0"
+            )}
+          >
+            <div className="w-8 h-full bg-gradient-to-l from-[#0D0D0D] to-transparent" />
+            <button
+              onClick={() => scroll("right")}
+              className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#2A2A2A] border border-[#3D3D3D] text-[#9BFFCA] hover:bg-[#333] transition-colors cursor-pointer"
+              aria-label="Scroll right"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M3.5 2L6.5 5L3.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="w-full h-[1px] bg-[#2D2D2D]" />
 
@@ -88,12 +298,12 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                disabled={!isRectSelected}
+                disabled={!isShapeSelected}
                 className="w-full justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent"
               >
                 <div
                   className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform"
-                  style={{ backgroundColor: rgbaToString(rectFillColor) }}
+                  style={{ backgroundColor: rgbaToString(shapeFillColor) }}
                 />
                 <div className="flex flex-col gap-[2px] items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -105,8 +315,8 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
             </PopoverTrigger>
             <PopoverContent className="w-auto p-3">
               <HexColorPicker
-                color={rgbaToHex(rectFillColor)}
-                onChange={(hex) => setRectFillColor(hexToRgba(hex, 1))}
+                color={rgbaToHex(shapeFillColor)}
+                onChange={(hex) => setShapeFillColor(hexToRgba(hex, 1))}
               />
             </PopoverContent>
           </Popover>
@@ -119,12 +329,12 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                disabled={!isRectSelected}
+                disabled={!isShapeSelected}
                 className="w-full justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent"
               >
                 <div
                   className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform"
-                  style={{ backgroundColor: rgbaToString(rectStrokeColor) }}
+                  style={{ backgroundColor: rgbaToString(shapeStrokeColor) }}
                 />
                 <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -135,8 +345,8 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
             </PopoverTrigger>
             <PopoverContent className="w-auto p-3">
               <HexColorPicker
-                color={rgbaToHex(rectStrokeColor)}
-                onChange={(hex) => setRectStrokeColor(hexToRgba(hex, 1))}
+                color={rgbaToHex(shapeStrokeColor)}
+                onChange={(hex) => setShapeStrokeColor(hexToRgba(hex, 1))}
               />
             </PopoverContent>
           </Popover>
@@ -147,30 +357,30 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
       <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center">
         <Label className={labelClassName}>Border Width</Label>
         <Slider
-          value={[rectStrokeWidth]}
-          onValueChange={([value]) => setRectStrokeWidth(value)}
+          value={[shapeStrokeWidth]}
+          onValueChange={([value]) => setShapeStrokeWidth(value)}
           min={SHAPE_RANGES.STROKE_WIDTH_MIN}
           max={SHAPE_RANGES.STROKE_WIDTH_MAX}
           step={1}
-          disabled={!isRectSelected}
+          disabled={!isShapeSelected}
           className={sliderClassName}
         />
-        <div className={valueBoxClassName}>{rectStrokeWidth}px</div>
+        <div className={valueBoxClassName}>{shapeStrokeWidth}px</div>
       </div>
 
       {/* Opacity */}
       <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center">
         <Label className={labelClassName}>Opacity</Label>
         <Slider
-          value={[rectOpacity]}
-          onValueChange={([value]) => setRectOpacity(value)}
+          value={[shapeOpacity]}
+          onValueChange={([value]) => setShapeOpacity(value)}
           min={SHAPE_RANGES.OPACITY_MIN}
           max={SHAPE_RANGES.OPACITY_MAX}
           step={1}
-          disabled={!isRectSelected}
+          disabled={!isShapeSelected}
           className={sliderClassName}
         />
-        <div className={valueBoxClassName}>{rectOpacity}%</div>
+        <div className={valueBoxClassName}>{shapeOpacity}%</div>
       </div>
     </div>
   );

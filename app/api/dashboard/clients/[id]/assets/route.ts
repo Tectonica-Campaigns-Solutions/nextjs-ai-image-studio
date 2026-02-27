@@ -110,9 +110,9 @@ export async function POST(
         400
       );
     }
-    if (!["logo", "image", "document"].includes(assetType)) {
+    if (!["logo", "image", "document", "frame"].includes(assetType)) {
       return errorResponse(
-        "asset_type must be one of: logo, image, document",
+        "asset_type must be one of: logo, image, document, frame",
         400
       );
     }
@@ -147,6 +147,15 @@ export async function POST(
 
     const uploadResult = await uploadAsset(file, id, assetType);
     if (!uploadResult.success || !uploadResult.url || !uploadResult.path) {
+      console.error("[assets POST] storage upload failed:", {
+        success: uploadResult.success,
+        error: uploadResult.error,
+        clientId: id,
+        assetType,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+      });
       return errorResponse(uploadResult.error || "Failed to upload file", 500);
     }
 
@@ -210,7 +219,8 @@ export async function POST(
       .single();
 
     if (insertError) {
-      return errorResponse("Failed to save asset metadata", 500);
+      console.error("[assets POST] insert error:", insertError);
+      return errorResponse(`Failed to save asset metadata: ${insertError.message}`, 500);
     }
 
     return NextResponse.json({ asset }, { status: 201 });

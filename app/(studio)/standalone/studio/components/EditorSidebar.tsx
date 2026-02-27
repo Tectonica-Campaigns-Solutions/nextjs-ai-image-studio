@@ -9,13 +9,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
-import { TextItem, LogoItem, QRItem, ShapeItem } from "./editor-icons";
+import { TextItem, LogoItem, QRItem, ShapeItem, FrameItem } from "./editor-icons";
 
 export interface EditorSidebarProps {
   textToolsPanel: ReactNode;
   logoToolsPanel: ReactNode;
   qrToolsPanel: ReactNode;
   shapeToolsPanel: ReactNode;
+  frameToolsPanel: ReactNode;
   activeTab: string | null;
   handleTabClick: (tabId: string) => void;
   isPanelVisible: boolean;
@@ -35,6 +36,7 @@ export function EditorSidebar({
   logoToolsPanel,
   qrToolsPanel,
   shapeToolsPanel,
+  frameToolsPanel,
   activeTab,
   handleTabClick,
   isPanelVisible,
@@ -142,6 +144,28 @@ export function EditorSidebar({
             </CardContent>
           </Card>
         </AccordionItem>
+
+        <AccordionItem value="frame-tools" className="border-0">
+          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+            <CardContent className="p-0 bg-[#191919]">
+              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-[15px]">
+                    <div className="w-[35px] h-[35px] bg-[#A8F0D8] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                      <FrameItem />
+                    </div>
+                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                      Frames
+                    </h2>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                {frameToolsPanel}
+              </AccordionContent>
+            </CardContent>
+          </Card>
+        </AccordionItem>
       </Accordion>
 
       {activeTab && (
@@ -185,6 +209,7 @@ export function EditorSidebar({
               {activeTab === "logo-overlay" && logoToolsPanel}
               {activeTab === "qr-code" && qrToolsPanel}
               {activeTab === "shape-tools" && shapeToolsPanel}
+              {activeTab === "frame-tools" && frameToolsPanel}
             </div>
           </aside>
         </>
@@ -257,6 +282,23 @@ export function EditorSidebar({
             </div>
             <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
               Shape Tools
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleTabClick("frame-tools")}
+            className={cn(
+              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+              activeTab === "frame-tools" && isPanelVisible
+                ? "bg-[#383838] border border-white"
+                : "bg-[#191919]"
+            )}
+          >
+            <div className="w-[35px] h-[35px] bg-[#A8F0D8] rounded-[8px] flex items-center justify-center flex-shrink-0">
+              <FrameItem />
+            </div>
+            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+              Frames
             </span>
           </button>
         </div>

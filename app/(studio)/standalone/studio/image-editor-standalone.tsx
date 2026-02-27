@@ -8,6 +8,7 @@ import {
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
+  FrameToolsPanel,
   LogoToolsPanel,
   QrToolsPanel,
   ShapeToolsPanel,
@@ -18,6 +19,7 @@ import type {
   DisclaimerPosition,
   ImageEditorStandaloneProps,
 } from "./types/image-editor-types";
+import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_FONTS, EXPORT, UI_COLORS } from "./constants/editor-constants";
 
 // Import custom hooks
@@ -27,6 +29,7 @@ import { useImageEditorSelection } from "./hooks/use-image-editor-selection";
 import { useTextTools } from "./hooks/use-text-tools";
 import { useQRTools } from "./hooks/use-qr-tools";
 import { useLogoTools } from "./hooks/use-logo-tools";
+import { useFrameTools } from "./hooks/use-frame-tools";
 import { useShapeTools } from "./hooks/use-shape-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
@@ -34,9 +37,13 @@ import { useEditorFonts } from "./hooks/use-editor-fonts";
 export default function ImageEditorStandalone({
   params,
   logoAssets,
+  frameAssets = [],
   fontAssets = [],
+  sessionData = null,
 }: ImageEditorStandaloneProps) {
-  const imageUrlFromParams = params.imageUrl;
+  const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
+
+  const { toast } = useToast();
 
   // Header ref
   const headerRef = useRef<HTMLDivElement>(null);
@@ -52,6 +59,10 @@ export default function ImageEditorStandalone({
   const [showDisclaimerModal, setShowDisclaimerModal] = useState<boolean>(false);
   const [disclaimerPosition, setDisclaimerPosition] = useState<DisclaimerPosition>(EXPORT.DEFAULT_DISCLAIMER_POSITION);
 
+  // Save state
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
+
   // Determine image URL
   const imageUrl = imageUrlFromParams || uploadedImageUrl;
 
@@ -66,26 +77,14 @@ export default function ImageEditorStandalone({
   const originalImageUrlRefStable = useRef<string | null>(null);
   const originalImageDimensionsRefStable = useRef<{ width: number; height: number } | null>(null);
   const saveStateRef = useRef<(immediate?: boolean) => void>(() => { });
+  const setFrameOpacityRef = useRef<(n: number) => void>(() => { });
 
-  // Initialize selection hook first (provides setters needed by other hooks)
-  const selection = useImageEditorSelection({
-    canvasRef: canvasRefStable,
-    setFontSize: () => { },
-    setFontFamily: () => { },
-    setTextColor: () => { },
-    setBackgroundColor: () => { },
-    setIsBold: () => { },
-    setIsItalic: () => { },
-    setIsUnderline: () => { },
-    setLineHeight: () => { },
-    setLetterSpacing: () => { },
-    setRectFillColor: () => { },
-    setRectStrokeColor: () => { },
-    setRectStrokeWidth: () => { },
-    setRectOpacity: () => { },
-  });
+  // Ref to track when shape state is being synced from a canvas selection change
+  // (as opposed to a user interaction). Used to prevent updateSelectedShape from
+  // overwriting the newly-selected shape with stale panel values.
+  const shapeSyncingRef = useRef(false);
 
-  // Initialize tools hooks with stable refs
+  // Initialize tools hooks first so their setters can be passed to the selection hook
   const textTools = useTextTools({
     canvasRef: canvasRefStable,
     saveStateRef,
@@ -108,22 +107,25 @@ export default function ImageEditorStandalone({
     saveStateRef,
   });
 
-  // Update selection hook setters to use tool hooks
-  useEffect(() => {
-    (selection as any).setFontSize = textTools.setFontSize;
-    (selection as any).setFontFamily = textTools.setFontFamily;
-    (selection as any).setTextColor = textTools.setTextColor;
-    (selection as any).setBackgroundColor = textTools.setBackgroundColor;
-    (selection as any).setIsBold = textTools.setIsBold;
-    (selection as any).setIsItalic = textTools.setIsItalic;
-    (selection as any).setIsUnderline = textTools.setIsUnderline;
-    (selection as any).setLineHeight = textTools.setLineHeight;
-    (selection as any).setLetterSpacing = textTools.setLetterSpacing;
-    (selection as any).setRectFillColor = shapeTools.setRectFillColor;
-    (selection as any).setRectStrokeColor = shapeTools.setRectStrokeColor;
-    (selection as any).setRectStrokeWidth = shapeTools.setRectStrokeWidth;
-    (selection as any).setRectOpacity = shapeTools.setRectOpacity;
-  }, []);
+  // Initialize selection hook with real setters wired directly
+  const selection = useImageEditorSelection({
+    canvasRef: canvasRefStable,
+    setFontSize: textTools.setFontSize,
+    setFontFamily: textTools.setFontFamily,
+    setTextColor: textTools.setTextColor,
+    setBackgroundColor: textTools.setBackgroundColor,
+    setIsBold: textTools.setIsBold,
+    setIsItalic: textTools.setIsItalic,
+    setIsUnderline: textTools.setIsUnderline,
+    setLineHeight: textTools.setLineHeight,
+    setLetterSpacing: textTools.setLetterSpacing,
+    setShapeFillColor: shapeTools.setShapeFillColor,
+    setShapeStrokeColor: shapeTools.setShapeStrokeColor,
+    setShapeStrokeWidth: shapeTools.setShapeStrokeWidth,
+    setShapeOpacity: shapeTools.setShapeOpacity,
+    onShapeSyncStart: () => { shapeSyncingRef.current = true; },
+    onShapeSyncEnd: () => { shapeSyncingRef.current = false; },
+  });
 
   // Initialize history hook with stable refs
   const history = useImageEditorHistory({
@@ -151,11 +153,24 @@ export default function ImageEditorStandalone({
     setSelectedObject: selection.setSelectedObject,
     setQrSize: qrTools.setQrSize,
     setLogoSize: logoTools.setLogoSize,
+    setFrameOpacity: (n: number) => setFrameOpacityRef.current(n),
     saveState: history.saveState,
     moveSaveTimeoutRef: history.moveSaveTimeoutRef,
     saveStateTimeoutRef: history.saveStateTimeoutRef,
     preventContextMenu,
   });
+
+  const frameTools = useFrameTools({
+    canvasRef: canvasRefStable,
+    frameAssets,
+    aspectRatio: canvasEditor.aspectRatio,
+    saveStateRef,
+  });
+
+  // Keep setFrameOpacityRef in sync so the canvas hook can call it
+  useEffect(() => {
+    setFrameOpacityRef.current = frameTools.setFrameOpacity;
+  }, [frameTools.setFrameOpacity]);
 
   // Mobile panel hook
   const mobilePanel = useMobilePanel();
@@ -170,6 +185,35 @@ export default function ImageEditorStandalone({
     originalImageUrlRefStable.current = canvasEditor.originalImageUrlRef.current;
     originalImageDimensionsRefStable.current = canvasEditor.originalImageDimensions;
   }, [canvasEditor.canvas, canvasEditor.originalImageUrlRef, canvasEditor.originalImageDimensions]);
+
+  // Restore session overlays once the canvas and background image are ready.
+  // originalImageDimensions is set only after the background image finishes loading,
+  // making it a reliable reactive trigger.
+  const sessionRestoredRef = useRef(false);
+  useEffect(() => {
+    if (!sessionData || sessionRestoredRef.current) return;
+    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+
+    sessionRestoredRef.current = true;
+
+    const overlayJSON = JSON.stringify(sessionData.overlay_json);
+    const fakeEntry = {
+      overlayJSON,
+      metadata: sessionData.metadata,
+    };
+
+    (async () => {
+      try {
+        await history.loadOverlaysFromJSON(canvasEditor.canvas!, overlayJSON);
+        history.applyEntryMetadataToCanvas(fakeEntry as any);
+        canvasEditor.canvas!.renderAll();
+        history.saveState(true);
+      } catch (err) {
+        console.error("[session-restore] failed:", err);
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
 
   // Update text on style change
   useEffect(() => {
@@ -188,23 +232,19 @@ export default function ImageEditorStandalone({
     textTools.letterSpacing,
   ]);
 
-  // Update rect on style change
+  // Update shape on style change — skip when the change came from a selection sync
   useEffect(() => {
+    if (shapeSyncingRef.current) return;
     if (!canvasEditor.canvas || !selection.selectedObject) return;
+    if (!shapeTools.isShapeSelected(selection.selectedObject)) return;
 
-    const isRectSelected =
-      selection.selectedObject.type === "rect" &&
-      (selection.selectedObject as any).isRect === true;
-
-    if (!isRectSelected) return;
-
-    shapeTools.updateSelectedRect();
+    shapeTools.updateSelectedShape();
     history.saveState(false);
   }, [
-    shapeTools.rectFillColor,
-    shapeTools.rectStrokeColor,
-    shapeTools.rectStrokeWidth,
-    shapeTools.rectOpacity,
+    shapeTools.shapeFillColor,
+    shapeTools.shapeStrokeColor,
+    shapeTools.shapeStrokeWidth,
+    shapeTools.shapeOpacity,
   ]);
 
   // Update QR on size/opacity change
@@ -220,6 +260,22 @@ export default function ImageEditorStandalone({
     logoTools.updateLogo();
     history.saveState(false);
   }, [logoTools.logoSize, logoTools.logoOpacity]);
+
+  // Update frame on opacity change
+  useEffect(() => {
+    if (!canvasEditor.canvas) return;
+    frameTools.updateFrame();
+    history.saveState(false);
+  }, [frameTools.frameOpacity]);
+
+  // Sync frame panel (opacity) when user selects a frame overlay
+  useEffect(() => {
+    const obj = selection.selectedObject;
+    if (!obj || !(obj as any).isFrame) return;
+    const frameObj = obj as any;
+    const op = frameObj.opacity;
+    if (typeof op === "number") frameTools.setFrameOpacity(Math.round(op * 100));
+  }, [selection.selectedObject]);
 
   // Sync logo panel (size/opacity) when user selects a different logo overlay
   useEffect(() => {
@@ -415,6 +471,93 @@ export default function ImageEditorStandalone({
     history.saveState(true);
   };
 
+  // Save canvas session to database
+  const handleSave = async () => {
+    if (!canvasEditor.canvas || !imageUrl) return;
+    setIsSaving(true);
+
+    try {
+      const currentEntry = history.historyState.entries[history.historyState.currentIndex];
+      const overlayJson = currentEntry
+        ? JSON.parse(currentEntry.overlayJSON)
+        : { version: "5.3.0", objects: [] };
+
+      const metadataToSave = currentEntry ? currentEntry.metadata : {};
+
+      const caUserId = params.user_id ?? "";
+
+      const body: Record<string, unknown> = {
+        ca_user_id: caUserId,
+        background_url: imageUrl,
+        overlay_json: overlayJson,
+        metadata: metadataToSave,
+      };
+      if (sessionId) body.session_id = sessionId;
+
+      const res = await fetch("/api/studio/canvas-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        toast({
+          title: "Save failed",
+          description: data.error ?? "Could not save the session.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newSessionId: string = data.id;
+      setSessionId(newSessionId);
+
+      // Update URL with session_id so the user can reload and resume
+      const url = new URL(window.location.href);
+      url.searchParams.set("session_id", newSessionId);
+      window.history.replaceState({}, "", url.toString());
+
+      toast({
+        title: "Saved",
+        description: "Session saved successfully.",
+        className: "bg-[#1a1a1a] border-[#333] text-white",
+      });
+
+      // Upload thumbnail to Supabase Storage in the background (non-blocking)
+      const caUserIdForThumb = params.user_id ?? "";
+      const currentWidth = canvasEditor.canvas.width;
+      const thumbMultiplier = Math.min(1, 300 / currentWidth);
+      const thumbnailBase64 = canvasEditor.canvas.toDataURL({
+        format: "jpeg",
+        quality: 0.6,
+        multiplier: thumbMultiplier,
+      });
+      fetch("/api/studio/canvas-sessions/thumbnail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: newSessionId,
+          ca_user_id: caUserIdForThumb,
+          image_base64: thumbnailBase64,
+        }),
+      }).catch((err) => {
+        console.warn("[handleSave] thumbnail upload failed (non-critical):", err);
+      });
+    } catch (err) {
+      console.error("[handleSave] error:", err);
+      toast({
+        title: "Save failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+        className: "bg-red-600 border-red-700 text-white",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Show upload prompt if no image
   if (showUploadPrompt) {
     return <UploadPromptCard onFileChange={handleImageUpload} />;
@@ -493,27 +636,42 @@ export default function ImageEditorStandalone({
     [qrTools, isQrSelected]
   );
 
-  const isRectSelected =
-    selection.selectedObject &&
-    selection.selectedObject.type === "rect" &&
-    (selection.selectedObject as any).isRect === true;
+  const isFrameSelected =
+    !!selection.selectedObject && !!(selection.selectedObject as any).isFrame;
+
+  const frameToolsPanel = useMemo(
+    () => (
+      <FrameToolsPanel
+        filteredFrameAssets={frameTools.filteredFrameAssets}
+        hasFrameAssets={frameTools.hasFrameAssets}
+        aspectRatio={canvasEditor.aspectRatio}
+        frameOpacity={frameTools.frameOpacity}
+        setFrameOpacity={frameTools.setFrameOpacity}
+        insertFrame={frameTools.insertFrame}
+        isFrameSelected={isFrameSelected}
+      />
+    ),
+    [frameTools, canvasEditor.aspectRatio, isFrameSelected]
+  );
+
+  const isShapeSelected = shapeTools.isShapeSelected(selection.selectedObject);
 
   const shapeToolsPanel = useMemo(
     () => (
       <ShapeToolsPanel
-        isRectSelected={!!isRectSelected}
-        addRect={shapeTools.addRect}
-        rectFillColor={shapeTools.rectFillColor}
-        setRectFillColor={shapeTools.setRectFillColor}
-        rectStrokeColor={shapeTools.rectStrokeColor}
-        setRectStrokeColor={shapeTools.setRectStrokeColor}
-        rectStrokeWidth={shapeTools.rectStrokeWidth}
-        setRectStrokeWidth={shapeTools.setRectStrokeWidth}
-        rectOpacity={shapeTools.rectOpacity}
-        setRectOpacity={shapeTools.setRectOpacity}
+        isShapeSelected={!!isShapeSelected}
+        addShape={shapeTools.addShape}
+        shapeFillColor={shapeTools.shapeFillColor}
+        setShapeFillColor={shapeTools.setShapeFillColor}
+        shapeStrokeColor={shapeTools.shapeStrokeColor}
+        setShapeStrokeColor={shapeTools.setShapeStrokeColor}
+        shapeStrokeWidth={shapeTools.shapeStrokeWidth}
+        setShapeStrokeWidth={shapeTools.setShapeStrokeWidth}
+        shapeOpacity={shapeTools.shapeOpacity}
+        setShapeOpacity={shapeTools.setShapeOpacity}
       />
     ),
-    [isRectSelected, shapeTools]
+    [isShapeSelected, shapeTools]
   );
 
   return (
@@ -533,6 +691,7 @@ export default function ImageEditorStandalone({
                 logoToolsPanel={logoToolsPanel}
                 qrToolsPanel={qrToolsPanel}
                 shapeToolsPanel={shapeToolsPanel}
+                frameToolsPanel={frameToolsPanel}
                 activeTab={mobilePanel.activeTab}
                 handleTabClick={mobilePanel.handleTabClick}
                 isPanelVisible={mobilePanel.isPanelVisible}
@@ -569,7 +728,9 @@ export default function ImageEditorStandalone({
                 redo={history.redo}
                 deleteSelected={deleteSelected}
                 handleExportClick={handleExportClick}
+                handleSave={handleSave}
                 isExporting={isExporting}
+                isSaving={isSaving}
                 historyState={history.historyState}
                 selectedObject={selection.selectedObject}
                 variant="mobile"
@@ -582,7 +743,9 @@ export default function ImageEditorStandalone({
             redo={history.redo}
             deleteSelected={deleteSelected}
             handleExportClick={handleExportClick}
+            handleSave={handleSave}
             isExporting={isExporting}
+            isSaving={isSaving}
             historyState={history.historyState}
             selectedObject={selection.selectedObject}
             variant="desktop"
