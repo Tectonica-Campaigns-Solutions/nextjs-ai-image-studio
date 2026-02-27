@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import type { HistoryState } from "../types/image-editor-types";
+import { FeedbackButtonInline } from "./FeedbackButton";
 
 export interface EditorToolbarProps {
   undo: () => void;
@@ -10,8 +11,11 @@ export interface EditorToolbarProps {
   deleteSelected: () => void;
   handleExportClick: () => void;
   handleSave: () => void;
+  handleGetFeedback?: () => void;
   isExporting: boolean;
   isSaving: boolean;
+  isFetchingFeedback?: boolean;
+  feedbackText?: string | null;
   historyState: HistoryState;
   selectedObject: any;
   /** When true, show mobile layout (inline buttons with labels); when false, desktop (icon-only column) */
@@ -50,8 +54,11 @@ export function EditorToolbar({
   deleteSelected,
   handleExportClick,
   handleSave,
+  handleGetFeedback,
   isExporting,
   isSaving,
+  isFetchingFeedback = false,
+  feedbackText = null,
   historyState,
   selectedObject,
   variant,
@@ -107,6 +114,15 @@ export function EditorToolbar({
           <Download className="w-4 h-4" />
           {isExporting ? "Exporting..." : "Download"}
         </Button>
+        {handleGetFeedback && (
+          <div className="basis-full">
+            <FeedbackButtonInline
+              handleGetFeedback={handleGetFeedback}
+              isFetchingFeedback={isFetchingFeedback}
+              feedbackText={feedbackText}
+            />
+          </div>
+        )}
       </div>
     );
   }
