@@ -1,6 +1,7 @@
 export { DisclaimerModal } from "./DisclaimerModal";
 export { EditorSidebar } from "./EditorSidebar";
 export { EditorToolbar } from "./EditorToolbar";
+export { FeedbackButton, FeedbackButtonInline } from "./FeedbackButton";
 export { FrameToolsPanel } from "./FrameToolsPanel";
 export { LogoToolsPanel } from "./LogoToolsPanel";
 export { QrToolsPanel } from "./QrToolsPanel";

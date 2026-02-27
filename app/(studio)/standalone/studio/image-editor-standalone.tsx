@@ -8,6 +8,7 @@ import {
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
+  FeedbackButton,
   FrameToolsPanel,
   LogoToolsPanel,
   QrToolsPanel,
@@ -62,6 +63,10 @@ export default function ImageEditorStandalone({
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
+
+  // Feedback state
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState<boolean>(false);
+  const [feedbackText, setFeedbackText] = useState<string | null>(null);
 
   // Determine image URL
   const imageUrl = imageUrlFromParams || uploadedImageUrl;
@@ -558,6 +563,49 @@ export default function ImageEditorStandalone({
     }
   };
 
+  // Get AI feedback on the current canvas
+  const handleGetFeedback = async () => {
+    if (!canvasEditor.canvas) return;
+    setIsFetchingFeedback(true);
+    setFeedbackText(null);
+
+    try {
+      const imageBase64 = canvasEditor.canvas.toDataURL({
+        format: "jpeg",
+        quality: 0.8,
+        multiplier: 1,
+      });
+
+      const res = await fetch("/api/studio/image-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: imageBase64 }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        toast({
+          title: "Feedback failed",
+          description: data.error ?? "Could not get feedback.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setFeedbackText(data.feedback);
+    } catch (err) {
+      console.error("[handleGetFeedback] error:", err);
+      toast({
+        title: "Feedback failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingFeedback(false);
+    }
+  };
+
   // Show upload prompt if no image
   if (showUploadPrompt) {
     return <UploadPromptCard onFileChange={handleImageUpload} />;
@@ -729,8 +777,11 @@ export default function ImageEditorStandalone({
                 deleteSelected={deleteSelected}
                 handleExportClick={handleExportClick}
                 handleSave={handleSave}
+                handleGetFeedback={handleGetFeedback}
                 isExporting={isExporting}
                 isSaving={isSaving}
+                isFetchingFeedback={isFetchingFeedback}
+                feedbackText={feedbackText}
                 historyState={history.historyState}
                 selectedObject={selection.selectedObject}
                 variant="mobile"
@@ -752,6 +803,12 @@ export default function ImageEditorStandalone({
           />
         </div>
       </div>
+
+      <FeedbackButton
+        handleGetFeedback={handleGetFeedback}
+        isFetchingFeedback={isFetchingFeedback}
+        feedbackText={feedbackText}
+      />
 
       <DisclaimerModal
         open={showDisclaimerModal}
