@@ -362,8 +362,8 @@ export async function POST(request: NextRequest) {
     let referenceImageFilenames: string[] = []
     const allImageUrls: string[] = []
     
-    // Determine if user provided an image (only relevant when branding is active)
-    const hasUserImage = useBranding && !!(imageUrl || base64Image)
+    // Determine if user provided an image (independent of branding)
+    const hasUserImage = !!(imageUrl || base64Image)
 
     if (useBranding) {
       // Get reference images for this organization
@@ -388,7 +388,7 @@ export async function POST(request: NextRequest) {
       // Upload reference images to fal.ai storage
       console.log(`[Flux 2 Pro Edit Create] Uploading ${referenceImageFilenames.length} reference images from ${folderName}...`)
     } else {
-      console.log(`[Flux 2 Pro Edit Create] withBranding=false — skipping reference images, will use fal-ai/flux-2-pro`)
+      console.log(`[Flux 2 Pro Edit Create] withBranding=false — skipping reference images${hasUserImage ? ', user image will be used with fal-ai/flux-2-pro/edit' : ', will use fal-ai/flux-2-pro (text-to-image)'}`)
     }
     
     // Read and upload each reference image
@@ -466,7 +466,7 @@ export async function POST(request: NextRequest) {
     // Only relevant when branding is active (fal-ai/flux-2-pro does not accept image_urls)
     let userImageCount = 0
     
-    if (useBranding && base64Image) {
+    if (base64Image) {
       console.log(`[Flux 2 Pro Edit Create] Processing user Base64 image...`)
       
       try {
@@ -566,7 +566,7 @@ export async function POST(request: NextRequest) {
           details: `Failed to process Base64 image: ${base64Error instanceof Error ? base64Error.message : 'Unknown error'}`
         }, { status: 400 })
       }
-    } else if (useBranding && imageUrl) {
+    } else if (imageUrl) {
       // Validate and add user image URL
       console.log(`[Flux 2 Pro Edit Create] Adding user image URL...`)
       
@@ -589,10 +589,8 @@ export async function POST(request: NextRequest) {
           details: `Invalid URL: ${imageUrl}`
         }, { status: 400 })
       }
-    } else if (!useBranding) {
-      console.log(`[Flux 2 Pro Edit Create] withBranding=false — no images attached to request`)
     } else {
-      console.log(`[Flux 2 Pro Edit Create] No user image provided, using only reference images`)
+      console.log(`[Flux 2 Pro Edit Create] No user image provided${useBranding ? ', using only reference images' : ''}`)
     }
 
     console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${referenceImageFilenames.length} references + ${userImageCount} user)`)
@@ -622,8 +620,8 @@ export async function POST(request: NextRequest) {
       output_format: outputFormat
     }
     
-    // Only include image_urls when branding is active (fal-ai/flux-2-pro/edit)
-    if (useBranding) {
+    // Include image_urls only when there are images to send (fal-ai/flux-2-pro/edit)
+    if (allImageUrls.length > 0) {
       input.image_urls = allImageUrls
     }
     
@@ -651,8 +649,8 @@ export async function POST(request: NextRequest) {
       prompt: input.prompt.substring(0, 100) + '...'
     }, null, 2))
 
-    const falModel = useBranding ? "fal-ai/flux-2-pro/edit" : "fal-ai/flux-2-pro"
-    console.log(`[Flux 2 Pro Edit Create] Using model: ${falModel}`)
+    const falModel = allImageUrls.length > 0 ? "fal-ai/flux-2-pro/edit" : "fal-ai/flux-2-pro"
+    console.log(`[Flux 2 Pro Edit Create] Using model: ${falModel} (${allImageUrls.length} total images: ${referenceImageFilenames.length} references + ${userImageCount} user)`)
 
     try {
       const result = await fal.subscribe(falModel, {
