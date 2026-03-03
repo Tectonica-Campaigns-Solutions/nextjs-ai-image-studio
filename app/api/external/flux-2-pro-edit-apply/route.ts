@@ -61,7 +61,7 @@ interface SceneConfig {
 
 const SCENE_CONFIGS: Record<SceneType, SceneConfig> = {
   people: {
-    defaultPrompt: "Combine the subject or subjects from @image1 with the artistic style and atmosphere of @image2. Do not modify the subjects pose and anatomical features. Do not add subjects from @image2 to @image1. Respect @image2 color scale."
+    defaultPrompt: "@image1 is the PRIMARY subject. Apply the artistic style, color palette, lighting mood, and atmospheric treatment of @image2 to the subject(s) in @image1. @image2 is a STYLE REFERENCE ONLY — do not introduce any structures, elements, or visual content from @image2 into the output. Preserve the exact pose, facial expression, anatomy, clothing, and identity of all subjects in @image1. Respect @image2 color scale."
   },
   landscape: {
     defaultPrompt: "Combine the natural landscape scene from @image1 with the artistic style, color palette, lighting mood, and surface textures of @image2. Preserve the exact composition, viewpoint, horizon line, scale, and all geographical features from @image1 (mountains, coastline, rivers, trees, clouds). Do not add, remove, or relocate any elements. Do not introduce animals, people, buildings, or objects from @image2. Keep all shapes and contours unchanged; apply only stylistic rendering (brushwork/material feel), atmosphere, and color grading. Respect @image2 color scale."
@@ -76,7 +76,7 @@ const SCENE_CONFIGS: Record<SceneType, SceneConfig> = {
 
 // Default Tectonica reference images (fallback)
 const TECTONICA_REFERENCE_IMAGES: Record<SceneType, string> = {
-  people: 'TCT-AI-Individual-Hispanic-Female-Young.png',
+  people: 'TCT-AI-Landmark.png',
   landscape: 'TCT-AI-Landmark-2.png',
   urban: 'TCT-AI-Landmark-3.png',
   monument: 'TCT-AI-Landmark.png'
@@ -733,9 +733,9 @@ export async function GET() {
     
     sceneTypes: {
       people: {
-        referenceImage: "TCT-AI-Individual-Hispanic-Female-Young.png",
+        referenceImage: "TCT-AI-Landmark.png",
         description: "For portraits and images with people",
-        defaultPrompt: "Combine the subject or subjects from @image1 with the artistic style and atmosphere of @image2. Do not modify the subjects pose and anatomical features. Do not add subjects from @image2 to @image1."
+        defaultPrompt: "@image1 is the PRIMARY subject. Apply the artistic style, color palette, lighting mood, and atmospheric treatment of @image2 to the subject(s) in @image1. @image2 is a STYLE REFERENCE ONLY — do not introduce any structures, elements, or visual content from @image2 into the output. Preserve the exact pose, facial expression, anatomy, clothing, and identity of all subjects in @image1."
       },
       landscape: {
         referenceImage: "TCT-AI-Landmark-2.png",
