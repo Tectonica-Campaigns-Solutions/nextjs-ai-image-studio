@@ -20,6 +20,8 @@ export interface ImageEditorStandaloneParams {
   imageUrl?: string;
   user_id?: string;
   session_id?: string;
+  client_id?: string;
+  user_email?: string;
 }
 
 export interface CanvasSessionData {

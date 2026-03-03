@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Canvas } from "fabric";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
@@ -19,6 +19,7 @@ export interface UseImageEditorCanvasOptions {
   moveSaveTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   saveStateTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   preventContextMenu: (e: MouseEvent) => false;
+  onBackgroundReplaced?: (newUrl: string) => void;
 }
 
 function gcd(a: number, b: number): number {
@@ -48,6 +49,7 @@ export function useImageEditorCanvas(
     moveSaveTimeoutRef,
     saveStateTimeoutRef,
     preventContextMenu,
+    onBackgroundReplaced,
   } = options;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -400,6 +402,109 @@ export function useImageEditorCanvas(
     };
   }, [imageUrl]);
 
+  const replaceBackgroundImage = useCallback(
+    async (newImageUrl: string) => {
+      const instance = canvasInstanceRef.current;
+      if (!instance) return;
+      const objects = instance.getObjects();
+      const currentBg = objects[0];
+      if (!currentBg || !(currentBg as any).isBackground) return;
+
+      try {
+        const newImg = await loadImageWithCORS(newImageUrl);
+        const originalWidth = newImg.width;
+        const originalHeight = newImg.height;
+
+        const left = currentBg.left ?? 0;
+        const top = currentBg.top ?? 0;
+        const scaleX = currentBg.scaleX ?? 1;
+        const scaleY = currentBg.scaleY ?? 1;
+
+        newImg.set({
+          left,
+          top,
+          scaleX,
+          scaleY,
+          selectable: false,
+          evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          hasControls: false,
+          hasBorders: false,
+        });
+        (newImg as any).isBackground = true;
+        (newImg as any).isEditable = false;
+
+        instance.remove(currentBg);
+        instance.add(newImg);
+        instance.sendObjectToBack(newImg);
+
+        originalImageUrlRef.current = newImageUrl;
+        setOriginalImageDimensions({ width: originalWidth, height: originalHeight });
+        setAspectRatio(computeAspectRatio(originalWidth, originalHeight));
+
+        const canvasArea = document.getElementById("canvas-area");
+        if (canvasArea && originalWidth > 0 && originalHeight > 0) {
+          const containerRect = canvasArea.getBoundingClientRect();
+          const maxDisplayWidth = Math.max(100, containerRect.width);
+          const maxDisplayHeight = Math.max(100, containerRect.height);
+          const displayScale = Math.min(
+            1,
+            maxDisplayWidth / originalWidth,
+            maxDisplayHeight / originalHeight
+          );
+          const newDisplayWidth = originalWidth * displayScale;
+          const newDisplayHeight = originalHeight * displayScale;
+          const oldWidth = instance.width ?? newDisplayWidth;
+          const scale = newDisplayWidth / oldWidth;
+
+          instance.setDimensions({
+            width: newDisplayWidth,
+            height: newDisplayHeight,
+          });
+
+          const canvasContainer = instance.getElement().parentElement;
+          if (canvasContainer) {
+            canvasContainer.style.width = `${newDisplayWidth}px`;
+            canvasContainer.style.height = `${newDisplayHeight}px`;
+            canvasContainer.style.maxWidth = `${newDisplayWidth}px`;
+            canvasContainer.style.maxHeight = `${newDisplayHeight}px`;
+          }
+
+          const allObjects = instance.getObjects();
+          allObjects.forEach((obj) => {
+            const objLeft = obj.left || 0;
+            const objTop = obj.top || 0;
+            const objScaleX = obj.scaleX || 1;
+            const objScaleY = obj.scaleY || 1;
+            obj.set({
+              left: objLeft * scale,
+              top: objTop * scale,
+              scaleX: objScaleX * scale,
+              scaleY: objScaleY * scale,
+            });
+            obj.setCoords();
+          });
+
+          setCanvasDimensions({
+            width: newDisplayWidth,
+            height: newDisplayHeight,
+          });
+        }
+
+        instance.renderAll();
+        onBackgroundReplaced?.(newImageUrl);
+      } catch (err) {
+        console.error("Error replacing background image:", err);
+        throw err;
+      }
+    },
+    [onBackgroundReplaced]
+  );
+
   return {
     canvas,
     setCanvas,
@@ -410,5 +515,6 @@ export function useImageEditorCanvas(
     setCanvasDimensions,
     originalImageUrlRef,
     aspectRatio,
+    replaceBackgroundImage,
   };
 }
