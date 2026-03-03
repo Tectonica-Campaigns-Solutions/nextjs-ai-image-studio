@@ -9,6 +9,7 @@ import {
   EditorSidebar,
   EditorToolbar,
   FeedbackButton,
+  AIEditPanel,
   FrameToolsPanel,
   LogoToolsPanel,
   QrToolsPanel,
@@ -34,6 +35,8 @@ import { useFrameTools } from "./hooks/use-frame-tools";
 import { useShapeTools } from "./hooks/use-shape-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
+import { editImage } from "./lib/image-edit-service";
+import { getCurrentBackgroundImageForEdit } from "./utils/image-editor-utils";
 
 export default function ImageEditorStandalone({
   params,
@@ -68,6 +71,9 @@ export default function ImageEditorStandalone({
   const [isFetchingFeedback, setIsFetchingFeedback] = useState<boolean>(false);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
 
+  // AI image edit state
+  const [isEditingWithAI, setIsEditingWithAI] = useState<boolean>(false);
+
   // Determine image URL
   const imageUrl = imageUrlFromParams || uploadedImageUrl;
 
@@ -83,6 +89,7 @@ export default function ImageEditorStandalone({
   const originalImageDimensionsRefStable = useRef<{ width: number; height: number } | null>(null);
   const saveStateRef = useRef<(immediate?: boolean) => void>(() => { });
   const setFrameOpacityRef = useRef<(n: number) => void>(() => { });
+  const currentBackgroundUrlRef = useRef<string | null>(null);
 
   // Ref to track when shape state is being synced from a canvas selection change
   // (as opposed to a user interaction). Used to prevent updateSelectedShape from
@@ -163,6 +170,9 @@ export default function ImageEditorStandalone({
     moveSaveTimeoutRef: history.moveSaveTimeoutRef,
     saveStateTimeoutRef: history.saveStateTimeoutRef,
     preventContextMenu,
+    onBackgroundReplaced: (newUrl) => {
+      currentBackgroundUrlRef.current = newUrl;
+    },
   });
 
   const frameTools = useFrameTools({
@@ -189,6 +199,9 @@ export default function ImageEditorStandalone({
     canvasRefStable.current = canvasEditor.canvas;
     originalImageUrlRefStable.current = canvasEditor.originalImageUrlRef.current;
     originalImageDimensionsRefStable.current = canvasEditor.originalImageDimensions;
+    if (currentBackgroundUrlRef.current === null && canvasEditor.originalImageUrlRef.current) {
+      currentBackgroundUrlRef.current = canvasEditor.originalImageUrlRef.current;
+    }
   }, [canvasEditor.canvas, canvasEditor.originalImageUrlRef, canvasEditor.originalImageDimensions]);
 
   // Restore session overlays once the canvas and background image are ready.
@@ -490,10 +503,11 @@ export default function ImageEditorStandalone({
       const metadataToSave = currentEntry ? currentEntry.metadata : {};
 
       const caUserId = params.user_id ?? "";
+      const backgroundUrlForSave = currentBackgroundUrlRef.current ?? imageUrl;
 
       const body: Record<string, unknown> = {
         ca_user_id: caUserId,
-        background_url: imageUrl,
+        background_url: backgroundUrlForSave,
         overlay_json: overlayJson,
         metadata: metadataToSave,
       };
@@ -562,6 +576,73 @@ export default function ImageEditorStandalone({
       setIsSaving(false);
     }
   };
+
+  // Edit background with AI
+  const handleAIEdit = useCallback(
+    async (prompt: string) => {
+      if (!canvasEditor.canvas || !canvasEditor.replaceBackgroundImage) return;
+      const payload = getCurrentBackgroundImageForEdit(canvasEditor.canvas);
+      if (!payload || (!payload.imageUrls?.length && !payload.base64Images?.length)) {
+        toast({
+          title: "Edit failed",
+          description: "Could not get the current image to edit.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setIsEditingWithAI(true);
+      try {
+        const result = await editImage({
+          prompt,
+          ...payload,
+          orgType: "Tectonica",
+          clientInfo: {
+            client_id: params.client_id ?? "Tectonica",
+            user_id: params.user_id ?? "",
+            user_email: params.user_email ?? "",
+          },
+        });
+        if (!result.success || !result.images?.length) {
+          const errMsg =
+            !result.success && "error" in result
+              ? result.error ?? result.details
+              : "No image returned.";
+          toast({
+            title: "Edit failed",
+            description: errMsg ?? "No image returned.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const editedUrl = result.images[0].url;
+        await canvasEditor.replaceBackgroundImage(editedUrl);
+        history.saveState(true);
+        toast({
+          title: "Image updated",
+          description: "The background has been edited. Overlays are preserved.",
+          className: "bg-[#1a1a1a] border-[#333] text-white",
+        });
+      } catch (err) {
+        console.error("[handleAIEdit] error:", err);
+        toast({
+          title: "Edit failed",
+          description: err instanceof Error ? err.message : "An unexpected error occurred.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsEditingWithAI(false);
+      }
+    },
+    [
+      canvasEditor.canvas,
+      canvasEditor.replaceBackgroundImage,
+      history.saveState,
+      params.client_id,
+      params.user_id,
+      params.user_email,
+      toast,
+    ]
+  );
 
   // Get AI feedback on the current canvas
   const handleGetFeedback = async () => {
@@ -639,6 +720,16 @@ export default function ImageEditorStandalone({
       />
     ),
     [selection.selectedObject, fontAssets, textTools]
+  );
+
+  const aiEditPanel = useMemo(
+    () => (
+      <AIEditPanel
+        onEdit={handleAIEdit}
+        isLoading={isEditingWithAI}
+      />
+    ),
+    [handleAIEdit, isEditingWithAI]
   );
 
   const isLogoSelected =
@@ -736,6 +827,7 @@ export default function ImageEditorStandalone({
             <div>
               <EditorSidebar
                 textToolsPanel={textToolsPanel}
+                aiEditPanel={aiEditPanel}
                 logoToolsPanel={logoToolsPanel}
                 qrToolsPanel={qrToolsPanel}
                 shapeToolsPanel={shapeToolsPanel}

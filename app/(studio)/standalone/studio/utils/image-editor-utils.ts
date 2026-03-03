@@ -51,3 +51,36 @@ export function rgbaToString(color: {
 }): string {
   return `rgba(${color.r},${color.g},${color.b},${color.a})`;
 }
+
+export interface GetCurrentBackgroundPayload {
+  imageUrls?: string[];
+  base64Images?: string[];
+}
+
+/**
+ * Get the current canvas background image for sending to the edit API.
+ * Returns either imageUrls (if the background is an HTTP URL) or base64Images
+ * (if it's a data URL or we need to export it).
+ */
+export function getCurrentBackgroundImageForEdit(canvas: {
+  getObjects(): Array<{ type?: string; getElement?: () => HTMLImageElement; _element?: HTMLImageElement }>;
+}): GetCurrentBackgroundPayload | null {
+  const objects = canvas.getObjects();
+  const bg = objects[0];
+  if (!bg || bg.type !== "image") return null;
+
+  const bgAny = bg as { getElement?: () => HTMLImageElement; _element?: HTMLImageElement };
+  const el = bgAny.getElement?.() ?? bgAny._element;
+  const src = el?.src;
+  if (!src) return null;
+
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    return { imageUrls: [src] };
+  }
+  if (src.startsWith("data:")) {
+    const match = src.match(/^data:image\/\w+;base64,(.+)$/);
+    const base64 = match ? match[1] : src.replace(/^data:[^;]+;base64,/, "");
+    return { base64Images: [base64] };
+  }
+  return null;
+}

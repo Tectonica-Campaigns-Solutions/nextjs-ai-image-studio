@@ -9,10 +9,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
+import { Sparkles } from "lucide-react";
 import { TextItem, LogoItem, QRItem, ShapeItem, FrameItem } from "./editor-icons";
 
 export interface EditorSidebarProps {
   textToolsPanel: ReactNode;
+  aiEditPanel: ReactNode;
   logoToolsPanel: ReactNode;
   qrToolsPanel: ReactNode;
   shapeToolsPanel: ReactNode;
@@ -33,6 +35,7 @@ export interface EditorSidebarProps {
 
 export function EditorSidebar({
   textToolsPanel,
+  aiEditPanel,
   logoToolsPanel,
   qrToolsPanel,
   shapeToolsPanel,
@@ -166,6 +169,28 @@ export function EditorSidebar({
             </CardContent>
           </Card>
         </AccordionItem>
+
+        <AccordionItem value="ai-edit" className="border-0">
+          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+            <CardContent className="p-0 bg-[#191919]">
+              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-[15px]">
+                    <div className="w-[35px] h-[35px] bg-[#B38BF4] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                      <Sparkles className="w-4 h-4 text-[#3302FE]" aria-hidden />
+                    </div>
+                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                      Edit with AI
+                    </h2>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                {aiEditPanel}
+              </AccordionContent>
+            </CardContent>
+          </Card>
+        </AccordionItem>
       </Accordion>
 
       {activeTab && (
@@ -206,6 +231,7 @@ export function EditorSidebar({
 
             <div className="px-[15px] pb-[30px] max-h-[calc(70vh-60px)] overflow-y-auto themed-scrollbar">
               {activeTab === "text-tools" && textToolsPanel}
+              {activeTab === "ai-edit" && aiEditPanel}
               {activeTab === "logo-overlay" && logoToolsPanel}
               {activeTab === "qr-code" && qrToolsPanel}
               {activeTab === "shape-tools" && shapeToolsPanel}
@@ -299,6 +325,23 @@ export function EditorSidebar({
             </div>
             <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
               Frames
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleTabClick("ai-edit")}
+            className={cn(
+              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+              activeTab === "ai-edit" && isPanelVisible
+                ? "bg-[#383838] border border-white"
+                : "bg-[#191919]"
+            )}
+          >
+            <div className="w-[35px] h-[35px] bg-[#B38BF4] rounded-[8px] flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-[#3302FE]" aria-hidden />
+            </div>
+            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+              Edit with AI
             </span>
           </button>
         </div>

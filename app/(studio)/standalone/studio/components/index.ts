@@ -1,5 +1,6 @@
 export { DisclaimerModal } from "./DisclaimerModal";
 export { EditorSidebar } from "./EditorSidebar";
+export { AIEditPanel } from "./AIEditPanel";
 export { EditorToolbar } from "./EditorToolbar";
 export { FeedbackButton, FeedbackButtonInline } from "./FeedbackButton";
 export { FrameToolsPanel } from "./FrameToolsPanel";
