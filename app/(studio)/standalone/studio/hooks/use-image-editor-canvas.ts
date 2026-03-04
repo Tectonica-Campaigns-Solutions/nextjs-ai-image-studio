@@ -266,7 +266,13 @@ export function useImageEditorCanvas(
             objects: [],
           });
           opts.setHistoryState({
-            entries: [{ overlayJSON: initialOverlayJSON, metadata: {} }],
+            entries: [
+              {
+                overlayJSON: initialOverlayJSON,
+                metadata: {},
+                backgroundUrl: imageUrl,
+              },
+            ],
             currentIndex: 0,
           });
           opts.setObjectMetadata({
@@ -415,38 +421,13 @@ export function useImageEditorCanvas(
         const originalWidth = newImg.width;
         const originalHeight = newImg.height;
 
-        const left = currentBg.left ?? 0;
-        const top = currentBg.top ?? 0;
-        const scaleX = currentBg.scaleX ?? 1;
-        const scaleY = currentBg.scaleY ?? 1;
-
-        newImg.set({
-          left,
-          top,
-          scaleX,
-          scaleY,
-          selectable: false,
-          evented: false,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockRotation: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          hasControls: false,
-          hasBorders: false,
-        });
-        (newImg as any).isBackground = true;
-        (newImg as any).isEditable = false;
-
-        instance.remove(currentBg);
-        instance.add(newImg);
-        instance.sendObjectToBack(newImg);
-
         originalImageUrlRef.current = newImageUrl;
         setOriginalImageDimensions({ width: originalWidth, height: originalHeight });
         setAspectRatio(computeAspectRatio(originalWidth, originalHeight));
 
         const canvasArea = document.getElementById("canvas-area");
+        let newDisplayWidth = originalWidth;
+        let newDisplayHeight = originalHeight;
         if (canvasArea && originalWidth > 0 && originalHeight > 0) {
           const containerRect = canvasArea.getBoundingClientRect();
           const maxDisplayWidth = Math.max(100, containerRect.width);
@@ -456,8 +437,48 @@ export function useImageEditorCanvas(
             maxDisplayWidth / originalWidth,
             maxDisplayHeight / originalHeight
           );
-          const newDisplayWidth = originalWidth * displayScale;
-          const newDisplayHeight = originalHeight * displayScale;
+          newDisplayWidth = originalWidth * displayScale;
+          newDisplayHeight = originalHeight * displayScale;
+          newImg.set({
+            left: 0,
+            top: 0,
+            scaleX: displayScale,
+            scaleY: displayScale,
+            selectable: false,
+            evented: false,
+            lockMovementX: true,
+            lockMovementY: true,
+            lockRotation: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            hasControls: false,
+            hasBorders: false,
+          });
+        } else {
+          newImg.set({
+            left: 0,
+            top: 0,
+            scaleX: 1,
+            scaleY: 1,
+            selectable: false,
+            evented: false,
+            lockMovementX: true,
+            lockMovementY: true,
+            lockRotation: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            hasControls: false,
+            hasBorders: false,
+          });
+        }
+        (newImg as any).isBackground = true;
+        (newImg as any).isEditable = false;
+
+        instance.remove(currentBg);
+        instance.add(newImg);
+        instance.sendObjectToBack(newImg);
+
+        if (canvasArea && originalWidth > 0 && originalHeight > 0) {
           const oldWidth = instance.width ?? newDisplayWidth;
           const scale = newDisplayWidth / oldWidth;
 
@@ -475,7 +496,18 @@ export function useImageEditorCanvas(
           }
 
           const allObjects = instance.getObjects();
-          allObjects.forEach((obj) => {
+          allObjects.forEach((obj, index) => {
+            if (index === 0) {
+              const bg = obj;
+              bg.set({
+                left: 0,
+                top: 0,
+                scaleX: newDisplayWidth / originalWidth,
+                scaleY: newDisplayHeight / originalHeight,
+              });
+              bg.setCoords();
+              return;
+            }
             const objLeft = obj.left || 0;
             const objTop = obj.top || 0;
             const objScaleX = obj.scaleX || 1;

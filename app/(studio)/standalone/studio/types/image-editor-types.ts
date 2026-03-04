@@ -9,6 +9,8 @@ export interface ObjectMetadata {
 export interface HistoryEntry {
   overlayJSON: string;
   metadata: Record<number, ObjectMetadata>;
+  /** Background image URL for this state; used when undoing/redoing so the correct image is restored. */
+  backgroundUrl?: string;
 }
 
 export interface HistoryState {

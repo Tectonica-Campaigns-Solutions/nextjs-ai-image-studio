@@ -2,11 +2,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface AIEditPanelProps {
-  onEdit: (prompt: string) => Promise<void>;
+  onEdit: (prompt: string, includeLayers?: boolean) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -15,12 +17,13 @@ export const AIEditPanel = React.memo(function AIEditPanel({
   isLoading,
 }: AIEditPanelProps) {
   const [prompt, setPrompt] = React.useState("");
+  const [includeLayers, setIncludeLayers] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = prompt.trim();
     if (!trimmed || isLoading) return;
-    await onEdit(trimmed);
+    await onEdit(trimmed, includeLayers);
   };
 
   return (
@@ -36,6 +39,22 @@ export const AIEditPanel = React.memo(function AIEditPanel({
             className="min-h-[88px] w-full !border-[#2D2D2D] !bg-[#1F1F1F] text-sm !text-white placeholder-white rounded-[10px] px-[16px] py-[10px] resize-y transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3] !font-(family-name:--font-manrope)"
             rows={3}
           />
+          <label
+            className={cn(
+              "flex items-center gap-2 cursor-pointer select-none",
+              isLoading && "opacity-50 pointer-events-none"
+            )}
+          >
+            <Checkbox
+              checked={includeLayers}
+              onCheckedChange={(checked) => setIncludeLayers(checked === true)}
+              disabled={isLoading}
+              className="border-[#2D2D2D] data-[state=checked]:bg-[#5C38F3] data-[state=checked]:border-[#5C38F3]"
+            />
+            <span className="text-[13px] text-white/90 font-(family-name:--font-manrope) leading-[135%]">
+              Include layers (text, QR, frames, etc.) in the image sent for editing
+            </span>
+          </label>
           <Button
             type="submit"
             disabled={!prompt.trim() || isLoading}
