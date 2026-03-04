@@ -24,6 +24,8 @@ export interface UseImageEditorHistoryOptions {
   setQrOpacity: (n: number) => void;
   setLogoSize: (n: number) => void;
   setLogoOpacity: (n: number) => void;
+  /** Called when undo/redo restores a different background URL so the canvas ref can stay in sync. */
+  onRestoreBackgroundUrl?: (url: string) => void;
 }
 
 export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
@@ -37,6 +39,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
     setQrOpacity,
     setLogoSize,
     setLogoOpacity,
+    onRestoreBackgroundUrl,
   } = options;
 
   const [historyState, setHistoryState] = useState<HistoryState>({
@@ -85,13 +88,16 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
         const newEntry: HistoryEntry = {
           overlayJSON,
           metadata: metadataSnapshot,
+          backgroundUrl: originalImageUrlRef.current ?? undefined,
         };
 
         setHistoryState((prev) => {
           const newEntries = prev.entries.slice(0, prev.currentIndex + 1);
+          const last = newEntries[newEntries.length - 1];
           if (
-            newEntries.length > 0 &&
-            newEntries[newEntries.length - 1].overlayJSON === overlayJSON
+            last &&
+            last.overlayJSON === overlayJSON &&
+            last.backgroundUrl === (originalImageUrlRef.current ?? undefined)
           ) {
             return prev;
           }
@@ -147,16 +153,21 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
   const addBackgroundFromUrl = useCallback(
     async (targetCanvas: Canvas): Promise<void> => {
       const url = originalImageUrlRef.current;
-      const dimensions = originalImageDimensionsRef.current;
-      if (!url || !dimensions) return;
+      if (!url) return;
+      const img = await loadImageWithCORS(url);
+      const originalWidth = img.width;
+      const originalHeight = img.height;
+      originalImageDimensionsRef.current = {
+        width: originalWidth,
+        height: originalHeight,
+      };
       const cw = (targetCanvas as any).width as number;
       const ch = (targetCanvas as any).height as number;
       const displayScale = Math.min(
         1,
-        cw / dimensions.width,
-        ch / dimensions.height,
+        cw / originalWidth,
+        ch / originalHeight,
       );
-      const img = await loadImageWithCORS(url);
       img.set({
         left: 0,
         top: 0,
@@ -270,6 +281,10 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       isRestoringState.current = false;
       return;
     }
+    if (previousEntry.backgroundUrl != null) {
+      originalImageUrlRef.current = previousEntry.backgroundUrl;
+      onRestoreBackgroundUrl?.(previousEntry.backgroundUrl);
+    }
 
     (async () => {
       try {
@@ -311,6 +326,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
     applyEntryMetadataToCanvas,
     setSelectedObject,
     setObjectMetadata,
+    onRestoreBackgroundUrl,
   ]);
 
   const redo = useCallback(() => {
@@ -336,6 +352,10 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
     if (!nextEntry) {
       isRestoringState.current = false;
       return;
+    }
+    if (nextEntry.backgroundUrl != null) {
+      originalImageUrlRef.current = nextEntry.backgroundUrl;
+      onRestoreBackgroundUrl?.(nextEntry.backgroundUrl);
     }
 
     (async () => {
@@ -378,6 +398,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
     applyEntryMetadataToCanvas,
     setSelectedObject,
     setObjectMetadata,
+    onRestoreBackgroundUrl,
   ]);
 
   return {

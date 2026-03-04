@@ -63,13 +63,20 @@ export interface GetCurrentBackgroundPayload {
  * (if it's a data URL or we need to export it).
  */
 export function getCurrentBackgroundImageForEdit(canvas: {
-  getObjects(): Array<{ type?: string; getElement?: () => HTMLImageElement; _element?: HTMLImageElement }>;
+  getObjects(): Array<{
+    type?: string;
+    getElement?: () => HTMLImageElement;
+    _element?: HTMLImageElement;
+  }>;
 }): GetCurrentBackgroundPayload | null {
   const objects = canvas.getObjects();
   const bg = objects[0];
   if (!bg || bg.type !== "image") return null;
 
-  const bgAny = bg as { getElement?: () => HTMLImageElement; _element?: HTMLImageElement };
+  const bgAny = bg as {
+    getElement?: () => HTMLImageElement;
+    _element?: HTMLImageElement;
+  };
   const el = bgAny.getElement?.() ?? bgAny._element;
   const src = el?.src;
   if (!src) return null;
@@ -83,4 +90,35 @@ export function getCurrentBackgroundImageForEdit(canvas: {
     return { base64Images: [base64] };
   }
   return null;
+}
+
+/**
+ * Get the full canvas (background + all overlays) as base64 for sending to the edit API.
+ * Use when the user wants to include layers (text, QR, frames, etc.) in the image sent for editing.
+ *
+ * The canvas type is kept loose here to avoid mismatches with different Fabric.js typings;
+ * we only rely on it exposing a compatible `toDataURL` method.
+ */
+export function getFullCanvasImageForEdit(canvas: {
+  toDataURL(options?: {
+    format?: string;
+    quality?: number;
+    multiplier?: number;
+  }): string;
+}): GetCurrentBackgroundPayload | null {
+  try {
+    const dataURL = canvas.toDataURL({
+      format: "jpeg",
+      quality: 0.9,
+      multiplier: 1,
+    });
+    if (!dataURL || !dataURL.startsWith("data:")) return null;
+    const match = dataURL.match(/^data:image\/\w+;base64,(.+)$/);
+    const base64 = match
+      ? match[1]
+      : dataURL.replace(/^data:[^;]+;base64,/, "");
+    return base64 ? { base64Images: [base64] } : null;
+  } catch {
+    return null;
+  }
 }

@@ -36,7 +36,7 @@ import { useShapeTools } from "./hooks/use-shape-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
-import { getCurrentBackgroundImageForEdit } from "./utils/image-editor-utils";
+import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit } from "./utils/image-editor-utils";
 
 export default function ImageEditorStandalone({
   params,
@@ -139,7 +139,10 @@ export default function ImageEditorStandalone({
     onShapeSyncEnd: () => { shapeSyncingRef.current = false; },
   });
 
-  // Initialize history hook with stable refs
+  // Ref used by onRestoreBackgroundUrl so undo/redo can update the canvas's background URL ref
+  const canvasOriginalImageUrlRefRef = useRef<React.MutableRefObject<string | null> | null>(null);
+
+  // Initialize history hook with stable refs and restore callback so undo/redo shows correct background
   const history = useImageEditorHistory({
     canvasRef: canvasRefStable,
     originalImageUrlRef: originalImageUrlRefStable,
@@ -150,6 +153,10 @@ export default function ImageEditorStandalone({
     setQrOpacity: qrTools.setQrOpacity,
     setLogoSize: logoTools.setLogoSize,
     setLogoOpacity: logoTools.setLogoOpacity,
+    onRestoreBackgroundUrl: (url) => {
+      if (canvasOriginalImageUrlRefRef.current) canvasOriginalImageUrlRefRef.current.current = url;
+      currentBackgroundUrlRef.current = url;
+    },
   });
 
   // Update saveStateRef whenever history.saveState changes
@@ -193,12 +200,13 @@ export default function ImageEditorStandalone({
   // Editor fonts hook
   useEditorFonts(fontAssets);
 
-  // Update stable refs when canvas becomes available
+  // Update stable refs when canvas becomes available (so undo/redo can update the canvas's background URL ref)
   useEffect(() => {
     if (!canvasEditor.canvas) return;
     canvasRefStable.current = canvasEditor.canvas;
     originalImageUrlRefStable.current = canvasEditor.originalImageUrlRef.current;
     originalImageDimensionsRefStable.current = canvasEditor.originalImageDimensions;
+    canvasOriginalImageUrlRefRef.current = canvasEditor.originalImageUrlRef;
     if (currentBackgroundUrlRef.current === null && canvasEditor.originalImageUrlRef.current) {
       currentBackgroundUrlRef.current = canvasEditor.originalImageUrlRef.current;
     }
@@ -230,7 +238,7 @@ export default function ImageEditorStandalone({
         console.error("[session-restore] failed:", err);
       }
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
 
   // Update text on style change
@@ -579,9 +587,11 @@ export default function ImageEditorStandalone({
 
   // Edit background with AI
   const handleAIEdit = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, includeLayers?: boolean) => {
       if (!canvasEditor.canvas || !canvasEditor.replaceBackgroundImage) return;
-      const payload = getCurrentBackgroundImageForEdit(canvasEditor.canvas);
+      const payload = includeLayers
+        ? getFullCanvasImageForEdit(canvasEditor.canvas)
+        : getCurrentBackgroundImageForEdit(canvasEditor.canvas);
       if (!payload || (!payload.imageUrls?.length && !payload.base64Images?.length)) {
         toast({
           title: "Edit failed",
@@ -616,10 +626,21 @@ export default function ImageEditorStandalone({
         }
         const editedUrl = result.images[0].url;
         await canvasEditor.replaceBackgroundImage(editedUrl);
+        if (includeLayers) {
+          const objects = canvasEditor.canvas.getObjects();
+          for (let i = objects.length - 1; i >= 1; i--) {
+            canvasEditor.canvas.remove(objects[i]);
+          }
+          canvasEditor.canvas.renderAll();
+        }
+        // Sync stable ref so saveState captures the edited URL (useEffect runs after render)
+        originalImageUrlRefStable.current = editedUrl;
         history.saveState(true);
         toast({
           title: "Image updated",
-          description: "The background has been edited. Overlays are preserved.",
+          description: includeLayers
+            ? "The image has been edited. Canvas now shows the result."
+            : "The background has been edited. Overlays are preserved.",
           className: "bg-[#1a1a1a] border-[#333] text-white",
         });
       } catch (err) {
