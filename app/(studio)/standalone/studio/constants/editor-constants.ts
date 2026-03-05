@@ -182,3 +182,15 @@ export const UI_COLORS = {
 export const MOBILE_PANEL = {
   DISMISS_THRESHOLD: 100, // pixels to drag down to dismiss
 } as const;
+
+// Feature flags — toggle UI without removing code
+export const FEATURE_FLAGS = {
+  showFeedbackButton: false,
+  showSaveCanvas: true,
+  showTextTools: true,
+  showLogoTools: true,
+  showQrTools: true,
+  showShapeTools: true,
+  showFrameTools: true,
+  showEditWithAI: true,
+} as const;

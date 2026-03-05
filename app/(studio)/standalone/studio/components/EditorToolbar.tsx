@@ -20,6 +20,8 @@ export interface EditorToolbarProps {
   selectedObject: any;
   /** When true, show mobile layout (inline buttons with labels); when false, desktop (icon-only column) */
   variant: "mobile" | "desktop";
+  /** When false, hide the Save canvas button. Default true. */
+  showSaveButton?: boolean;
 }
 
 const UndoIcon = () => (
@@ -62,6 +64,7 @@ export function EditorToolbar({
   historyState,
   selectedObject,
   variant,
+  showSaveButton = true,
 }: EditorToolbarProps) {
   const undoDisabled = historyState.currentIndex <= 0;
   const redoDisabled =
@@ -99,13 +102,15 @@ export function EditorToolbar({
         >
           <DeleteIcon size={22} />
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed flex-1 md:flex-none transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
-        >
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <SaveIcon size={18} />}
-        </Button>
+        {showSaveButton && (
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed flex-1 md:flex-none transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <SaveIcon size={18} />}
+          </Button>
+        )}
         <Button
           onClick={handleExportClick}
           disabled={isExporting}
@@ -163,15 +168,17 @@ export function EditorToolbar({
       >
         <DeleteIcon size={17} />
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleSave}
-        disabled={isSaving}
-        className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
-      >
-        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon size={17} />}
-      </Button>
+      {showSaveButton && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon size={17} />}
+        </Button>
+      )}
     </div>
   );
 }

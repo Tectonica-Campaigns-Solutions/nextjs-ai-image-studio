@@ -13,12 +13,12 @@ import { Sparkles } from "lucide-react";
 import { TextItem, LogoItem, QRItem, ShapeItem, FrameItem } from "./editor-icons";
 
 export interface EditorSidebarProps {
-  textToolsPanel: ReactNode;
-  aiEditPanel: ReactNode;
-  logoToolsPanel: ReactNode;
-  qrToolsPanel: ReactNode;
-  shapeToolsPanel: ReactNode;
-  frameToolsPanel: ReactNode;
+  textToolsPanel: ReactNode | null;
+  aiEditPanel: ReactNode | null;
+  logoToolsPanel: ReactNode | null;
+  qrToolsPanel: ReactNode | null;
+  shapeToolsPanel: ReactNode | null;
+  frameToolsPanel: ReactNode | null;
   activeTab: string | null;
   handleTabClick: (tabId: string) => void;
   isPanelVisible: boolean;
@@ -60,137 +60,149 @@ export function EditorSidebar({
         collapsible
         className="space-y-[5px] md:block hidden gap-[10px]"
       >
-        <AccordionItem value="text-tools" className="border-0">
-          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0 bg-[#191919]">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-[15px]">
-                    <div className="w-[35px] h-[35px] bg-[#C1C9FF] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
-                      <TextItem />
+        {textToolsPanel != null && (
+          <AccordionItem value="text-tools" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#C1C9FF] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <TextItem />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        Text Tools
+                      </h2>
                     </div>
-                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
-                      Text Tools
-                    </h2>
                   </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
-                {textToolsPanel}
-              </AccordionContent>
-            </CardContent>
-          </Card>
-        </AccordionItem>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {textToolsPanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="logo-tools" className="border-0">
-          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0 bg-[#191919]">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center bg-[#191919] [&>svg]:text-white">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-[15px]">
-                    <div className="w-[35px] h-[35px] bg-[#FFCA9B] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
-                      <LogoItem />
+        {logoToolsPanel != null && (
+          <AccordionItem value="logo-tools" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center bg-[#191919] [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#FFCA9B] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <LogoItem />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        Logo Overlay
+                      </h2>
                     </div>
-                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
-                      Logo Overlay
-                    </h2>
                   </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
-                {logoToolsPanel}
-              </AccordionContent>
-            </CardContent>
-          </Card>
-        </AccordionItem>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {logoToolsPanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="qr-tools" className="border-0">
-          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0 bg-[#191919]">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-[15px]">
-                    <div className="w-[35px] h-[35px] bg-[#D5B5FF] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
-                      <QRItem />
+        {qrToolsPanel != null && (
+          <AccordionItem value="qr-tools" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#D5B5FF] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <QRItem />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        QR Code
+                      </h2>
                     </div>
-                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
-                      QR Code
-                    </h2>
                   </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
-                {qrToolsPanel}
-              </AccordionContent>
-            </CardContent>
-          </Card>
-        </AccordionItem>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {qrToolsPanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="shape-tools" className="border-0">
-          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0 bg-[#191919]">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-[15px]">
-                    <div className="w-[35px] h-[35px] bg-[#9BFFCA] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
-                      <ShapeItem />
+        {shapeToolsPanel != null && (
+          <AccordionItem value="shape-tools" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#9BFFCA] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <ShapeItem />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        Shape Tools
+                      </h2>
                     </div>
-                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
-                      Shape Tools
-                    </h2>
                   </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
-                {shapeToolsPanel}
-              </AccordionContent>
-            </CardContent>
-          </Card>
-        </AccordionItem>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {shapeToolsPanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="frame-tools" className="border-0">
-          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0 bg-[#191919]">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-[15px]">
-                    <div className="w-[35px] h-[35px] bg-[#A8F0D8] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
-                      <FrameItem />
+        {frameToolsPanel != null && (
+          <AccordionItem value="frame-tools" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#A8F0D8] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <FrameItem />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        Frames
+                      </h2>
                     </div>
-                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
-                      Frames
-                    </h2>
                   </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
-                {frameToolsPanel}
-              </AccordionContent>
-            </CardContent>
-          </Card>
-        </AccordionItem>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {frameToolsPanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="ai-edit" className="border-0">
-          <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
-            <CardContent className="p-0 bg-[#191919]">
-              <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-[15px]">
-                    <div className="w-[35px] h-[35px] bg-[#B38BF4] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
-                      <Sparkles className="w-4 h-4 text-[#3302FE]" aria-hidden />
+        {aiEditPanel != null && (
+          <AccordionItem value="ai-edit" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#B38BF4] rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <Sparkles className="w-4 h-4 text-[#3302FE]" aria-hidden />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        Edit with AI
+                      </h2>
                     </div>
-                    <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
-                      Edit with AI
-                    </h2>
                   </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
-                {aiEditPanel}
-              </AccordionContent>
-            </CardContent>
-          </Card>
-        </AccordionItem>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {aiEditPanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
       </Accordion>
 
       {activeTab && (
@@ -243,107 +255,119 @@ export function EditorSidebar({
 
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#0D0D0D] pb-[env(safe-area-inset-bottom)] overflow-x-auto z-10 mobile-nav-scroll">
         <div className="flex items-center px-[10px] py-[10px] gap-[10px]">
-          <button
-            onClick={() => handleTabClick("text-tools")}
-            className={cn(
-              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
-              activeTab === "text-tools" && isPanelVisible
-                ? "bg-[#383838] border-white"
-                : "bg-[#191919]"
-            )}
-          >
-            <div className="w-[35px] h-[35px] bg-[#C1C9FF] rounded-[8px] flex items-center justify-center flex-shrink-0">
-              <TextItem />
-            </div>
-            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
-              Text Tools
-            </span>
-          </button>
+          {textToolsPanel != null && (
+            <button
+              onClick={() => handleTabClick("text-tools")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "text-tools" && isPanelVisible
+                  ? "bg-[#383838] border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#C1C9FF] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <TextItem />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                Text Tools
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={() => handleTabClick("logo-overlay")}
-            className={cn(
-              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
-              activeTab === "logo-overlay" && isPanelVisible
-                ? "bg-[#383838] border border-white"
-                : "bg-[#191919]"
-            )}
-          >
-            <div className="w-[35px] h-[35px] bg-[#FFCA9B] rounded-[8px] flex items-center justify-center flex-shrink-0">
-              <LogoItem />
-            </div>
-            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
-              Logo Overlay
-            </span>
-          </button>
+          {logoToolsPanel != null && (
+            <button
+              onClick={() => handleTabClick("logo-overlay")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "logo-overlay" && isPanelVisible
+                  ? "bg-[#383838] border border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#FFCA9B] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <LogoItem />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                Logo Overlay
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={() => handleTabClick("qr-code")}
-            className={cn(
-              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
-              activeTab === "qr-code" && isPanelVisible
-                ? "bg-[#383838] border border-white"
-                : "bg-[#191919]"
-            )}
-          >
-            <div className="w-[35px] h-[35px] bg-[#D5B5FF] rounded-[8px] flex items-center justify-center flex-shrink-0">
-              <QRItem />
-            </div>
-            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
-              QR Code
-            </span>
-          </button>
+          {qrToolsPanel != null && (
+            <button
+              onClick={() => handleTabClick("qr-code")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "qr-code" && isPanelVisible
+                  ? "bg-[#383838] border border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#D5B5FF] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <QRItem />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                QR Code
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={() => handleTabClick("shape-tools")}
-            className={cn(
-              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
-              activeTab === "shape-tools" && isPanelVisible
-                ? "bg-[#383838] border border-white"
-                : "bg-[#191919]"
-            )}
-          >
-            <div className="w-[35px] h-[35px] bg-[#9BFFCA] rounded-[8px] flex items-center justify-center flex-shrink-0">
-              <ShapeItem />
-            </div>
-            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
-              Shape Tools
-            </span>
-          </button>
+          {shapeToolsPanel != null && (
+            <button
+              onClick={() => handleTabClick("shape-tools")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "shape-tools" && isPanelVisible
+                  ? "bg-[#383838] border border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#9BFFCA] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <ShapeItem />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                Shape Tools
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={() => handleTabClick("frame-tools")}
-            className={cn(
-              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
-              activeTab === "frame-tools" && isPanelVisible
-                ? "bg-[#383838] border border-white"
-                : "bg-[#191919]"
-            )}
-          >
-            <div className="w-[35px] h-[35px] bg-[#A8F0D8] rounded-[8px] flex items-center justify-center flex-shrink-0">
-              <FrameItem />
-            </div>
-            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
-              Frames
-            </span>
-          </button>
+          {frameToolsPanel != null && (
+            <button
+              onClick={() => handleTabClick("frame-tools")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "frame-tools" && isPanelVisible
+                  ? "bg-[#383838] border border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#A8F0D8] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <FrameItem />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                Frames
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={() => handleTabClick("ai-edit")}
-            className={cn(
-              "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
-              activeTab === "ai-edit" && isPanelVisible
-                ? "bg-[#383838] border border-white"
-                : "bg-[#191919]"
-            )}
-          >
-            <div className="w-[35px] h-[35px] bg-[#B38BF4] rounded-[8px] flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-[#3302FE]" aria-hidden />
-            </div>
-            <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
-              Edit with AI
-            </span>
-          </button>
+          {aiEditPanel != null && (
+            <button
+              onClick={() => handleTabClick("ai-edit")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "ai-edit" && isPanelVisible
+                  ? "bg-[#383838] border border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#B38BF4] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-[#3302FE]" aria-hidden />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                Edit with AI
+              </span>
+            </button>
+          )}
         </div>
       </nav>
     </>

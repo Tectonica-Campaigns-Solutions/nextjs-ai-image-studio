@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bold, Italic, Underline, PlusIcon } from "lucide-react";
+import { Bold, Italic, Underline, } from "lucide-react";
 import { RgbaColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +22,7 @@ import {
 import { rgbaToString } from "../utils/image-editor-utils";
 import type { RgbaColor } from "../types/image-editor-types";
 import type { FontAsset } from "../types/image-editor-types";
+import { TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextToolIcon } from "./editor-icons";
 
 export interface TextToolsPanelProps {
   selectedObject: any;
@@ -41,6 +42,8 @@ export interface TextToolsPanelProps {
   setLineHeight: (n: number) => void;
   letterSpacing: number;
   setLetterSpacing: (n: number) => void;
+  textAlign: "left" | "center" | "right";
+  setTextAlign: (align: "left" | "center" | "right") => void;
   textColor: RgbaColor;
   setTextColor: (c: RgbaColor) => void;
   backgroundColor: RgbaColor;
@@ -65,6 +68,8 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
   setLineHeight,
   letterSpacing,
   setLetterSpacing,
+  textAlign,
+  setTextAlign,
   textColor,
   setTextColor,
   backgroundColor,
@@ -76,8 +81,8 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
         onClick={addText}
         className="w-full h-[44px] bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) rounded-[10px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg active:scale-[0.98]"
       >
-        <PlusIcon />
-        Add Text
+        <TextToolIcon />
+        Add a text box
       </Button>
       <div className="w-full  h-[1px] bg-[#2D2D2D]"></div>
       <div className="grid grid-cols-2 gap-[20px]">
@@ -117,6 +122,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
               size="sm"
               onClick={() => setIsBold(!isBold)}
               disabled={!selectedObject}
+              aria-label={isBold ? "Remove bold" : "Bold"}
               className={cn(
                 "h-full cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
                 isBold && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
@@ -129,6 +135,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
               size="sm"
               onClick={() => setIsItalic(!isItalic)}
               disabled={!selectedObject}
+              aria-label={isItalic ? "Remove italic" : "Italic"}
               className={cn(
                 "h-full cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
                 isItalic && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
@@ -141,6 +148,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
               size="sm"
               onClick={() => setIsUnderline(!isUnderline)}
               disabled={!selectedObject}
+              aria-label={isUnderline ? "Remove underline" : "Underline"}
               className={cn(
                 "h-full cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
                 isUnderline && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
@@ -151,77 +159,69 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center">
-        <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
-          Size
-        </Label>
-        <div>
-          <Slider
-            value={[fontSize]}
-            onValueChange={([value]) => setFontSize(value)}
-            min={12}
-            max={72}
-            step={1}
-            disabled={!selectedObject}
-            className={cn(
-              "w-full",
-              // Parte inactiva
-              "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-              // Parte activa
-              "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-              // Esfera / handle
-              "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-            )}
-          />
+      <div className="w-full h-[1px] bg-[#2D2D2D]" />
+      <div className="grid grid-cols-2 gap-4 items-center">
+        <div className="min-w-0 flex shrink-0">
+          <div className="grid grid-cols-3 gap-[5px] w-fit">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTextAlign("left")}
+              disabled={!selectedObject}
+              aria-label="Align text left"
+              className={cn(
+                "!py-[10px] !px-[16px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 h-auto",
+                textAlign === "left" && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
+              )}
+            >
+              <TextAlignLeftIcon />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTextAlign("center")}
+              disabled={!selectedObject}
+              aria-label="Align text center"
+              className={cn(
+                "!py-[10px] !px-[16px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 h-auto",
+                textAlign === "center" && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
+              )}
+            >
+              <TextAlignCenterIcon />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTextAlign("right")}
+              disabled={!selectedObject}
+              aria-label="Align text right"
+              className={cn(
+                "!py-[10px] !px-[16px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 h-auto",
+                textAlign === "right" && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
+              )}
+            >
+              <TextAlignRightIcon />
+            </Button>
+          </div>
         </div>
-        <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
-          {fontSize}px
-        </div>
-      </div>
-      <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center">
-        <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
-          Line Height
-        </Label>
-        <Slider
-          value={[lineHeight]}
-          onValueChange={([value]) => setLineHeight(value)}
-          min={0.8}
-          max={3.0}
-          step={0.1}
-          disabled={!selectedObject}
-          className={cn(
-            "w-full",
-            // Parte inactiva
-            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-            // Parte activa
-            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-            // Esfera / handle
-            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-          )}
-        />
-        <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
-          <span>{lineHeight.toFixed(1)}</span>
-        </div>
-      </div>
-      <div className="w-full  h-[1px] bg-[#2D2D2D]"></div>
-      <div className="flex gap-[50px]">
-        <div>
+        <div className="flex gap-3 justify-end items-center min-w-0">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 disabled={!selectedObject}
-                className="w-full justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent"
+                aria-label="Change text color"
+                className="w-auto justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent shrink-0"
               >
                 <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform"
+                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform shrink-0"
                   style={{ backgroundColor: rgbaToString(textColor) }}
                 />
                 <div className="flex flex-col gap-[2px] items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <div className="h-[2px] w-[20px] bg-[#E5E5EF]"></div>
+                  <div className="h-[2px] w-[20px] bg-[#E5E5EF]" />
                 </div>
               </Button>
             </PopoverTrigger>
@@ -229,20 +229,19 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
               <RgbaColorPicker color={textColor} onChange={setTextColor} />
             </PopoverContent>
           </Popover>
-        </div>
-        <div>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 disabled={!selectedObject}
-                className="w-full justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent"
+                aria-label="Change text background color"
+                className="w-auto justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent shrink-0"
               >
                 <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform"
+                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform shrink-0"
                   style={{ backgroundColor: rgbaToString(backgroundColor) }}
                 />
-                <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center">
+                <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="#191919" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -255,6 +254,58 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
           </Popover>
         </div>
       </div>
+      <div className="w-full h-[1px] bg-[#2D2D2D]" />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center min-w-0">
+          <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block shrink-0">
+            Size
+          </Label>
+          <div className="min-w-0">
+            <Slider
+              value={[fontSize]}
+              onValueChange={([value]) => setFontSize(value)}
+              min={12}
+              max={72}
+              step={1}
+              disabled={!selectedObject}
+              className={cn(
+                "w-full",
+                "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+                "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+                "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+              )}
+            />
+          </div>
+          <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[12px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444] shrink-0 tabular-nums">
+            {fontSize}px
+          </div>
+        </div>
+        <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center min-w-0">
+          <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block shrink-0">
+            Line Height
+          </Label>
+          <div className="min-w-0">
+            <Slider
+              value={[lineHeight]}
+              onValueChange={([value]) => setLineHeight(value)}
+              min={0.8}
+              max={3.0}
+              step={0.1}
+              disabled={!selectedObject}
+              className={cn(
+                "w-full",
+                "[&_[data-slot=slider-track]]:bg-[#303030c4]",
+                "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
+                "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
+              )}
+            />
+          </div>
+          <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[12px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444] shrink-0 tabular-nums">
+            <span>{lineHeight.toFixed(1)}</span>
+          </div>
+        </div>
+      </div>
+      <div className="w-full h-[1px] bg-[#2D2D2D]" />
     </div>
   );
 });

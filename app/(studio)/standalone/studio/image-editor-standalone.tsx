@@ -22,7 +22,7 @@ import type {
   ImageEditorStandaloneProps,
 } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
-import { DEFAULT_FONTS, EXPORT, UI_COLORS } from "./constants/editor-constants";
+import { DEFAULT_FONTS, EXPORT, FEATURE_FLAGS, UI_COLORS } from "./constants/editor-constants";
 
 // Import custom hooks
 import { useImageEditorCanvas } from "./hooks/use-image-editor-canvas";
@@ -131,6 +131,7 @@ export default function ImageEditorStandalone({
     setIsUnderline: textTools.setIsUnderline,
     setLineHeight: textTools.setLineHeight,
     setLetterSpacing: textTools.setLetterSpacing,
+    setTextAlign: textTools.setTextAlign,
     setShapeFillColor: shapeTools.setShapeFillColor,
     setShapeStrokeColor: shapeTools.setShapeStrokeColor,
     setShapeStrokeWidth: shapeTools.setShapeStrokeWidth,
@@ -256,6 +257,7 @@ export default function ImageEditorStandalone({
     textTools.isUnderline,
     textTools.lineHeight,
     textTools.letterSpacing,
+    textTools.textAlign,
   ]);
 
   // Update shape on style change — skip when the change came from a selection sync
@@ -734,6 +736,8 @@ export default function ImageEditorStandalone({
         setLineHeight={textTools.setLineHeight}
         letterSpacing={textTools.letterSpacing}
         setLetterSpacing={textTools.setLetterSpacing}
+        textAlign={textTools.textAlign}
+        setTextAlign={textTools.setTextAlign}
         textColor={textTools.textColor}
         setTextColor={textTools.setTextColor}
         backgroundColor={textTools.backgroundColor}
@@ -800,17 +804,21 @@ export default function ImageEditorStandalone({
     !!selection.selectedObject && !!(selection.selectedObject as any).isFrame;
 
   const frameToolsPanel = useMemo(
-    () => (
-      <FrameToolsPanel
-        filteredFrameAssets={frameTools.filteredFrameAssets}
-        hasFrameAssets={frameTools.hasFrameAssets}
-        aspectRatio={canvasEditor.aspectRatio}
-        frameOpacity={frameTools.frameOpacity}
-        setFrameOpacity={frameTools.setFrameOpacity}
-        insertFrame={frameTools.insertFrame}
-        isFrameSelected={isFrameSelected}
-      />
-    ),
+    () => {
+      if (!frameTools.hasFrameAssets) return null;
+
+      return (
+        <FrameToolsPanel
+          filteredFrameAssets={frameTools.filteredFrameAssets}
+          hasFrameAssets={frameTools.hasFrameAssets}
+          aspectRatio={canvasEditor.aspectRatio}
+          frameOpacity={frameTools.frameOpacity}
+          setFrameOpacity={frameTools.setFrameOpacity}
+          insertFrame={frameTools.insertFrame}
+          isFrameSelected={isFrameSelected}
+        />
+      );
+    },
     [frameTools, canvasEditor.aspectRatio, isFrameSelected]
   );
 
@@ -847,12 +855,12 @@ export default function ImageEditorStandalone({
           <div className="md:w-[400px] w-full overflow-y-auto themed-scrollbar md:pr-3 md:h-full md:min-h-0 md:self-start  flex flex-col justify-between">
             <div>
               <EditorSidebar
-                textToolsPanel={textToolsPanel}
-                aiEditPanel={aiEditPanel}
-                logoToolsPanel={logoToolsPanel}
-                qrToolsPanel={qrToolsPanel}
-                shapeToolsPanel={shapeToolsPanel}
-                frameToolsPanel={frameToolsPanel}
+                textToolsPanel={FEATURE_FLAGS.showTextTools ? textToolsPanel : null}
+                aiEditPanel={FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null}
+                logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}
+                qrToolsPanel={FEATURE_FLAGS.showQrTools ? qrToolsPanel : null}
+                shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
+                frameToolsPanel={FEATURE_FLAGS.showFrameTools ? frameToolsPanel : null}
                 activeTab={mobilePanel.activeTab}
                 handleTabClick={mobilePanel.handleTabClick}
                 isPanelVisible={mobilePanel.isPanelVisible}
@@ -890,13 +898,20 @@ export default function ImageEditorStandalone({
                 deleteSelected={deleteSelected}
                 handleExportClick={handleExportClick}
                 handleSave={handleSave}
-                handleGetFeedback={handleGetFeedback}
+                handleGetFeedback={
+                  FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
+                }
                 isExporting={isExporting}
                 isSaving={isSaving}
-                isFetchingFeedback={isFetchingFeedback}
-                feedbackText={feedbackText}
+                isFetchingFeedback={
+                  FEATURE_FLAGS.showFeedbackButton ? isFetchingFeedback : undefined
+                }
+                feedbackText={
+                  FEATURE_FLAGS.showFeedbackButton ? feedbackText : undefined
+                }
                 historyState={history.historyState}
                 selectedObject={selection.selectedObject}
+                showSaveButton={FEATURE_FLAGS.showSaveCanvas}
                 variant="mobile"
               />
             )}
@@ -912,16 +927,19 @@ export default function ImageEditorStandalone({
             isSaving={isSaving}
             historyState={history.historyState}
             selectedObject={selection.selectedObject}
+            showSaveButton={FEATURE_FLAGS.showSaveCanvas}
             variant="desktop"
           />
         </div>
       </div>
 
-      <FeedbackButton
-        handleGetFeedback={handleGetFeedback}
-        isFetchingFeedback={isFetchingFeedback}
-        feedbackText={feedbackText}
-      />
+      {FEATURE_FLAGS.showFeedbackButton && (
+        <FeedbackButton
+          handleGetFeedback={handleGetFeedback}
+          isFetchingFeedback={isFetchingFeedback}
+          feedbackText={feedbackText}
+        />
+      )}
 
       <DisclaimerModal
         open={showDisclaimerModal}

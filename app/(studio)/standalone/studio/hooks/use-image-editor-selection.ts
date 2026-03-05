@@ -15,6 +15,7 @@ export interface UseImageEditorSelectionOptions {
   setIsUnderline: (b: boolean) => void;
   setLineHeight: (n: number) => void;
   setLetterSpacing: (n: number) => void;
+  setTextAlign: (align: "left" | "center" | "right") => void;
   setShapeFillColor: (c: RgbaColor) => void;
   setShapeStrokeColor: (c: RgbaColor) => void;
   setShapeStrokeWidth: (n: number) => void;
@@ -37,6 +38,7 @@ export function useImageEditorSelection(
     setIsUnderline,
     setLineHeight,
     setLetterSpacing,
+    setTextAlign,
     setShapeFillColor,
     setShapeStrokeColor,
     setShapeStrokeWidth,
@@ -111,6 +113,8 @@ export function useImageEditorSelection(
     setIsUnderline(textObj.underline || false);
     setLineHeight(textObj.lineHeight || 1.2);
     setLetterSpacing(textObj.charSpacing || 0);
+    const align = textObj.textAlign as "left" | "center" | "right" | undefined;
+    setTextAlign(align === "center" || align === "right" ? align : "left");
   }, [
     selectedObject,
     canvasRef,
@@ -123,6 +127,7 @@ export function useImageEditorSelection(
     setIsUnderline,
     setLineHeight,
     setLetterSpacing,
+    setTextAlign,
   ]);
 
   // Sync shape UI from selected shape object

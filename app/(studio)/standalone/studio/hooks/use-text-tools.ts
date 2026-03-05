@@ -38,6 +38,9 @@ export function useTextTools(options: UseTextToolsOptions) {
   const [letterSpacing, setLetterSpacing] = useState<number>(
     TEXT_DEFAULTS.LETTER_SPACING,
   );
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">(
+    "left",
+  );
 
   const addText = useCallback(() => {
     const canvas = canvasRef.current;
@@ -57,6 +60,7 @@ export function useTextTools(options: UseTextToolsOptions) {
       underline: isUnderline,
       lineHeight,
       charSpacing: letterSpacing,
+      textAlign,
       editable: true,
       selectable: true,
     });
@@ -77,6 +81,7 @@ export function useTextTools(options: UseTextToolsOptions) {
     isUnderline,
     lineHeight,
     letterSpacing,
+    textAlign,
   ]);
 
   const updateSelectedText = useCallback(() => {
@@ -97,6 +102,7 @@ export function useTextTools(options: UseTextToolsOptions) {
       underline: isUnderline,
       lineHeight,
       charSpacing: letterSpacing,
+      textAlign,
     });
     canvas.renderAll();
   }, [
@@ -110,6 +116,7 @@ export function useTextTools(options: UseTextToolsOptions) {
     isUnderline,
     lineHeight,
     letterSpacing,
+    textAlign,
   ]);
 
   return {
@@ -131,6 +138,8 @@ export function useTextTools(options: UseTextToolsOptions) {
     setLineHeight,
     letterSpacing,
     setLetterSpacing,
+    textAlign,
+    setTextAlign,
     addText,
     updateSelectedText,
   };
