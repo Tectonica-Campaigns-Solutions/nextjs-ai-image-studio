@@ -71,9 +71,9 @@ export const LOGO_DEFAULTS = {
 
 // Default logo assets (url + display_name; variant is added when mapping to LogoAsset)
 export const DEFAULT_LOGO_ASSETS = [
-  { url: "/TAI-FullColor.png", display_name: "Apply Color Version" },
-  { url: "/TAI-White.png", display_name: "Apply White Version" },
-  { url: "/TAI-Dark.png", display_name: "Apply Dark Version" },
+  { url: "/TAI-FullColor.png", display_name: "Tectonica AI Color" },
+  { url: "/TAI-White.png", display_name: "Tectonica AI White" },
+  { url: "/TAI-Dark.png", display_name: "Tectonica AI Dark" },
 ] as const;
 
 // Logo Ranges

@@ -1,4 +1,5 @@
-import { FabricImage } from "fabric";
+import { FabricImage, Textbox, cache } from "fabric";
+import type { Canvas } from "fabric";
 
 export function fileToBase64(file: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -121,4 +122,25 @@ export function getFullCanvasImageForEdit(canvas: {
   } catch {
     return null;
   }
+}
+
+/**
+ * Clear Fabric's cached character-width measurements and force every Textbox
+ * on the canvas to recalculate its dimensions.
+ *
+ * Must be called after any font finishes loading so that text objects whose
+ * metrics were computed against a fallback font get reflowed correctly.
+ * Without this, textAlign "right" (or "center") can overflow the Textbox
+ * boundary because the cached widths no longer match the real font.
+ */
+export function remeasureTextboxes(canvas: Canvas | null): void {
+  if (!canvas) return;
+  cache.clearFontCache();
+  for (const obj of canvas.getObjects()) {
+    if (obj instanceof Textbox) {
+      obj.initDimensions();
+      obj.setCoords();
+    }
+  }
+  canvas.requestRenderAll();
 }

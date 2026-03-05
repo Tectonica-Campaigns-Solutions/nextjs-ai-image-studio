@@ -36,7 +36,7 @@ import { useShapeTools } from "./hooks/use-shape-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
-import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit } from "./utils/image-editor-utils";
+import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
 
 export default function ImageEditorStandalone({
   params,
@@ -199,11 +199,20 @@ export default function ImageEditorStandalone({
   const mobilePanel = useMobilePanel();
 
   const onFontsLoaded = useCallback(() => {
-    canvasRefStable.current?.renderAll();
+    remeasureTextboxes(canvasRefStable.current);
   }, []);
 
   // Editor fonts hook
   const { fontsReady } = useEditorFonts(fontAssets, { onFontsLoaded });
+
+  // Re-measure textboxes whenever *any* font finishes loading (covers bundled
+  // next/font fonts like Manrope that aren't tracked by useEditorFonts).
+  useEffect(() => {
+    if (typeof document?.fonts?.addEventListener !== "function") return;
+    const handler = () => remeasureTextboxes(canvasRefStable.current);
+    document.fonts.addEventListener("loadingdone", handler);
+    return () => document.fonts.removeEventListener("loadingdone", handler);
+  }, []);
 
   // Update stable refs when canvas becomes available (so undo/redo can update the canvas's background URL ref)
   useEffect(() => {

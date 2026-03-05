@@ -60,7 +60,7 @@ export function useTextTools(options: UseTextToolsOptions) {
       fontFamily: getCanvasFontFamily(
         fontFamily,
         DEFAULT_FONTS.PRIMARY,
-        BUNDLED_FONT_CSS_VARS
+        BUNDLED_FONT_CSS_VARS,
       ),
       fill: rgbaToString(textColor),
       backgroundColor:
@@ -107,7 +107,7 @@ export function useTextTools(options: UseTextToolsOptions) {
       fontFamily: getCanvasFontFamily(
         fontFamily,
         DEFAULT_FONTS.PRIMARY,
-        BUNDLED_FONT_CSS_VARS
+        BUNDLED_FONT_CSS_VARS,
       ),
       fill: rgbaToString(textColor),
       backgroundColor:
