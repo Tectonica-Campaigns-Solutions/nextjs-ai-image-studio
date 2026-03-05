@@ -226,23 +226,23 @@ export function useImageEditorCanvas(
           ctrls.mt.visible = false;
         }
 
-        // Position rotation, vertical resize, and horizontal resize below the object
+        // Position 2 visible controls below the object:
+        // rotation (-18) | move (18)
+        // v-resize and h-resize are kept but hidden for now
         if (ctrls.mtr) {
           ctrls.mtr.y = 0.5;
           ctrls.mtr.offsetY = 30;
-          ctrls.mtr.offsetX = -36;
+          ctrls.mtr.offsetX = -18;
           ctrls.mtr.withConnection = false;
           ctrls.mtr.cursorStyle = "crosshair";
         }
         if (ctrls.mb) {
-          ctrls.mb.offsetY = 30;
-          ctrls.mb.offsetX = 0;
+          ctrls.mb.visible = false;
         }
 
-        // Custom delta-based horizontal scaling that works from any control
-        // position (Fabric's built-in handler uses absolute mouse position
-        // relative to the object edge, which breaks when the control isn't
-        // on an edge).
+        // Delta-based horizontal scaling (Fabric's built-in handler uses
+        // absolute mouse position relative to the object edge, which breaks
+        // when the control isn't on an edge).
         const horizontalScaleFromCenter = (
           _eventData: TPointerEvent,
           transform: any,
@@ -256,7 +256,6 @@ export function useImageEditorCanvas(
           const zoom = canvas ? canvas.getZoom() : 1;
           const initialWidth = target.width * transform.scaleX * zoom;
 
-          // Project mouse delta onto the object's local X axis
           const angle = (target.angle || 0) * (Math.PI / 180);
           const rawDx = x - transform.ex;
           const rawDy = y - transform.ey;
@@ -278,10 +277,40 @@ export function useImageEditorCanvas(
           x: 0,
           y: 0.5,
           offsetY: 30,
-          offsetX: 36,
+          offsetX: 54,
+          visible: false,
           cursorStyle: "ew-resize",
           actionHandler: horizontalScaleFromCenter,
           render: renderers.resizeH,
+          sizeX: 28,
+          sizeY: 28,
+        });
+
+        const moveHandler = (
+          _eventData: TPointerEvent,
+          transform: any,
+          x: number,
+          y: number,
+        ): boolean => {
+          const target = transform.target;
+          if (target.lockMovementX && target.lockMovementY) return false;
+
+          target.set({
+            left: x - transform.offsetX,
+            top: y - transform.offsetY,
+          });
+          target.setCoords();
+          return true;
+        };
+
+        ctrls.moveCtrl = new Control({
+          x: 0,
+          y: 0.5,
+          offsetY: 30,
+          offsetX: 18,
+          cursorStyle: "move",
+          actionHandler: moveHandler,
+          render: renderers.moveCtrl,
           sizeX: 28,
           sizeY: 28,
         });

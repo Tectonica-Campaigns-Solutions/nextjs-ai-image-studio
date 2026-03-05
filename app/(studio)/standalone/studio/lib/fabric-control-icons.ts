@@ -178,6 +178,74 @@ function renderResizeHorizontal(): ControlRenderFn {
   };
 }
 
+function renderMove(): ControlRenderFn {
+  return (ctx, left, top) => {
+    ctx.save();
+    ctx.translate(left, top);
+    drawIconCircleBg(ctx);
+
+    // Scale the 24x24 Figma SVG to fit inside the circle
+    const s = 20 / 24;
+    ctx.scale(s, s);
+    ctx.translate(-12, -12);
+
+    ctx.fillStyle = ICON_STROKE;
+    ctx.beginPath();
+    ctx.moveTo(18.21, 7.79);
+    ctx.lineTo(16.8, 9.2);
+    ctx.lineTo(18.59, 10.99);
+    ctx.lineTo(13, 10.99);
+    ctx.lineTo(13, 5.4);
+    ctx.lineTo(14.79, 7.19);
+    ctx.lineTo(16.2, 5.78);
+    ctx.lineTo(12.7, 2.28);
+    ctx.bezierCurveTo(12.6075, 2.1873, 12.4976, 2.1137, 12.3766, 2.0636);
+    ctx.bezierCurveTo(12.2556, 2.0134, 12.126, 1.9876, 11.995, 1.9876);
+    ctx.bezierCurveTo(11.864, 1.9876, 11.7343, 2.0134, 11.6134, 2.0636);
+    ctx.bezierCurveTo(11.4924, 2.1137, 11.3825, 2.1873, 11.29, 2.28);
+    ctx.lineTo(7.79, 5.78);
+    ctx.lineTo(9.2, 7.19);
+    ctx.lineTo(10.99, 5.4);
+    ctx.lineTo(10.99, 10.99);
+    ctx.lineTo(5.4, 10.99);
+    ctx.lineTo(7.19, 9.2);
+    ctx.lineTo(5.78, 7.79);
+    ctx.lineTo(2.28, 11.29);
+    ctx.bezierCurveTo(2.1873, 11.3825, 2.1137, 11.4924, 2.0636, 11.6134);
+    ctx.bezierCurveTo(2.0134, 11.7343, 1.9876, 11.864, 1.9876, 11.995);
+    ctx.bezierCurveTo(1.9876, 12.126, 2.0134, 12.2556, 2.0636, 12.3766);
+    ctx.bezierCurveTo(2.1137, 12.4976, 2.1873, 12.6075, 2.28, 12.7);
+    ctx.lineTo(5.78, 16.2);
+    ctx.lineTo(7.19, 14.79);
+    ctx.lineTo(5.4, 13);
+    ctx.lineTo(10.99, 13);
+    ctx.lineTo(10.99, 18.59);
+    ctx.lineTo(9.2, 16.8);
+    ctx.lineTo(7.79, 18.21);
+    ctx.lineTo(11.29, 21.71);
+    ctx.bezierCurveTo(11.49, 21.91, 11.74, 22, 12, 22);
+    ctx.bezierCurveTo(12.26, 22, 12.51, 21.9, 12.71, 21.71);
+    ctx.lineTo(16.21, 18.21);
+    ctx.lineTo(14.8, 16.8);
+    ctx.lineTo(13.01, 18.59);
+    ctx.lineTo(13.01, 13);
+    ctx.lineTo(18.6, 13);
+    ctx.lineTo(16.81, 14.79);
+    ctx.lineTo(18.22, 16.2);
+    ctx.lineTo(21.72, 12.7);
+    ctx.bezierCurveTo(21.8127, 12.6075, 21.8862, 12.4976, 21.9364, 12.3766);
+    ctx.bezierCurveTo(21.9866, 12.2556, 22.0124, 12.126, 22.0124, 11.995);
+    ctx.bezierCurveTo(22.0124, 11.864, 21.9866, 11.7343, 21.9364, 11.6134);
+    ctx.bezierCurveTo(21.8862, 11.4924, 21.8127, 11.3825, 21.72, 11.29);
+    ctx.lineTo(18.22, 7.79);
+    ctx.lineTo(18.21, 7.79);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  };
+}
+
 function renderNothing(): ControlRenderFn {
   return () => {};
 }
@@ -190,6 +258,7 @@ function renderNothing(): ControlRenderFn {
  * - Rotation (mtr): rotation icon, positioned below the object
  * - Vertical resize (mb): up/down arrows icon, positioned below
  * - Horizontal resize (resizeH): left/right arrows icon, positioned below
+ * - Move (moveCtrl): 4-way arrow icon, positioned below
  */
 export function getCustomControlRenderers(): Record<string, ControlRenderFn> {
   return {
@@ -205,5 +274,6 @@ export function getCustomControlRenderers(): Record<string, ControlRenderFn> {
 
     mtr: renderRotation(),
     resizeH: renderResizeHorizontal(),
+    moveCtrl: renderMove(),
   };
 }
