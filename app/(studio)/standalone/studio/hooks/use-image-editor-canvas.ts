@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Canvas, FabricObject, Textbox } from "fabric";
+import {
+  Canvas,
+  Control,
+  FabricObject,
+  Textbox,
+  type TPointerEvent,
+} from "fabric";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
+import { getCustomControlRenderers } from "../lib/fabric-control-icons";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
 
 export interface UseImageEditorCanvasOptions {
@@ -188,39 +195,111 @@ export function useImageEditorCanvas(
       const maxDisplayWidth = Math.max(100, availableWidth);
       const maxDisplayHeight = Math.max(100, availableHeight);
 
-      // --- Canva-like control styling for all Fabric objects ---
-      FabricObject.prototype.set({
-        transparentCorners: false,
-        cornerColor: "#FFFFFF",
-        cornerStrokeColor: "#7B61FF",
-        cornerSize: 10,
-        cornerStyle: "circle",
-        borderColor: "#7B61FF",
-        borderScaleFactor: 1.5,
-        padding: 4,
-      });
+      // --- Canva-like control styling & custom icons for all Fabric objects ---
+      // In Fabric v6 the constructor creates per-instance controls and applies
+      // InteractiveFabricObject.ownDefaults via Object.assign, so prototype.set()
+      // has no effect. We patch ownDefaults and override the static createControls
+      // methods so every future instance gets the right styling + custom renderers.
 
-      // Textbox: middle handles resize width only (text reflows), height auto-expands
-      Textbox.prototype.set({
-        transparentCorners: false,
-        cornerColor: "#FFFFFF",
-        cornerStrokeColor: "#7B61FF",
-        cornerSize: 10,
-        cornerStyle: "circle",
-        borderColor: "#7B61FF",
-        borderScaleFactor: 1.5,
-        padding: 4,
-      });
-
-      // Custom rotation control — positioned above the object with a line connector.
-      // In Fabric 6, controls may be per-instance (not on prototype); only customize if present.
-      const controls = (FabricObject.prototype as any).controls;
-      const rotateControl = controls?.mtr;
-      if (rotateControl) {
-        rotateControl.offsetY = -30;
-        rotateControl.withConnection = true;
-        rotateControl.cursorStyle = "crosshair";
+      const ownDefaults = (FabricObject as any).ownDefaults;
+      if (ownDefaults) {
+        Object.assign(ownDefaults, {
+          transparentCorners: false,
+          cornerColor: "#FFFFFF",
+          cornerStrokeColor: "transparent",
+          cornerSize: 14,
+          touchCornerSize: 28,
+          borderColor: "#7B61FF",
+          borderScaleFactor: 1.5,
+          padding: 4,
+        });
       }
+
+      const renderers = getCustomControlRenderers();
+      const patchControls = (ctrls: Record<string, any>) => {
+        for (const [name, renderFn] of Object.entries(renderers)) {
+          if (ctrls[name]) ctrls[name].render = renderFn;
+        }
+
+        // Hide original mt — we replace it with a custom resizeH control
+        if (ctrls.mt) {
+          ctrls.mt.visible = false;
+        }
+
+        // Position rotation, vertical resize, and horizontal resize below the object
+        if (ctrls.mtr) {
+          ctrls.mtr.y = 0.5;
+          ctrls.mtr.offsetY = 30;
+          ctrls.mtr.offsetX = -36;
+          ctrls.mtr.withConnection = false;
+          ctrls.mtr.cursorStyle = "crosshair";
+        }
+        if (ctrls.mb) {
+          ctrls.mb.offsetY = 30;
+          ctrls.mb.offsetX = 0;
+        }
+
+        // Custom delta-based horizontal scaling that works from any control
+        // position (Fabric's built-in handler uses absolute mouse position
+        // relative to the object edge, which breaks when the control isn't
+        // on an edge).
+        const horizontalScaleFromCenter = (
+          _eventData: TPointerEvent,
+          transform: any,
+          x: number,
+          y: number,
+        ): boolean => {
+          const target = transform.target;
+          if (target.lockScalingX) return false;
+
+          const canvas = target.canvas;
+          const zoom = canvas ? canvas.getZoom() : 1;
+          const initialWidth = target.width * transform.scaleX * zoom;
+
+          // Project mouse delta onto the object's local X axis
+          const angle = (target.angle || 0) * (Math.PI / 180);
+          const rawDx = x - transform.ex;
+          const rawDy = y - transform.ey;
+          const dx = rawDx * Math.cos(angle) + rawDy * Math.sin(angle);
+
+          const newScaleX = Math.max(
+            0.05,
+            transform.scaleX * (1 + (dx * 2) / initialWidth),
+          );
+
+          const center = target.getRelativeCenterPoint();
+          target.set("scaleX", newScaleX);
+          target.setPositionByOrigin(center, "center", "center");
+
+          return true;
+        };
+
+        ctrls.resizeH = new Control({
+          x: 0,
+          y: 0.5,
+          offsetY: 30,
+          offsetX: 36,
+          cursorStyle: "ew-resize",
+          actionHandler: horizontalScaleFromCenter,
+          render: renderers.resizeH,
+          sizeX: 28,
+          sizeY: 28,
+        });
+      };
+
+      const origFOCreate = (FabricObject as any).createControls;
+      (FabricObject as any).createControls = function () {
+        const result = origFOCreate.call(this);
+        if (result.controls) patchControls(result.controls);
+        return result;
+      };
+
+      const origTBCreate = (Textbox as any).createControls;
+      (Textbox as any).createControls = function () {
+        const result = origTBCreate.call(this);
+        if (result.controls) patchControls(result.controls);
+        return result;
+      };
 
       const fabricCanvas = new Canvas(canvasRef.current, {
         width: maxDisplayWidth,

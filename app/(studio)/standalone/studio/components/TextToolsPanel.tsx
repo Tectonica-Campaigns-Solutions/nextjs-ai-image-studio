@@ -296,7 +296,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
         </div>
         <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center min-w-0">
           <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block shrink-0">
-            Line Height
+            Line
           </Label>
           <div className="min-w-0">
             <Slider
