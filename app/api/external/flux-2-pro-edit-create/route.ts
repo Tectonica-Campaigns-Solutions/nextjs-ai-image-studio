@@ -77,9 +77,13 @@ async function getClientReferenceImages(orgType: string): Promise<{
   filenames: string[]; 
   folderName: string;
   userImagePrompt: string;
+  styleReinforcement: string;
 }> {
   // Default prompt for user image preservation
   const defaultUserImagePrompt = "IMPORTANT: Image @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+
+  // Default style reinforcement directive
+  const defaultStyleReinforcement = "STYLE REFERENCE DIRECTIVE: The reference images define the color palette, tonal values, lighting setup, and atmospheric mood that MUST be applied to the result. Honor the rendering style direction specified in the prompt (e.g., photorealistic, illustrative, painterly), but extract the color grading, tonal range, lighting character, and overall visual aesthetic exclusively from the reference images. Do not use a generic or default color treatment — the aesthetic must feel visually consistent with the reference images."
   
   const folderName = `${orgType.toLowerCase()}-reference-images`
   const folderPath = path.join(process.cwd(), 'public', folderName)
@@ -107,11 +111,17 @@ async function getClientReferenceImages(orgType: string): Promise<{
       } else {
         console.log(`[Flux 2 Pro Edit Create] ⚠️ No custom user image prompt found, using default:`, defaultUserImagePrompt)
       }
-      
+
+      // Extract style reinforcement if available, otherwise use default
+      const styleReinforcement: string = typeof config.prompts?.createStyleReinforcement === 'string'
+        ? config.prompts.createStyleReinforcement
+        : defaultStyleReinforcement
+
       return { 
         filenames: config.create, 
         folderName,
-        userImagePrompt
+        userImagePrompt,
+        styleReinforcement
       }
     }
   } catch (error) {
@@ -126,7 +136,8 @@ async function getClientReferenceImages(orgType: string): Promise<{
   return { 
     filenames: FALLBACK_REFERENCE_IMAGES, 
     folderName: 'tectonica-reference-images',
-    userImagePrompt: defaultUserImagePrompt
+    userImagePrompt: defaultUserImagePrompt,
+    styleReinforcement: defaultStyleReinforcement
   }
 }
 
@@ -359,6 +370,7 @@ export async function POST(request: NextRequest) {
     let allReferenceFilenames: string[] = []
     let folderName = ''
     let userImagePrompt = ''
+    let styleReinforcement = ''
     let referenceImageFilenames: string[] = []
     const allImageUrls: string[] = []
     
@@ -371,6 +383,7 @@ export async function POST(request: NextRequest) {
       allReferenceFilenames = refResult.filenames
       folderName = refResult.folderName
       userImagePrompt = refResult.userImagePrompt
+      styleReinforcement = refResult.styleReinforcement
 
       // Select reference images based on whether user provided an image
       if (hasUserImage) {
@@ -610,6 +623,14 @@ export async function POST(request: NextRequest) {
     if (compositionRuleText) {
       finalPrompt = `${finalPrompt}\n${compositionRuleText}`
       console.log(`[Flux 2 Pro Edit Create] Applied composition rule '${compositionRule}'`)
+    }
+
+    // Apply style reinforcement whenever branding (reference images) is active
+    // and the user has NOT provided their own image. When a user image is present,
+    // the createWithUserImage prompt already covers the style reference directive.
+    if (useBranding && styleReinforcement && !hasUserImage) {
+      finalPrompt = `${finalPrompt}\n${styleReinforcement}`
+      console.log(`[Flux 2 Pro Edit Create] Style reinforcement directive appended`)
     }
 
     // Prepare input for fal.ai
