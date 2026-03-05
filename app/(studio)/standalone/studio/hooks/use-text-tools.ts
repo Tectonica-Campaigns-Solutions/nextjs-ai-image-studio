@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { IText } from "fabric";
+import { Textbox } from "fabric";
 import { rgbaToString } from "../utils/image-editor-utils";
+import { getCanvasFontFamily } from "../utils/studio-utils";
 import type { RgbaColor } from "../types/image-editor-types";
-import { TEXT_DEFAULTS, DEFAULT_FONTS } from "../constants/editor-constants";
+import {
+  TEXT_DEFAULTS,
+  DEFAULT_FONTS,
+  BUNDLED_FONT_CSS_VARS,
+} from "../constants/editor-constants";
 
 export interface UseTextToolsOptions {
   canvasRef: React.MutableRefObject<any>;
@@ -47,11 +52,16 @@ export function useTextTools(options: UseTextToolsOptions) {
     const saveState = saveStateRef.current;
     if (!canvas) return;
 
-    const text = new IText(TEXT_DEFAULTS.DEFAULT_TEXT, {
+    const text = new Textbox(TEXT_DEFAULTS.DEFAULT_TEXT, {
       left: TEXT_DEFAULTS.INITIAL_LEFT,
       top: TEXT_DEFAULTS.INITIAL_TOP,
+      width: 340,
       fontSize,
-      fontFamily,
+      fontFamily: getCanvasFontFamily(
+        fontFamily,
+        DEFAULT_FONTS.PRIMARY,
+        BUNDLED_FONT_CSS_VARS
+      ),
       fill: rgbaToString(textColor),
       backgroundColor:
         backgroundColor.a === 0 ? "" : rgbaToString(backgroundColor),
@@ -63,6 +73,7 @@ export function useTextTools(options: UseTextToolsOptions) {
       textAlign,
       editable: true,
       selectable: true,
+      splitByGrapheme: true,
     });
     (text as any).isEditable = true;
     canvas.add(text);
@@ -88,12 +99,16 @@ export function useTextTools(options: UseTextToolsOptions) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const active = canvas.getActiveObject();
-    if (!active || active.type !== "i-text") return;
+    if (!active || active.type !== "textbox") return;
 
-    const textObj = active as IText;
+    const textObj = active as Textbox;
     textObj.set({
       fontSize,
-      fontFamily,
+      fontFamily: getCanvasFontFamily(
+        fontFamily,
+        DEFAULT_FONTS.PRIMARY,
+        BUNDLED_FONT_CSS_VARS
+      ),
       fill: rgbaToString(textColor),
       backgroundColor:
         backgroundColor.a === 0 ? "" : rgbaToString(backgroundColor),

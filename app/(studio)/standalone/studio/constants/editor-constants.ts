@@ -32,7 +32,7 @@ export const TEXT_DEFAULTS = {
   LETTER_SPACING: 0,
   COLOR: { r: 0, g: 0, b: 0, a: 1 },
   BG_COLOR: { r: 255, g: 255, b: 255, a: 1 },
-  DEFAULT_TEXT: "Double-click to edit this text\nYou can add more lines here",
+  DEFAULT_TEXT: "Double-click to start editing...",
   INITIAL_LEFT: 100,
   INITIAL_TOP: 100,
 } as const;
@@ -155,6 +155,12 @@ export const DEFAULT_FONTS = {
   SECONDARY: "Arial",
   FALLBACK: ["Manrope", "IBM Plex Sans"],
 } as const;
+
+/** Bundled fonts loaded via next/font; map display name to CSS variable for canvas use */
+export const BUNDLED_FONT_CSS_VARS: Record<string, string> = {
+  Manrope: "--font-manrope",
+  "IBM Plex Sans": "--font-ibm-plex-sans",
+};
 
 // Z-Index / Layer Management
 export const LAYERS = {

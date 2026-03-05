@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Canvas } from "fabric";
+import { Canvas, FabricObject, Textbox } from "fabric";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
 
@@ -33,7 +33,7 @@ function computeAspectRatio(width: number, height: number): string {
 
 export function useImageEditorCanvas(
   imageUrl: string | null,
-  options: UseImageEditorCanvasOptions
+  options: UseImageEditorCanvasOptions,
 ) {
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -84,7 +84,7 @@ export function useImageEditorCanvas(
       const displayScale = Math.min(
         1,
         maxDisplayWidth / originalImageDimensions.width,
-        maxDisplayHeight / originalImageDimensions.height
+        maxDisplayHeight / originalImageDimensions.height,
       );
 
       const newDisplayWidth = originalImageDimensions.width * displayScale;
@@ -181,12 +181,46 @@ export function useImageEditorCanvas(
           window.innerHeight -
             verticalPadding -
             headerTotalHeight -
-            safetyMargin
+            safetyMargin,
         );
       }
 
       const maxDisplayWidth = Math.max(100, availableWidth);
       const maxDisplayHeight = Math.max(100, availableHeight);
+
+      // --- Canva-like control styling for all Fabric objects ---
+      FabricObject.prototype.set({
+        transparentCorners: false,
+        cornerColor: "#FFFFFF",
+        cornerStrokeColor: "#7B61FF",
+        cornerSize: 10,
+        cornerStyle: "circle",
+        borderColor: "#7B61FF",
+        borderScaleFactor: 1.5,
+        padding: 4,
+      });
+
+      // Textbox: middle handles resize width only (text reflows), height auto-expands
+      Textbox.prototype.set({
+        transparentCorners: false,
+        cornerColor: "#FFFFFF",
+        cornerStrokeColor: "#7B61FF",
+        cornerSize: 10,
+        cornerStyle: "circle",
+        borderColor: "#7B61FF",
+        borderScaleFactor: 1.5,
+        padding: 4,
+      });
+
+      // Custom rotation control — positioned above the object with a line connector.
+      // In Fabric 6, controls may be per-instance (not on prototype); only customize if present.
+      const controls = (FabricObject.prototype as any).controls;
+      const rotateControl = controls?.mtr;
+      if (rotateControl) {
+        rotateControl.offsetY = -30;
+        rotateControl.withConnection = true;
+        rotateControl.cursorStyle = "crosshair";
+      }
 
       const fabricCanvas = new Canvas(canvasRef.current, {
         width: maxDisplayWidth,
@@ -217,7 +251,7 @@ export function useImageEditorCanvas(
         const displayScale = Math.min(
           1,
           maxDisplayWidth / originalWidth,
-          maxDisplayHeight / originalHeight
+          maxDisplayHeight / originalHeight,
         );
         const displayWidth = originalWidth * displayScale;
         const displayHeight = originalHeight * displayScale;
@@ -395,12 +429,12 @@ export function useImageEditorCanvas(
         const canvasWrapper = canvasElement.parentElement;
         canvasElement.removeEventListener(
           "contextmenu",
-          opts.preventContextMenu
+          opts.preventContextMenu,
         );
         if (canvasWrapper) {
           canvasWrapper.removeEventListener(
             "contextmenu",
-            opts.preventContextMenu
+            opts.preventContextMenu,
           );
         }
         instance.dispose();
@@ -422,7 +456,10 @@ export function useImageEditorCanvas(
         const originalHeight = newImg.height;
 
         originalImageUrlRef.current = newImageUrl;
-        setOriginalImageDimensions({ width: originalWidth, height: originalHeight });
+        setOriginalImageDimensions({
+          width: originalWidth,
+          height: originalHeight,
+        });
         setAspectRatio(computeAspectRatio(originalWidth, originalHeight));
 
         const canvasArea = document.getElementById("canvas-area");
@@ -435,7 +472,7 @@ export function useImageEditorCanvas(
           const displayScale = Math.min(
             1,
             maxDisplayWidth / originalWidth,
-            maxDisplayHeight / originalHeight
+            maxDisplayHeight / originalHeight,
           );
           newDisplayWidth = originalWidth * displayScale;
           newDisplayHeight = originalHeight * displayScale;
@@ -534,7 +571,7 @@ export function useImageEditorCanvas(
         throw err;
       }
     },
-    [onBackgroundReplaced]
+    [onBackgroundReplaced],
   );
 
   return {

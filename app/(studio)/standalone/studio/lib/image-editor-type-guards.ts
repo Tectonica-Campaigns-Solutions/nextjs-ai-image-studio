@@ -12,10 +12,11 @@ export function isFabricImage(obj: any): obj is FabricObjectWithMetadata {
 }
 
 /**
- * Type guard to check if an object is a text object
+ * Type guard to check if an object is a text object.
+ * Accepts both "textbox" (Fabric.Textbox) and "i-text" (legacy/saved canvases).
  */
 export function isTextObject(obj: any): obj is FabricObjectWithMetadata {
-  return obj && obj.type === "i-text";
+  return obj && (obj.type === "textbox" || obj.type === "i-text");
 }
 
 /**

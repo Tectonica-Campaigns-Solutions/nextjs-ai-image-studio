@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bold, Italic, Underline, } from "lucide-react";
+import { Bold, Italic, Underline, Loader2 } from "lucide-react";
 import { RgbaColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +27,7 @@ import { TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextToolIco
 export interface TextToolsPanelProps {
   selectedObject: any;
   fontAssets: FontAsset[];
+  fontsReady?: boolean;
   addText: () => void;
   fontSize: number;
   setFontSize: (n: number) => void;
@@ -53,6 +54,7 @@ export interface TextToolsPanelProps {
 export const TextToolsPanel = React.memo(function TextToolsPanel({
   selectedObject,
   fontAssets,
+  fontsReady = true,
   addText,
   fontSize,
   setFontSize,
@@ -75,14 +77,26 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
   backgroundColor,
   setBackgroundColor,
 }: TextToolsPanelProps) {
+  const isAddTextDisabled = fontAssets.length > 0 && !fontsReady;
+
   return (
     <div className="space-y-5 w-full">
       <Button
         onClick={addText}
-        className="w-full h-[44px] bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) rounded-[10px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg active:scale-[0.98]"
+        disabled={isAddTextDisabled}
+        className="w-full h-[44px] bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) rounded-[10px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-[#5C38F3]"
       >
-        <TextToolIcon />
-        Add a text box
+        {isAddTextDisabled ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden />
+            Loading fonts...
+          </>
+        ) : (
+          <>
+            <TextToolIcon />
+            Add a text box
+          </>
+        )}
       </Button>
       <div className="w-full  h-[1px] bg-[#2D2D2D]"></div>
       <div className="grid grid-cols-2 gap-[20px]">

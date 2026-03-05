@@ -32,6 +32,58 @@ export const FONT_WEIGHTS = [
 ];
 
 // Font utilities
+
+/**
+ * Returns the primary (first) font family from a font-family string that may
+ * include fallbacks (e.g. "Custom Font", "Manrope", sans-serif -> "Custom Font").
+ * Use when syncing from canvas object to panel so the Select value matches an option.
+ */
+export function getPrimaryFontFamily(fontFamily: string): string {
+  if (!fontFamily?.trim()) return "";
+  const first = fontFamily.split(",")[0].trim();
+  return first.replace(/^["']|["']$/g, "");
+}
+
+/**
+ * Returns a font-family string with fallbacks so the canvas renders with a safe
+ * fallback (e.g. Manrope) while custom/Google fonts are still loading.
+ */
+export function getFontFamilyWithFallback(
+  fontFamily: string,
+  fallback: string = "Manrope"
+): string {
+  if (!fontFamily?.trim()) return `"${fallback}", sans-serif`;
+  const primary = fontFamily.trim().replace(/^["']|["']$/g, "");
+  if (primary === fallback) return `"${primary}", sans-serif`;
+  return `"${primary}", "${fallback}", sans-serif`;
+}
+
+/**
+ * Resolves the font family string to use when drawing on the canvas. For bundled
+ * fonts (Manrope, IBM Plex Sans) loaded via next/font CSS variables, reads the
+ * computed variable so the canvas uses the same font as the UI.
+ */
+export function getCanvasFontFamily(
+  fontFamily: string,
+  fallback: string,
+  bundledFontCssVars: Record<string, string>
+): string {
+  if (typeof document === "undefined") {
+    return getFontFamilyWithFallback(fontFamily, fallback);
+  }
+  const primary = fontFamily?.trim().replace(/^["']|["']$/g, "") || "";
+  const cssVar = primary && bundledFontCssVars[primary];
+  if (cssVar) {
+    const resolved = getComputedStyle(document.documentElement)
+      .getPropertyValue(cssVar)
+      .trim();
+    if (resolved) {
+      return getFontFamilyWithFallback(resolved, fallback);
+    }
+  }
+  return getFontFamilyWithFallback(fontFamily, fallback);
+}
+
 export function validateFontFamily(fontFamily: string): boolean {
   if (
     !fontFamily ||

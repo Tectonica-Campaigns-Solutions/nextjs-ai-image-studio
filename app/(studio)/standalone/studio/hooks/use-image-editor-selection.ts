@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { IText } from "fabric";
+import type { Textbox } from "fabric";
+import { getPrimaryFontFamily } from "../utils/studio-utils";
 import type { ObjectMetadata, RgbaColor } from "../types/image-editor-types";
 
 export interface UseImageEditorSelectionOptions {
@@ -25,7 +26,7 @@ export interface UseImageEditorSelectionOptions {
 }
 
 export function useImageEditorSelection(
-  options: UseImageEditorSelectionOptions
+  options: UseImageEditorSelectionOptions,
 ) {
   const {
     canvasRef,
@@ -55,12 +56,24 @@ export function useImageEditorSelection(
   const onShapeSyncStartRef = useRef(onShapeSyncStart);
   const onShapeSyncEndRef = useRef(onShapeSyncEnd);
 
-  useEffect(() => { setShapeFillColorRef.current = setShapeFillColor; }, [setShapeFillColor]);
-  useEffect(() => { setShapeStrokeColorRef.current = setShapeStrokeColor; }, [setShapeStrokeColor]);
-  useEffect(() => { setShapeStrokeWidthRef.current = setShapeStrokeWidth; }, [setShapeStrokeWidth]);
-  useEffect(() => { setShapeOpacityRef.current = setShapeOpacity; }, [setShapeOpacity]);
-  useEffect(() => { onShapeSyncStartRef.current = onShapeSyncStart; }, [onShapeSyncStart]);
-  useEffect(() => { onShapeSyncEndRef.current = onShapeSyncEnd; }, [onShapeSyncEnd]);
+  useEffect(() => {
+    setShapeFillColorRef.current = setShapeFillColor;
+  }, [setShapeFillColor]);
+  useEffect(() => {
+    setShapeStrokeColorRef.current = setShapeStrokeColor;
+  }, [setShapeStrokeColor]);
+  useEffect(() => {
+    setShapeStrokeWidthRef.current = setShapeStrokeWidth;
+  }, [setShapeStrokeWidth]);
+  useEffect(() => {
+    setShapeOpacityRef.current = setShapeOpacity;
+  }, [setShapeOpacity]);
+  useEffect(() => {
+    onShapeSyncStartRef.current = onShapeSyncStart;
+  }, [onShapeSyncStart]);
+  useEffect(() => {
+    onShapeSyncEndRef.current = onShapeSyncEnd;
+  }, [onShapeSyncEnd]);
 
   const [selectedObject, setSelectedObject] = useState<any>(null);
   const [objectMetadata, setObjectMetadata] = useState<
@@ -70,16 +83,18 @@ export function useImageEditorSelection(
   // Sync text UI from selected text object
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !selectedObject || selectedObject.type !== "i-text") return;
+    if (!canvas || !selectedObject || selectedObject.type !== "textbox") return;
 
-    const textObj = selectedObject as IText;
+    const textObj = selectedObject as Textbox;
     setFontSize(textObj.fontSize || 24);
-    setFontFamily(textObj.fontFamily || "Arial");
+    setFontFamily(
+      getPrimaryFontFamily(String(textObj.fontFamily || "")) || "Arial"
+    );
 
     const fillColor = textObj.fill as string;
     if (fillColor && fillColor.startsWith("rgba")) {
       const match = fillColor.match(
-        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
+        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/,
       );
       if (match) {
         setTextColor({
@@ -94,7 +109,7 @@ export function useImageEditorSelection(
     const bgColor = textObj.backgroundColor as string;
     if (bgColor && bgColor.startsWith("rgba")) {
       const match = bgColor.match(
-        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
+        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/,
       );
       if (match) {
         setBackgroundColor({
@@ -146,7 +161,7 @@ export function useImageEditorSelection(
     const fillColor = shapeObj.fill as string;
     if (fillColor && fillColor.startsWith("rgba")) {
       const match = fillColor.match(
-        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
+        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/,
       );
       if (match) {
         setShapeFillColorRef.current({
@@ -161,7 +176,7 @@ export function useImageEditorSelection(
     const strokeColor = shapeObj.stroke as string;
     if (strokeColor && strokeColor.startsWith("rgba")) {
       const match = strokeColor.match(
-        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
+        /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/,
       );
       if (match) {
         setShapeStrokeColorRef.current({

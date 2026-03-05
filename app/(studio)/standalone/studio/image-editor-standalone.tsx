@@ -198,8 +198,12 @@ export default function ImageEditorStandalone({
   // Mobile panel hook
   const mobilePanel = useMobilePanel();
 
+  const onFontsLoaded = useCallback(() => {
+    canvasRefStable.current?.renderAll();
+  }, []);
+
   // Editor fonts hook
-  useEditorFonts(fontAssets);
+  const { fontsReady } = useEditorFonts(fontAssets, { onFontsLoaded });
 
   // Update stable refs when canvas becomes available (so undo/redo can update the canvas's background URL ref)
   useEffect(() => {
@@ -244,7 +248,7 @@ export default function ImageEditorStandalone({
 
   // Update text on style change
   useEffect(() => {
-    if (!canvasEditor.canvas || !selection.selectedObject || selection.selectedObject.type !== "i-text") return;
+    if (!canvasEditor.canvas || !selection.selectedObject || selection.selectedObject.type !== "textbox") return;
     textTools.updateSelectedText();
     history.saveState(false);
   }, [
@@ -721,6 +725,7 @@ export default function ImageEditorStandalone({
       <TextToolsPanel
         selectedObject={selection.selectedObject}
         fontAssets={fontAssets}
+        fontsReady={fontsReady}
         addText={textTools.addText}
         fontSize={textTools.fontSize}
         setFontSize={textTools.setFontSize}
@@ -744,7 +749,7 @@ export default function ImageEditorStandalone({
         setBackgroundColor={textTools.setBackgroundColor}
       />
     ),
-    [selection.selectedObject, fontAssets, textTools]
+    [selection.selectedObject, fontAssets, fontsReady, textTools]
   );
 
   const aiEditPanel = useMemo(
