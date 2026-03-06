@@ -22,10 +22,10 @@ import type {
   ImageEditorStandaloneProps,
 } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
-import { DEFAULT_FONTS, EXPORT, FEATURE_FLAGS, UI_COLORS } from "./constants/editor-constants";
+import { DEFAULT_FONTS, EXPORT, FEATURE_FLAGS, SELECTION_MENU, UI_COLORS } from "./constants/editor-constants";
 
 // Import custom hooks
-import { useImageEditorCanvas } from "./hooks/use-image-editor-canvas";
+import { useImageEditorCanvas, constrainObjectToCanvas } from "./hooks/use-image-editor-canvas";
 import { useImageEditorHistory } from "./hooks/use-image-editor-history";
 import { useImageEditorSelection } from "./hooks/use-image-editor-selection";
 import { useTextTools } from "./hooks/use-text-tools";
@@ -82,7 +82,7 @@ export default function ImageEditorStandalone({
     top: number;
   } | null>(null);
 
-  // Context menu position when a layer is selected (above the selection, Canva-style)
+  // Context menu position when a layer is selected (above or below the selection to avoid clipping at canvas edges)
   const [selectionContextMenuPosition, setSelectionContextMenuPosition] = useState<{
     left: number;
     top: number;
@@ -179,6 +179,35 @@ export default function ImageEditorStandalone({
     saveStateRef.current = history.saveState;
   }, [history.saveState]);
 
+  // Context menu position: above/below object depending on space (used by canvas hook move control and by effects)
+  const computeMenuPosition = useCallback(
+    (obj: any, canvas: { viewportTransform?: number[]; height?: number }) => {
+      const center = obj.getCenterPoint();
+      const vpt = canvas.viewportTransform;
+      if (!vpt) return null;
+      const centerScreenX = center.x * vpt[0] + center.y * vpt[2] + vpt[4];
+      const centerScreenY = center.x * vpt[1] + center.y * vpt[3] + vpt[5];
+      const ch = canvas.height ?? 0;
+      const menuAboveTop = centerScreenY - SELECTION_MENU.OFFSET_ABOVE;
+      const menuAboveTopNearBottom = centerScreenY - SELECTION_MENU.OFFSET_ABOVE_NEAR_BOTTOM;
+      const menuBelowTop = centerScreenY + SELECTION_MENU.OFFSET_BELOW;
+      const menuBelowBottom = menuBelowTop + SELECTION_MENU.EST_HEIGHT;
+      const nearTop = centerScreenY < SELECTION_MENU.NEAR_TOP_Y;
+      const nearBottom = centerScreenY > ch - SELECTION_MENU.NEAR_BOTTOM_OFFSET;
+      const belowFits = menuBelowBottom <= ch - SELECTION_MENU.EDGE_MARGIN;
+      let top: number;
+      if (nearTop && belowFits) {
+        top = menuBelowTop;
+      } else if (nearBottom) {
+        top = menuAboveTopNearBottom;
+      } else {
+        top = menuAboveTop;
+      }
+      return { left: centerScreenX, top };
+    },
+    [],
+  );
+
   // Initialize canvas hook (provides canvas instance)
   const canvasEditor = useImageEditorCanvas(imageUrl, {
     headerRef,
@@ -196,6 +225,10 @@ export default function ImageEditorStandalone({
       currentBackgroundUrlRef.current = newUrl;
     },
     onRotationTooltip: setRotationTooltip,
+    onSelectionContextMenuPosition: (obj, canvas) => {
+      const pos = computeMenuPosition(obj, canvas);
+      if (pos) setSelectionContextMenuPosition(pos);
+    },
   });
 
   const frameTools = useFrameTools({
@@ -229,9 +262,6 @@ export default function ImageEditorStandalone({
     return () => document.fonts.removeEventListener("loadingdone", handler);
   }, []);
 
-  // Compute floating context menu position when selection changes (Canva-style menu above the object)
-  const SELECTION_MENU_OFFSET_TOP = 65;
-
   useEffect(() => {
     const canvas = canvasEditor.canvas;
     const obj = selection.selectedObject;
@@ -239,17 +269,9 @@ export default function ImageEditorStandalone({
       setSelectionContextMenuPosition(null);
       return;
     }
-    const center = obj.getCenterPoint();
-    const vpt = canvas.viewportTransform;
-    if (!vpt) {
-      setSelectionContextMenuPosition(null);
-      return;
-    }
-    const left = center.x * vpt[0] + center.y * vpt[2] + vpt[4];
-    const top =
-      center.x * vpt[1] + center.y * vpt[3] + vpt[5] - SELECTION_MENU_OFFSET_TOP;
-    setSelectionContextMenuPosition({ left, top });
-  }, [canvasEditor.canvas, selection.selectedObject]);
+    const pos = computeMenuPosition(obj, canvas);
+    if (pos) setSelectionContextMenuPosition(pos);
+  }, [canvasEditor.canvas, selection.selectedObject, computeMenuPosition]);
 
   // Update context menu position while moving the layer so the bar follows the selection
   useEffect(() => {
@@ -261,13 +283,8 @@ export default function ImageEditorStandalone({
         setSelectionContextMenuPosition(null);
         return;
       }
-      const center = obj.getCenterPoint();
-      const vpt = canvas.viewportTransform;
-      if (!vpt) return;
-      const left = center.x * vpt[0] + center.y * vpt[2] + vpt[4];
-      const top =
-        center.x * vpt[1] + center.y * vpt[3] + vpt[5] - SELECTION_MENU_OFFSET_TOP;
-      setSelectionContextMenuPosition({ left, top });
+      const pos = computeMenuPosition(obj, canvas);
+      if (pos) setSelectionContextMenuPosition(pos);
     };
     canvas.on("object:moving", onMoveOrModify);
     canvas.on("object:modified", onMoveOrModify);
@@ -275,7 +292,7 @@ export default function ImageEditorStandalone({
       canvas.off("object:moving", onMoveOrModify);
       canvas.off("object:modified", onMoveOrModify);
     };
-  }, [canvasEditor.canvas]);
+  }, [canvasEditor.canvas, computeMenuPosition]);
 
   // Update stable refs when canvas becomes available (so undo/redo can update the canvas's background URL ref)
   useEffect(() => {
@@ -586,6 +603,7 @@ export default function ImageEditorStandalone({
       const top = (obj.top ?? 0) + 20;
       clone.set({ left, top });
       clone.setCoords();
+      constrainObjectToCanvas(clone, canvas);
       canvas.add(clone);
       canvas.setActiveObject(clone);
       canvas.renderAll();

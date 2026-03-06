@@ -11,6 +11,7 @@ import {
 import { loadImageWithCORS } from "../utils/image-editor-utils";
 import { getCustomControlRenderers } from "../lib/fabric-control-icons";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
+import { CANVAS_CONTROLS } from "../constants/editor-constants";
 
 export interface UseImageEditorCanvasOptions {
   headerRef: React.RefObject<HTMLDivElement | null>;
@@ -34,6 +35,8 @@ export interface UseImageEditorCanvasOptions {
       top: number;
     } | null,
   ) => void;
+  /** Called when the object is moved via the move control so the context menu bar can follow. */
+  onSelectionContextMenuPosition?: (obj: any, canvas: Canvas) => void;
 }
 
 function gcd(a: number, b: number): number {
@@ -43,6 +46,66 @@ function gcd(a: number, b: number): number {
 function computeAspectRatio(width: number, height: number): string {
   const divisor = gcd(Math.round(width), Math.round(height));
   return `${Math.round(width) / divisor}:${Math.round(height) / divisor}`;
+}
+
+/**
+ * Constrains an object so its bounding box stays within canvas dimensions.
+ * No-op for background objects. Call setCoords() before reading bounds.
+ */
+export function constrainObjectToCanvas(obj: any, canvas: Canvas): void {
+  if (!obj || !canvas || (obj as any).isBackground) return;
+  obj.setCoords();
+  const cw = canvas.width ?? 0;
+  const ch = canvas.height ?? 0;
+  if (cw <= 0 || ch <= 0) return;
+
+  let rect: { left: number; top: number; width: number; height: number };
+  if (typeof obj.getBoundingRect === "function") {
+    rect = obj.getBoundingRect();
+  } else {
+    const coords = obj.getCoords?.();
+    if (!coords || coords.length < 4) return;
+    const xs = coords.map((p: { x: number }) => p.x);
+    const ys = coords.map((p: { y: number }) => p.y);
+    const left = Math.min(...xs);
+    const top = Math.min(...ys);
+    rect = {
+      left,
+      top,
+      width: Math.max(...xs) - left,
+      height: Math.max(...ys) - top,
+    };
+  }
+
+  const newLeft = Math.max(0, Math.min(rect.left, cw - rect.width));
+  const newTop = Math.max(0, Math.min(rect.top, ch - rect.height));
+  const dx = newLeft - rect.left;
+  const dy = newTop - rect.top;
+  if (dx === 0 && dy === 0) return;
+  obj.set({
+    left: (obj.left ?? 0) + dx,
+    top: (obj.top ?? 0) + dy,
+  });
+  obj.setCoords();
+}
+
+/**
+ * Updates the rotate/move control positions so they stay visible at canvas edges.
+ * Only move controls above when object is near the bottom (no space below). Near the top, keep them below so they stay visible.
+ */
+function updateControlsPositionForCanvasBounds(obj: any, canvas: Canvas): void {
+  if (!obj || !canvas || (obj as any).isBackground) return;
+  const ctrls = obj.controls;
+  if (!ctrls?.mtr || !ctrls?.moveCtrl) return;
+  const center = obj.getCenterPoint();
+  const ch = canvas.height ?? 0;
+  const nearBottom =
+    center.y + CANVAS_CONTROLS.OFFSET_BELOW > ch - CANVAS_CONTROLS.BOTTOM_THRESHOLD;
+  const offsetY = nearBottom ? CANVAS_CONTROLS.OFFSET_ABOVE : CANVAS_CONTROLS.OFFSET_BELOW;
+  ctrls.mtr.offsetY = offsetY;
+  ctrls.moveCtrl.offsetY = offsetY;
+  if (ctrls.resizeH) ctrls.resizeH.offsetY = offsetY;
+  obj.setCoords();
 }
 
 export function useImageEditorCanvas(
@@ -65,6 +128,7 @@ export function useImageEditorCanvas(
     preventContextMenu,
     onBackgroundReplaced,
     onRotationTooltip,
+    onSelectionContextMenuPosition,
   } = options;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -242,7 +306,7 @@ export function useImageEditorCanvas(
         // v-resize and h-resize are kept but hidden for now
         if (ctrls.mtr) {
           ctrls.mtr.y = 0.5;
-          ctrls.mtr.offsetY = 30;
+          ctrls.mtr.offsetY = CANVAS_CONTROLS.OFFSET_BELOW;
           ctrls.mtr.offsetX = -18;
           ctrls.mtr.withConnection = false;
           ctrls.mtr.cursorStyle = "crosshair";
@@ -287,7 +351,7 @@ export function useImageEditorCanvas(
         ctrls.resizeH = new Control({
           x: 0,
           y: 0.5,
-          offsetY: 30,
+          offsetY: CANVAS_CONTROLS.OFFSET_BELOW,
           offsetX: 54,
           visible: false,
           cursorStyle: "ew-resize",
@@ -311,13 +375,16 @@ export function useImageEditorCanvas(
             top: y - transform.offsetY,
           });
           target.setCoords();
+          const c = target.canvas;
+          if (c) constrainObjectToCanvas(target, c);
+          optionsRef.current.onSelectionContextMenuPosition?.(target, c);
           return true;
         };
 
         ctrls.moveCtrl = new Control({
           x: 0,
           y: 0.5,
-          offsetY: 30,
+          offsetY: CANVAS_CONTROLS.OFFSET_BELOW,
           offsetX: 18,
           cursorStyle: "move",
           actionHandler: moveHandler,
@@ -483,6 +550,8 @@ export function useImageEditorCanvas(
           opts.setSelectedObject(null);
           return;
         }
+        if (selected)
+          updateControlsPositionForCanvasBounds(selected, fabricCanvas);
         opts.setSelectedObject(selected || null);
       });
 
@@ -496,6 +565,8 @@ export function useImageEditorCanvas(
           opts.setSelectedObject(null);
           return;
         }
+        if (selected)
+          updateControlsPositionForCanvasBounds(selected, fabricCanvas);
         opts.setSelectedObject(selected || null);
       });
 
@@ -559,10 +630,19 @@ export function useImageEditorCanvas(
           clearTimeout(opts.moveSaveTimeoutRef.current);
           opts.moveSaveTimeoutRef.current = null;
         }
+        if (obj) {
+          constrainObjectToCanvas(obj, fabricCanvas);
+          updateControlsPositionForCanvasBounds(obj, fabricCanvas);
+        }
         opts.saveState(true);
       });
 
-      fabricCanvas.on("object:moving", () => {
+      fabricCanvas.on("object:moving", (e: any) => {
+        const target = e?.target;
+        if (target) {
+          constrainObjectToCanvas(target, fabricCanvas);
+          updateControlsPositionForCanvasBounds(target, fabricCanvas);
+        }
         if (opts.moveSaveTimeoutRef.current) {
           clearTimeout(opts.moveSaveTimeoutRef.current);
         }

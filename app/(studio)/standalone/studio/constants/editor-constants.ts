@@ -12,6 +12,24 @@ export const CANVAS = {
   DEFAULT_BG_COLOR: "#f8f9fa",
 } as const;
 
+// Canvas object controls (rotate / move icons) – offset from object center
+export const CANVAS_CONTROLS = {
+  OFFSET_BELOW: 18,
+  OFFSET_ABOVE: -65,
+  BOTTOM_THRESHOLD: 80,
+} as const;
+
+// Selection context menu (Duplicate / Delete) – positioning above/below object
+export const SELECTION_MENU = {
+  OFFSET_ABOVE: 65,
+  OFFSET_ABOVE_NEAR_BOTTOM: 118,
+  OFFSET_BELOW: 70,
+  EST_HEIGHT: 48,
+  EDGE_MARGIN: 20,
+  NEAR_TOP_Y: 85,
+  NEAR_BOTTOM_OFFSET: 110,
+} as const;
+
 // History Configuration
 export const HISTORY = {
   MAX_ENTRIES: 50,
