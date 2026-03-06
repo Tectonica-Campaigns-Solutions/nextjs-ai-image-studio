@@ -38,6 +38,7 @@ export function ClientDetailClient({
   const [email, setEmail] = useState(client.email ?? "");
   const [description, setDescription] = useState(client.description ?? "");
   const [isActive, setIsActive] = useState(client.is_active);
+  const [allowCustomLogo, setAllowCustomLogo] = useState(client.allow_custom_logo ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,6 +93,7 @@ export function ClientDetailClient({
       email,
       description: description || null,
       is_active: isActive,
+      allow_custom_logo: allowCustomLogo,
     });
     setSaving(false);
     if (result.error) {
@@ -218,6 +220,25 @@ export function ClientDetailClient({
                   id="is_active"
                   checked={isActive}
                   onCheckedChange={setIsActive}
+                  className="data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-gray-200"
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <Label
+                    htmlFor="allow_custom_logo"
+                    className="text-sm font-medium text-gray-700 cursor-pointer"
+                  >
+                    Allow custom logo upload
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    When enabled, users can upload their own logo in the studio under Logo overlay
+                  </p>
+                </div>
+                <Switch
+                  id="allow_custom_logo"
+                  checked={allowCustomLogo}
+                  onCheckedChange={setAllowCustomLogo}
                   className="data-[state=checked]:bg-gray-900 data-[state=unchecked]:bg-gray-200"
                 />
               </div>

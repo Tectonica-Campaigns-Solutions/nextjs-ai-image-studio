@@ -30,6 +30,8 @@ export interface LogoToolsPanelProps {
   handleLogoFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   /** When false, size and opacity controls are disabled (no logo overlay selected on canvas). */
   isLogoSelected?: boolean;
+  /** When false, "Upload custom logo" option is hidden. Default true. */
+  allowCustomLogo?: boolean;
 }
 
 export const LogoToolsPanel = React.memo(function LogoToolsPanel({
@@ -46,6 +48,7 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
   handleInsertDefaultLogo,
   handleLogoFileUpload,
   isLogoSelected = false,
+  allowCustomLogo = true,
 }: LogoToolsPanelProps) {
   return (
     <div className="space-y-4">
@@ -126,7 +129,9 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
                   {asset.display_name}
                 </SelectItem>
               ))}
-            <SelectItem value="custom">Upload Custom Logo</SelectItem>
+            {allowCustomLogo !== false && (
+              <SelectItem value="custom">Upload Custom Logo</SelectItem>
+            )}
           </SelectContent>
         </Select>
         {availableVariants.length > 0 && !selectedVariant && (

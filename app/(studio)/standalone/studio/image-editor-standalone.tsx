@@ -45,6 +45,7 @@ export default function ImageEditorStandalone({
   frameAssets = [],
   fontAssets = [],
   sessionData = null,
+  allowCustomLogo = true,
 }: ImageEditorStandaloneProps) {
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
 
@@ -894,9 +895,10 @@ export default function ImageEditorStandalone({
         handleInsertDefaultLogo={logoTools.handleInsertDefaultLogo}
         handleLogoFileUpload={logoTools.handleLogoFileUpload}
         isLogoSelected={isLogoSelected}
+        allowCustomLogo={allowCustomLogo}
       />
     ),
-    [logoTools, isLogoSelected]
+    [logoTools, isLogoSelected, allowCustomLogo]
   );
 
   const qrToolsPanel = useMemo(

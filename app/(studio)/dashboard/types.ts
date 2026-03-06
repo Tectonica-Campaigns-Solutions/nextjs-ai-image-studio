@@ -10,6 +10,7 @@ export interface Client {
   slug: string | null;
   description: string | null;
   is_active: boolean;
+  allow_custom_logo: boolean;
   metadata: Record<string, unknown> | null;
   created_at?: string;
   updated_at?: string;

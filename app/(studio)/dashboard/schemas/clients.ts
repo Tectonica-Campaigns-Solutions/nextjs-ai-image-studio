@@ -24,6 +24,7 @@ export const createClientSchema = z.object({
     .nullable()
     .transform((s) => (s?.trim() ? s.trim() : null)),
   is_active: z.boolean().optional().default(true),
+  allow_custom_logo: z.boolean().optional().default(true),
   metadata: z.record(z.unknown()).optional().nullable(),
 });
 
@@ -50,6 +51,7 @@ export const updateClientSchema = z.object({
     .nullable()
     .transform((s) => (s?.trim() ? s.trim() : null)),
   is_active: z.boolean().optional(),
+  allow_custom_logo: z.boolean().optional(),
   metadata: z.record(z.unknown()).optional().nullable(),
 });
 

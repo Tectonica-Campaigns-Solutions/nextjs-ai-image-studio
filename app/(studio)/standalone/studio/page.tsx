@@ -14,7 +14,7 @@ type StudioPageProps = {
 export default async function StudioPage({ searchParams }: StudioPageProps) {
   const params = await searchParams;
 
-  const [{ logoAssets, fontAssets, frameAssets }, sessionData] = await Promise.all([
+  const [{ logoAssets, fontAssets, frameAssets, allowCustomLogo }, sessionData] = await Promise.all([
     getEditorAssetsForUser(params.user_id),
     params.session_id ? getCanvasSession(params.session_id) : Promise.resolve(null),
   ]);
@@ -27,6 +27,7 @@ export default async function StudioPage({ searchParams }: StudioPageProps) {
         frameAssets={frameAssets}
         fontAssets={fontAssets}
         sessionData={sessionData}
+        allowCustomLogo={allowCustomLogo}
       />
     </Suspense>
   );

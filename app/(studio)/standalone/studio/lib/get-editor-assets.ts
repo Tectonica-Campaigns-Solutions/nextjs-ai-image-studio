@@ -11,17 +11,35 @@ function getDefaultLogoAssets(): LogoAsset[] {
 
 export async function getEditorAssetsForUser(
   caUserId: string | undefined
-): Promise<{ logoAssets: LogoAsset[]; fontAssets: FontAsset[]; frameAssets: FrameAsset[] }> {
+): Promise<{
+  logoAssets: LogoAsset[];
+  fontAssets: FontAsset[];
+  frameAssets: FrameAsset[];
+  allowCustomLogo: boolean;
+}> {
   if (!caUserId?.trim()) {
     return {
       logoAssets: getDefaultLogoAssets(),
       fontAssets: [],
       frameAssets: [],
+      allowCustomLogo: true,
     };
   }
 
   try {
     const supabase = await createClient();
+
+    const { data: clientRecord } = await supabase
+      .from("clients")
+      .select("id, allow_custom_logo")
+      .eq("ca_user_id", caUserId)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .single();
+
+    const clientIdForFallbacks = clientRecord?.id ?? null;
+    const allowCustomLogo = clientRecord?.allow_custom_logo ?? true;
+
     let logoAssets: LogoAsset[] = getDefaultLogoAssets();
     let fontAssets: FontAsset[] = [];
     let frameAssets: FrameAsset[] = [];
@@ -53,19 +71,23 @@ export async function getEditorAssetsForUser(
     } else if (rpcError) {
       console.warn("RPC function failed, trying direct query:", rpcError);
 
-      const { data: client, error: clientError } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("ca_user_id", caUserId)
-        .eq("is_active", true)
-        .is("deleted_at", null)
-        .single();
+      const clientId =
+        clientIdForFallbacks ??
+        (
+          await supabase
+            .from("clients")
+            .select("id")
+            .eq("ca_user_id", caUserId)
+            .eq("is_active", true)
+            .is("deleted_at", null)
+            .single()
+        ).data?.id;
 
-      if (!clientError && client) {
+      if (clientId) {
         const { data: directLogos, error: logosError } = await supabase
           .from("client_assets")
           .select("file_url, display_name, name, variant")
-          .eq("client_id", client.id)
+          .eq("client_id", clientId)
           .eq("asset_type", "logo")
           .is("deleted_at", null)
           .order("is_primary", { ascending: false })
@@ -83,8 +105,6 @@ export async function getEditorAssetsForUser(
         } else if (logosError) {
           console.error("Error fetching client assets:", logosError);
         }
-      } else if (clientError) {
-        console.error("Error fetching client:", clientError);
       }
     }
 
@@ -114,19 +134,23 @@ export async function getEditorAssetsForUser(
         fontsRpcError
       );
 
-      const { data: client, error: clientError } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("ca_user_id", caUserId)
-        .eq("is_active", true)
-        .is("deleted_at", null)
-        .single();
+      const fontClientId =
+        clientIdForFallbacks ??
+        (
+          await supabase
+            .from("clients")
+            .select("id")
+            .eq("ca_user_id", caUserId)
+            .eq("is_active", true)
+            .is("deleted_at", null)
+            .single()
+        ).data?.id;
 
-      if (!clientError && client) {
+      if (fontClientId) {
         const { data: directFonts, error: fontsError } = await supabase
           .from("client_fonts")
           .select("font_source, font_family, font_weights, file_url")
-          .eq("client_id", client.id)
+          .eq("client_id", fontClientId)
           .is("deleted_at", null)
           .order("is_primary", { ascending: false })
           .order("sort_order", { ascending: true })
@@ -172,19 +196,23 @@ export async function getEditorAssetsForUser(
     } else if (framesRpcError) {
       console.warn("RPC function failed for frames, trying direct query:", framesRpcError);
 
-      const { data: client, error: clientError } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("ca_user_id", caUserId)
-        .eq("is_active", true)
-        .is("deleted_at", null)
-        .single();
+      const frameClientId =
+        clientIdForFallbacks ??
+        (
+          await supabase
+            .from("clients")
+            .select("id")
+            .eq("ca_user_id", caUserId)
+            .eq("is_active", true)
+            .is("deleted_at", null)
+            .single()
+        ).data?.id;
 
-      if (!clientError && client) {
+      if (frameClientId) {
         const { data: directFrames, error: framesError } = await supabase
           .from("client_assets")
           .select("file_url, display_name, name, variant")
-          .eq("client_id", client.id)
+          .eq("client_id", frameClientId)
           .eq("asset_type", "frame")
           .is("deleted_at", null)
           .order("is_primary", { ascending: false })
@@ -205,13 +233,14 @@ export async function getEditorAssetsForUser(
       }
     }
 
-    return { logoAssets, fontAssets, frameAssets };
+    return { logoAssets, fontAssets, frameAssets, allowCustomLogo };
   } catch (error) {
     console.error("Error in getEditorAssetsForUser:", error);
     return {
       logoAssets: getDefaultLogoAssets(),
       fontAssets: [],
       frameAssets: [],
+      allowCustomLogo: true,
     };
   }
 }

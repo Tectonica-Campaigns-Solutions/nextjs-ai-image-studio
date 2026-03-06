@@ -101,6 +101,7 @@ export async function PATCH(
     if (data.description !== undefined)
       updateData.description = data.description;
     if (data.is_active !== undefined) updateData.is_active = data.is_active;
+    if (data.allow_custom_logo !== undefined) updateData.allow_custom_logo = data.allow_custom_logo;
     if (data.metadata !== undefined) updateData.metadata = data.metadata;
     if (data.slug !== undefined) updateData.slug = data.slug;
 

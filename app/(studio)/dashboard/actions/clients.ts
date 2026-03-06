@@ -65,6 +65,7 @@ export async function createClientAction(
       slug: finalSlug || null,
       description: data.description ?? null,
       is_active: data.is_active,
+      allow_custom_logo: data.allow_custom_logo ?? true,
       metadata: data.metadata ?? null,
       created_by: check.user.id,
       updated_by: check.user.id,
@@ -84,6 +85,7 @@ export async function updateClientAction(
     email?: string;
     description?: string | null;
     is_active?: boolean;
+    allow_custom_logo?: boolean;
   }
 ): Promise<ClientActionResult> {
   const check = await requireAdmin();

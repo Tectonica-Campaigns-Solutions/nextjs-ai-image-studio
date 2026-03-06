@@ -68,6 +68,8 @@ export interface ImageEditorStandaloneProps {
   frameAssets?: FrameAsset[];
   fontAssets?: FontAsset[];
   sessionData?: CanvasSessionData | null;
+  /** When false, "Upload custom logo" is hidden in Logo overlay. Default true. */
+  allowCustomLogo?: boolean;
 }
 
 export type DisclaimerPosition =
