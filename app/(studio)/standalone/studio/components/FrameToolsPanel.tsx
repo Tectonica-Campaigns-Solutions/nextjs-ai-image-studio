@@ -1,14 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { FrameAsset } from "../types/image-editor-types";
+import { FRAME_SHOW_BY_SIZE_OPTIONS } from "@/lib/aspect-ratios";
 import { cn } from "@/lib/utils";
 
 export interface FrameToolsPanelProps {
-  filteredFrameAssets: FrameAsset[];
-  hasFrameAssets: boolean;
+  frameAssets: FrameAsset[];
   aspectRatio: string | null;
   frameOpacity: number;
   setFrameOpacity: (n: number) => void;
@@ -16,35 +23,73 @@ export interface FrameToolsPanelProps {
   isFrameSelected: boolean;
 }
 
+function filterFramesBySize(frames: FrameAsset[], size: string): FrameAsset[] {
+  if (size === "all") return frames;
+  return frames.filter((asset) => {
+    const v = asset.variant;
+    if (!v) return false;
+    if (v === "*") return true;
+    const ratios = v.split(",").map((s) => s.trim()).filter(Boolean);
+    return ratios.includes(size);
+  });
+}
+
 export const FrameToolsPanel = React.memo(function FrameToolsPanel({
-  filteredFrameAssets,
-  hasFrameAssets,
+  frameAssets,
   aspectRatio,
   frameOpacity,
   setFrameOpacity,
   insertFrame,
   isFrameSelected,
 }: FrameToolsPanelProps) {
+  const hasAnyFrames = frameAssets.length > 0;
+
+  const [showBySize, setShowBySize] = useState<string>(() => {
+    if (aspectRatio && FRAME_SHOW_BY_SIZE_OPTIONS.some((o) => o.value === aspectRatio))
+      return aspectRatio;
+    return "all";
+  });
+
+  const filteredFrames = useMemo(
+    () => filterFramesBySize(frameAssets, showBySize),
+    [frameAssets, showBySize]
+  );
+
   return (
     <div className="space-y-4">
-      {aspectRatio && (
-        <p className="text-xs text-[#929292] font-(family-name:--font-manrope)">
-          Showing frames for{" "}
-          <span className="text-[#F4F4F4] font-semibold">{aspectRatio}</span>
-        </p>
-      )}
+      <div className="space-y-2">
+        <Label className="text-[13px] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope)">
+          Show by size
+        </Label>
+        <Select value={showBySize} onValueChange={setShowBySize}>
+          <SelectTrigger className="w-full border-[#2D2D2D] bg-[#0D0D0D] text-[#F4F4F4] font-(family-name:--font-manrope)">
+            <SelectValue placeholder="Select size" />
+          </SelectTrigger>
+          <SelectContent>
+            {FRAME_SHOW_BY_SIZE_OPTIONS.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {!hasFrameAssets ? (
+      {!hasAnyFrames ? (
         <div className="py-6 text-center">
           <p className="text-[13px] text-[#929292] font-(family-name:--font-manrope)">
-            {aspectRatio
-              ? `No frames available for ${aspectRatio}`
-              : "No frames available"}
+            No frames available
+          </p>
+        </div>
+      ) : filteredFrames.length === 0 ? (
+        <div className="py-6 text-center">
+          <p className="text-[13px] text-[#929292] font-(family-name:--font-manrope)">
+            No frames for this size. Try &quot;All&quot; or another option.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {filteredFrameAssets.map((asset) => (
+          {filteredFrames.map((asset) => (
             <button
               key={asset.url}
               type="button"

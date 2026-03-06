@@ -5,10 +5,11 @@ import {
   errorResponse,
   validateIdParam,
 } from "@/app/api/dashboard/_lib/api-response";
+import { VALID_ASPECT_RATIO_VALUES } from "@/lib/aspect-ratios";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getParams(
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>,
 ): Promise<{ id: string; error: null } | { id: null; error: NextResponse }> {
   const { id } = await params;
   const invalid = validateIdParam(id);
@@ -21,7 +22,7 @@ async function getParams(
  */
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -73,7 +74,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -107,22 +108,44 @@ export async function POST(
     if (!name || typeof name !== "string" || name.trim() === "") {
       return errorResponse(
         "name is required and must be a non-empty string",
-        400
+        400,
       );
     }
     if (!["logo", "image", "document", "frame"].includes(assetType)) {
       return errorResponse(
         "asset_type must be one of: logo, image, document, frame",
-        400
+        400,
       );
     }
 
     let variantValue: string | null = null;
     if (variant && typeof variant === "string" && variant.trim() !== "") {
       const trimmed = variant.trim();
-      if (trimmed.length > 50)
-        return errorResponse("variant must be 50 characters or less", 400);
-      variantValue = trimmed;
+      if (assetType === "frame") {
+        if (trimmed.length > 120)
+          return errorResponse("variant must be 120 characters or less", 400);
+        if (trimmed === "*") {
+          variantValue = "*";
+        } else {
+          const parts = trimmed
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          const invalid = parts.find(
+            (p) => !VALID_ASPECT_RATIO_VALUES.has(p as any),
+          );
+          if (invalid)
+            return errorResponse(
+              `Invalid frame aspect ratio: ${invalid}. Use * for all or comma-separated values (e.g. 1:1, 9:16).`,
+              400,
+            );
+          variantValue = parts.join(",");
+        }
+      } else {
+        if (trimmed.length > 50)
+          return errorResponse("variant must be 50 characters or less", 400);
+        variantValue = trimmed;
+      }
     }
 
     const allowedTypes = [
@@ -134,15 +157,12 @@ export async function POST(
     ];
     if (!allowedTypes.includes(file.type)) {
       return errorResponse(
-        "Tipo de archivo no permitido. Solo se permiten imágenes.",
-        400
+        "File type not allowed. Only image files are permitted.",
+        400,
       );
     }
     if (file.size > 10 * 1024 * 1024) {
-      return errorResponse(
-        "Archivo demasiado grande. Tamaño máximo: 10MB",
-        400
-      );
+      return errorResponse("File too large. Maximum size: 10MB", 400);
     }
 
     const uploadResult = await uploadAsset(file, id, assetType);
@@ -220,7 +240,10 @@ export async function POST(
 
     if (insertError) {
       console.error("[assets POST] insert error:", insertError);
-      return errorResponse(`Failed to save asset metadata: ${insertError.message}`, 500);
+      return errorResponse(
+        `Failed to save asset metadata: ${insertError.message}`,
+        500,
+      );
     }
 
     return NextResponse.json({ asset }, { status: 201 });

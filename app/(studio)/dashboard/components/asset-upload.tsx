@@ -5,27 +5,9 @@ import NextImage from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, Loader2 } from "lucide-react";
-
-const COMMON_ASPECT_RATIOS = [
-  { value: "16:9", label: "16:9 — Landscape HD (1920×1080)" },
-  { value: "9:16", label: "9:16 — Portrait / Stories (1080×1920)" },
-  { value: "1:1", label: "1:1 — Square (1080×1080)" },
-  { value: "4:3", label: "4:3 — Classic landscape (1024×768)" },
-  { value: "3:4", label: "3:4 — Classic portrait (768×1024)" },
-  { value: "4:5", label: "4:5 — Instagram portrait (1080×1350)" },
-  { value: "5:4", label: "5:4 — Instagram landscape (1350×1080)" },
-  { value: "3:2", label: "3:2 — DSLR landscape (1500×1000)" },
-  { value: "2:3", label: "2:3 — DSLR portrait (1000×1500)" },
-  { value: "21:9", label: "21:9 — Ultrawide (2560×1080)" },
-] as const;
+import { COMMON_ASPECT_RATIOS } from "@/lib/aspect-ratios";
 
 interface AssetUploadProps {
   clientId: string;
@@ -49,6 +31,8 @@ export function AssetUpload({
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [variant, setVariant] = useState("");
+  const [frameVariantAll, setFrameVariantAll] = useState(false);
+  const [frameVariantRatios, setFrameVariantRatios] = useState<string[]>([]);
   const [isPrimary, setIsPrimary] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,8 +114,14 @@ export function AssetUpload({
       setError("Please select a file and provide a name");
       return;
     }
-    if (assetType === "frame" && !variant.trim()) {
-      setError("Please select an aspect ratio for this frame");
+    const frameVariantValue =
+      assetType === "frame"
+        ? frameVariantAll
+          ? "*"
+          : frameVariantRatios.join(",")
+        : variant.trim();
+    if (assetType === "frame" && !frameVariantValue) {
+      setError("Please select at least one aspect ratio or \"All aspect ratios\"");
       return;
     }
 
@@ -145,8 +135,8 @@ export function AssetUpload({
       formData.append("display_name", displayName.trim() || name.trim());
       formData.append("asset_type", assetType);
       formData.append("is_primary", isPrimary.toString());
-      if (variant.trim()) {
-        formData.append("variant", variant.trim());
+      if (assetType === "frame" ? frameVariantValue : variant.trim()) {
+        formData.append("variant", assetType === "frame" ? frameVariantValue : variant.trim());
       }
 
       const response = await fetch(
@@ -168,6 +158,8 @@ export function AssetUpload({
       setName("");
       setDisplayName("");
       setVariant("");
+      setFrameVariantAll(false);
+      setFrameVariantRatios([]);
       setIsPrimary(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -189,6 +181,8 @@ export function AssetUpload({
     setName("");
     setDisplayName("");
     setVariant("");
+    setFrameVariantAll(false);
+    setFrameVariantRatios([]);
     setIsPrimary(false);
     setError(null);
     if (fileInputRef.current) {
@@ -262,27 +256,43 @@ export function AssetUpload({
       {/* Variant */}
       {assetType === "frame" ? (
         <div className="space-y-2">
-          <Label htmlFor="asset-variant">
-            Aspect Ratio <span className="text-destructive">*</span>
+          <Label>
+            Aspect ratio(s) <span className="text-destructive">*</span>
           </Label>
-          <Select
-            value={variant}
-            onValueChange={setVariant}
-            disabled={uploading}
-          >
-            <SelectTrigger id="asset-variant">
-              <SelectValue placeholder="Select aspect ratio…" />
-            </SelectTrigger>
-            <SelectContent>
-              {COMMON_ASPECT_RATIOS.map(({ value, label }) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
+          <div className="rounded-md border bg-muted/30 p-3 space-y-3 max-h-[220px] overflow-y-auto">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={frameVariantAll}
+                onCheckedChange={(checked) => {
+                  setFrameVariantAll(!!checked);
+                  if (checked) setFrameVariantRatios([]);
+                }}
+                disabled={uploading}
+              />
+              <span className="text-sm font-medium">All aspect ratios</span>
+            </label>
+            {!frameVariantAll &&
+              COMMON_ASPECT_RATIOS.map(({ value, label }) => (
+                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={frameVariantRatios.includes(value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setFrameVariantRatios((prev) =>
+                          prev.includes(value) ? prev : [...prev, value]
+                        );
+                      } else {
+                        setFrameVariantRatios((prev) => prev.filter((r) => r !== value));
+                      }
+                    }}
+                    disabled={uploading}
+                  />
+                  <span className="text-sm">{label}</span>
+                </label>
               ))}
-            </SelectContent>
-          </Select>
+          </div>
           <p className="text-xs text-muted-foreground">
-            The frame will only appear in the studio when the canvas matches this aspect ratio.
+            The frame will appear in the studio when the canvas matches any selected aspect ratio (or all if you choose &quot;All aspect ratios&quot;).
           </p>
         </div>
       ) : (
@@ -332,7 +342,12 @@ export function AssetUpload({
         </Button>
         <Button
           onClick={handleUpload}
-          disabled={!file || !name.trim() || (assetType === "frame" && !variant.trim()) || uploading}
+          disabled={
+            !file ||
+            !name.trim() ||
+            (assetType === "frame" && !frameVariantAll && frameVariantRatios.length === 0) ||
+            uploading
+          }
         >
           {uploading ? (
             <>

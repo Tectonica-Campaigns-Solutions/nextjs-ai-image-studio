@@ -4,10 +4,11 @@ import {
   errorResponse,
   validateIdParam,
 } from "@/app/api/dashboard/_lib/api-response";
+import { VALID_ASPECT_RATIO_VALUES } from "@/lib/aspect-ratios";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getParams(
-  params: Promise<{ id: string; assetId: string }>
+  params: Promise<{ id: string; assetId: string }>,
 ): Promise<
   | { id: string; assetId: string; error: null }
   | { id: null; assetId: null; error: NextResponse }
@@ -25,7 +26,7 @@ async function getParams(
  */
 export async function GET(
   _request: NextRequest,
-  context: { params: Promise<{ id: string; assetId: string }> }
+  context: { params: Promise<{ id: string; assetId: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -70,7 +71,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  context: { params: Promise<{ id: string; assetId: string }> }
+  context: { params: Promise<{ id: string; assetId: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -82,7 +83,7 @@ export async function PATCH(
   try {
     const supabase = await createClient();
     const body = await request.json();
-    const { name, display_name, is_primary, sort_order } = body;
+    const { name, display_name, is_primary, sort_order, variant } = body;
 
     const { data: client, error: clientError } = await supabase
       .from("clients")
@@ -122,6 +123,40 @@ export async function PATCH(
       }
       updateData.sort_order = sort_order;
     }
+    if (variant !== undefined) {
+      if (variant === null || variant === "") {
+        updateData.variant = null;
+      } else if (typeof variant !== "string" || variant.trim() === "") {
+        updateData.variant = null;
+      } else {
+        const trimmed = variant.trim();
+        if (existingAsset.asset_type === "frame") {
+          if (trimmed.length > 120)
+            return errorResponse("variant must be 120 characters or less", 400);
+          if (trimmed === "*") {
+            updateData.variant = "*";
+          } else {
+            const parts = trimmed
+              .split(",")
+              .map((s: string) => s.trim())
+              .filter(Boolean);
+            const invalid = parts.find(
+              (p) => !VALID_ASPECT_RATIO_VALUES.has(p as any),
+            );
+            if (invalid)
+              return errorResponse(
+                `Invalid frame aspect ratio: ${invalid}. Use * for all or comma-separated values (e.g. 1:1, 9:16).`,
+                400,
+              );
+            updateData.variant = parts.join(",");
+          }
+        } else {
+          if (trimmed.length > 50)
+            return errorResponse("variant must be 50 characters or less", 400);
+          updateData.variant = trimmed;
+        }
+      }
+    }
     if (is_primary !== undefined) {
       const newIsPrimary = Boolean(is_primary);
       if (newIsPrimary && !existingAsset.is_primary) {
@@ -155,7 +190,7 @@ export async function PATCH(
  */
 export async function DELETE(
   _request: NextRequest,
-  context: { params: Promise<{ id: string; assetId: string }> }
+  context: { params: Promise<{ id: string; assetId: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;

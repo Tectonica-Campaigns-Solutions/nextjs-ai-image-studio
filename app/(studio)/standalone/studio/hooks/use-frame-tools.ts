@@ -19,13 +19,16 @@ export function useFrameTools(options: UseFrameToolsOptions) {
   const [frameOpacity, setFrameOpacity] = useState<number>(FRAME_DEFAULTS.OPACITY);
 
   // Filter assets to only those matching the current canvas aspect ratio
-  const filteredFrameAssets = useMemo(
-    () =>
-      aspectRatio
-        ? frameAssets.filter((asset) => asset.variant === aspectRatio)
-        : frameAssets,
-    [frameAssets, aspectRatio]
-  );
+  const filteredFrameAssets = useMemo(() => {
+    if (!aspectRatio) return frameAssets;
+    return frameAssets.filter((asset) => {
+      const v = asset.variant;
+      if (!v) return false;
+      if (v === "*") return true;
+      const ratios = v.split(",").map((s) => s.trim()).filter(Boolean);
+      return ratios.includes(aspectRatio);
+    });
+  }, [frameAssets, aspectRatio]);
 
   const removeExistingFrame = useCallback(() => {
     const canvas = canvasRef.current;
@@ -48,12 +51,23 @@ export function useFrameTools(options: UseFrameToolsOptions) {
         const canvasWidth = canvas.width as number;
         const canvasHeight = canvas.height as number;
 
-        const scaleX = canvasWidth / frameImage.width;
-        const scaleY = canvasHeight / frameImage.height;
+        // Scale to ~90% of canvas so the frame doesn't fill the entire area:
+        // user can then move and resize it easily (controls stay visible).
+        const scaleToFit = Math.min(
+          canvasWidth / frameImage.width,
+          canvasHeight / frameImage.height
+        );
+        const scale = scaleToFit * 0.9;
+        const scaleX = scale;
+        const scaleY = scale;
+        const scaledW = frameImage.width * scale;
+        const scaledH = frameImage.height * scale;
+        const left = (canvasWidth - scaledW) / 2;
+        const top = (canvasHeight - scaledH) / 2;
 
         const img = new FabricImage(frameImage.getElement(), {
-          left: 0,
-          top: 0,
+          left,
+          top,
           originX: "left",
           originY: "top",
           scaleX,
@@ -64,8 +78,7 @@ export function useFrameTools(options: UseFrameToolsOptions) {
           lockRotation: true,
           hasControls: true,
           hasBorders: true,
-          // Keep aspect ratio locked while scaling
-          lockUniScaling: false,
+          lockUniScaling: true,
         });
         (img as any).isFrame = true;
         (img as any).isEditable = true;
@@ -105,6 +118,7 @@ export function useFrameTools(options: UseFrameToolsOptions) {
   return {
     frameOpacity,
     setFrameOpacity,
+    frameAssets,
     filteredFrameAssets,
     hasFrameAssets,
     insertFrame,

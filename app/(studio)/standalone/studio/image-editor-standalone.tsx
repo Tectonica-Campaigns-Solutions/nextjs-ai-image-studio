@@ -922,21 +922,16 @@ export default function ImageEditorStandalone({
     !!selection.selectedObject && !!(selection.selectedObject as any).isFrame;
 
   const frameToolsPanel = useMemo(
-    () => {
-      if (!frameTools.hasFrameAssets) return null;
-
-      return (
-        <FrameToolsPanel
-          filteredFrameAssets={frameTools.filteredFrameAssets}
-          hasFrameAssets={frameTools.hasFrameAssets}
-          aspectRatio={canvasEditor.aspectRatio}
-          frameOpacity={frameTools.frameOpacity}
-          setFrameOpacity={frameTools.setFrameOpacity}
-          insertFrame={frameTools.insertFrame}
-          isFrameSelected={isFrameSelected}
-        />
-      );
-    },
+    () => (
+      <FrameToolsPanel
+        frameAssets={frameTools.frameAssets}
+        aspectRatio={canvasEditor.aspectRatio}
+        frameOpacity={frameTools.frameOpacity}
+        setFrameOpacity={frameTools.setFrameOpacity}
+        insertFrame={frameTools.insertFrame}
+        isFrameSelected={isFrameSelected}
+      />
+    ),
     [frameTools, canvasEditor.aspectRatio, isFrameSelected]
   );
 

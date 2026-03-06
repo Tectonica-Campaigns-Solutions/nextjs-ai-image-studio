@@ -263,7 +263,7 @@ export function ClientDetailClient({
             Client Frames
           </h2>
           <p className="text-sm text-gray-500 mb-6">
-            Frame images overlaid on the canvas. Tag each frame with an aspect ratio (e.g. <strong>16:9</strong>, <strong>1:1</strong>) so it only appears when the canvas matches that proportion.
+            Frame images overlaid on the canvas. Choose one or more aspect ratios (or &quot;All&quot;) per frame so it appears when the canvas matches those formats.
           </p>
           <FrameGallery
             clientId={client.id}
