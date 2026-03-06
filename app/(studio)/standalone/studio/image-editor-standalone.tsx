@@ -18,9 +18,10 @@ import {
   UploadPromptCard,
 } from "./components";
 import type {
-  DisclaimerPosition,
+  ExportConfig,
   ImageEditorStandaloneProps,
 } from "./types/image-editor-types";
+import type { DisclaimerPosition } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_FONTS, EXPORT, FEATURE_FLAGS, SELECTION_MENU, UI_COLORS } from "./constants/editor-constants";
 
@@ -441,12 +442,21 @@ export default function ImageEditorStandalone({
     setShowDisclaimerModal(true);
   };
 
+  // Normalize export filename: strip extension, sanitize, then add extension for format
+  const getExportFilename = (filename: string, format: ExportConfig["format"]): string => {
+    const invalidChars = /[/\\:*?"<>|]/g;
+    const base = filename.replace(/\.[^.]+$/, "").trim().replace(invalidChars, "") || EXPORT.DEFAULT_FILENAME_BASE;
+    const ext = format === "jpeg" ? ".jpeg" : format === "webp" ? ".webp" : ".png";
+    return base + ext;
+  };
+
   // Export image with disclaimer
-  const exportImage = async (position: DisclaimerPosition) => {
+  const exportImage = async (config: ExportConfig) => {
     if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
     setIsExporting(true);
     setShowDisclaimerModal(false);
 
+    const { position, format, filename } = config;
     let disclaimerGroup: Group | null = null;
     try {
       // Add temporary disclaimer before export
@@ -564,13 +574,13 @@ export default function ImageEditorStandalone({
       const multiplier = canvasEditor.originalImageDimensions.width / currentWidth;
 
       const dataURL = canvasEditor.canvas.toDataURL({
-        format: EXPORT.DEFAULT_FORMAT,
-        quality: EXPORT.DEFAULT_QUALITY,
+        format: format as "png" | "jpeg" | "webp",
+        quality: format === "png" ? 1 : EXPORT.DEFAULT_QUALITY,
         multiplier: multiplier,
-      });
+      } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
 
       const link = document.createElement("a");
-      link.download = EXPORT.DEFAULT_FILENAME;
+      link.download = getExportFilename(filename, format);
       link.href = dataURL;
       link.click();
     } catch (error) {
@@ -1105,7 +1115,7 @@ export default function ImageEditorStandalone({
         onOpenChange={setShowDisclaimerModal}
         disclaimerPosition={disclaimerPosition}
         setDisclaimerPosition={setDisclaimerPosition}
-        onConfirm={() => exportImage(disclaimerPosition)}
+        onConfirm={(exportConfig) => exportImage(exportConfig)}
         isExporting={isExporting}
       />
     </div>

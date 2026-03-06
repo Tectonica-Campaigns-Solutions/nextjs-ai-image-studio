@@ -138,10 +138,17 @@ export const SHAPE_RANGES = {
 } as const;
 
 // Export/Disclaimer Configuration
+export const EXPORT_FORMATS = [
+  { value: "png" as const, label: "PNG" },
+  { value: "jpeg" as const, label: "JPEG" },
+  { value: "webp" as const, label: "WebP" },
+];
+
 export const EXPORT = {
   DEFAULT_FORMAT: "png",
   DEFAULT_QUALITY: 1,
   DEFAULT_FILENAME: "edited-image.png",
+  DEFAULT_FILENAME_BASE: "edited-image",
   DEFAULT_DISCLAIMER_POSITION: "bottom-right",
   DISCLAIMER_MARGIN_MULTIPLIER: 0.009,
   DISCLAIMER_PADDING_MULTIPLIER: 0.009,

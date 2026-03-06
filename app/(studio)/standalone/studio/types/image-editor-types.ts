@@ -78,6 +78,14 @@ export type DisclaimerPosition =
   | "top-left"
   | "bottom-left";
 
+export type ExportFormat = "png" | "jpeg" | "webp";
+
+export interface ExportConfig {
+  position: DisclaimerPosition;
+  format: ExportFormat;
+  filename: string;
+}
+
 export interface RgbaColor {
   r: number;
   g: number;
