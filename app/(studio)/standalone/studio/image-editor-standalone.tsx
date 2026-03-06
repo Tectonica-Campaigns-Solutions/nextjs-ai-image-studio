@@ -37,6 +37,7 @@ import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
+import { Copy, Trash2 } from "lucide-react";
 
 export default function ImageEditorStandalone({
   params,
@@ -73,6 +74,19 @@ export default function ImageEditorStandalone({
 
   // AI image edit state
   const [isEditingWithAI, setIsEditingWithAI] = useState<boolean>(false);
+
+  // Rotation tooltip (degrees) shown near element while rotating or briefly after
+  const [rotationTooltip, setRotationTooltip] = useState<{
+    angle: number;
+    left: number;
+    top: number;
+  } | null>(null);
+
+  // Context menu position when a layer is selected (above the selection, Canva-style)
+  const [selectionContextMenuPosition, setSelectionContextMenuPosition] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
 
   // Determine image URL
   const imageUrl = imageUrlFromParams || uploadedImageUrl;
@@ -181,6 +195,7 @@ export default function ImageEditorStandalone({
     onBackgroundReplaced: (newUrl) => {
       currentBackgroundUrlRef.current = newUrl;
     },
+    onRotationTooltip: setRotationTooltip,
   });
 
   const frameTools = useFrameTools({
@@ -213,6 +228,54 @@ export default function ImageEditorStandalone({
     document.fonts.addEventListener("loadingdone", handler);
     return () => document.fonts.removeEventListener("loadingdone", handler);
   }, []);
+
+  // Compute floating context menu position when selection changes (Canva-style menu above the object)
+  const SELECTION_MENU_OFFSET_TOP = 65;
+
+  useEffect(() => {
+    const canvas = canvasEditor.canvas;
+    const obj = selection.selectedObject;
+    if (!canvas || !obj || (obj as any).isBackground) {
+      setSelectionContextMenuPosition(null);
+      return;
+    }
+    const center = obj.getCenterPoint();
+    const vpt = canvas.viewportTransform;
+    if (!vpt) {
+      setSelectionContextMenuPosition(null);
+      return;
+    }
+    const left = center.x * vpt[0] + center.y * vpt[2] + vpt[4];
+    const top =
+      center.x * vpt[1] + center.y * vpt[3] + vpt[5] - SELECTION_MENU_OFFSET_TOP;
+    setSelectionContextMenuPosition({ left, top });
+  }, [canvasEditor.canvas, selection.selectedObject]);
+
+  // Update context menu position while moving the layer so the bar follows the selection
+  useEffect(() => {
+    const canvas = canvasEditor.canvas;
+    if (!canvas) return;
+    const onMoveOrModify = (e: any) => {
+      const obj = e.target;
+      if (!obj || (obj as any).isBackground) {
+        setSelectionContextMenuPosition(null);
+        return;
+      }
+      const center = obj.getCenterPoint();
+      const vpt = canvas.viewportTransform;
+      if (!vpt) return;
+      const left = center.x * vpt[0] + center.y * vpt[2] + vpt[4];
+      const top =
+        center.x * vpt[1] + center.y * vpt[3] + vpt[5] - SELECTION_MENU_OFFSET_TOP;
+      setSelectionContextMenuPosition({ left, top });
+    };
+    canvas.on("object:moving", onMoveOrModify);
+    canvas.on("object:modified", onMoveOrModify);
+    return () => {
+      canvas.off("object:moving", onMoveOrModify);
+      canvas.off("object:modified", onMoveOrModify);
+    };
+  }, [canvasEditor.canvas]);
 
   // Update stable refs when canvas becomes available (so undo/redo can update the canvas's background URL ref)
   useEffect(() => {
@@ -511,6 +574,27 @@ export default function ImageEditorStandalone({
     canvasEditor.canvas.renderAll();
     history.saveState(true);
   };
+
+  // Duplicate selected object (offset so it's visible)
+  const duplicateSelected = useCallback(async () => {
+    const canvas = canvasEditor.canvas;
+    const obj = selection.selectedObject;
+    if (!canvas || !obj || (obj as any).isBackground) return;
+    try {
+      const clone = await (obj as any).clone();
+      const left = (obj.left ?? 0) + 20;
+      const top = (obj.top ?? 0) + 20;
+      clone.set({ left, top });
+      clone.setCoords();
+      canvas.add(clone);
+      canvas.setActiveObject(clone);
+      canvas.renderAll();
+      selection.setSelectedObject(clone);
+      history.saveState(true);
+    } catch (err) {
+      console.error("[duplicateSelected]", err);
+    }
+  }, [canvasEditor.canvas, selection.selectedObject, selection.setSelectedObject, history.saveState]);
 
   // Save canvas session to database
   const handleSave = async () => {
@@ -900,8 +984,54 @@ export default function ImageEditorStandalone({
             className="flex-1 min-w-0 OLD_xl:px-20 md:overflow-y-auto themed-scrollbar md:min-h-0 OLD_bg-green-500"
           >
             <div className="mb-5">
-              <div className="w-full max-w-full overflow-hidden rounded-[3px] flex justify-start">
+              <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-start">
                 <canvas ref={canvasEditor.canvasRef} />
+                {rotationTooltip !== null && (
+                  <div
+                    className="pointer-events-none absolute z-10 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white tabular-nums"
+                    style={{
+                      left: rotationTooltip.left,
+                      top: rotationTooltip.top,
+                      transform: "translate(-50%, 0)",
+                    }}
+                    aria-live="polite"
+                    role="status"
+                  >
+                    {rotationTooltip.angle}°
+                  </div>
+                )}
+                {selectionContextMenuPosition !== null && (
+                  <div
+                    className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
+                    style={{
+                      left: selectionContextMenuPosition.left,
+                      top: selectionContextMenuPosition.top,
+                      transform: "translate(-50%, 0)",
+                    }}
+                    role="toolbar"
+                    aria-label="Layer options"
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={duplicateSelected}
+                      className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
+                      aria-label="Duplicate layer"
+                      title="Duplicate layer"
+                    >
+                      <Copy className="size-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={deleteSelected}
+                      className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                      aria-label="Delete layer"
+                      title="Delete layer"
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

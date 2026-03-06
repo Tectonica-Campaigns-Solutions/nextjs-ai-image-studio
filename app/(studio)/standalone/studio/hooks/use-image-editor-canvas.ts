@@ -27,6 +27,13 @@ export interface UseImageEditorCanvasOptions {
   saveStateTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   preventContextMenu: (e: MouseEvent) => false;
   onBackgroundReplaced?: (newUrl: string) => void;
+  onRotationTooltip?: (
+    payload: {
+      angle: number;
+      left: number;
+      top: number;
+    } | null,
+  ) => void;
 }
 
 function gcd(a: number, b: number): number {
@@ -57,11 +64,15 @@ export function useImageEditorCanvas(
     saveStateTimeoutRef,
     preventContextMenu,
     onBackgroundReplaced,
+    onRotationTooltip,
   } = options;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalImageUrlRef = useRef<string | null>(null);
   const canvasInstanceRef = useRef<Canvas | null>(null);
+  const rotationTooltipTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const [canvas, setCanvas] = useState<Canvas | null>(null);
   const [originalImageDimensions, setOriginalImageDimensions] = useState<{
@@ -430,7 +441,41 @@ export function useImageEditorCanvas(
         console.error("Error loading image:", error);
       }
 
+      const ROTATION_TOOLTIP_OFFSET_TOP = 80;
+
+      /** Normalize angle to Canva-style range: 0..179, then -180..-1 (then back to 0). */
+      const normalizeAngleToCanvaRange = (angle: number) => {
+        let a = ((angle % 360) + 360) % 360;
+        if (a > 180) a -= 360;
+        return Math.round(a);
+      };
+
+      const isRotatable = (obj: any) =>
+        obj && !(obj as any).isBackground && obj.lockRotation !== true;
+
+      const getRotationTooltipPosition = (obj: any) => {
+        const center = obj.getCenterPoint();
+        const vpt = fabricCanvas.viewportTransform;
+        if (!vpt) return { left: 0, top: 0 };
+        const left = center.x * vpt[0] + center.y * vpt[2] + vpt[4];
+        const top =
+          center.x * vpt[1] +
+          center.y * vpt[3] +
+          vpt[5] +
+          ROTATION_TOOLTIP_OFFSET_TOP;
+        return { left, top };
+      };
+
+      const clearRotationTooltipTimeout = () => {
+        if (rotationTooltipTimeoutRef.current) {
+          clearTimeout(rotationTooltipTimeoutRef.current);
+          rotationTooltipTimeoutRef.current = null;
+        }
+      };
+
       fabricCanvas.on("selection:created", (e) => {
+        clearRotationTooltipTimeout();
+        opts.onRotationTooltip?.(null);
         const selected = e.selected?.[0];
         if (selected && (selected as any).isBackground) {
           fabricCanvas.discardActiveObject();
@@ -442,6 +487,8 @@ export function useImageEditorCanvas(
       });
 
       fabricCanvas.on("selection:updated", (e) => {
+        clearRotationTooltipTimeout();
+        opts.onRotationTooltip?.(null);
         const selected = e.selected?.[0];
         if (selected && (selected as any).isBackground) {
           fabricCanvas.discardActiveObject();
@@ -453,6 +500,8 @@ export function useImageEditorCanvas(
       });
 
       fabricCanvas.on("selection:cleared", () => {
+        clearRotationTooltipTimeout();
+        opts.onRotationTooltip?.(null);
         opts.setSelectedObject(null);
       });
 
@@ -465,6 +514,15 @@ export function useImageEditorCanvas(
           e.e.stopPropagation();
           return false;
         }
+      });
+
+      fabricCanvas.on("object:rotating", (e) => {
+        const target = (e as any).target;
+        if (!opts.onRotationTooltip || !isRotatable(target)) return;
+        clearRotationTooltipTimeout();
+        const angle = normalizeAngleToCanvaRange(Number(target.angle) || 0);
+        const { left, top } = getRotationTooltipPosition(target);
+        opts.onRotationTooltip({ angle, left, top });
       });
 
       fabricCanvas.on("object:modified", (e) => {
@@ -486,6 +544,16 @@ export function useImageEditorCanvas(
               opts.setFrameOpacity(Math.round(op * 100));
             }
           }
+        }
+        if (isRotatable(obj) && opts.onRotationTooltip) {
+          const angle = normalizeAngleToCanvaRange(Number(obj.angle) || 0);
+          const { left, top } = getRotationTooltipPosition(obj);
+          opts.onRotationTooltip({ angle, left, top });
+          clearRotationTooltipTimeout();
+          rotationTooltipTimeoutRef.current = setTimeout(() => {
+            rotationTooltipTimeoutRef.current = null;
+            opts.onRotationTooltip?.(null);
+          }, 2000);
         }
         if (opts.moveSaveTimeoutRef.current) {
           clearTimeout(opts.moveSaveTimeoutRef.current);
@@ -521,6 +589,11 @@ export function useImageEditorCanvas(
     return () => {
       clearTimeout(timeoutId);
       const opts = optionsRef.current;
+      if (rotationTooltipTimeoutRef.current) {
+        clearTimeout(rotationTooltipTimeoutRef.current);
+        rotationTooltipTimeoutRef.current = null;
+      }
+      opts.onRotationTooltip?.(null);
       if (opts.saveStateTimeoutRef.current) {
         clearTimeout(opts.saveStateTimeoutRef.current);
         opts.saveStateTimeoutRef.current = null;
