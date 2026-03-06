@@ -75,7 +75,7 @@ export function useFrameTools(options: UseFrameToolsOptions) {
           opacity: frameOpacity / 100,
           selectable: true,
           evented: true,
-          lockRotation: true,
+          lockRotation: false,
           hasControls: true,
           hasBorders: true,
           lockUniScaling: true,
