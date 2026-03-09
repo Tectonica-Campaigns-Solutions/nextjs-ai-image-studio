@@ -13,6 +13,7 @@ import type {
   UpdateAdminInput,
 } from "@/app/(studio)/dashboard/schemas/admins";
 import { isValidUUID } from "@/app/(studio)/dashboard/schemas/params";
+import { setupPasswordSchema } from "@/app/(studio)/dashboard/schemas/auth";
 
 export type AdminActionResult = { error?: string };
 
@@ -188,16 +189,21 @@ export async function updateAdminAction(
   });
 
   if (fetchError || !existingRole) return { error: "Admin not found" };
-  if (existingRole.user_id === check.user.id) {
-    console.log("[updateAdminAction] User tried to modify own status");
-    return { error: "You cannot modify your own admin status" };
+
+  const isSelfEdit = existingRole.user_id === check.user.id;
+  const updateData: { is_active?: boolean; expires_at?: string | null } = {};
+
+  if (isSelfEdit) {
+    // Self-edit: allow expires_at and display_name (cannot change own is_active)
+    if (parsed.data.expires_at !== undefined)
+      updateData.expires_at = parsed.data.expires_at;
+  } else {
+    if (parsed.data.is_active !== undefined)
+      updateData.is_active = parsed.data.is_active;
+    if (parsed.data.expires_at !== undefined)
+      updateData.expires_at = parsed.data.expires_at;
   }
 
-  const updateData: { is_active?: boolean; expires_at?: string | null } = {};
-  if (parsed.data.is_active !== undefined)
-    updateData.is_active = parsed.data.is_active;
-  if (parsed.data.expires_at !== undefined)
-    updateData.expires_at = parsed.data.expires_at;
   console.log("[updateAdminAction] updateData:", updateData);
 
   const { error } = await supabase
@@ -209,6 +215,20 @@ export async function updateAdminAction(
     console.log("[updateAdminAction] Update error:", error.message, error);
     return { error: "Failed to update admin" };
   }
+
+  // Update display name in Supabase Auth user_metadata (full_name)
+  if (parsed.data.display_name !== undefined) {
+    const adminSupabase = createAdminClient();
+    const { error: metaError } = await adminSupabase.auth.admin.updateUserById(
+      existingRole.user_id,
+      { user_metadata: { full_name: parsed.data.display_name ?? "" } }
+    );
+    if (metaError) {
+      console.error("[updateAdminAction] updateUserById user_metadata:", metaError.message);
+      return { error: "Failed to update name" };
+    }
+  }
+
   console.log("[updateAdminAction] Success");
   revalidatePath("/dashboard/admins");
   revalidatePath(`/dashboard/admins/${adminId}`);
@@ -264,5 +284,54 @@ export async function deleteAdminAction(
   console.log("[deleteAdminAction] Success");
   revalidatePath("/dashboard/admins");
   revalidatePath(`/dashboard/admins/${adminId}`);
+  return {};
+}
+
+export type SetAdminPasswordResult = { error?: string };
+
+export async function setAdminPasswordAction(
+  targetUserId: string,
+  raw: { password: string; confirmPassword: string }
+): Promise<SetAdminPasswordResult> {
+  const check = await requireAdmin();
+  if (!check.success) {
+    redirect("/dashboard/login?error=admin_required");
+  }
+
+  const parsed = setupPasswordSchema.safeParse({ password: raw.password });
+  if (!parsed.success) {
+    const msg =
+      parsed.error.flatten().fieldErrors.password?.[0] ?? "Invalid password";
+    return { error: String(msg) };
+  }
+  if (raw.password !== raw.confirmPassword) {
+    return { error: "Passwords do not match" };
+  }
+
+  const supabase = await createClient();
+  const { data: role, error: roleError } = await supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", targetUserId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (roleError || !role) {
+    return { error: "Admin not found" };
+  }
+
+  const adminSupabase = createAdminClient();
+  const { error: updateError } = await adminSupabase.auth.admin.updateUserById(
+    targetUserId,
+    { password: parsed.data.password }
+  );
+
+  if (updateError) {
+    console.error("[setAdminPasswordAction] updateUserById error:", updateError.message);
+    return { error: "Failed to update password" };
+  }
+
+  revalidatePath("/dashboard/admins");
+  revalidatePath(`/dashboard/admins/${role.id}`);
   return {};
 }

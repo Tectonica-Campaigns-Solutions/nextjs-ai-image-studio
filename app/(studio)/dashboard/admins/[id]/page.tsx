@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
-import { getAdminById, getCurrentUserId } from "@/app/(studio)/dashboard/data/admins";
+import { notFound, redirect } from "next/navigation";
+import { getAdminDetailData } from "@/app/(studio)/dashboard/data/admins";
+import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { AdminDetailClient } from "@/app/(studio)/dashboard/components/admin-detail-client";
 
 interface PageProps {
@@ -8,16 +9,17 @@ interface PageProps {
 
 export default async function AdminDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [admin, currentUserId] = await Promise.all([
-    getAdminById(id),
-    getCurrentUserId(),
-  ]);
 
+  const auth = await requireAdmin();
+  if (!auth.success) {
+    redirect("/dashboard/login?error=admin_required");
+  }
+  const admin = await getAdminDetailData(id);
   if (admin === null) {
     notFound();
   }
 
   return (
-    <AdminDetailClient admin={admin} currentUserId={currentUserId} />
+    <AdminDetailClient admin={admin} currentUserId={auth.user.id} />
   );
 }

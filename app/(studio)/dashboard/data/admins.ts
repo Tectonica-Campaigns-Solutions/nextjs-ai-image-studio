@@ -2,9 +2,11 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import type { Admin } from "@/app/(studio)/dashboard/types";
 
-export async function getAdmins(): Promise<Admin[] | null> {
-  const check = await requireAdmin();
-  if (!check.success) return null;
+/**
+ * Fetches all admins. Does NOT call requireAdmin - the page must do that first.
+ * User and granter fetches are parallelized per role (Promise.all).
+ */
+export async function getAdminsListData(): Promise<Admin[] | null> {
   const supabase = createAdminClient();
   const { data: adminRoles, error: rolesError } = await supabase
     .from("user_roles")
@@ -14,45 +16,63 @@ export async function getAdmins(): Promise<Admin[] | null> {
 
   if (rolesError) return null;
 
-  const admins: Admin[] = [];
-  for (const role of adminRoles ?? []) {
-    let email = "N/A";
-    try {
-      const { data: userData, error: userError } =
-        await supabase.auth.admin.getUserById(role.user_id);
-      if (!userError && userData?.user) email = userData.user.email || "N/A";
-    } catch {
-      // ignore
-    }
-    let grantedByEmail: string | null = null;
-    if (role.granted_by) {
+  const admins = await Promise.all(
+    (adminRoles ?? []).map(async (role) => {
+      const [userRes, granterRes] = await Promise.all([
+        supabase.auth.admin.getUserById(role.user_id),
+        role.granted_by
+          ? supabase.auth.admin.getUserById(role.granted_by)
+          : Promise.resolve({ data: { user: null }, error: null }),
+      ]);
+      let email = "N/A";
+      let displayName: string | null = null;
       try {
-        const { data: granterData } = await supabase.auth.admin.getUserById(
-          role.granted_by,
-        );
-        if (granterData?.user) grantedByEmail = granterData.user.email ?? null;
+        if (!userRes.error && userRes.data?.user) {
+          const u = userRes.data.user;
+          email = u.email || "N/A";
+          const meta = u.user_metadata as Record<string, unknown> | undefined;
+          displayName =
+            (meta?.full_name as string) ??
+            (meta?.display_name as string) ??
+            null;
+        }
       } catch {
         // ignore
       }
-    }
-    admins.push({
-      id: role.id,
-      user_id: role.user_id,
-      email,
-      role: role.role,
-      granted_by: role.granted_by,
-      granted_by_email: grantedByEmail,
-      granted_at: role.granted_at,
-      expires_at: role.expires_at,
-      is_active: role.is_active,
-    });
-  }
+      let grantedByEmail: string | null = null;
+      try {
+        if (granterRes.data?.user)
+          grantedByEmail = granterRes.data.user.email ?? null;
+      } catch {
+        // ignore
+      }
+      return {
+        id: role.id,
+        user_id: role.user_id,
+        email,
+        display_name: displayName,
+        role: role.role,
+        granted_by: role.granted_by,
+        granted_by_email: grantedByEmail,
+        granted_at: role.granted_at,
+        expires_at: role.expires_at,
+        is_active: role.is_active,
+      } as Admin;
+    })
+  );
   return admins;
 }
 
-export async function getAdminById(id: string): Promise<Admin | null> {
+export async function getAdmins(): Promise<Admin[] | null> {
   const check = await requireAdmin();
   if (!check.success) return null;
+  return getAdminsListData();
+}
+
+/**
+ * Fetches one admin by id. Does NOT call requireAdmin - the page must do that first.
+ */
+export async function getAdminDetailData(id: string): Promise<Admin | null> {
   const supabase = createAdminClient();
   const { data: role, error: roleError } = await supabase
     .from("user_roles")
@@ -64,10 +84,17 @@ export async function getAdminById(id: string): Promise<Admin | null> {
   if (roleError || !role) return null;
 
   let email = "N/A";
+  let displayName: string | null = null;
   try {
     const { data: userData, error: userError } =
       await supabase.auth.admin.getUserById(role.user_id);
-    if (!userError && userData?.user) email = userData.user.email || "N/A";
+    if (!userError && userData?.user) {
+      const u = userData.user;
+      email = u.email || "N/A";
+      const meta = u.user_metadata as Record<string, unknown> | undefined;
+      displayName =
+        (meta?.full_name as string) ?? (meta?.display_name as string) ?? null;
+    }
   } catch {
     // ignore
   }
@@ -86,6 +113,7 @@ export async function getAdminById(id: string): Promise<Admin | null> {
     id: role.id,
     user_id: role.user_id,
     email,
+    display_name: displayName,
     role: role.role,
     granted_by: role.granted_by,
     granted_by_email: grantedByEmail,
@@ -93,6 +121,12 @@ export async function getAdminById(id: string): Promise<Admin | null> {
     expires_at: role.expires_at,
     is_active: role.is_active,
   } as Admin;
+}
+
+export async function getAdminById(id: string): Promise<Admin | null> {
+  const check = await requireAdmin();
+  if (!check.success) return null;
+  return getAdminDetailData(id);
 }
 
 /** Returns current user id if authenticated and admin; null otherwise. */

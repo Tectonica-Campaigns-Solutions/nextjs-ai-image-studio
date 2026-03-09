@@ -26,6 +26,12 @@ export const createAdminSchema = z
 
 export const updateAdminSchema = z.object({
   is_active: z.boolean().optional(),
+  display_name: z
+    .string()
+    .max(256, "Name must be at most 256 characters")
+    .optional()
+    .nullable()
+    .transform((s) => (s === "" || s == null ? null : s.trim())),
   expires_at: z
     .string()
     .optional()
@@ -39,4 +45,4 @@ export const updateAdminSchema = z.object({
 
 export const adminIdParamSchema = z.object({ id: uuidSchema });
 export type CreateAdminInput = z.infer<typeof createAdminSchema>;
-export type UpdateAdminInput = z.infer<typeof updateAdminSchema>;
+export type UpdateAdminInput = z.input<typeof updateAdminSchema>;

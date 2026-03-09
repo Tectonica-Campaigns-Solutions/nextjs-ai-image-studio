@@ -60,6 +60,7 @@ export interface Admin {
   id: string;
   user_id: string;
   email: string;
+  display_name: string | null;
   role: string;
   granted_by: string | null;
   granted_by_email: string | null;

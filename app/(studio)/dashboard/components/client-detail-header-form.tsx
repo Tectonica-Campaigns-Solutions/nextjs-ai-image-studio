@@ -8,31 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { AssetGallery } from "./asset-gallery";
-import { FrameGallery } from "./frame-gallery";
-import { FontGallery } from "./font-gallery";
-import { CanvasSessionGallery } from "./CanvasSessionGallery";
-import { getGoogleFontsUrl, generateFontFaceCSS } from "../../standalone/studio/utils/studio-utils";
-import type { Client, ClientAsset, ClientFont, CanvasSessionSummary } from "@/app/(studio)/dashboard/types";
+import type { Client } from "@/app/(studio)/dashboard/types";
 import { updateClientAction } from "@/app/(studio)/dashboard/actions/clients";
 
-interface ClientDetailClientProps {
+interface ClientDetailHeaderFormProps {
   client: Client;
-  assets: ClientAsset[];
-  frames: ClientAsset[];
-  fonts: ClientFont[];
   variants: string[];
-  canvasSessions: CanvasSessionSummary[];
+  clientId: string;
+  /** Renders in the grid second column (Assets card) */
+  galleryAssetsSlot: React.ReactNode;
+  /** Renders below the grid (Frames, Fonts, Sessions) */
+  galleryRestSlot: React.ReactNode;
 }
 
-export function ClientDetailClient({
+export function ClientDetailHeaderForm({
   client,
-  assets,
-  frames,
-  fonts,
-  variants,
-  canvasSessions,
-}: ClientDetailClientProps) {
+  clientId,
+  galleryAssetsSlot,
+  galleryRestSlot,
+}: ClientDetailHeaderFormProps) {
   const router = useRouter();
   const [name, setName] = useState(client.name);
   const [email, setEmail] = useState(client.email ?? "");
@@ -42,53 +36,10 @@ export function ClientDetailClient({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load Google/Custom fonts for preview (client-side only)
-  if (typeof document !== "undefined" && fonts.length > 0) {
-    const googleFonts = fonts.filter((f) => f.font_source === "google");
-    const customFonts = fonts.filter((f) => f.font_source === "custom");
-    if (googleFonts.length > 0) {
-      const googleFontsData = googleFonts.map((f) => ({
-        family: f.font_family,
-        weights: f.font_weights || ["400"],
-      }));
-      const googleFontsUrl = getGoogleFontsUrl(googleFontsData);
-      if (googleFontsUrl) {
-        let link = document.querySelector(`link[data-google-fonts]`) as HTMLLinkElement;
-        if (!link) {
-          link = document.createElement("link");
-          link.rel = "stylesheet";
-          link.setAttribute("data-google-fonts", "true");
-          document.head.appendChild(link);
-        }
-        link.href = googleFontsUrl;
-      }
-    }
-    if (customFonts.length > 0) {
-      let style = document.querySelector(`style[data-custom-fonts]`) as HTMLStyleElement;
-      if (!style) {
-        style = document.createElement("style");
-        style.setAttribute("data-custom-fonts", "true");
-        document.head.appendChild(style);
-      }
-      const fontFaceCSS = customFonts
-        .map((font) => {
-          if (!font.file_url) return "";
-          return (font.font_weights || [])
-            .map((weight: string) =>
-              generateFontFaceCSS(font.font_family, font.file_url!, weight)
-            )
-            .join("\n");
-        })
-        .filter(Boolean)
-        .join("\n");
-      style.textContent = fontFaceCSS;
-    }
-  }
-
   const handleSave = async () => {
     setError(null);
     setSaving(true);
-    const result = await updateClientAction(client.id, {
+    const result = await updateClientAction(clientId, {
       name,
       email,
       description: description || null,
@@ -245,57 +196,9 @@ export function ClientDetailClient({
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">
-              Client Assets
-            </h2>
-            <AssetGallery
-              clientId={client.id}
-              assets={assets}
-              variants={variants}
-              onRefresh={() => router.refresh()}
-            />
-          </div>
+          <div className="min-h-[200px]">{galleryAssetsSlot}</div>
         </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            Client Frames
-          </h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Frame images overlaid on the canvas. Choose one or more aspect ratios (or &quot;All&quot;) per frame so it appears when the canvas matches those formats.
-          </p>
-          <FrameGallery
-            clientId={client.id}
-            frames={frames}
-            onRefresh={() => router.refresh()}
-          />
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">
-            Client Fonts
-          </h2>
-          <FontGallery
-            clientId={client.id}
-            fonts={fonts}
-            onRefresh={() => router.refresh()}
-          />
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            Canvas Sessions
-          </h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Saved editor sessions for this client. Each session stores the canvas overlays and can be reopened in the editor.
-          </p>
-          <CanvasSessionGallery
-            clientId={client.id}
-            sessions={canvasSessions}
-            onRefresh={() => router.refresh()}
-          />
-        </div>
+        {galleryRestSlot}
       </div>
     </div>
   );

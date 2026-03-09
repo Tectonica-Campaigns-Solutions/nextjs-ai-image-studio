@@ -3,8 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { isAdmin } from "../utils/admin-utils";
+import { getCurrentUserWithRole } from "../utils/admin-utils";
 import { redirect } from "next/navigation";
 
 type AdminLoginPageProps = {
@@ -17,17 +16,9 @@ export default async function AdminLoginPage({
   const params = await searchParams;
   const error = params.error;
 
-  // If the user is already authenticated and is admin, redirect to the panel
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    const admin = await isAdmin();
-    if (admin) {
-      redirect("/dashboard/clients");
-    }
+  const { user, isAdmin } = await getCurrentUserWithRole();
+  if (user && isAdmin) {
+    redirect("/dashboard/clients");
   }
 
   return (

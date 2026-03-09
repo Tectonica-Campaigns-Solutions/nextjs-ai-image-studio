@@ -167,14 +167,18 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex items-center gap-2">
                           <h3 className="truncate text-lg font-semibold text-foreground">
-                            {admin.email && admin.email !== "N/A"
-                              ? admin.email
-                              : "Email not available"}
+                            {admin.display_name?.trim() ||
+                              (admin.email && admin.email !== "N/A"
+                                ? admin.email
+                                : "Email not available")}
                           </h3>
                           {isCurrentUser && (
                             <span className="text-muted-foreground text-xs">(You)</span>
                           )}
                         </div>
+                        {admin.email && admin.email !== "N/A" && admin.display_name?.trim() && (
+                          <p className="text-muted-foreground text-xs mb-1">{admin.email}</p>
+                        )}
                         {admin.granted_by_email && (
                           <p className="text-muted-foreground mb-2 text-xs">
                             Created by: {admin.granted_by_email}
@@ -187,7 +191,6 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                             variant="ghost"
                             size="icon"
                             className="size-8"
-                            disabled={isCurrentUser}
                             aria-label="Open actions menu"
                           >
                             <MoreVertical className="size-4" />

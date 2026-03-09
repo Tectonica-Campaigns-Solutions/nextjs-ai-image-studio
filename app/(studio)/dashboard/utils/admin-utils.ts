@@ -1,11 +1,12 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 /**
- * Check if the current user has admin role
+ * Check if the current user has admin role. Cached per request.
  * @returns true if the user is admin, false otherwise
  */
-export async function isAdmin(): Promise<boolean> {
+export const isAdmin = cache(async (): Promise<boolean> => {
   try {
     const supabase = await createClient();
     const {
@@ -45,16 +46,16 @@ export async function isAdmin(): Promise<boolean> {
     console.error("Error in isAdmin:", error);
     return false;
   }
-}
+});
 
 /**
- * Requires that the user be admin, returns error 403 if not
- * Useful to use in API routes
+ * Requires that the user be admin, returns error 403 if not.
+ * Useful to use in API routes. Cached per request so multiple callers share one auth check.
  */
-export async function requireAdmin(): Promise<
+export const requireAdmin = cache(async (): Promise<
   | { success: true; user: { id: string } }
   | { success: false; response: NextResponse }
-> {
+> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -80,13 +81,16 @@ export async function requireAdmin(): Promise<
   }
 
   return { success: true, user: { id: user.id } };
-}
+});
 
 /**
- * Gets the current user and checks if they are admin
- * Returns both the user and the admin status
+ * Gets the current user and checks if they are admin in a single pass.
+ * One createClient, one getUser, one user_roles query (no call to isAdmin).
  */
-export async function getCurrentUserWithRole() {
+export async function getCurrentUserWithRole(): Promise<{
+  user: { id: string } | null;
+  isAdmin: boolean;
+}> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -97,6 +101,18 @@ export async function getCurrentUserWithRole() {
     return { user: null, isAdmin: false };
   }
 
-  const admin = await isAdmin();
-  return { user, isAdmin: admin };
+  const { data: role, error } = await supabase
+    .from("user_roles")
+    .select("role, expires_at")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error || !role) {
+    return { user: { id: user.id }, isAdmin: false };
+  }
+
+  const notExpired = !role.expires_at || new Date(role.expires_at) > new Date();
+  return { user: { id: user.id }, isAdmin: notExpired };
 }

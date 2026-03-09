@@ -122,7 +122,7 @@ export function CanvasSessionGallery({
             <div className="p-3 flex flex-col gap-2 flex-1">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-800 truncate">
-                  {session.name ?? "Sin nombre"}
+                  {session.name ?? "Untitled"}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {formatDate(session.updated_at)}
@@ -153,7 +153,7 @@ export function CanvasSessionGallery({
                     variant="outline"
                     size="sm"
                     className="h-8 w-8 p-0"
-                    title="Abrir en editor"
+                    title="Open in editor"
                   >
                     <ExternalLink className="size-3" />
                   </Button>
@@ -166,25 +166,25 @@ export function CanvasSessionGallery({
                       size="sm"
                       className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
                       disabled={deletingId === session.id}
-                      title="Eliminar sesión"
+                      title="Delete session"
                     >
                       <Trash2 className="size-3" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar sesión?</AlertDialogTitle>
+                      <AlertDialogTitle>Delete session?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta acción eliminará la sesión &ldquo;{session.name ?? "Sin nombre"}&rdquo;. No se puede deshacer.
+                        This will permanently delete the session &ldquo;{session.name ?? "Untitled"}&rdquo;. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-red-600 hover:bg-red-700 text-white"
                         onClick={() => handleDelete(session.id)}
                       >
-                        Eliminar
+                        Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -204,7 +204,7 @@ export function CanvasSessionGallery({
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between gap-4 pr-6">
               <span className="truncate">
-                {viewingSession?.name ?? "Sin nombre"} — overlay_json
+                {viewingSession?.name ?? "Untitled"} — overlay_json
               </span>
               {viewingSession && (
                 <CopyButton

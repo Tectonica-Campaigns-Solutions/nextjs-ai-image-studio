@@ -1,12 +1,8 @@
-import { notFound } from "next/navigation";
-import {
-  getClientById,
-  getClientAssets,
-  getClientFonts,
-  getClientVariants,
-  getClientCanvasSessions,
-} from "@/app/(studio)/dashboard/data/clients";
-import { ClientDetailClient } from "@/app/(studio)/dashboard/components/client-detail-client";
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
+import { ClientDetailHeaderSection } from "@/app/(studio)/dashboard/components/client-detail-header-section";
+import ClientDetailLoading from "./loading";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,27 +10,15 @@ interface PageProps {
 
 export default async function ClientDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [client, assets, frames, fonts, variants, canvasSessions] = await Promise.all([
-    getClientById(id),
-    getClientAssets(id, "logo"),
-    getClientAssets(id, "frame"),
-    getClientFonts(id),
-    getClientVariants(id),
-    getClientCanvasSessions(id),
-  ]);
 
-  if (client === null) {
-    notFound();
+  const auth = await requireAdmin();
+  if (!auth.success) {
+    redirect("/dashboard/login?error=admin_required");
   }
 
   return (
-    <ClientDetailClient
-      client={client}
-      assets={assets ?? []}
-      frames={frames ?? []}
-      fonts={fonts ?? []}
-      variants={variants ?? []}
-      canvasSessions={canvasSessions ?? []}
-    />
+    <Suspense fallback={<ClientDetailLoading />}>
+      <ClientDetailHeaderSection clientId={id} />
+    </Suspense>
   );
 }

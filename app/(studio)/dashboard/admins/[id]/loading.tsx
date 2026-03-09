@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function AdminLoading() {
+export default function AdminDetailLoading() {
   return (
     <div
       className={cn(
@@ -9,7 +9,7 @@ export default function AdminLoading() {
         "pb-[env(safe-area-inset-bottom)]"
       )}
       aria-busy="true"
-      aria-label="Loading"
+      aria-label="Loading admin"
     >
       <Loader2
         className="size-10 animate-spin text-muted-foreground"

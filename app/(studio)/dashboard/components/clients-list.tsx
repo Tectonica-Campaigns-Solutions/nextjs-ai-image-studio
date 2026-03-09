@@ -10,7 +10,6 @@ import {
   Search,
   Edit,
   Trash2,
-  Image as ImageIcon,
   MoreVertical,
 } from "lucide-react";
 import {
@@ -187,16 +186,7 @@ export function ClientsList({ initialClients }: ClientsListProps) {
                           }}
                         >
                           <Edit className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/dashboard/clients/${client.id}`);
-                          }}
-                        >
-                          <ImageIcon className="h-4 w-4 mr-2" />
-                          View Assets
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e) => {
