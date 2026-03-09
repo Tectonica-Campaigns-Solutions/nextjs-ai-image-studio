@@ -461,6 +461,19 @@ export default function ImageEditorStandalone({
     event.target.value = "";
   };
 
+  // Select layer from Layers panel (sync canvas active object and selection state)
+  // Declared here so hooks order is stable; only render path changes below.
+  const handleSelectLayer = useCallback(
+    (obj: any) => {
+      const c = canvasRefStable.current;
+      if (!c) return;
+      c.setActiveObject(obj);
+      c.renderAll();
+      selection.setSelectedObject(obj);
+    },
+    [selection.setSelectedObject]
+  );
+
   // Handle export click
   const handleExportClick = () => {
     setShowDisclaimerModal(true);
@@ -1009,24 +1022,7 @@ export default function ImageEditorStandalone({
     }
   };
 
-  // Show upload prompt if no image
-  if (showUploadPrompt) {
-    return <UploadPromptCard onFileChange={handleImageUpload} />;
-  }
-
-  // Select layer from Layers panel (sync canvas active object and selection state)
-  const handleSelectLayer = useCallback(
-    (obj: any) => {
-      const c = canvasRefStable.current;
-      if (!c) return;
-      c.setActiveObject(obj);
-      c.renderAll();
-      selection.setSelectedObject(obj);
-    },
-    [selection.setSelectedObject]
-  );
-
-  // Render panels with memoization
+  // Render panels with memoization (all hooks must run every render; conditional return is at the end)
   const layersToolsPanel = useMemo(
     () =>
       FEATURE_FLAGS.showLayersPanel && canvasEditor.canvas ? (
@@ -1222,6 +1218,10 @@ export default function ImageEditorStandalone({
     ),
     [isShapeSelected, shapeTools]
   );
+
+  if (showUploadPrompt) {
+    return <UploadPromptCard onFileChange={handleImageUpload} />;
+  }
 
   return (
     <div

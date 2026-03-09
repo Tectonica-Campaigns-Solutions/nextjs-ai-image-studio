@@ -220,7 +220,7 @@ export const GUIDES = {
   DEFAULT_GRID_SIZE: 25,
   GUIDE_COLOR: "rgba(92, 56, 243, 0.6)",
   GUIDE_WIDTH: 1,
-  GRID_COLOR: "rgba(255, 255, 255, 0.08)",
+  GRID_COLOR: "rgba(255, 255, 255, 1)",
   GRID_WIDTH: 1,
 } as const;
 
@@ -235,5 +235,5 @@ export const FEATURE_FLAGS = {
   showFrameTools: true,
   showEditWithAI: true,
   showLayersPanel: true,
-  showGuidesAndGrid: false,
+  showGuidesAndGrid: true,
 } as const;

@@ -22,7 +22,7 @@ export function CanvasGuidesOverlay({
 
   return (
     <div
-      className="absolute left-0 top-0 pointer-events-none z-[1]"
+      className="absolute left-0 top-0 pointer-events-none z-10"
       style={{ width, height }}
       aria-hidden
     >
