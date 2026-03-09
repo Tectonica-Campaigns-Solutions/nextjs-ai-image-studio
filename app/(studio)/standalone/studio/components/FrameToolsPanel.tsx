@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -107,11 +108,12 @@ export const FrameToolsPanel = React.memo(function FrameToolsPanel({
                   backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
                 }}
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={asset.url}
                 alt={asset.display_name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+                fill
+                sizes="(max-width: 400px) 50vw, 200px"
+                className="object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <p className="text-white text-[10px] font-medium leading-tight truncate font-(family-name:--font-manrope)">
