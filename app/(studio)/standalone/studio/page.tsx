@@ -1,7 +1,6 @@
 import { Suspense } from "react";
-import ImageEditorStandalone from "./image-editor-standalone";
-import { getEditorAssetsForUser } from "./lib/get-editor-assets";
-import { getCanvasSession } from "./lib/get-canvas-session";
+import { StudioLoading } from "./studio-loading";
+import StudioEditorLoader from "./studio-editor-loader";
 
 type StudioPageProps = {
   searchParams: Promise<{
@@ -11,24 +10,10 @@ type StudioPageProps = {
   }>;
 };
 
-export default async function StudioPage({ searchParams }: StudioPageProps) {
-  const params = await searchParams;
-
-  const [{ logoAssets, fontAssets, frameAssets, allowCustomLogo }, sessionData] = await Promise.all([
-    getEditorAssetsForUser(params.user_id),
-    params.session_id ? getCanvasSession(params.session_id) : Promise.resolve(null),
-  ]);
-
+export default function StudioPage({ searchParams }: StudioPageProps) {
   return (
-    <Suspense fallback={<>...</>}>
-      <ImageEditorStandalone
-        params={params}
-        logoAssets={logoAssets}
-        frameAssets={frameAssets}
-        fontAssets={fontAssets}
-        sessionData={sessionData}
-        allowCustomLogo={allowCustomLogo}
-      />
+    <Suspense fallback={<StudioLoading />}>
+      <StudioEditorLoader searchParams={searchParams} />
     </Suspense>
   );
 }

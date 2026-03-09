@@ -12,8 +12,8 @@ export interface UploadPromptCardProps {
 export function UploadPromptCard({ onFileChange }: UploadPromptCardProps) {
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-[#0D0D0D]">
-      <Card className="w-96 shadow-xl bg-[#191919] border-none">
-        <CardContent className="p-8 text-center space-y-6">
+      <Card className="w-96 shadow-xl !bg-[#191919] border-none p-0">
+        <CardContent className="p-8 text-center space-y-6 bg-[#191919]">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto">
             <ImageIcon className="w-8 h-8 text-white" />
           </div>
