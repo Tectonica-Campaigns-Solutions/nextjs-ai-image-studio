@@ -161,7 +161,7 @@ export function validateFontFile(file: File): {
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: `Tipo de archivo no permitido. Tipos permitidos: ${allowedTypes.join(
+      error: `File type not allowed. Allowed types: ${allowedTypes.join(
         ", "
       )}`,
     };
@@ -172,7 +172,7 @@ export function validateFontFile(file: File): {
   if (!fileExt || !allowedExtensions.includes(fileExt)) {
     return {
       valid: false,
-      error: `Extensión de archivo no permitida. Extensiones permitidas: ${allowedExtensions.join(
+      error: `File extension not allowed. Allowed extensions: ${allowedExtensions.join(
         ", "
       )}`,
     };
@@ -182,7 +182,7 @@ export function validateFontFile(file: File): {
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: `Archivo demasiado grande. Tamaño máximo: ${
+      error: `File too large. Maximum size: ${
         MAX_FILE_SIZE / 1024 / 1024
       }MB`,
     };

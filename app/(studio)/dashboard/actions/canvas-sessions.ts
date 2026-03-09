@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { isValidUUID } from "@/app/(studio)/dashboard/schemas/params";
 
@@ -16,7 +16,7 @@ export async function deleteCanvasSessionAction(
   if (!isValidUUID(clientId) || !isValidUUID(sessionId))
     return { error: "Invalid ID" };
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: session, error: fetchError } = await supabase
     .from("client_canvas_sessions")
     .select("id")

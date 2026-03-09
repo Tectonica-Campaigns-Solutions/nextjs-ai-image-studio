@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const caUserId = searchParams.get("ca_user_id");
+  const backgroundUrl = searchParams.get("background_url") ?? undefined;
 
   if (!caUserId?.trim()) {
     return NextResponse.json(
@@ -14,7 +15,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = await listSessions(caUserId.trim());
+  const result = await listSessions(caUserId.trim(), {
+    ...(backgroundUrl ? { background_url: backgroundUrl } : {}),
+  });
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }

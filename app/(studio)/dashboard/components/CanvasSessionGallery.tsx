@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Trash2, Code, Copy, Check, ExternalLink } from "lucide-react";
+import { Trash2, Code, Copy, Check, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +19,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { CanvasSessionSummary } from "@/app/(studio)/dashboard/types";
 import { deleteCanvasSessionAction } from "@/app/(studio)/dashboard/actions/canvas-sessions";
@@ -31,7 +30,7 @@ interface CanvasSessionGalleryProps {
 }
 
 function formatDate(dateStr: string) {
-  return new Intl.DateTimeFormat("es", {
+  return new Intl.DateTimeFormat("en", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -76,18 +75,20 @@ export function CanvasSessionGallery({
 }: CanvasSessionGalleryProps) {
   const [viewingSession, setViewingSession] = useState<CanvasSessionSummary | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogSessionId, setDeleteDialogSessionId] = useState<string | null>(null);
 
   const handleDelete = async (sessionId: string) => {
     setDeletingId(sessionId);
     await deleteCanvasSessionAction(clientId, sessionId);
     setDeletingId(null);
+    setDeleteDialogSessionId(null);
     onRefresh();
   };
 
   if (sessions.length === 0) {
     return (
       <p className="text-sm text-gray-500 py-4">
-        No hay sesiones de canvas guardadas para este cliente.
+        No canvas sessions saved for this client.
       </p>
     );
   }
@@ -113,7 +114,7 @@ export function CanvasSessionGallery({
               ) : (
                 <div className="flex flex-col items-center gap-1 text-gray-400">
                   <Code className="size-8" />
-                  <span className="text-xs">Sin preview</span>
+                  <span className="text-xs">No preview</span>
                 </div>
               )}
             </div>
@@ -141,7 +142,7 @@ export function CanvasSessionGallery({
                   onClick={() => setViewingSession(session)}
                 >
                   <Code className="size-3" />
-                  Ver JSON
+                  View JSON
                 </Button>
 
                 <a
@@ -159,18 +160,25 @@ export function CanvasSessionGallery({
                   </Button>
                 </a>
 
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
-                      disabled={deletingId === session.id}
-                      title="Delete session"
-                    >
+                <AlertDialog
+                  open={deleteDialogSessionId === session.id}
+                  onOpenChange={(open) => { if (!open) setDeleteDialogSessionId(null); }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                    disabled={deletingId === session.id}
+                    title="Delete session"
+                    onClick={() => setDeleteDialogSessionId(session.id)}
+                  >
+                    {deletingId === session.id ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
                       <Trash2 className="size-3" />
-                    </Button>
-                  </AlertDialogTrigger>
+                    )}
+                  </Button>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete session?</AlertDialogTitle>
@@ -179,12 +187,25 @@ export function CanvasSessionGallery({
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel disabled={deletingId === session.id}>
+                        Cancel
+                      </AlertDialogCancel>
                       <AlertDialogAction
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                        onClick={() => handleDelete(session.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                        disabled={deletingId === session.id}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await handleDelete(session.id);
+                        }}
                       >
-                        Delete
+                        {deletingId === session.id ? (
+                          <>
+                            <Loader2 className="size-3 animate-spin shrink-0" />
+                            <span>Deleting…</span>
+                          </>
+                        ) : (
+                          "Delete"
+                        )}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

@@ -1,11 +1,17 @@
 export { DisclaimerModal } from "./DisclaimerModal";
 export { EditorSidebar } from "./EditorSidebar";
+export { LayersPanel } from "./LayersPanel";
+export { AlignmentPopover } from "./AlignmentPopover";
+export { CanvasGuidesOverlay } from "./CanvasGuidesOverlay";
+export { GuidesAndGridPanel } from "./GuidesAndGridPanel";
 export { AIEditPanel } from "./AIEditPanel";
 export { EditorToolbar } from "./EditorToolbar";
 export { FeedbackButton, FeedbackButtonInline } from "./FeedbackButton";
 export { FrameToolsPanel } from "./FrameToolsPanel";
 export { LogoToolsPanel } from "./LogoToolsPanel";
 export { QrToolsPanel } from "./QrToolsPanel";
+export { SaveSessionModal } from "./SaveSessionModal";
+export { SessionsListPanel } from "./SessionsListPanel";
 export { ShapeToolsPanel } from "./ShapeToolsPanel";
 export { TextToolsPanel } from "./TextToolsPanel";
 export { UploadPromptCard } from "./UploadPromptCard";

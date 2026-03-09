@@ -57,7 +57,7 @@ export function AssetUpload({
       return;
     }
 
-    // Validar tamaño (10MB)
+    // Validate size (10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
       setError("File is too large. Maximum size: 10MB");
       return;
@@ -100,7 +100,7 @@ export function AssetUpload({
     };
     reader.readAsDataURL(selectedFile);
 
-    // Auto-completar nombre si está vacío
+    // Auto-fill name if empty
     if (!name) {
       setName(selectedFile.name.replace(/\.[^/.]+$/, ""));
     }

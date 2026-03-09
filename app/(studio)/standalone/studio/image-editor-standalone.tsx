@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Text, Group, Shadow, Rect } from "fabric";
+import { Text, Group, Shadow, Rect, ActiveSelection } from "fabric";
 import { TectonicaLogo } from "./components/editor-icons";
 import {
   DisclaimerModal,
@@ -10,13 +10,20 @@ import {
   EditorToolbar,
   FeedbackButton,
   AIEditPanel,
+  AlignmentPopover,
+  CanvasGuidesOverlay,
   FrameToolsPanel,
+  GuidesAndGridPanel,
+  LayersPanel,
   LogoToolsPanel,
   QrToolsPanel,
+  SaveSessionModal,
+  SessionsListPanel,
   ShapeToolsPanel,
   TextToolsPanel,
   UploadPromptCard,
 } from "./components";
+import type { SessionSummary } from "./components/SessionsListPanel";
 import type {
   ExportConfig,
   ImageEditorStandaloneProps,
@@ -34,6 +41,7 @@ import { useQRTools } from "./hooks/use-qr-tools";
 import { useLogoTools } from "./hooks/use-logo-tools";
 import { useFrameTools } from "./hooks/use-frame-tools";
 import { useShapeTools } from "./hooks/use-shape-tools";
+import { useAlignmentTools } from "./hooks/use-alignment-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
@@ -69,6 +77,11 @@ export default function ImageEditorStandalone({
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
+  const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+
+  // Sessions list for current image (saved versions)
+  const [sessionsForImage, setSessionsForImage] = useState<SessionSummary[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState<boolean>(false);
 
   // Feedback state
   const [isFetchingFeedback, setIsFetchingFeedback] = useState<boolean>(false);
@@ -89,6 +102,14 @@ export default function ImageEditorStandalone({
     left: number;
     top: number;
   } | null>(null);
+
+  // Guides and grid
+  const [showGrid, setShowGrid] = useState(false);
+  const [guidePositions, setGuidePositions] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
+  const guidePositionsRef = useRef<{ v: number[]; h: number[] } | null>(null);
+  useEffect(() => {
+    guidePositionsRef.current = guidePositions;
+  }, [guidePositions]);
 
   // Determine image URL
   const imageUrl = imageUrlFromParams || uploadedImageUrl;
@@ -231,6 +252,7 @@ export default function ImageEditorStandalone({
       const pos = computeMenuPosition(obj, canvas);
       if (pos) setSelectionContextMenuPosition(pos);
     },
+    guidePositionsRef,
   });
 
   const frameTools = useFrameTools({
@@ -239,6 +261,8 @@ export default function ImageEditorStandalone({
     aspectRatio: canvasEditor.aspectRatio,
     saveStateRef,
   });
+
+  const alignmentTools = useAlignmentTools(canvasRefStable);
 
   // Keep setFrameOpacityRef in sync so the canvas hook can call it
   useEffect(() => {
@@ -595,38 +619,76 @@ export default function ImageEditorStandalone({
     setIsExporting(false);
   };
 
-  // Delete selected object
+  // Get objects from current selection (single object or ActiveSelection)
+  const getSelectedObjects = useCallback(() => {
+    const canvas = canvasEditor.canvas;
+    if (!canvas) return [];
+    const active = canvas.getActiveObject();
+    if (!active) return [];
+    if ((active as any).type === "activeSelection" && typeof (active as any).getObjects === "function") {
+      return (active as any).getObjects().filter((o: any) => !o.isBackground);
+    }
+    if ((active as any).isBackground) return [];
+    return [active];
+  }, [canvasEditor.canvas]);
+
+  // Delete selected object(s)
   const deleteSelected = () => {
-    if (!canvasEditor.canvas || !selection.selectedObject) return;
-    canvasEditor.canvas.remove(selection.selectedObject);
-    canvasEditor.canvas.renderAll();
+    const canvas = canvasEditor.canvas;
+    const objects = getSelectedObjects();
+    if (!canvas || objects.length === 0) return;
+    objects.forEach((obj: any) => canvas.remove(obj));
+    canvas.discardActiveObject();
+    canvas.renderAll();
+    selection.setSelectedObject(null);
     history.saveState(true);
   };
 
-  // Duplicate selected object (offset so it's visible)
+  // Duplicate selected object(s) (offset so visible)
   const duplicateSelected = useCallback(async () => {
     const canvas = canvasEditor.canvas;
-    const obj = selection.selectedObject;
-    if (!canvas || !obj || (obj as any).isBackground) return;
+    const objects = getSelectedObjects();
+    if (!canvas || objects.length === 0) return;
     try {
-      const clone = await (obj as any).clone();
-      const left = (obj.left ?? 0) + 20;
-      const top = (obj.top ?? 0) + 20;
-      clone.set({ left, top });
-      clone.setCoords();
-      constrainObjectToCanvas(clone, canvas);
-      canvas.add(clone);
-      canvas.setActiveObject(clone);
-      canvas.renderAll();
-      selection.setSelectedObject(clone);
+      if (objects.length === 1) {
+        const obj = objects[0];
+        const clone = await (obj as any).clone();
+        const left = (obj.left ?? 0) + 20;
+        const top = (obj.top ?? 0) + 20;
+        clone.set({ left, top });
+        clone.setCoords();
+        constrainObjectToCanvas(clone, canvas);
+        canvas.add(clone);
+        canvas.setActiveObject(clone);
+        canvas.renderAll();
+        selection.setSelectedObject(clone);
+      } else {
+        const clones: any[] = [];
+        const offset = 20;
+        for (const obj of objects as any[]) {
+          const clone = await (obj as any).clone();
+          clone.set({
+            left: (obj.left ?? 0) + offset,
+            top: (obj.top ?? 0) + offset,
+          });
+          clone.setCoords();
+          constrainObjectToCanvas(clone, canvas);
+          canvas.add(clone);
+          clones.push(clone);
+        }
+        const newSelection = new ActiveSelection(clones, { canvas });
+        canvas.setActiveObject(newSelection);
+        canvas.renderAll();
+        selection.setSelectedObject(newSelection);
+      }
       history.saveState(true);
     } catch (err) {
       console.error("[duplicateSelected]", err);
     }
-  }, [canvasEditor.canvas, selection.selectedObject, selection.setSelectedObject, history.saveState]);
+  }, [canvasEditor.canvas, getSelectedObjects, selection.setSelectedObject, history.saveState]);
 
-  // Save canvas session to database
-  const handleSave = async () => {
+  // Save canvas session to database (optionalName from SaveSessionModal when saving via modal)
+  const handleSave = async (optionalName?: string) => {
     if (!canvasEditor.canvas || !imageUrl) return;
     setIsSaving(true);
 
@@ -648,6 +710,8 @@ export default function ImageEditorStandalone({
         metadata: metadataToSave,
       };
       if (sessionId) body.session_id = sessionId;
+      const nameTrimmed = optionalName?.trim();
+      if (nameTrimmed) body.name = nameTrimmed;
 
       const res = await fetch("/api/studio/canvas-sessions", {
         method: "POST",
@@ -679,6 +743,7 @@ export default function ImageEditorStandalone({
         description: "Session saved successfully.",
         className: "bg-[#1a1a1a] border-[#333] text-white",
       });
+      setShowSaveModal(false);
 
       // Upload thumbnail to Supabase Storage in the background (non-blocking)
       const caUserIdForThumb = params.user_id ?? "";
@@ -700,6 +765,30 @@ export default function ImageEditorStandalone({
       }).catch((err) => {
         console.warn("[handleSave] thumbnail upload failed (non-critical):", err);
       });
+
+      // Refresh saved versions list after successful save
+      const bgUrl = currentBackgroundUrlRef.current ?? imageUrl;
+      if (caUserIdForThumb && bgUrl) {
+        try {
+          const listRes = await fetch(
+            `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserIdForThumb)}&background_url=${encodeURIComponent(bgUrl)}`
+          );
+          const listData = await listRes.json();
+          if (listRes.ok && Array.isArray(listData.sessions)) {
+            setSessionsForImage(
+              listData.sessions.map((s: { id: string; name: string | null; thumbnail_url: string | null; created_at: string; updated_at: string }) => ({
+                id: s.id,
+                name: s.name,
+                thumbnail_url: s.thumbnail_url,
+                created_at: s.created_at,
+                updated_at: s.updated_at,
+              }))
+            );
+          }
+        } catch {
+          // non-blocking
+        }
+      }
     } catch (err) {
       console.error("[handleSave] error:", err);
       toast({
@@ -712,6 +801,90 @@ export default function ImageEditorStandalone({
       setIsSaving(false);
     }
   };
+
+  // Fetch sessions for current image (saved versions panel)
+  const fetchSessionsForImage = useCallback(async () => {
+    const caUserId = params.user_id?.trim();
+    const bgUrl = currentBackgroundUrlRef.current ?? imageUrl;
+    if (!caUserId || !bgUrl) {
+      setSessionsForImage([]);
+      return;
+    }
+    setSessionsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}&background_url=${encodeURIComponent(bgUrl)}`
+      );
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.sessions)) {
+        setSessionsForImage(
+          data.sessions.map((s: { id: string; name: string | null; thumbnail_url: string | null; created_at: string; updated_at: string }) => ({
+            id: s.id,
+            name: s.name,
+            thumbnail_url: s.thumbnail_url,
+            created_at: s.created_at,
+            updated_at: s.updated_at,
+          }))
+        );
+      } else {
+        setSessionsForImage([]);
+      }
+    } catch {
+      setSessionsForImage([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, [params.user_id, imageUrl]);
+
+  useEffect(() => {
+    fetchSessionsForImage();
+  }, [fetchSessionsForImage]);
+
+  // Load a saved session into the canvas (from Saved versions panel)
+  const handleSelectSession = useCallback(
+    async (sessionIdToLoad: string) => {
+      const canvas = canvasEditor.canvas;
+      if (!canvas) return;
+      try {
+        const res = await fetch(`/api/studio/canvas-sessions/${sessionIdToLoad}`);
+        const session = await res.json();
+        if (!res.ok || session.error) {
+          toast({
+            title: "Could not load session",
+            description: session.error ?? "Session not found.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const overlayJSON = JSON.stringify(session.overlay_json ?? { version: "5.3.0", objects: [] });
+        const objects = canvas.getObjects();
+        for (let i = objects.length - 1; i >= 1; i--) {
+          canvas.remove(objects[i]);
+        }
+        await history.loadOverlaysFromJSON(canvas, overlayJSON);
+        history.applyEntryMetadataToCanvas({
+          overlayJSON,
+          metadata: session.metadata ?? {},
+        } as any);
+        canvas.discardActiveObject();
+        canvas.renderAll();
+        history.saveState(true);
+        setSessionId(sessionIdToLoad);
+        selection.setSelectedObject(null);
+        const url = new URL(window.location.href);
+        url.searchParams.set("session_id", sessionIdToLoad);
+        window.history.replaceState({}, "", url.toString());
+      } catch (err) {
+        console.error("[handleSelectSession]", err);
+        toast({
+          title: "Could not load session",
+          description: "An unexpected error occurred.",
+          variant: "destructive",
+        });
+      }
+    },
+    [canvasEditor.canvas, history, selection.setSelectedObject]
+  );
 
   // Edit background with AI
   const handleAIEdit = useCallback(
@@ -841,7 +1014,37 @@ export default function ImageEditorStandalone({
     return <UploadPromptCard onFileChange={handleImageUpload} />;
   }
 
+  // Select layer from Layers panel (sync canvas active object and selection state)
+  const handleSelectLayer = useCallback(
+    (obj: any) => {
+      const c = canvasRefStable.current;
+      if (!c) return;
+      c.setActiveObject(obj);
+      c.renderAll();
+      selection.setSelectedObject(obj);
+    },
+    [selection.setSelectedObject]
+  );
+
   // Render panels with memoization
+  const layersToolsPanel = useMemo(
+    () =>
+      FEATURE_FLAGS.showLayersPanel && canvasEditor.canvas ? (
+        <LayersPanel
+          canvasRef={canvasRefStable}
+          selectedObject={selection.selectedObject}
+          onSelectLayer={handleSelectLayer}
+          onSaveState={history.saveState}
+        />
+      ) : null,
+    [
+      canvasEditor.canvas,
+      selection.selectedObject,
+      handleSelectLayer,
+      history.saveState,
+    ]
+  );
+
   const textToolsPanel = useMemo(
     () => (
       <TextToolsPanel
@@ -945,7 +1148,62 @@ export default function ImageEditorStandalone({
     [frameTools, canvasEditor.aspectRatio, isFrameSelected]
   );
 
+  const guidesAndGridPanel = useMemo(
+    () =>
+      FEATURE_FLAGS.showGuidesAndGrid ? (
+        <GuidesAndGridPanel
+          showGrid={showGrid}
+          onShowGridChange={setShowGrid}
+          guidePositions={guidePositions}
+          onAddCenterGuides={() => {
+            const w = canvasEditor.canvasDimensions?.width ?? 0;
+            const h = canvasEditor.canvasDimensions?.height ?? 0;
+            if (w <= 0 || h <= 0) return;
+            setGuidePositions((prev) => ({
+              v: [...prev.v, w / 2],
+              h: [...prev.h, h / 2],
+            }));
+          }}
+          onClearGuides={() => setGuidePositions({ v: [], h: [] })}
+          canvasWidth={canvasEditor.canvasDimensions?.width ?? 0}
+          canvasHeight={canvasEditor.canvasDimensions?.height ?? 0}
+        />
+      ) : null,
+    [
+      showGrid,
+      guidePositions,
+      canvasEditor.canvasDimensions?.width,
+      canvasEditor.canvasDimensions?.height,
+    ]
+  );
+
   const isShapeSelected = shapeTools.isShapeSelected(selection.selectedObject);
+
+  const alignmentSlot = useMemo(
+    () => (
+      <AlignmentPopover
+        onAlign={(option) => {
+          alignmentTools.runAlign(option);
+          history.saveState(true);
+        }}
+        selectedObject={selection.selectedObject}
+      />
+    ),
+    [alignmentTools.runAlign, history.saveState, selection.selectedObject]
+  );
+
+  const sessionsListPanel = useMemo(
+    () =>
+      params.user_id ? (
+        <SessionsListPanel
+          sessions={sessionsForImage}
+          currentSessionId={sessionId}
+          onSelectSession={handleSelectSession}
+          isLoading={sessionsLoading}
+        />
+      ) : null,
+    [params.user_id, sessionsForImage, sessionId, handleSelectSession, sessionsLoading]
+  );
 
   const shapeToolsPanel = useMemo(
     () => (
@@ -978,12 +1236,15 @@ export default function ImageEditorStandalone({
           <div className="md:w-[400px] w-full overflow-y-auto themed-scrollbar md:pr-3 md:h-full md:min-h-0 md:self-start  flex flex-col justify-between">
             <div>
               <EditorSidebar
+                layersToolsPanel={layersToolsPanel}
                 textToolsPanel={FEATURE_FLAGS.showTextTools ? textToolsPanel : null}
                 aiEditPanel={FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null}
                 logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}
                 qrToolsPanel={FEATURE_FLAGS.showQrTools ? qrToolsPanel : null}
                 shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
                 frameToolsPanel={FEATURE_FLAGS.showFrameTools ? frameToolsPanel : null}
+                guidesAndGridPanel={guidesAndGridPanel}
+                sessionsListPanel={sessionsListPanel}
                 activeTab={mobilePanel.activeTab}
                 handleTabClick={mobilePanel.handleTabClick}
                 isPanelVisible={mobilePanel.isPanelVisible}
@@ -1011,6 +1272,14 @@ export default function ImageEditorStandalone({
             <div className="mb-5">
               <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-start">
                 <canvas ref={canvasEditor.canvasRef} />
+                {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
+                  <CanvasGuidesOverlay
+                    width={canvasEditor.canvasDimensions.width}
+                    height={canvasEditor.canvasDimensions.height}
+                    showGrid={showGrid}
+                    guidePositions={guidePositions}
+                  />
+                )}
                 {rotationTooltip !== null && (
                   <div
                     className="pointer-events-none absolute z-10 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white tabular-nums"
@@ -1082,6 +1351,8 @@ export default function ImageEditorStandalone({
                 selectedObject={selection.selectedObject}
                 showSaveButton={FEATURE_FLAGS.showSaveCanvas}
                 variant="mobile"
+                alignmentSlot={alignmentSlot}
+                onSaveClick={() => setShowSaveModal(true)}
               />
             )}
           </div>
@@ -1097,7 +1368,9 @@ export default function ImageEditorStandalone({
             historyState={history.historyState}
             selectedObject={selection.selectedObject}
             showSaveButton={FEATURE_FLAGS.showSaveCanvas}
-            variant="desktop"
+                variant="desktop"
+            alignmentSlot={alignmentSlot}
+            onSaveClick={() => setShowSaveModal(true)}
           />
         </div>
       </div>
@@ -1109,6 +1382,13 @@ export default function ImageEditorStandalone({
           feedbackText={feedbackText}
         />
       )}
+
+      <SaveSessionModal
+        open={showSaveModal}
+        onOpenChange={setShowSaveModal}
+        onConfirm={(name) => handleSave(name)}
+        isSaving={isSaving}
+      />
 
       <DisclaimerModal
         open={showDisclaimerModal}

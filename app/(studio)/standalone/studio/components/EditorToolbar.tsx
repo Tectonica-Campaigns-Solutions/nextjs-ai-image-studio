@@ -22,6 +22,10 @@ export interface EditorToolbarProps {
   variant: "mobile" | "desktop";
   /** When false, hide the Save canvas button. Default true. */
   showSaveButton?: boolean;
+  /** Optional alignment popover (e.g. <AlignmentPopover ... />) to show when selection exists */
+  alignmentSlot?: React.ReactNode;
+  /** When provided, Save button opens this callback (e.g. to show save modal) instead of calling handleSave directly */
+  onSaveClick?: () => void;
 }
 
 const UndoIcon = () => (
@@ -65,6 +69,8 @@ export function EditorToolbar({
   selectedObject,
   variant,
   showSaveButton = true,
+  alignmentSlot,
+  onSaveClick,
 }: EditorToolbarProps) {
   const undoDisabled = historyState.currentIndex <= 0;
   const redoDisabled =
@@ -102,9 +108,10 @@ export function EditorToolbar({
         >
           <DeleteIcon size={22} />
         </Button>
+        {alignmentSlot}
         {showSaveButton && (
           <Button
-            onClick={handleSave}
+            onClick={onSaveClick ?? handleSave}
             disabled={isSaving}
             className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed flex-1 md:flex-none transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
           >
@@ -168,11 +175,12 @@ export function EditorToolbar({
       >
         <DeleteIcon size={17} />
       </Button>
+      {alignmentSlot}
       {showSaveButton && (
         <Button
           variant="outline"
           size="sm"
-          onClick={handleSave}
+          onClick={onSaveClick ?? handleSave}
           disabled={isSaving}
           className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
         >

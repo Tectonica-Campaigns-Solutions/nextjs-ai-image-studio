@@ -163,3 +163,13 @@ export function TextAlignRightIcon() {
     <path d="M4.125 4.125H13.75V5.5H4.125V4.125ZM6.875 8.25H13.75V9.625H6.875V8.25ZM4.125 12.375H13.75V13.75H4.125V12.375ZM6.875 16.5H13.75V17.875H6.875V16.5ZM16.5 2.75H17.875V19.25H16.5V2.75Z" fill="white" />
   </svg>
 }
+
+export function LayersItem() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M2 11L8 14L14 11" stroke="#8B9DC3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 8L8 11L14 8" stroke="#8B9DC3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 5L8 8L14 5L8 2L2 5Z" stroke="#8B9DC3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

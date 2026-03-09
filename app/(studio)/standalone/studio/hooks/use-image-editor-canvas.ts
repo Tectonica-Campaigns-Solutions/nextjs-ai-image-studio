@@ -11,7 +11,7 @@ import {
 import { loadImageWithCORS } from "../utils/image-editor-utils";
 import { getCustomControlRenderers } from "../lib/fabric-control-icons";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
-import { CANVAS_CONTROLS } from "../constants/editor-constants";
+import { CANVAS_CONTROLS, GUIDES } from "../constants/editor-constants";
 
 export interface UseImageEditorCanvasOptions {
   headerRef: React.RefObject<HTMLDivElement | null>;
@@ -37,6 +37,8 @@ export interface UseImageEditorCanvasOptions {
   ) => void;
   /** Called when the object is moved via the move control so the context menu bar can follow. */
   onSelectionContextMenuPosition?: (obj: any, canvas: Canvas) => void;
+  /** Ref to current guide positions for snap-to-guide during object:moving. */
+  guidePositionsRef?: React.MutableRefObject<{ v: number[]; h: number[] } | null>;
 }
 
 function gcd(a: number, b: number): number {
@@ -87,6 +89,58 @@ export function constrainObjectToCanvas(obj: any, canvas: Canvas): void {
     top: (obj.top ?? 0) + dy,
   });
   obj.setCoords();
+}
+
+const SNAP_THRESHOLD = GUIDES.SNAP_THRESHOLD;
+
+function snapObjectToGuides(obj: any, canvas: Canvas, guides: { v: number[]; h: number[] }): void {
+  if ((obj as any).isBackground) return;
+  obj.setCoords?.();
+  const rect =
+    typeof obj.getBoundingRect === "function"
+      ? obj.getBoundingRect()
+      : { left: obj.left ?? 0, top: obj.top ?? 0, width: 0, height: 0 };
+  const left = rect.left;
+  const top = rect.top;
+  const w = rect.width ?? 0;
+  const h = rect.height ?? 0;
+  const centerX = left + w / 2;
+  const centerY = top + h / 2;
+  const right = left + w;
+  const bottom = top + h;
+  let dx = 0;
+  let dy = 0;
+  for (const gx of guides.v) {
+    const dl = Math.abs(left - gx);
+    const dc = Math.abs(centerX - gx);
+    const dr = Math.abs(right - gx);
+    const min = Math.min(dl, dc, dr);
+    if (min <= SNAP_THRESHOLD) {
+      if (min === dl) dx = gx - left;
+      else if (min === dc) dx = gx - centerX;
+      else dx = gx - right;
+      break;
+    }
+  }
+  for (const gy of guides.h) {
+    const dt = Math.abs(top - gy);
+    const dc = Math.abs(centerY - gy);
+    const db = Math.abs(bottom - gy);
+    const min = Math.min(dt, dc, db);
+    if (min <= SNAP_THRESHOLD) {
+      if (min === dt) dy = gy - top;
+      else if (min === dc) dy = gy - centerY;
+      else dy = gy - bottom;
+      break;
+    }
+  }
+  if (dx !== 0 || dy !== 0) {
+    obj.set({
+      left: (obj.left ?? 0) + dx,
+      top: (obj.top ?? 0) + dy,
+    });
+    obj.setCoords?.();
+  }
 }
 
 /**
@@ -413,6 +467,8 @@ export function useImageEditorCanvas(
         height: maxDisplayHeight,
         backgroundColor: "#f8f9fa",
         preserveObjectStacking: true,
+        selection: true,
+        selectionKey: "shiftKey",
       });
 
       const canvasElement = fabricCanvas.getElement();
@@ -540,34 +596,40 @@ export function useImageEditorCanvas(
         }
       };
 
-      fabricCanvas.on("selection:created", (e) => {
-        clearRotationTooltipTimeout();
-        opts.onRotationTooltip?.(null);
-        const selected = e.selected?.[0];
-        if (selected && (selected as any).isBackground) {
+      const getActiveOrSelected = () => {
+        const active = fabricCanvas.getActiveObject();
+        if (!active) return null;
+        if ((active as any).type === "activeSelection") {
+          const objects = (active as any).getObjects?.() ?? [];
+          if (objects.some((o: any) => o.isBackground)) {
+            fabricCanvas.discardActiveObject();
+            fabricCanvas.renderAll();
+            return null;
+          }
+          return active;
+        }
+        if ((active as any).isBackground) {
           fabricCanvas.discardActiveObject();
           fabricCanvas.renderAll();
-          opts.setSelectedObject(null);
-          return;
+          return null;
         }
-        if (selected)
-          updateControlsPositionForCanvasBounds(selected, fabricCanvas);
-        opts.setSelectedObject(selected || null);
+        return active;
+      };
+
+      fabricCanvas.on("selection:created", () => {
+        clearRotationTooltipTimeout();
+        opts.onRotationTooltip?.(null);
+        const selected = getActiveOrSelected();
+        if (selected) updateControlsPositionForCanvasBounds(selected, fabricCanvas);
+        opts.setSelectedObject(selected);
       });
 
-      fabricCanvas.on("selection:updated", (e) => {
+      fabricCanvas.on("selection:updated", () => {
         clearRotationTooltipTimeout();
         opts.onRotationTooltip?.(null);
-        const selected = e.selected?.[0];
-        if (selected && (selected as any).isBackground) {
-          fabricCanvas.discardActiveObject();
-          fabricCanvas.renderAll();
-          opts.setSelectedObject(null);
-          return;
-        }
-        if (selected)
-          updateControlsPositionForCanvasBounds(selected, fabricCanvas);
-        opts.setSelectedObject(selected || null);
+        const selected = getActiveOrSelected();
+        if (selected) updateControlsPositionForCanvasBounds(selected, fabricCanvas);
+        opts.setSelectedObject(selected);
       });
 
       fabricCanvas.on("selection:cleared", () => {
@@ -640,6 +702,10 @@ export function useImageEditorCanvas(
       fabricCanvas.on("object:moving", (e: any) => {
         const target = e?.target;
         if (target) {
+          const guides = opts.guidePositionsRef?.current;
+          if (guides && (guides.v.length > 0 || guides.h.length > 0)) {
+            snapObjectToGuides(target, fabricCanvas, guides);
+          }
           constrainObjectToCanvas(target, fabricCanvas);
           updateControlsPositionForCanvasBounds(target, fabricCanvas);
         }

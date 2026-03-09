@@ -165,17 +165,23 @@ export async function saveSession(
 }
 
 export async function listSessions(
-  caUserId: string
+  caUserId: string,
+  options?: { background_url?: string }
 ): Promise<SessionRow[] | { error: string }> {
   const supabase = createServiceClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("client_canvas_sessions")
     .select(
       "id, client_id, ca_user_id, name, thumbnail_url, background_url, overlay_json, metadata, created_at, updated_at"
     )
     .eq("ca_user_id", caUserId)
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false });
+    .is("deleted_at", null);
+
+  if (options?.background_url?.trim()) {
+    query = query.eq("background_url", options.background_url.trim());
+  }
+
+  const { data, error } = await query.order("updated_at", { ascending: false });
 
   if (error) return { error: "Failed to fetch sessions" };
   return (data ?? []) as SessionRow[];

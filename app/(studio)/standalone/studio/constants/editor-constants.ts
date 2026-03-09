@@ -214,6 +214,16 @@ export const MOBILE_PANEL = {
   DISMISS_THRESHOLD: 100, // pixels to drag down to dismiss
 } as const;
 
+// Guides and grid
+export const GUIDES = {
+  SNAP_THRESHOLD: 8,
+  DEFAULT_GRID_SIZE: 25,
+  GUIDE_COLOR: "rgba(92, 56, 243, 0.6)",
+  GUIDE_WIDTH: 1,
+  GRID_COLOR: "rgba(255, 255, 255, 0.08)",
+  GRID_WIDTH: 1,
+} as const;
+
 // Feature flags — toggle UI without removing code
 export const FEATURE_FLAGS = {
   showFeedbackButton: false,
@@ -224,4 +234,6 @@ export const FEATURE_FLAGS = {
   showShapeTools: true,
   showFrameTools: true,
   showEditWithAI: true,
+  showLayersPanel: true,
+  showGuidesAndGrid: false,
 } as const;
