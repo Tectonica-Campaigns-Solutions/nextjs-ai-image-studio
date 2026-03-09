@@ -511,6 +511,8 @@ export function useImageEditorCanvas(
           canvasContainer.style.maxHeight = `${displayHeight}px`;
         }
 
+        setCanvasDimensions({ width: displayWidth, height: displayHeight });
+
         img.set({
           left: 0,
           top: 0,
@@ -718,7 +720,29 @@ export function useImageEditorCanvas(
         }, 400);
       });
 
-      fabricCanvas.on("text:editing:exited", () => {
+      fabricCanvas.on("text:editing:exited", (e: any) => {
+        // Fabric can reset selectable/evented when exiting text edit; re-apply lock if user had locked the layer
+        const target = e?.target;
+        const toRestore = target
+          ? [target]
+          : fabricCanvas.getObjects().filter((obj: any) => obj.__layerLocked === true);
+        toRestore.forEach((obj: any) => {
+          if (obj.__layerLocked === true) {
+            const lockProps: Record<string, unknown> = {
+              lockMovementX: true,
+              lockMovementY: true,
+              hasControls: false,
+              hasBorders: false,
+              selectable: false,
+              evented: false,
+            };
+            if (obj.type === "textbox" || obj.type === "i-text") {
+              lockProps.editable = false;
+            }
+            obj.set(lockProps);
+          }
+        });
+        if (toRestore.length > 0) fabricCanvas.renderAll();
         opts.saveState(true);
       });
 

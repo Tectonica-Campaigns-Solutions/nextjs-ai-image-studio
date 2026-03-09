@@ -96,15 +96,43 @@ export const LayersPanel = React.memo(function LayersPanel({
     (obj: any) => {
       const c = canvasRef.current;
       if (!c) return;
-      const locked = !!(obj.lockMovementX && obj.lockMovementY);
-      obj.set({
-        lockMovementX: !locked,
-        lockMovementY: !locked,
-        hasControls: !locked,
-        hasBorders: !locked,
-        selectable: !locked,
-        evented: !locked,
-      });
+      // Use explicit lock flag so state survives Fabric's text:editing:exited (which can reset selectable/evented)
+      const locked = (obj as any).__layerLocked === true ||
+        !!(obj.lockMovementX && obj.lockMovementY) ||
+        obj.selectable === false ||
+        obj.evented === false;
+      const nextLocked = !locked;
+      (obj as any).__layerLocked = nextLocked;
+
+      // If locking while text is in edit mode: exit editing first (blur hidden input, call exitEditing, then deselect)
+      if (nextLocked) {
+        const active = c.getActiveObject();
+        const isActive =
+          active === obj ||
+          (active && (active as any).type === "activeSelection" && (active as any).getObjects?.().includes(obj));
+        if (isActive) {
+          if (obj.hiddenTextarea && typeof obj.hiddenTextarea.blur === "function") {
+            obj.hiddenTextarea.blur();
+          }
+          if (obj.isEditing && typeof obj.exitEditing === "function") {
+            obj.exitEditing();
+          }
+          c.discardActiveObject();
+        }
+      }
+
+      const lockProps: Record<string, boolean> = {
+        lockMovementX: nextLocked,
+        lockMovementY: nextLocked,
+        hasControls: !nextLocked,
+        hasBorders: !nextLocked,
+        selectable: !nextLocked,
+        evented: !nextLocked,
+      };
+      if (obj.type === "textbox" || (obj as any).type === "i-text") {
+        lockProps.editable = !nextLocked;
+      }
+      obj.set(lockProps);
       c.renderAll();
       onSaveState(false);
       setLayerVersion((v) => v + 1);
@@ -154,7 +182,11 @@ export const LayersPanel = React.memo(function LayersPanel({
           {layers.map((obj) => {
             const selected = isSelected(obj);
             const visible = obj.visible !== false;
-            const locked = !!(obj.lockMovementX && obj.lockMovementY);
+            const locked =
+              (obj as any).__layerLocked === true ||
+              !!(obj.lockMovementX && obj.lockMovementY) ||
+              obj.selectable === false ||
+              obj.evented === false;
             const name = getLayerDisplayName(obj);
             return (
               <li

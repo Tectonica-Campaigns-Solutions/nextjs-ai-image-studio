@@ -1150,26 +1150,10 @@ export default function ImageEditorStandalone({
         <GuidesAndGridPanel
           showGrid={showGrid}
           onShowGridChange={setShowGrid}
-          guidePositions={guidePositions}
-          onAddCenterGuides={() => {
-            const w = canvasEditor.canvasDimensions?.width ?? 0;
-            const h = canvasEditor.canvasDimensions?.height ?? 0;
-            if (w <= 0 || h <= 0) return;
-            setGuidePositions((prev) => ({
-              v: [...prev.v, w / 2],
-              h: [...prev.h, h / 2],
-            }));
-          }}
-          onClearGuides={() => setGuidePositions({ v: [], h: [] })}
-          canvasWidth={canvasEditor.canvasDimensions?.width ?? 0}
-          canvasHeight={canvasEditor.canvasDimensions?.height ?? 0}
         />
       ) : null,
     [
       showGrid,
-      guidePositions,
-      canvasEditor.canvasDimensions?.width,
-      canvasEditor.canvasDimensions?.height,
     ]
   );
 
@@ -1242,7 +1226,7 @@ export default function ImageEditorStandalone({
                 logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}
                 qrToolsPanel={FEATURE_FLAGS.showQrTools ? qrToolsPanel : null}
                 shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
-                frameToolsPanel={FEATURE_FLAGS.showFrameTools ? frameToolsPanel : null}
+                frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
                 guidesAndGridPanel={guidesAndGridPanel}
                 sessionsListPanel={sessionsListPanel}
                 activeTab={mobilePanel.activeTab}
@@ -1349,7 +1333,7 @@ export default function ImageEditorStandalone({
                 }
                 historyState={history.historyState}
                 selectedObject={selection.selectedObject}
-                showSaveButton={FEATURE_FLAGS.showSaveCanvas}
+                showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
                 variant="mobile"
                 alignmentSlot={alignmentSlot}
                 onSaveClick={() => setShowSaveModal(true)}
@@ -1367,7 +1351,7 @@ export default function ImageEditorStandalone({
             isSaving={isSaving}
             historyState={history.historyState}
             selectedObject={selection.selectedObject}
-            showSaveButton={FEATURE_FLAGS.showSaveCanvas}
+            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
                 variant="desktop"
             alignmentSlot={alignmentSlot}
             onSaveClick={() => setShowSaveModal(true)}
