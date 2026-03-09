@@ -78,6 +78,7 @@ async function getClientReferenceImages(orgType: string): Promise<{
   folderName: string;
   userImagePrompt: string;
   styleReinforcement: string;
+  elementIsolation: string;
 }> {
   // Default prompt for user image preservation
   const defaultUserImagePrompt = "IMPORTANT: Image @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
@@ -117,11 +118,17 @@ async function getClientReferenceImages(orgType: string): Promise<{
         ? config.prompts.createStyleReinforcement
         : defaultStyleReinforcement
 
+      // Extract element isolation directive if available (empty string = disabled)
+      const elementIsolation: string = typeof config.prompts?.createElementIsolation === 'string'
+        ? config.prompts.createElementIsolation
+        : ''
+
       return { 
         filenames: config.create, 
         folderName,
         userImagePrompt,
-        styleReinforcement
+        styleReinforcement,
+        elementIsolation
       }
     }
   } catch (error) {
@@ -137,7 +144,8 @@ async function getClientReferenceImages(orgType: string): Promise<{
     filenames: FALLBACK_REFERENCE_IMAGES, 
     folderName: 'tectonica-reference-images',
     userImagePrompt: defaultUserImagePrompt,
-    styleReinforcement: defaultStyleReinforcement
+    styleReinforcement: defaultStyleReinforcement,
+    elementIsolation: ''
   }
 }
 
@@ -371,6 +379,7 @@ export async function POST(request: NextRequest) {
     let folderName = ''
     let userImagePrompt = ''
     let styleReinforcement = ''
+    let elementIsolation = ''
     let referenceImageFilenames: string[] = []
     const allImageUrls: string[] = []
     
@@ -384,6 +393,7 @@ export async function POST(request: NextRequest) {
       folderName = refResult.folderName
       userImagePrompt = refResult.userImagePrompt
       styleReinforcement = refResult.styleReinforcement
+      elementIsolation = refResult.elementIsolation
 
       // Select reference images based on whether user provided an image
       if (hasUserImage) {
@@ -631,6 +641,13 @@ export async function POST(request: NextRequest) {
     if (useBranding && styleReinforcement && !hasUserImage) {
       finalPrompt = `${finalPrompt}\n${styleReinforcement}`
       console.log(`[Flux 2 Pro Edit Create] Style reinforcement directive appended`)
+    }
+
+    // Apply element isolation directive for pure generation (no user image) only.
+    // Controlled via config.json "createElementIsolation" — empty string disables it.
+    if (useBranding && elementIsolation && !hasUserImage) {
+      finalPrompt = `${finalPrompt}\n${elementIsolation}`
+      console.log(`[Flux 2 Pro Edit Create] Element isolation directive appended`)
     }
 
     // Prepare input for fal.ai
