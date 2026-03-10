@@ -18,7 +18,7 @@ type StudioEditorLoaderProps = {
 
 /**
  * Async server component that fetches editor assets and session, then renders the editor.
- * Used inside Suspense so the parent can show a skeleton fallback while loading.
+ * Used inside Suspense so the parent can show a skeleton fallback while loading
  */
 export default async function StudioEditorLoader({
   searchParams,
