@@ -9,11 +9,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
-import { Sparkles, Grid3X3, Save } from "lucide-react";
+import { Sparkles, Grid3X3, Save, ImageIcon } from "lucide-react";
 import { TextItem, LogoItem, QRItem, ShapeItem, FrameItem, LayersItem } from "./editor-icons";
 
 export interface EditorSidebarProps {
   layersToolsPanel: ReactNode | null;
+  backgroundImagePanel: ReactNode | null;
   textToolsPanel: ReactNode | null;
   aiEditPanel: ReactNode | null;
   logoToolsPanel: ReactNode | null;
@@ -38,6 +39,7 @@ export interface EditorSidebarProps {
 
 export function EditorSidebar({
   layersToolsPanel,
+  backgroundImagePanel,
   textToolsPanel,
   aiEditPanel,
   logoToolsPanel,
@@ -258,6 +260,30 @@ export function EditorSidebar({
           </AccordionItem>
         )}
 
+        {backgroundImagePanel != null && (
+          <AccordionItem value="background-image" className="border-0">
+            <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
+              <CardContent className="p-0 bg-[#191919]">
+                <AccordionTrigger className="py-[10px] px-[15px] hover:no-underline cursor-pointer items-center [&>svg]:text-white">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-[15px]">
+                      <div className="w-[35px] h-[35px] bg-[#7B9FD4]/50 rounded-[8px] flex items-center justify-center transition-transform hover:scale-110">
+                        <ImageIcon className="w-4 h-4 text-white" aria-hidden />
+                      </div>
+                      <h2 className="font-bold text-white text-[14px] leading-[110%] font-(family-name:--font-manrope)">
+                        Background image
+                      </h2>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-[15px] pt-[10px] pb-[15px]">
+                  {backgroundImagePanel}
+                </AccordionContent>
+              </CardContent>
+            </Card>
+          </AccordionItem>
+        )}
+
         {aiEditPanel != null && (
           <AccordionItem value="ai-edit" className="border-0">
             <Card className="border-0 shadow-sm bg-[#191919] p-0 transition-all hover:bg-[#1F1F1F] hover:shadow-lg">
@@ -321,6 +347,7 @@ export function EditorSidebar({
 
             <div className="px-[15px] pb-[30px] max-h-[calc(70vh-60px)] overflow-y-auto themed-scrollbar">
               {activeTab === "layers" && layersToolsPanel}
+              {activeTab === "background-image" && backgroundImagePanel}
               {activeTab === "text-tools" && textToolsPanel}
               {activeTab === "ai-edit" && aiEditPanel}
               {activeTab === "logo-overlay" && logoToolsPanel}
@@ -484,6 +511,25 @@ export function EditorSidebar({
               </div>
               <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
                 Saved versions
+              </span>
+            </button>
+          )}
+
+          {backgroundImagePanel != null && (
+            <button
+              onClick={() => handleTabClick("background-image")}
+              className={cn(
+                "flex items-center gap-[10px] py-[8px] px-[8px] rounded-[10px] transition-all whitespace-nowrap cursor-pointer border border-[#191919]",
+                activeTab === "background-image" && isPanelVisible
+                  ? "bg-[#383838] border-white"
+                  : "bg-[#191919]"
+              )}
+            >
+              <div className="w-[35px] h-[35px] bg-[#7B9FD4]/50 rounded-[8px] flex items-center justify-center flex-shrink-0">
+                <ImageIcon className="w-4 h-4 text-white" aria-hidden />
+              </div>
+              <span className="text-white text-[14px] font-medium leading-[110%] font-(family-name:--font-manrope)">
+                Background
               </span>
             </button>
           )}

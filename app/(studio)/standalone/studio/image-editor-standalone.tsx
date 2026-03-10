@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Text, Group, Shadow, Rect, ActiveSelection } from "fabric";
 import { TectonicaLogo } from "./components/editor-icons";
 import {
+  BackgroundImagePanel,
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
@@ -89,6 +90,9 @@ export default function ImageEditorStandalone({
 
   // AI image edit state
   const [isEditingWithAI, setIsEditingWithAI] = useState<boolean>(false);
+
+  // Replace background image state
+  const [isReplacingBackground, setIsReplacingBackground] = useState<boolean>(false);
 
   // Rotation tooltip (degrees) shown near element while rotating or briefly after
   const [rotationTooltip, setRotationTooltip] = useState<{
@@ -460,6 +464,45 @@ export default function ImageEditorStandalone({
     }
     event.target.value = "";
   };
+
+  // Replace background image (from URL or file object URL)
+  const handleReplaceBackground = useCallback(
+    async (newUrl: string) => {
+      if (!canvasEditor.replaceBackgroundImage) return;
+      setIsReplacingBackground(true);
+      try {
+        originalImageUrlRefStable.current = newUrl;
+        await canvasEditor.replaceBackgroundImage(newUrl);
+        history.saveState(true);
+        toast({
+          title: "Background updated",
+          description: "The background image has been replaced.",
+          className: "bg-[#1a1a1a] border-[#333] text-white",
+        });
+      } catch {
+        toast({
+          title: "Error",
+          description: "Could not load the image.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsReplacingBackground(false);
+      }
+    },
+    [canvasEditor.replaceBackgroundImage, history.saveState, toast]
+  );
+
+  const handleReplaceBackgroundFromFile = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        const url = URL.createObjectURL(file);
+        handleReplaceBackground(url);
+      }
+      event.target.value = "";
+    },
+    [handleReplaceBackground]
+  );
 
   // Select layer from Layers panel (sync canvas active object and selection state)
   // Declared here so hooks order is stable; only render path changes below.
@@ -1127,6 +1170,17 @@ export default function ImageEditorStandalone({
     [handleAIEdit, isEditingWithAI]
   );
 
+  const backgroundImagePanel = useMemo(
+    () => (
+      <BackgroundImagePanel
+        onReplaceFromUrl={handleReplaceBackground}
+        onReplaceFromFile={handleReplaceBackgroundFromFile}
+        isLoading={isReplacingBackground}
+      />
+    ),
+    [handleReplaceBackground, handleReplaceBackgroundFromFile, isReplacingBackground]
+  );
+
   const isLogoSelected =
     !!selection.selectedObject && !!(selection.selectedObject as any).isLogo;
   const isQrSelected =
@@ -1265,6 +1319,7 @@ export default function ImageEditorStandalone({
             <div>
               <EditorSidebar
                 layersToolsPanel={layersToolsPanel}
+                backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
                 textToolsPanel={FEATURE_FLAGS.showTextTools ? textToolsPanel : null}
                 aiEditPanel={FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null}
                 logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}

@@ -1,3 +1,4 @@
+export { BackgroundImagePanel } from "./BackgroundImagePanel";
 export { DisclaimerModal } from "./DisclaimerModal";
 export { EditorSidebar } from "./EditorSidebar";
 export { LayersPanel } from "./LayersPanel";

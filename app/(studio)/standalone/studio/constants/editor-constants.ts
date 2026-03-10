@@ -228,6 +228,7 @@ export const GUIDES = {
 export const FEATURE_FLAGS = {
   showFeedbackButton: false,
   showSaveCanvas: true,
+  showReplaceBackgroundTool: true,
   showTextTools: true,
   showLogoTools: true,
   showQrTools: true,
