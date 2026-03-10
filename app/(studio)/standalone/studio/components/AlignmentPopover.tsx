@@ -26,13 +26,16 @@ export interface AlignmentPopoverProps {
   variant?: "mobile" | "desktop";
 }
 
-const alignOptions: { option: AlignOption; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+const alignToCanvasOptions: { option: AlignOption; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { option: "align-left", label: "Align left", Icon: AlignLeft },
   { option: "align-center-h", label: "Align center", Icon: AlignCenter },
   { option: "align-right", label: "Align right", Icon: AlignRight },
   { option: "align-top", label: "Align top", Icon: AlignStartVertical },
   { option: "align-center-v", label: "Align middle", Icon: AlignCenterVertical },
   { option: "align-bottom", label: "Align bottom", Icon: AlignEndVertical },
+];
+
+const distributeOptions: { option: AlignOption; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { option: "distribute-h", label: "Distribute horizontal", Icon: AlignHorizontalSpaceBetween },
   { option: "distribute-v", label: "Distribute vertical", Icon: AlignVerticalSpaceBetween },
 ];
@@ -45,7 +48,7 @@ export function AlignmentPopover({
   const hasSelection = !!selectedObject;
   const isMultiSelection =
     hasSelection &&
-    (selectedObject as any).type === "activeSelection" &&
+    (selectedObject as any).type === "activeselection" &&
     typeof (selectedObject as any).getObjects === "function";
   const multiCount = isMultiSelection ? (selectedObject as any).getObjects().length : 0;
   const canDistribute = isMultiSelection && multiCount >= 3;
@@ -67,15 +70,17 @@ export function AlignmentPopover({
         className="w-auto p-2 bg-[#191919] border-[#2D2D2D] rounded-[10px]"
         align={variant === "desktop" ? "start" : "center"}
       >
-        <div className="grid grid-cols-4 gap-1">
-          {alignOptions.map(({ option, label, Icon }) => (
+        <p className="text-[10px] uppercase tracking-wider text-white/40 px-1 mb-1.5 font-(family-name:--font-manrope)">
+          Align to canvas
+        </p>
+        <div className="grid grid-cols-3 gap-1">
+          {alignToCanvasOptions.map(({ option, label, Icon }) => (
             <Button
               key={option}
               variant="ghost"
               size="sm"
-              disabled={option.startsWith("distribute") && !canDistribute}
               onClick={() => onAlign(option)}
-              className="h-9 w-9 p-0 text-white hover:bg-white/10 disabled:opacity-40"
+              className="h-9 w-9 p-0 text-white hover:bg-white/10"
               title={label}
               aria-label={label}
             >
@@ -83,11 +88,35 @@ export function AlignmentPopover({
             </Button>
           ))}
         </div>
-        <p className="text-[11px] text-white/50 mt-2 px-1 font-(family-name:--font-manrope)">
-          {!canDistribute && (selectedObject as any)?.type === "activeSelection"
-            ? "Select 3+ objects to distribute"
-            : "Align to canvas"}
+
+        <div className="border-t border-[#2D2D2D] my-2" />
+
+        <p className="text-[10px] uppercase tracking-wider text-white/40 px-1 mb-1.5 font-(family-name:--font-manrope)">
+          Distribute
         </p>
+        <div className="flex gap-1">
+          {distributeOptions.map(({ option, label, Icon }) => (
+            <Button
+              key={option}
+              variant="ghost"
+              size="sm"
+              disabled={!canDistribute}
+              onClick={() => onAlign(option)}
+              className="h-9 w-9 p-0 text-white hover:bg-white/10 disabled:opacity-30"
+              title={canDistribute ? label : `${label} (select 3+ layers)`}
+              aria-label={label}
+            >
+              <Icon className="w-4 h-4" />
+            </Button>
+          ))}
+        </div>
+        {!canDistribute && (
+          <p className="text-[10px] text-white/35 mt-1.5 px-1 font-(family-name:--font-manrope)">
+            {isMultiSelection && multiCount === 2
+              ? "Select 1 more layer to distribute"
+              : "Select 3+ layers to distribute"}
+          </p>
+        )}
       </PopoverContent>
     </Popover>
   );

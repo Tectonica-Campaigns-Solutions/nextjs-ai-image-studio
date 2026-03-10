@@ -601,7 +601,7 @@ export function useImageEditorCanvas(
       const getActiveOrSelected = () => {
         const active = fabricCanvas.getActiveObject();
         if (!active) return null;
-        if ((active as any).type === "activeSelection") {
+        if ((active as any).type === "activeselection") {
           const objects = (active as any).getObjects?.() ?? [];
           if (objects.some((o: any) => o.isBackground)) {
             fabricCanvas.discardActiveObject();

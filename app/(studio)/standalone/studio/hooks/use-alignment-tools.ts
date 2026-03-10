@@ -49,7 +49,7 @@ export function useAlignmentTools(canvasRef: React.MutableRefObject<any>) {
       const ch = canvas.height ?? 0;
       if (cw <= 0 || ch <= 0) return;
 
-      if ((active as any).type === "activeSelection" && typeof (active as any).getObjects === "function") {
+      if ((active as any).type === "activeselection" && typeof (active as any).getObjects === "function") {
         const objects = (active as any).getObjects().filter((o: any) => !o.isBackground);
         if (objects.length === 0) return;
         if (option.startsWith("distribute")) {

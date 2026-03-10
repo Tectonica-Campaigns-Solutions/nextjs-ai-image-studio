@@ -46,7 +46,7 @@ import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Lock, Trash2, Unlock } from "lucide-react";
 
 export default function ImageEditorStandalone({
   params,
@@ -638,7 +638,7 @@ export default function ImageEditorStandalone({
     if (!canvas) return [];
     const active = canvas.getActiveObject();
     if (!active) return [];
-    if ((active as any).type === "activeSelection" && typeof (active as any).getObjects === "function") {
+    if ((active as any).type === "activeselection" && typeof (active as any).getObjects === "function") {
       return (active as any).getObjects().filter((o: any) => !o.isBackground);
     }
     if ((active as any).isBackground) return [];
@@ -698,6 +698,50 @@ export default function ImageEditorStandalone({
     } catch (err) {
       console.error("[duplicateSelected]", err);
     }
+  }, [canvasEditor.canvas, getSelectedObjects, selection.setSelectedObject, history.saveState]);
+
+  // Lock/unlock selected object(s) — mirrors LayersPanel.handleLockToggle logic
+  const toggleLockSelected = useCallback(() => {
+    const canvas = canvasEditor.canvas;
+    const objects = getSelectedObjects();
+    if (!canvas || objects.length === 0) return;
+
+    for (const obj of objects) {
+      const locked =
+        (obj as any).__layerLocked === true ||
+        !!(obj.lockMovementX && obj.lockMovementY) ||
+        obj.selectable === false ||
+        obj.evented === false;
+      const nextLocked = !locked;
+      (obj as any).__layerLocked = nextLocked;
+
+      if (nextLocked) {
+        if (obj.hiddenTextarea && typeof obj.hiddenTextarea.blur === "function") {
+          obj.hiddenTextarea.blur();
+        }
+        if (obj.isEditing && typeof obj.exitEditing === "function") {
+          obj.exitEditing();
+        }
+      }
+
+      const lockProps: Record<string, boolean> = {
+        lockMovementX: nextLocked,
+        lockMovementY: nextLocked,
+        hasControls: !nextLocked,
+        hasBorders: !nextLocked,
+        selectable: !nextLocked,
+        evented: !nextLocked,
+      };
+      if (obj.type === "textbox" || (obj as any).type === "i-text") {
+        lockProps.editable = !nextLocked;
+      }
+      obj.set(lockProps);
+    }
+
+    canvas.discardActiveObject();
+    canvas.renderAll();
+    selection.setSelectedObject(null);
+    history.saveState(true);
   }, [canvasEditor.canvas, getSelectedObjects, selection.setSelectedObject, history.saveState]);
 
   // Save canvas session to database (optionalName from SaveSessionModal when saving via modal)
@@ -1278,38 +1322,60 @@ export default function ImageEditorStandalone({
                     {rotationTooltip.angle}°
                   </div>
                 )}
-                {selectionContextMenuPosition !== null && (
-                  <div
-                    className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
-                    style={{
-                      left: selectionContextMenuPosition.left,
-                      top: selectionContextMenuPosition.top,
-                      transform: "translate(-50%, 0)",
-                    }}
-                    role="toolbar"
-                    aria-label="Layer options"
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={duplicateSelected}
-                      className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
-                      aria-label="Duplicate layer"
-                      title="Duplicate layer"
+                {selectionContextMenuPosition !== null && (() => {
+                  const selObj = selection.selectedObject;
+                  const isLocked =
+                    !!selObj &&
+                    ((selObj as any).__layerLocked === true ||
+                      !!(selObj.lockMovementX && selObj.lockMovementY) ||
+                      selObj.selectable === false ||
+                      selObj.evented === false);
+                  return (
+                    <div
+                      className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
+                      style={{
+                        left: selectionContextMenuPosition.left,
+                        top: selectionContextMenuPosition.top,
+                        transform: "translate(-50%, 0)",
+                      }}
+                      role="toolbar"
+                      aria-label="Layer options"
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      <Copy className="size-4" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={deleteSelected}
-                      className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
-                      aria-label="Delete layer"
-                      title="Delete layer"
-                    >
-                      <Trash2 className="size-4" aria-hidden />
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        onClick={duplicateSelected}
+                        className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
+                        aria-label="Duplicate layer"
+                        title="Duplicate layer"
+                      >
+                        <Copy className="size-4" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleLockSelected}
+                        className={`flex size-8 items-center justify-center rounded-md transition-colors ${
+                          isLocked
+                            ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
+                            : "text-white/90 hover:bg-white/15 hover:text-white"
+                        }`}
+                        aria-label={isLocked ? "Unlock layer" : "Lock layer"}
+                        title={isLocked ? "Unlock layer" : "Lock layer"}
+                      >
+                        {isLocked ? <Lock className="size-4" aria-hidden /> : <Unlock className="size-4" aria-hidden />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={deleteSelected}
+                        className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                        aria-label="Delete layer"
+                        title="Delete layer"
+                      >
+                        <Trash2 className="size-4" aria-hidden />
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

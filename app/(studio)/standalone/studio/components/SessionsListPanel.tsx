@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SessionSummary {
@@ -14,7 +15,7 @@ export interface SessionSummary {
 export interface SessionsListPanelProps {
   sessions: SessionSummary[];
   currentSessionId: string | null;
-  onSelectSession: (sessionId: string) => void;
+  onSelectSession: (sessionId: string) => void | Promise<void>;
   isLoading: boolean;
 }
 
@@ -62,6 +63,20 @@ export function SessionsListPanel({
 }: SessionsListPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight } = useScrollState(scrollRef);
+  const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
+
+  const handleClick = useCallback(
+    async (sessionId: string) => {
+      if (loadingSessionId) return;
+      setLoadingSessionId(sessionId);
+      try {
+        await onSelectSession(sessionId);
+      } finally {
+        setLoadingSessionId(null);
+      }
+    },
+    [onSelectSession, loadingSessionId]
+  );
 
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({ left: dir === "right" ? 120 : -120, behavior: "smooth" });
@@ -115,23 +130,26 @@ export function SessionsListPanel({
         >
           {sessions.map((session) => {
             const isCurrent = session.id === currentSessionId;
+            const isLoadingThis = loadingSessionId === session.id;
             return (
               <button
                 key={session.id}
                 type="button"
-                onClick={() => onSelectSession(session.id)}
+                onClick={() => handleClick(session.id)}
+                disabled={!!loadingSessionId}
                 role="listitem"
                 className={cn(
-                  "flex flex-col items-center justify-start gap-1.5 py-2 px-2 rounded-[10px] border transition-all cursor-pointer flex-shrink-0 text-left",
+                  "relative flex flex-col items-center justify-start gap-1.5 py-2 px-2 rounded-[10px] border transition-all cursor-pointer flex-shrink-0 text-left",
                   "bg-[#1F1F1F] border-[#2D2D2D]",
                   "hover:border-[#444] hover:bg-[#252525]",
                   "active:scale-[0.98]",
                   "w-[96px]",
-                  isCurrent && "border-[#5C38F3] bg-[#5C38F3]/10 ring-1 ring-[#5C38F3]"
+                  isCurrent && "border-[#5C38F3] bg-[#5C38F3]/10 ring-1 ring-[#5C38F3]",
+                  !!loadingSessionId && !isLoadingThis && "opacity-50 pointer-events-none"
                 )}
                 aria-pressed={isCurrent}
               >
-                <div className="w-full aspect-[4/3] rounded-[6px] bg-[#0D0D0D] border border-[#2D2D2D] overflow-hidden flex items-center justify-center">
+                <div className="relative w-full aspect-[4/3] rounded-[6px] bg-[#0D0D0D] border border-[#2D2D2D] overflow-hidden flex items-center justify-center">
                   {session.thumbnail_url ? (
                     <img
                       src={session.thumbnail_url}
@@ -140,6 +158,11 @@ export function SessionsListPanel({
                     />
                   ) : (
                     <span className="text-[#666] text-[10px]">—</span>
+                  )}
+                  {isLoadingThis && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[6px]">
+                      <Loader2 className="size-5 animate-spin text-[#5C38F3]" />
+                    </div>
                   )}
                 </div>
                 <p className="text-white text-[11px] font-(family-name:--font-manrope) font-medium truncate w-full text-center">

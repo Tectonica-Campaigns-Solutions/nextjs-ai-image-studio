@@ -71,7 +71,7 @@ export const LayersPanel = React.memo(function LayersPanel({
     (obj: any) => {
       if (!selectedObject) return false;
       const active = canvas?.getActiveObject();
-      if (active && (active as any).type === "activeSelection") {
+      if (active && (active as any).type === "activeselection") {
         return (active as ActiveSelection).getObjects().includes(obj);
       }
       return selectedObject === obj;
@@ -109,7 +109,7 @@ export const LayersPanel = React.memo(function LayersPanel({
         const active = c.getActiveObject();
         const isActive =
           active === obj ||
-          (active && (active as any).type === "activeSelection" && (active as any).getObjects?.().includes(obj));
+          (active && (active as any).type === "activeselection" && (active as any).getObjects?.().includes(obj));
         if (isActive) {
           if (obj.hiddenTextarea && typeof obj.hiddenTextarea.blur === "function") {
             obj.hiddenTextarea.blur();
