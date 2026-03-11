@@ -1387,7 +1387,7 @@ export default function ImageEditorStandalone({
                 shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
                 frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
                 guidesAndGridPanel={guidesAndGridPanel}
-                sessionsListPanel={sessionsListPanel}
+                sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
                 activeTab={mobilePanel.activeTab}
                 handleTabClick={mobilePanel.handleTabClick}
                 isPanelVisible={mobilePanel.isPanelVisible}
