@@ -53,6 +53,7 @@ import { useAlignmentTools } from "./hooks/use-alignment-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
+import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
 import { Copy, Lock, Trash2, Unlock } from "lucide-react";
 
@@ -93,6 +94,8 @@ export default function ImageEditorStandalone({
   // Sessions list for current image (saved versions)
   const [sessionsForImage, setSessionsForImage] = useState<SessionSummary[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState<boolean>(false);
+  /** True once the initial sessions fetch has completed (or was skipped). Used to avoid layout shift. */
+  const [sessionsInitialFetchDone, setSessionsInitialFetchDone] = useState<boolean>(false);
 
   // Feedback state
   const [isFetchingFeedback, setIsFetchingFeedback] = useState<boolean>(false);
@@ -968,6 +971,7 @@ export default function ImageEditorStandalone({
     const bgUrl = currentBackgroundUrlRef.current ?? imageUrl;
     if (!caUserId || !bgUrl) {
       setSessionsForImage([]);
+      setSessionsInitialFetchDone(true);
       return;
     }
     setSessionsLoading(true);
@@ -993,12 +997,20 @@ export default function ImageEditorStandalone({
       setSessionsForImage([]);
     } finally {
       setSessionsLoading(false);
+      setSessionsInitialFetchDone(true);
     }
   }, [params.user_id, imageUrl]);
 
   useEffect(() => {
     fetchSessionsForImage();
   }, [fetchSessionsForImage]);
+
+  // When there is no user or no image, we don't fetch sessions; mark as done so we don't block editor ready.
+  useEffect(() => {
+    if (!params.user_id?.trim() || !imageUrl) {
+      setSessionsInitialFetchDone(true);
+    }
+  }, [params.user_id, imageUrl]);
 
   // Load a saved session into the canvas (from Saved versions panel)
   const handleSelectSession = useCallback(
@@ -1365,7 +1377,19 @@ export default function ImageEditorStandalone({
     return <UploadPromptCard onFileChange={handleImageUpload} />;
   }
 
+  // Avoid layout shift: keep loading until canvas and sessions (if needed) are ready.
+  const editorReady =
+    !!canvasEditor.canvas &&
+    (!params.user_id?.trim() || !imageUrl || sessionsInitialFetchDone);
+
   return (
+    <>
+      {!editorReady && (
+        <div className="fixed inset-0 z-[100]" style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}>
+          <StudioLoading />
+        </div>
+      )}
+      <div className={editorReady ? "" : "invisible"}>
     <div
       className="min-h-screen h-full md:px-[30px] px-[10px] md:py-[20px] py-[18px] flex flex-col md:h-screen md:overflow-hidden"
       style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
@@ -1569,5 +1593,7 @@ export default function ImageEditorStandalone({
         isExporting={isExporting}
       />
     </div>
+      </div>
+    </>
   );
 }
