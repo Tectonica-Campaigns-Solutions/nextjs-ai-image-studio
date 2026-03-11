@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Check } from "lucide-react";
 import type { HistoryState } from "../types/image-editor-types";
 import { FeedbackButtonInline } from "./FeedbackButton";
 
@@ -26,6 +26,12 @@ export interface EditorToolbarProps {
   alignmentSlot?: React.ReactNode;
   /** When provided, Save button opens this callback (e.g. to show save modal) instead of calling handleSave directly */
   onSaveClick?: () => void;
+  /** Optional callback to return the edited image to the parent conversation (when embedded as iframe). */
+  onReturnToConversation?: () => void;
+  /** When true, toolbar is being used inside an iframe-embedded studio. Controls visibility of "Done" button. */
+  isEmbedded?: boolean;
+  /** Loading state for the "Done" (return to conversation) action. */
+  isReturning?: boolean;
 }
 
 const UndoIcon = () => (
@@ -71,6 +77,9 @@ export function EditorToolbar({
   showSaveButton = true,
   alignmentSlot,
   onSaveClick,
+  onReturnToConversation,
+  isEmbedded = false,
+  isReturning = false,
 }: EditorToolbarProps) {
   const undoDisabled = historyState.currentIndex <= 0;
   const redoDisabled =
@@ -126,6 +135,20 @@ export function EditorToolbar({
           <Download className="w-4 h-4" />
           {isExporting ? "Exporting..." : "Download"}
         </Button>
+        {isEmbedded && onReturnToConversation && (
+          <Button
+            onClick={onReturnToConversation}
+            disabled={isReturning}
+            className="bg-emerald-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] flex items-center justify-center gap-[5px] basis-full md:basis-auto transition-all hover:bg-emerald-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 disabled:hover:scale-100"
+            aria-label="Done — return image to conversation"
+          >
+            {isReturning ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
+          </Button>
+        )}
         {handleGetFeedback && (
           <div className="basis-full">
             <FeedbackButtonInline
@@ -185,6 +208,20 @@ export function EditorToolbar({
           className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
         >
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon size={17} />}
+        </Button>
+      )}
+      {isEmbedded && onReturnToConversation && (
+        <Button
+          onClick={onReturnToConversation}
+          disabled={isReturning}
+          className="bg-emerald-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] transition-all hover:bg-emerald-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 disabled:hover:scale-100"
+          aria-label="Done — return image to conversation"
+        >
+          {isReturning ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Check className="w-4 h-4" />
+          )}
         </Button>
       )}
     </div>

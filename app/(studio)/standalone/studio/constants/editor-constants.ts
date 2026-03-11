@@ -238,3 +238,8 @@ export const FEATURE_FLAGS = {
   showLayersPanel: true,
   showGuidesAndGrid: true,
 } as const;
+
+// Iframe communication from Studio → parent (ChangeAgent/Open WebUI)
+export const STUDIO_IFRAME_MESSAGE = {
+  EDITING_DONE_TYPE: "tectonica-studio-editing-done",
+} as const;

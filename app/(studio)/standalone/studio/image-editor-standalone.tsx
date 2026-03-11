@@ -31,7 +31,14 @@ import type {
 } from "./types/image-editor-types";
 import type { DisclaimerPosition } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
-import { DEFAULT_FONTS, EXPORT, FEATURE_FLAGS, SELECTION_MENU, UI_COLORS } from "./constants/editor-constants";
+import {
+  DEFAULT_FONTS,
+  EXPORT,
+  FEATURE_FLAGS,
+  SELECTION_MENU,
+  UI_COLORS,
+  STUDIO_IFRAME_MESSAGE,
+} from "./constants/editor-constants";
 
 // Import custom hooks
 import { useImageEditorCanvas, constrainObjectToCanvas } from "./hooks/use-image-editor-canvas";
@@ -74,6 +81,9 @@ export default function ImageEditorStandalone({
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState<boolean>(false);
   const [disclaimerPosition, setDisclaimerPosition] = useState<DisclaimerPosition>(EXPORT.DEFAULT_DISCLAIMER_POSITION);
+
+  // Iframe return-to-conversation state
+  const [isReturningToConversation, setIsReturningToConversation] = useState<boolean>(false);
 
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -520,6 +530,56 @@ export default function ImageEditorStandalone({
   // Handle export click
   const handleExportClick = () => {
     setShowDisclaimerModal(true);
+  };
+
+  // Detect if editor is running inside an iframe (embedded in ChangeAgent/Open WebUI)
+  const isEmbedded = typeof window !== "undefined" && typeof window.self !== "undefined" && window.self !== window.top;
+
+  // Export current canvas as data URL (without disclaimer) and send it to parent via postMessage
+  const handleReturnToConversation = async () => {
+    if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+
+    try {
+      setIsReturningToConversation(true);
+
+      const currentWidth = canvasEditor.canvas.width;
+      const multiplier =
+        currentWidth > 0
+          ? canvasEditor.originalImageDimensions.width / currentWidth
+          : 1;
+
+      const dataURL = canvasEditor.canvas.toDataURL({
+        format: "png",
+        quality: 1,
+        multiplier,
+      } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
+
+      if (!dataURL) {
+        toast({
+          title: "Could not export image",
+          description: "Try again before returning it to the conversation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      window.parent.postMessage(
+        {
+          type: STUDIO_IFRAME_MESSAGE.EDITING_DONE_TYPE,
+          imageDataUrl: dataURL,
+        },
+        "*"
+      );
+    } catch (error) {
+      console.error("Failed to return image to parent conversation:", error);
+      toast({
+        title: "Error returning image",
+        description: "Something went wrong sending the image back to the conversation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsReturningToConversation(false);
+    }
   };
 
   // Normalize export filename: strip extension, sanitize, then add extension for format
@@ -1409,11 +1469,10 @@ export default function ImageEditorStandalone({
                       <button
                         type="button"
                         onClick={toggleLockSelected}
-                        className={`flex size-8 items-center justify-center rounded-md transition-colors ${
-                          isLocked
-                            ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
-                            : "text-white/90 hover:bg-white/15 hover:text-white"
-                        }`}
+                        className={`flex size-8 items-center justify-center rounded-md transition-colors ${isLocked
+                          ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
+                          : "text-white/90 hover:bg-white/15 hover:text-white"
+                          }`}
                         aria-label={isLocked ? "Unlock layer" : "Lock layer"}
                         title={isLocked ? "Unlock layer" : "Lock layer"}
                       >
@@ -1458,6 +1517,9 @@ export default function ImageEditorStandalone({
                 variant="mobile"
                 alignmentSlot={alignmentSlot}
                 onSaveClick={() => setShowSaveModal(true)}
+                onReturnToConversation={handleReturnToConversation}
+                isEmbedded={isEmbedded}
+                isReturning={isReturningToConversation}
               />
             )}
           </div>
@@ -1473,9 +1535,12 @@ export default function ImageEditorStandalone({
             historyState={history.historyState}
             selectedObject={selection.selectedObject}
             showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
-                variant="desktop"
+            variant="desktop"
             alignmentSlot={alignmentSlot}
             onSaveClick={() => setShowSaveModal(true)}
+            onReturnToConversation={handleReturnToConversation}
+            isEmbedded={isEmbedded}
+            isReturning={isReturningToConversation}
           />
         </div>
       </div>
