@@ -545,6 +545,8 @@ export default function ImageEditorStandalone({
     try {
       setIsReturningToConversation(true);
 
+      const caUserId = params.user_id?.trim();
+
       const currentWidth = canvasEditor.canvas.width;
       const multiplier =
         currentWidth > 0
@@ -552,32 +554,17 @@ export default function ImageEditorStandalone({
           : 1;
 
       const dataURL = canvasEditor.canvas.toDataURL({
-        format: "png",
+        format: "jpeg",
         quality: 1,
         multiplier,
       } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
 
-      if (!dataURL) {
+      if (!dataURL || !caUserId) {
         toast({
           title: "Could not export image",
           description: "Try again before returning it to the conversation.",
           variant: "destructive",
         });
-        return;
-      }
-
-      const caUserId = params.user_id?.trim();
-
-      // If we don't have a ChangeAgent user id, fall back to the previous behaviour
-      // and send the base64 image directly (mainly for non-CA embedding scenarios).
-      if (!caUserId) {
-        window.parent.postMessage(
-          {
-            type: STUDIO_IFRAME_MESSAGE.EDITING_DONE_TYPE,
-            imageDataUrl: dataURL,
-          },
-          "*"
-        );
         return;
       }
 
@@ -1428,209 +1415,209 @@ export default function ImageEditorStandalone({
         </div>
       )}
       <div className={editorReady ? "" : "invisible"}>
-    <div
-      className="min-h-screen h-full md:px-[30px] px-[10px] md:py-[20px] py-[18px] flex flex-col md:h-screen md:overflow-hidden"
-      style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
-    >
-      <div className="flex-1 md:block flex flex-col md:min-h-0">
         <div
-          id="sidebar"
-          className="flex-1 flex h-full md:flex-row flex-col-reverse OLD_bg-red-500 max-w-[1400px] mx-auto md:min-h-0 gap-10"
+          className="min-h-screen h-full md:px-[30px] px-[10px] md:py-[20px] py-[18px] flex flex-col md:h-screen md:overflow-hidden"
+          style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
         >
-          <div className="md:w-[400px] w-full overflow-y-auto themed-scrollbar md:pr-3 md:h-full md:min-h-0 md:self-start  flex flex-col justify-between">
-            <div>
-              <EditorSidebar
-                layersToolsPanel={layersToolsPanel}
-                backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
-                textToolsPanel={FEATURE_FLAGS.showTextTools ? textToolsPanel : null}
-                aiEditPanel={FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null}
-                logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}
-                qrToolsPanel={FEATURE_FLAGS.showQrTools ? qrToolsPanel : null}
-                shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
-                frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
-                guidesAndGridPanel={guidesAndGridPanel}
-                sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
-                activeTab={mobilePanel.activeTab}
-                handleTabClick={mobilePanel.handleTabClick}
-                isPanelVisible={mobilePanel.isPanelVisible}
-                currentTranslateY={mobilePanel.currentTranslateY}
-                dragStartY={mobilePanel.dragStartY}
-                panelRef={mobilePanel.panelRef}
-                handleDragStart={mobilePanel.handleDragStart}
-                handleDragMove={mobilePanel.handleDragMove}
-                handleDragEnd={mobilePanel.handleDragEnd}
-                setIsPanelVisible={mobilePanel.setIsPanelVisible}
-                setCurrentTranslateY={mobilePanel.setCurrentTranslateY}
-                setActiveTab={mobilePanel.setActiveTab}
-              />
-            </div>
+          <div className="flex-1 md:block flex flex-col md:min-h-0">
+            <div
+              id="sidebar"
+              className="flex-1 flex h-full md:flex-row flex-col-reverse OLD_bg-red-500 max-w-[1400px] mx-auto md:min-h-0 gap-10"
+            >
+              <div className="md:w-[400px] w-full overflow-y-auto themed-scrollbar md:pr-3 md:h-full md:min-h-0 md:self-start  flex flex-col justify-between">
+                <div>
+                  <EditorSidebar
+                    layersToolsPanel={layersToolsPanel}
+                    backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
+                    textToolsPanel={FEATURE_FLAGS.showTextTools ? textToolsPanel : null}
+                    aiEditPanel={FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null}
+                    logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}
+                    qrToolsPanel={FEATURE_FLAGS.showQrTools ? qrToolsPanel : null}
+                    shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
+                    frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
+                    guidesAndGridPanel={guidesAndGridPanel}
+                    sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
+                    activeTab={mobilePanel.activeTab}
+                    handleTabClick={mobilePanel.handleTabClick}
+                    isPanelVisible={mobilePanel.isPanelVisible}
+                    currentTranslateY={mobilePanel.currentTranslateY}
+                    dragStartY={mobilePanel.dragStartY}
+                    panelRef={mobilePanel.panelRef}
+                    handleDragStart={mobilePanel.handleDragStart}
+                    handleDragMove={mobilePanel.handleDragMove}
+                    handleDragEnd={mobilePanel.handleDragEnd}
+                    setIsPanelVisible={mobilePanel.setIsPanelVisible}
+                    setCurrentTranslateY={mobilePanel.setCurrentTranslateY}
+                    setActiveTab={mobilePanel.setActiveTab}
+                  />
+                </div>
 
-            <div className="opacity-50">
-              <TectonicaLogo />
-            </div>
-          </div>
+                <div className="opacity-50">
+                  <TectonicaLogo />
+                </div>
+              </div>
 
-          <div
-            id="canvas-area"
-            className="flex-1 min-w-0 OLD_xl:px-20 md:overflow-y-auto themed-scrollbar md:min-h-0 OLD_bg-green-500"
-          >
-            <div className="mb-5">
-              <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-start">
-                <canvas ref={canvasEditor.canvasRef} />
-                {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
-                  <CanvasGuidesOverlay
-                    width={canvasEditor.canvasDimensions.width}
-                    height={canvasEditor.canvasDimensions.height}
-                    showGrid={showGrid}
-                    guidePositions={guidePositions}
+              <div
+                id="canvas-area"
+                className="flex-1 min-w-0 OLD_xl:px-20 md:overflow-y-auto themed-scrollbar md:min-h-0 OLD_bg-green-500"
+              >
+                <div className="mb-5">
+                  <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-start">
+                    <canvas ref={canvasEditor.canvasRef} />
+                    {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
+                      <CanvasGuidesOverlay
+                        width={canvasEditor.canvasDimensions.width}
+                        height={canvasEditor.canvasDimensions.height}
+                        showGrid={showGrid}
+                        guidePositions={guidePositions}
+                      />
+                    )}
+                    {rotationTooltip !== null && (
+                      <div
+                        className="pointer-events-none absolute z-10 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white tabular-nums"
+                        style={{
+                          left: rotationTooltip.left,
+                          top: rotationTooltip.top,
+                          transform: "translate(-50%, 0)",
+                        }}
+                        aria-live="polite"
+                        role="status"
+                      >
+                        {rotationTooltip.angle}°
+                      </div>
+                    )}
+                    {selectionContextMenuPosition !== null && (() => {
+                      const selObj = selection.selectedObject;
+                      const isLocked =
+                        !!selObj &&
+                        ((selObj as any).__layerLocked === true ||
+                          !!(selObj.lockMovementX && selObj.lockMovementY) ||
+                          selObj.selectable === false ||
+                          selObj.evented === false);
+                      return (
+                        <div
+                          className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
+                          style={{
+                            left: selectionContextMenuPosition.left,
+                            top: selectionContextMenuPosition.top,
+                            transform: "translate(-50%, 0)",
+                          }}
+                          role="toolbar"
+                          aria-label="Layer options"
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={duplicateSelected}
+                            className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
+                            aria-label="Duplicate layer"
+                            title="Duplicate layer"
+                          >
+                            <Copy className="size-4" aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={toggleLockSelected}
+                            className={`flex size-8 items-center justify-center rounded-md transition-colors ${isLocked
+                              ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
+                              : "text-white/90 hover:bg-white/15 hover:text-white"
+                              }`}
+                            aria-label={isLocked ? "Unlock layer" : "Lock layer"}
+                            title={isLocked ? "Unlock layer" : "Lock layer"}
+                          >
+                            {isLocked ? <Lock className="size-4" aria-hidden /> : <Unlock className="size-4" aria-hidden />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={deleteSelected}
+                            className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                            aria-label="Delete layer"
+                            title="Delete layer"
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {!mobilePanel.activeTab && (
+                  <EditorToolbar
+                    undo={history.undo}
+                    redo={history.redo}
+                    deleteSelected={deleteSelected}
+                    handleExportClick={handleExportClick}
+                    handleSave={handleSave}
+                    handleGetFeedback={
+                      FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
+                    }
+                    isExporting={isExporting}
+                    isSaving={isSaving}
+                    isFetchingFeedback={
+                      FEATURE_FLAGS.showFeedbackButton ? isFetchingFeedback : undefined
+                    }
+                    feedbackText={
+                      FEATURE_FLAGS.showFeedbackButton ? feedbackText : undefined
+                    }
+                    historyState={history.historyState}
+                    selectedObject={selection.selectedObject}
+                    showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+                    variant="mobile"
+                    alignmentSlot={alignmentSlot}
+                    onSaveClick={() => setShowSaveModal(true)}
+                    onReturnToConversation={handleReturnToConversation}
+                    isEmbedded={isEmbedded}
+                    isReturning={isReturningToConversation}
                   />
                 )}
-                {rotationTooltip !== null && (
-                  <div
-                    className="pointer-events-none absolute z-10 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white tabular-nums"
-                    style={{
-                      left: rotationTooltip.left,
-                      top: rotationTooltip.top,
-                      transform: "translate(-50%, 0)",
-                    }}
-                    aria-live="polite"
-                    role="status"
-                  >
-                    {rotationTooltip.angle}°
-                  </div>
-                )}
-                {selectionContextMenuPosition !== null && (() => {
-                  const selObj = selection.selectedObject;
-                  const isLocked =
-                    !!selObj &&
-                    ((selObj as any).__layerLocked === true ||
-                      !!(selObj.lockMovementX && selObj.lockMovementY) ||
-                      selObj.selectable === false ||
-                      selObj.evented === false);
-                  return (
-                    <div
-                      className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
-                      style={{
-                        left: selectionContextMenuPosition.left,
-                        top: selectionContextMenuPosition.top,
-                        transform: "translate(-50%, 0)",
-                      }}
-                      role="toolbar"
-                      aria-label="Layer options"
-                      onPointerDown={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        onClick={duplicateSelected}
-                        className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
-                        aria-label="Duplicate layer"
-                        title="Duplicate layer"
-                      >
-                        <Copy className="size-4" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={toggleLockSelected}
-                        className={`flex size-8 items-center justify-center rounded-md transition-colors ${isLocked
-                          ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
-                          : "text-white/90 hover:bg-white/15 hover:text-white"
-                          }`}
-                        aria-label={isLocked ? "Unlock layer" : "Lock layer"}
-                        title={isLocked ? "Unlock layer" : "Lock layer"}
-                      >
-                        {isLocked ? <Lock className="size-4" aria-hidden /> : <Unlock className="size-4" aria-hidden />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={deleteSelected}
-                        className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
-                        aria-label="Delete layer"
-                        title="Delete layer"
-                      >
-                        <Trash2 className="size-4" aria-hidden />
-                      </button>
-                    </div>
-                  );
-                })()}
               </div>
-            </div>
 
-            {!mobilePanel.activeTab && (
               <EditorToolbar
                 undo={history.undo}
                 redo={history.redo}
                 deleteSelected={deleteSelected}
                 handleExportClick={handleExportClick}
                 handleSave={handleSave}
-                handleGetFeedback={
-                  FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
-                }
                 isExporting={isExporting}
                 isSaving={isSaving}
-                isFetchingFeedback={
-                  FEATURE_FLAGS.showFeedbackButton ? isFetchingFeedback : undefined
-                }
-                feedbackText={
-                  FEATURE_FLAGS.showFeedbackButton ? feedbackText : undefined
-                }
                 historyState={history.historyState}
                 selectedObject={selection.selectedObject}
                 showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
-                variant="mobile"
+                variant="desktop"
                 alignmentSlot={alignmentSlot}
                 onSaveClick={() => setShowSaveModal(true)}
                 onReturnToConversation={handleReturnToConversation}
                 isEmbedded={isEmbedded}
                 isReturning={isReturningToConversation}
               />
-            )}
+            </div>
           </div>
 
-          <EditorToolbar
-            undo={history.undo}
-            redo={history.redo}
-            deleteSelected={deleteSelected}
-            handleExportClick={handleExportClick}
-            handleSave={handleSave}
-            isExporting={isExporting}
+          {FEATURE_FLAGS.showFeedbackButton && (
+            <FeedbackButton
+              handleGetFeedback={handleGetFeedback}
+              isFetchingFeedback={isFetchingFeedback}
+              feedbackText={feedbackText}
+            />
+          )}
+
+          <SaveSessionModal
+            open={showSaveModal}
+            onOpenChange={setShowSaveModal}
+            onConfirm={(name) => handleSave(name)}
             isSaving={isSaving}
-            historyState={history.historyState}
-            selectedObject={selection.selectedObject}
-            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
-            variant="desktop"
-            alignmentSlot={alignmentSlot}
-            onSaveClick={() => setShowSaveModal(true)}
-            onReturnToConversation={handleReturnToConversation}
-            isEmbedded={isEmbedded}
-            isReturning={isReturningToConversation}
+          />
+
+          <DisclaimerModal
+            open={showDisclaimerModal}
+            onOpenChange={setShowDisclaimerModal}
+            disclaimerPosition={disclaimerPosition}
+            setDisclaimerPosition={setDisclaimerPosition}
+            onConfirm={(exportConfig) => exportImage(exportConfig)}
+            isExporting={isExporting}
           />
         </div>
-      </div>
-
-      {FEATURE_FLAGS.showFeedbackButton && (
-        <FeedbackButton
-          handleGetFeedback={handleGetFeedback}
-          isFetchingFeedback={isFetchingFeedback}
-          feedbackText={feedbackText}
-        />
-      )}
-
-      <SaveSessionModal
-        open={showSaveModal}
-        onOpenChange={setShowSaveModal}
-        onConfirm={(name) => handleSave(name)}
-        isSaving={isSaving}
-      />
-
-      <DisclaimerModal
-        open={showDisclaimerModal}
-        onOpenChange={setShowDisclaimerModal}
-        disclaimerPosition={disclaimerPosition}
-        setDisclaimerPosition={setDisclaimerPosition}
-        onConfirm={(exportConfig) => exportImage(exportConfig)}
-        isExporting={isExporting}
-      />
-    </div>
       </div>
     </>
   );
