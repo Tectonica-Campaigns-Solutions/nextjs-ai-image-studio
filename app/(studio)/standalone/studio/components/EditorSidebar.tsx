@@ -68,7 +68,7 @@ export function EditorSidebar({
       frameToolsPanel != null ||
       guidesAndGridPanel != null ||
       sessionsListPanel != null) && (
-      <Accordion type="single" className="space-y-[10px]">
+      <Accordion type="single" collapsible className="space-y-[10px]">
         {layersToolsPanel != null && (
           <AccordionItem value="layers-advanced" className="border-0">
             <Card className="border-0 shadow-sm bg-[#191919] p-0">
