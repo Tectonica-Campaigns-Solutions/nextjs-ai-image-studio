@@ -30,7 +30,7 @@ export const BackgroundImagePanel = React.memo(function BackgroundImagePanel({
         <div className="flex gap-[10px]">
           <Input
             type="url"
-            placeholder="Enter or paste image URL"
+            placeholder="Enter image URL"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             disabled={isLoading}
