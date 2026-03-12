@@ -94,6 +94,66 @@ export async function uploadThumbnailToStorage(
   }
 }
 
+export async function uploadConversationImageToStorage(
+  base64: string,
+  caUserId: string
+): Promise<string | null> {
+  try {
+    const supabase = createServiceClient();
+
+    const clientId = await resolveClientId(supabase, caUserId);
+    if (!clientId) {
+      console.error("[canvas-session-service] client not found for ca_user_id (conversation image):", caUserId);
+      return null;
+    }
+
+    let mimeType = "image/png";
+    let base64Data = base64;
+    if (base64.startsWith("data:")) {
+      const match = base64.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        mimeType = match[1];
+        base64Data = match[2];
+      }
+    }
+
+    const extension =
+      mimeType === "image/jpeg" || mimeType === "image/jpg"
+        ? "jpg"
+        : mimeType === "image/webp"
+        ? "webp"
+        : "png";
+
+    const buffer = Buffer.from(base64Data, "base64");
+
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}.${extension}`;
+    const filePath = `clients/${clientId}/conversation-outputs/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, buffer, {
+        contentType: mimeType,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error(
+        "[canvas-session-service] conversation image storage upload failed:",
+        error
+      );
+      return null;
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    return `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${filePath}`;
+  } catch (err) {
+    console.error("[canvas-session-service] conversation image upload error:", err);
+    return null;
+  }
+}
+
 export async function updateSessionThumbnail(
   sessionId: string,
   thumbnailUrl: string

@@ -538,7 +538,7 @@ export default function ImageEditorStandalone({
   // Detect if editor is running inside an iframe (embedded in ChangeAgent/Open WebUI)
   const isEmbedded = typeof window !== "undefined" && typeof window.self !== "undefined" && window.self !== window.top;
 
-  // Export current canvas as data URL (without disclaimer) and send it to parent via postMessage
+  // Export current canvas (without disclaimer), upload it to Supabase and send the public URL to parent via postMessage
   const handleReturnToConversation = async () => {
     if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
 
@@ -566,10 +566,48 @@ export default function ImageEditorStandalone({
         return;
       }
 
+      const caUserId = params.user_id?.trim();
+
+      // If we don't have a ChangeAgent user id, fall back to the previous behaviour
+      // and send the base64 image directly (mainly for non-CA embedding scenarios).
+      if (!caUserId) {
+        window.parent.postMessage(
+          {
+            type: STUDIO_IFRAME_MESSAGE.EDITING_DONE_TYPE,
+            imageDataUrl: dataURL,
+          },
+          "*"
+        );
+        return;
+      }
+
+      const uploadResponse = await fetch("/api/studio/return-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_base64: dataURL,
+          ca_user_id: caUserId,
+        }),
+      });
+
+      const uploadJson = await uploadResponse.json().catch(() => null);
+
+      if (!uploadResponse.ok || !uploadJson?.image_url) {
+        console.error("Failed to upload image for conversation return:", uploadJson);
+        toast({
+          title: "Could not upload image",
+          description: uploadJson?.error ?? "Try again before returning it to the conversation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const imageUrl = uploadJson.image_url as string;
+
       window.parent.postMessage(
         {
           type: STUDIO_IFRAME_MESSAGE.EDITING_DONE_TYPE,
-          imageDataUrl: dataURL,
+          imageUrl,
         },
         "*"
       );
