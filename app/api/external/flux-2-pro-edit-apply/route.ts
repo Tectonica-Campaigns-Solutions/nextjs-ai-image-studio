@@ -172,6 +172,26 @@ async function getCompositionRuleText(orgType: string, compositionRule: string):
   return null
 }
 
+/**
+ * Get the createElementIsolation prompt text from the organization's config.json.
+ * Returns null if not found.
+ */
+async function getElementIsolationText(orgType: string): Promise<string | null> {
+  try {
+    const folderName = `${orgType.toLowerCase()}-reference-images`
+    const folderPath = path.join(process.cwd(), 'public', folderName)
+    const configPath = path.join(folderPath, 'config.json')
+    const configContent = await fs.readFile(configPath, 'utf-8')
+    const config = JSON.parse(configContent)
+    if (config.prompts?.createElementIsolation && typeof config.prompts.createElementIsolation === 'string') {
+      return config.prompts.createElementIsolation
+    }
+  } catch {
+    // Config not found or unreadable — silently ignore
+  }
+  return null
+}
+
 // Default scene type
 const DEFAULT_SCENE_TYPE: SceneType = 'people'
 
@@ -287,6 +307,13 @@ export async function POST(request: NextRequest) {
     if (compositionRuleText) {
       finalPrompt = `${finalPrompt}\n${compositionRuleText}`
       console.log(`[Flux 2 Pro Edit Apply] Applied composition rule '${compositionRule}'`)
+    }
+
+    // Always apply createElementIsolation rule
+    const elementIsolationText = await getElementIsolationText(orgType)
+    if (elementIsolationText) {
+      finalPrompt = `${finalPrompt}\n${elementIsolationText}`
+      console.log(`[Flux 2 Pro Edit Apply] Applied createElementIsolation rule`)
     }
 
     console.log("[Flux 2 Pro Edit Apply] Parameters:", {
