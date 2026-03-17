@@ -6,12 +6,12 @@
   "create": [
     "TctAIGeneration01.jpg",
     "TctAIGeneration02.jpg",
-    "TctAIGeneration04.jpg",
+    "TCT-AI-Landmark-2.png",
     "TctAIGeneration05.jpg",
     "TctAIGeneration06.jpg",
     "TctAIGeneration07.jpg",
     "TctAIGeneration08.jpg",
-    "TctAIGeneration03.jpg"
+    "TCT-AI-Landmark-3.png"
   ],
   "prompts": {
     "people": "@image1 is the PRIMARY subject and @image2 is a STYLE REFERENCE ONLY. Combine the subject(s) from @image1 with the artistic style and atmosphere of @image2. Do not modify @image1 subject(s) pose and anatomical features.",
