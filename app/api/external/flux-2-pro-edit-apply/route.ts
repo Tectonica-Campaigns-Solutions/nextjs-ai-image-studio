@@ -7,14 +7,14 @@ import { getClientApiKey } from '@/lib/api-keys'
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
- * For 2 images (1 user + 1 reference):
- * - First image (user): max 4 MP (2048x2048)
- * - Second image (reference): max 1 MP (1024x1024)
- * - Total: 5 MP input + output within 9 MP limit
+ * For 3 images (1 user + 2 references):
+ * - User image: max 4 MP (2048x2048)
+ * - Each reference image: max 0.5 MP (~707x707)
+ * - Total: ~5 MP input + output within 9 MP limit
  */
-async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promise<Buffer> {
-  const maxMegapixels = isFirstImage ? 4_000_000 : 1_000_000
-  const maxDimension = isFirstImage ? 2048 : 1024
+async function resizeImageForFalAI(buffer: Buffer, imageRole: 'user' | 'reference'): Promise<Buffer> {
+  const maxMegapixels = imageRole === 'user' ? 4_000_000 : 500_000
+  const maxDimension = imageRole === 'user' ? 2048 : 1024
   
   const metadata = await sharp(buffer).metadata()
   const currentPixels = (metadata.width || 0) * (metadata.height || 0)
@@ -93,7 +93,7 @@ const TECTONICA_REFERENCE_IMAGES: Record<SceneType, string> = {
 async function getClientSceneConfig(
   orgType: string, 
   sceneType: SceneType
-): Promise<{ filename: string; folderName: string; prompt: string }> {
+): Promise<{ filenames: string[]; folderName: string; prompt: string }> {
   const folderName = `${orgType.toLowerCase()}-reference-images`
   const folderPath = path.join(process.cwd(), 'public', folderName)
   let customPrompt: string | null = null
@@ -110,12 +110,24 @@ async function getClientSceneConfig(
       console.log(`[Flux 2 Pro Edit Apply] Using custom prompt from config.json for ${sceneType}`)
     }
     
-    if (config[sceneType] && typeof config[sceneType] === 'string') {
-      console.log(`[Flux 2 Pro Edit Apply] Using config.json mapping: ${sceneType} -> ${config[sceneType]}`)
-      return { 
-        filename: config[sceneType], 
-        folderName,
-        prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
+    if (config[sceneType]) {
+      const rawValue = config[sceneType]
+      let filenames: string[]
+      if (Array.isArray(rawValue)) {
+        filenames = rawValue.filter((f: unknown) => typeof f === 'string') as string[]
+        console.log(`[Flux 2 Pro Edit Apply] Using config.json mapping: ${sceneType} -> [${filenames.join(', ')}]`)
+      } else if (typeof rawValue === 'string') {
+        filenames = [rawValue]
+        console.log(`[Flux 2 Pro Edit Apply] Using config.json mapping: ${sceneType} -> ${rawValue}`)
+      } else {
+        filenames = []
+      }
+      if (filenames.length > 0) {
+        return { 
+          filenames, 
+          folderName,
+          prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
+        }
       }
     }
   } catch (error) {
@@ -133,7 +145,7 @@ async function getClientSceneConfig(
       await fs.access(conventionPath)
       console.log(`[Flux 2 Pro Edit Apply] Found by convention: ${conventionFilename}`)
       return { 
-        filename: conventionFilename, 
+        filenames: [conventionFilename], 
         folderName,
         prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
       }
@@ -146,7 +158,7 @@ async function getClientSceneConfig(
   console.log(`[Flux 2 Pro Edit Apply] No reference image found for ${orgType}, falling back to Tectonica`)
   const tectonicaFilename = TECTONICA_REFERENCE_IMAGES[sceneType]
   return { 
-    filename: tectonicaFilename, 
+    filenames: [tectonicaFilename], 
     folderName: 'tectonicaai-reference-images',
     prompt: customPrompt || SCENE_CONFIGS[sceneType].defaultPrompt
   }
@@ -441,7 +453,7 @@ export async function POST(request: NextRequest) {
         let finalMimeType = 'image/jpeg'
         
         try {
-          finalBuffer = await resizeImageForFalAI(imageBuffer, true)
+          finalBuffer = await resizeImageForFalAI(imageBuffer, 'user')
           console.log(`[Flux 2 Pro Edit Apply] ✅ Processed: ${(imageBuffer.length / 1024).toFixed(1)} KB → ${(finalBuffer.length / 1024).toFixed(1)} KB`)
         } catch (sharpError) {
           console.warn(`[Flux 2 Pro Edit Apply] ⚠️  Processing failed, using original`)
@@ -526,76 +538,78 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // SECOND: Upload style reference image (this will be @image2)
-    console.log(`[Flux 2 Pro Edit Apply] Uploading style reference image for scene type '${sceneType}' (will be @image2)...`)
-    
-    // Use the reference image from the scene config we already retrieved
-    const referenceImageFilename = sceneConfig.filename
+    // SECOND: Upload style reference images (these will be @image2, @image3, ...)
+    const referenceImageFilenames = sceneConfig.filenames
     const folderName = sceneConfig.folderName
-    const imagePath = `/${folderName}/${referenceImageFilename}`
-    const fullPath = path.join(process.cwd(), 'public', imagePath)
-    
-    console.log(`[Flux 2 Pro Edit Apply] Using reference: ${folderName}/${referenceImageFilename}`)
-    
-    try {
-      console.log(`[Flux 2 Pro Edit Apply] Reading style reference: ${fullPath}`)
-      
-      // Read the file
-      let imageBuffer = await fs.readFile(fullPath)
-      
-      // Resize reference image (second image, max 1 MP)
-      imageBuffer = await resizeImageForFalAI(imageBuffer, false)
-      
-      // Upload as JPEG
-      const mimeType = 'image/jpeg'
-      const fileName = `style-ref.jpg`
-      
-      console.log(`[Flux 2 Pro Edit Apply] Uploading style reference: ${fileName} (${(imageBuffer.length / 1024).toFixed(1)} KB)`)
-      
-      const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Key ${falApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          content_type: mimeType,
-          file_name: fileName
+    console.log(`[Flux 2 Pro Edit Apply] Uploading ${referenceImageFilenames.length} style reference image(s) for scene type '${sceneType}'...`)
+
+    for (let refIndex = 0; refIndex < referenceImageFilenames.length; refIndex++) {
+      const refFilename = referenceImageFilenames[refIndex]
+      const imageLabel = `@image${refIndex + 2}`
+      const fullPath = path.join(process.cwd(), 'public', folderName, refFilename)
+
+      console.log(`[Flux 2 Pro Edit Apply] Using reference ${imageLabel}: ${folderName}/${refFilename}`)
+
+      try {
+        console.log(`[Flux 2 Pro Edit Apply] Reading style reference: ${fullPath}`)
+
+        // Read the file
+        let imageBuffer = await fs.readFile(fullPath)
+
+        // Resize reference image (max 0.5 MP each)
+        imageBuffer = await resizeImageForFalAI(imageBuffer, 'reference')
+
+        // Upload as JPEG
+        const mimeType = 'image/jpeg'
+        const fileName = `style-ref-${refIndex + 1}.jpg`
+
+        console.log(`[Flux 2 Pro Edit Apply] Uploading style reference: ${fileName} (${(imageBuffer.length / 1024).toFixed(1)} KB)`)
+
+        const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Key ${falApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content_type: mimeType,
+            file_name: fileName
+          })
         })
-      })
-      
-      if (!initiateResponse.ok) {
-        throw new Error(`Failed to initiate upload: ${initiateResponse.status}`)
+
+        if (!initiateResponse.ok) {
+          throw new Error(`Failed to initiate upload: ${initiateResponse.status}`)
+        }
+
+        const { upload_url, file_url } = await initiateResponse.json()
+
+        const uint8Array = new Uint8Array(imageBuffer)
+        const putResponse = await fetch(upload_url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': mimeType,
+            'Content-Length': imageBuffer.length.toString()
+          },
+          body: uint8Array
+        })
+
+        if (!putResponse.ok) {
+          throw new Error(`Failed to PUT file: ${putResponse.status}`)
+        }
+
+        console.log(`[Flux 2 Pro Edit Apply] ✅ Uploaded style reference (${imageLabel}): ${file_url}`)
+        allImageUrls.push(file_url)
+
+      } catch (uploadError) {
+        console.error(`[Flux 2 Pro Edit Apply] Failed to upload style reference ${imageLabel}:`, uploadError)
+        return NextResponse.json({
+          error: "Failed to upload style reference image",
+          details: `Failed to upload style reference ${imageLabel}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
+        }, { status: 500 })
       }
-      
-      const { upload_url, file_url } = await initiateResponse.json()
-      
-      const uint8Array = new Uint8Array(imageBuffer)
-      const putResponse = await fetch(upload_url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': mimeType,
-          'Content-Length': imageBuffer.length.toString()
-        },
-        body: uint8Array
-      })
-      
-      if (!putResponse.ok) {
-        throw new Error(`Failed to PUT file: ${putResponse.status}`)
-      }
-      
-      console.log(`[Flux 2 Pro Edit Apply] ✅ Uploaded style reference (@image2): ${file_url}`)
-      allImageUrls.push(file_url)
-      
-    } catch (uploadError) {
-      console.error(`[Flux 2 Pro Edit Apply] Failed to upload style reference:`, uploadError)
-      return NextResponse.json({
-        error: "Failed to upload style reference image",
-        details: `Failed to upload style reference: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
-      }, { status: 500 })
     }
-    
-    console.log(`[Flux 2 Pro Edit Apply] Total images: ${allImageUrls.length} (1 user + 1 style ref)`)
+
+    console.log(`[Flux 2 Pro Edit Apply] Total images: ${allImageUrls.length} (1 user + ${referenceImageFilenames.length} style ref(s))`)
 
     // Prepare input for fal.ai
     const input: any = {
@@ -626,7 +640,7 @@ export async function POST(request: NextRequest) {
     console.log("[Flux 2 Pro Edit Apply] Calling fal.ai...")
     console.log("[Flux 2 Pro Edit Apply] Input:", JSON.stringify({
       ...input,
-      image_urls: `[${allImageUrls.length} URLs: 1 user + 1 style ref]`,
+      image_urls: `[${allImageUrls.length} URLs: 1 user + ${referenceImageFilenames.length} style ref(s)]`,
       prompt: input.prompt
     }, null, 2))
 
@@ -679,7 +693,8 @@ export async function POST(request: NextRequest) {
         model: "fal-ai/flux-2-pro/edit",
         provider: "fal.ai",
         inputImages: allImageUrls.length,
-        referenceImage: referenceImageFilename,
+        referenceImages: referenceImageFilenames,
+        referenceImage: referenceImageFilenames[0],
         userImages: 1,
         settings: {
           image_size: input.image_size,
