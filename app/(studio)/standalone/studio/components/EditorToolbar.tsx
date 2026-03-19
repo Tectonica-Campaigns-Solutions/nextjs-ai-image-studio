@@ -163,7 +163,7 @@ export function EditorToolbar({
   }
 
   return (
-    <div className="hidden md:flex flex-col gap-[10px] shrink-0 md:self-start">
+    <div className="hidden md:flex flex-col gap-[10px] shrink-0 md:self-start md:sticky md:top-4 lg:top-5 xl:static z-10">
       <Button
         variant="outline"
         size="sm"

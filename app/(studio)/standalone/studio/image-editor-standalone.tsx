@@ -55,7 +55,7 @@ import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
-import { Copy, Lock, Trash2, Unlock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
 
 export default function ImageEditorStandalone({
   params,
@@ -106,6 +106,7 @@ export default function ImageEditorStandalone({
 
   // Replace background image state
   const [isReplacingBackground, setIsReplacingBackground] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   // Rotation tooltip (degrees) shown near element while rotating or briefly after
   const [rotationTooltip, setRotationTooltip] = useState<{
@@ -377,6 +378,30 @@ export default function ImageEditorStandalone({
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
+
+  // Recalculate canvas size when sidebar collapses/expands in tablet/laptop.
+  // Dispatch once immediately and once after width transition completes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("resize"));
+    const timeout = window.setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 220);
+    return () => window.clearTimeout(timeout);
+  }, [isSidebarCollapsed]);
+
+  // Reset collapsed desktop/tablet sidebar state when entering mobile widths.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleViewportChange = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarCollapsed(false);
+      }
+    };
+    handleViewportChange();
+    window.addEventListener("resize", handleViewportChange);
+    return () => window.removeEventListener("resize", handleViewportChange);
+  }, []);
 
   // Update text on style change
   useEffect(() => {
@@ -1407,6 +1432,10 @@ export default function ImageEditorStandalone({
     !!canvasEditor.canvas &&
     (!params.user_id?.trim() || !imageUrl || sessionsInitialFetchDone);
 
+  const sidebarWidthClass = isSidebarCollapsed
+    ? "md:w-[76px] lg:w-[88px] xl:w-[400px]"
+    : "md:w-[260px] lg:w-[320px] xl:w-[400px]";
+
   return (
     <>
       {!editorReady && (
@@ -1416,16 +1445,28 @@ export default function ImageEditorStandalone({
       )}
       <div className={editorReady ? "" : "invisible"}>
         <div
-          className="min-h-screen h-full md:px-[30px] px-[10px] md:py-[20px] py-[18px] flex flex-col md:h-screen md:overflow-hidden"
+          className="min-h-screen h-full px-[10px] py-[18px] flex flex-col md:px-[14px] md:py-[18px] lg:px-[22px] lg:py-[20px] xl:px-[30px] md:h-dvh md:overflow-hidden"
           style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
         >
           <div className="flex-1 md:block flex flex-col md:min-h-0">
             <div
               id="sidebar"
-              className="flex-1 flex h-full md:flex-row flex-col-reverse OLD_bg-red-500 max-w-[1400px] mx-auto md:min-h-0 gap-10"
+              className="flex-1 flex h-full md:flex-row flex-col-reverse md:max-w-[760px] lg:max-w-[1080px] xl:max-w-[1400px] mx-auto md:min-h-0 gap-3 md:gap-4 lg:gap-6 xl:gap-10"
             >
-              <div className="md:w-[400px] w-full overflow-y-auto themed-scrollbar md:pr-3 md:h-full md:min-h-0 md:self-start  flex flex-col justify-between">
-                <div>
+              <div className={`w-full ${sidebarWidthClass} overflow-y-auto themed-scrollbar md:h-full md:min-h-0 md:self-start flex flex-col justify-start md:pr-1 lg:pr-2 xl:pr-3 transition-[width] duration-200 ease-out`}>
+                <div className="mb-2 flex items-center justify-end md:justify-start">
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                    className="hidden md:inline-flex xl:hidden size-9 items-center justify-center rounded-md border border-white/15 bg-[#1a1a1a] text-white/85 hover:bg-[#242424] hover:text-white"
+                    aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                  >
+                    {isSidebarCollapsed ? <ChevronRight className="size-4" aria-hidden /> : <ChevronLeft className="size-4" aria-hidden />}
+                  </button>
+                </div>
+
+                <div className={isSidebarCollapsed ? "block md:hidden xl:block" : "block"}>
                   <EditorSidebar
                     layersToolsPanel={layersToolsPanel}
                     backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
@@ -1452,17 +1493,17 @@ export default function ImageEditorStandalone({
                   />
                 </div>
 
-                <div className="opacity-50">
+                <div className={`opacity-50 mt-6 md:mt-auto ${isSidebarCollapsed ? "md:flex md:justify-center xl:justify-start" : ""}`}>
                   <TectonicaLogo />
                 </div>
               </div>
 
               <div
                 id="canvas-area"
-                className="flex-1 min-w-0 OLD_xl:px-20 md:overflow-y-auto themed-scrollbar md:min-h-0 OLD_bg-green-500"
+                className="flex-1 min-w-0 md:min-h-0 themed-scrollbar md:overflow-auto"
               >
                 <div className="mb-5">
-                  <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-start">
+                  <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-center xl:justify-start">
                     <canvas ref={canvasEditor.canvasRef} />
                     {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
                       <CanvasGuidesOverlay
