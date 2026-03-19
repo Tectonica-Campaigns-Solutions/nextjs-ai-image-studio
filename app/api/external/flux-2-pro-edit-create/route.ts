@@ -81,7 +81,7 @@ async function getClientReferenceImages(orgType: string): Promise<{
   elementIsolation: string;
 }> {
   // Default prompt for user image preservation
-  const defaultUserImagePrompt = "IMPORTANT: Image @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+  const defaultUserImagePrompt = "IMPORTANT: @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
 
   // Default style reinforcement directive
   const defaultStyleReinforcement = "STYLE REFERENCE DIRECTIVE: The reference images define the color palette, tonal values, lighting setup, and atmospheric mood that MUST be applied to the result. Honor the rendering style direction specified in the prompt (e.g., photorealistic, illustrative, painterly), but extract the color grading, tonal range, lighting character, and overall visual aesthetic exclusively from the reference images. Do not use a generic or default color treatment — the aesthetic must feel visually consistent with the reference images."
