@@ -325,7 +325,7 @@ export function FontUpload({
           checked={isPrimary}
           onChange={(e) => setIsPrimary(e.target.checked)}
           disabled={uploading}
-          className="h-4 w-4"
+          className="size-4"
         />
       </div>
 
@@ -352,12 +352,12 @@ export function FontUpload({
         >
           {uploading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
               Uploading...
             </>
           ) : (
             <>
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="size-4" />
               Add Font
             </>
           )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AssetGallery } from "./asset-gallery";
 import { FrameGallery } from "./frame-gallery";
@@ -12,7 +13,6 @@ interface ClientDetailGalleriesProps {
   clientId: string;
   variants: string[];
   data: ClientDetailGalleriesData;
-  /** "assets" = only Assets card (for grid cell), "rest" = Frames/Fonts/Sessions, "all" = all four */
   showOnly?: "assets" | "rest" | "all";
 }
 
@@ -25,14 +25,15 @@ export function ClientDetailGalleries({
   const router = useRouter();
   const onRefresh = () => router.refresh();
 
-  // Load Google/Custom fonts for preview when showing rest or all
-  if (
-    typeof document !== "undefined" &&
-    data.fonts.length > 0 &&
-    (showOnly === "rest" || showOnly === "all")
-  ) {
+  const shouldLoadFonts =
+    data.fonts.length > 0 && (showOnly === "rest" || showOnly === "all");
+
+  useEffect(() => {
+    if (!shouldLoadFonts) return;
+
     const googleFonts = data.fonts.filter((f) => f.font_source === "google");
     const customFonts = data.fonts.filter((f) => f.font_source === "custom");
+
     if (googleFonts.length > 0) {
       const googleFontsData = googleFonts.map((f) => ({
         family: f.font_family,
@@ -50,6 +51,7 @@ export function ClientDetailGalleries({
         link.href = googleFontsUrl;
       }
     }
+
     if (customFonts.length > 0) {
       let style = document.querySelector(`style[data-custom-fonts]`) as HTMLStyleElement;
       if (!style) {
@@ -70,11 +72,11 @@ export function ClientDetailGalleries({
         .join("\n");
       style.textContent = fontFaceCSS;
     }
-  }
+  }, [shouldLoadFonts, data.fonts]);
 
   const assetsCard = (
-    <div className="bg-white rounded-lg border border-gray-200 p-8">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Client Assets</h2>
+    <div className="bg-card rounded-lg border border-border p-8">
+      <h2 className="text-lg font-semibold text-foreground mb-6">Assets</h2>
       <AssetGallery
         clientId={clientId}
         assets={data.assets}
@@ -86,9 +88,9 @@ export function ClientDetailGalleries({
 
   const restCards = (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Client Frames</h2>
-        <p className="text-sm text-gray-500 mb-6">
+      <div className="bg-card rounded-lg border border-border p-8 mb-6">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Frames</h2>
+        <p className="text-sm text-muted-foreground mb-6 text-pretty">
           Frame images overlaid on the canvas. Choose one or more aspect ratios (or &quot;All&quot;) per frame so it appears when the canvas matches those formats.
         </p>
         <FrameGallery
@@ -97,17 +99,17 @@ export function ClientDetailGalleries({
           onRefresh={onRefresh}
         />
       </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Client Fonts</h2>
+      <div className="bg-card rounded-lg border border-border p-8 mb-6">
+        <h2 className="text-lg font-semibold text-foreground mb-6">Fonts</h2>
         <FontGallery
           clientId={clientId}
           fonts={data.fonts}
           onRefresh={onRefresh}
         />
       </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Canvas Sessions</h2>
-        <p className="text-sm text-gray-500 mb-6">
+      <div className="bg-card rounded-lg border border-border p-8">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Canvas Sessions</h2>
+        <p className="text-sm text-muted-foreground mb-6 text-pretty">
           Saved editor sessions for this client. Each session stores the canvas overlays and can be reopened in the editor.
         </p>
         <CanvasSessionGallery

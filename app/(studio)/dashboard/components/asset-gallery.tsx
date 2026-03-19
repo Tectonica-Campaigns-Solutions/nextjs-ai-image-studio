@@ -2,6 +2,20 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Star, Expand } from "lucide-react";
 import {
@@ -11,9 +25,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AssetUpload } from "./asset-upload";
+import { SortableItem } from "./sortable-item";
 import type { ClientAsset } from "@/app/(studio)/dashboard/types";
-import { deleteAssetAction, setPrimaryAssetAction } from "@/app/(studio)/dashboard/actions/assets";
+import {
+  deleteAssetAction,
+  setPrimaryAssetAction,
+  reorderAssetsAction,
+} from "@/app/(studio)/dashboard/actions/assets";
 
 interface AssetGalleryProps {
   clientId: string;
@@ -30,38 +59,59 @@ export function AssetGallery({
 }: AssetGalleryProps) {
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const openLightbox = useCallback((asset: ClientAsset) => {
-    setLightboxAsset(asset);
-  }, []);
-
-  const closeLightbox = useCallback(() => {
-    setLightboxAsset(null);
-  }, []);
-
-  const handleLightboxKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-    },
-    [closeLightbox]
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor)
   );
 
-  const handleDelete = async (assetId: string) => {
-    if (!confirm("Are you sure you want to delete this asset?")) return;
-    const result = await deleteAssetAction(clientId, assetId);
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const oldIndex = assets.findIndex((a) => a.id === active.id);
+      const newIndex = assets.findIndex((a) => a.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = [...assets];
+      const [moved] = reordered.splice(oldIndex, 1);
+      reordered.splice(newIndex, 0, moved);
+
+      const result = await reorderAssetsAction(
+        clientId,
+        reordered.map((a) => a.id)
+      );
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Order updated");
+      onRefresh();
+    },
+    [assets, clientId, onRefresh]
+  );
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const result = await deleteAssetAction(clientId, deleteTarget);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
+      setDeleteTarget(null);
       return;
     }
+    toast.success("Asset deleted");
+    setDeleteTarget(null);
     onRefresh();
   };
 
   const handleSetPrimary = async (assetId: string) => {
     const result = await setPrimaryAssetAction(clientId, assetId);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Primary asset updated");
     onRefresh();
   };
 
@@ -86,6 +136,59 @@ export function AssetGallery({
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete asset</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this asset? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog
+        open={!!lightboxAsset}
+        onOpenChange={(open) => !open && setLightboxAsset(null)}
+      >
+        <DialogContent className="max-w-5xl h-[90dvh] p-0 gap-0 bg-black/95 border-none [&>button]:text-white [&>button]:hover:bg-white/20">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {lightboxAsset?.display_name || lightboxAsset?.name}
+            </DialogTitle>
+            <DialogDescription>Full-size image preview</DialogDescription>
+          </DialogHeader>
+          {lightboxAsset && (
+            <div className="relative w-full h-full">
+              <Image
+                src={lightboxAsset.file_url}
+                alt={lightboxAsset.display_name || lightboxAsset.name}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
+              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80 truncate max-w-full px-4">
+                {lightboxAsset.display_name || lightboxAsset.name}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -101,7 +204,8 @@ export function AssetGallery({
 
         {assets.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground mb-4">
+            <Upload className="size-8 text-muted-foreground mx-auto mb-3" aria-hidden />
+            <p className="text-sm text-muted-foreground mb-4 text-pretty">
               No assets found. Upload the first one to start.
             </p>
             <Button onClick={() => setShowUpload(true)} variant="outline" aria-label="Upload first asset">
@@ -110,8 +214,12 @@ export function AssetGallery({
             </Button>
           </div>
         ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
           <div className="space-y-6">
-            {/* Group assets by variant */}
             {(() => {
               const groupedAssets = assets.reduce((acc, asset) => {
                 const variantKey = asset.variant || "No variant";
@@ -132,17 +240,21 @@ export function AssetGallery({
                       ({variantAssets.length} asset{variantAssets.length !== 1 ? "s" : ""})
                     </span>
                   </h3>
+                  <SortableContext
+                    items={variantAssets.map((a) => a.id)}
+                    strategy={rectSortingStrategy}
+                  >
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {variantAssets.map((asset) => (
-                      <div
+                      <SortableItem
                         key={asset.id}
-                        className="relative group border rounded-lg overflow-hidden bg-card"
+                        id={asset.id}
+                        className="group relative border rounded-lg overflow-hidden bg-card"
                       >
-                        {/* Image Preview - click to open lightbox */}
                         <button
                           type="button"
-                          onClick={() => openLightbox(asset)}
-                          className="relative aspect-square bg-muted flex items-center justify-center w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#5661f6] focus:ring-inset"
+                          onClick={() => setLightboxAsset(asset)}
+                          className="relative aspect-square bg-muted flex items-center justify-center w-full cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                           title="View full size"
                         >
                           <Image
@@ -154,110 +266,75 @@ export function AssetGallery({
                           />
                         </button>
 
-                        {/* Overlay with actions */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-                          <div className="pointer-events-auto flex items-center gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => openLightbox(asset)}
-                              title="View full size"
-                            >
-                              <Expand className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleSetPrimary(asset.id)}
-                              disabled={asset.is_primary}
-                              title={asset.is_primary ? "Already primary" : "Mark as Primary"}
-                            >
-                              <Star
-                                className={`h-4 w-4 ${asset.is_primary ? "fill-yellow-400 text-yellow-400" : "fill-gray-400 text-gray-400"
-                                  }`}
-                              />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(asset.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Primary badge */}
                         {asset.is_primary && (
-                          <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-current" />
-                            Primary Asset
+                          <div className="absolute top-2 right-2 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                            <Star className="size-3 fill-current" />
+                            Primary
                           </div>
                         )}
 
-                        {/* Variant badge (if not grouped) */}
                         {asset.variant && (
-                          <div className="absolute top-2 left-2 bg-blue-500/90 text-white px-2 py-1 rounded text-xs font-medium">
+                          <div className="absolute top-2 left-2 bg-muted text-muted-foreground px-2 py-1 rounded text-xs font-medium">
                             {asset.variant}
                           </div>
                         )}
 
-                        {/* Asset info */}
-                        <div className="p-2 border-t">
-                          <p className="text-sm font-medium truncate">
-                            {asset.display_name || asset.name}
-                          </p>
-                          {asset.width && asset.height && (
-                            <p className="text-xs text-muted-foreground">
-                              {asset.width} × {asset.height}px
+                        <div className="p-2 border-t flex items-center justify-between gap-1">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">
+                              {asset.display_name || asset.name}
                             </p>
-                          )}
+                            {asset.width && asset.height && (
+                              <p className="text-xs text-muted-foreground tabular-nums">
+                                {asset.width} x {asset.height}px
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              onClick={() => setLightboxAsset(asset)}
+                              title="View full size"
+                              aria-label="View full size"
+                            >
+                              <Expand className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              onClick={() => handleSetPrimary(asset.id)}
+                              disabled={asset.is_primary}
+                              title={asset.is_primary ? "Already primary" : "Mark as Primary"}
+                              aria-label={asset.is_primary ? "Already primary" : "Mark as Primary"}
+                            >
+                              <Star
+                                className={`size-3.5 ${asset.is_primary ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
+                              />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-destructive hover:text-destructive"
+                              onClick={() => setDeleteTarget(asset.id)}
+                              title="Delete asset"
+                              aria-label="Delete asset"
+                            >
+                              <X className="size-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      </SortableItem>
                     ))}
                   </div>
+                  </SortableContext>
                 </div>
               ));
             })()}
           </div>
-        )}
-
-        {/* Lightbox */}
-        {lightboxAsset && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-            onClick={closeLightbox}
-            onKeyDown={handleLightboxKeyDown}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Image preview"
-            tabIndex={0}
-          >
-            <button
-              type="button"
-              onClick={closeLightbox}
-              className="absolute top-4 right-4 z-10 rounded-full p-2 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div
-              className="relative w-full max-w-5xl h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={lightboxAsset.file_url}
-                alt={lightboxAsset.display_name || lightboxAsset.name}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
-            </div>
-            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80 truncate max-w-full px-4">
-              {lightboxAsset.display_name || lightboxAsset.name}
-            </p>
-          </div>
+          </DndContext>
         )}
       </div>
     </>

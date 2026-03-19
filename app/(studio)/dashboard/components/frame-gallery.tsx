@@ -2,6 +2,20 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Star, Expand, Pencil } from "lucide-react";
 import {
@@ -11,10 +25,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssetUpload } from "./asset-upload";
+import { SortableItem } from "./sortable-item";
 import type { ClientAsset } from "@/app/(studio)/dashboard/types";
-import { deleteAssetAction, setPrimaryAssetAction } from "@/app/(studio)/dashboard/actions/assets";
+import {
+  deleteAssetAction,
+  setPrimaryAssetAction,
+  reorderAssetsAction,
+} from "@/app/(studio)/dashboard/actions/assets";
 import { COMMON_ASPECT_RATIOS } from "@/lib/aspect-ratios";
 
 interface FrameGalleryProps {
@@ -26,43 +55,65 @@ interface FrameGalleryProps {
 export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps) {
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const oldIndex = frames.findIndex((f) => f.id === active.id);
+      const newIndex = frames.findIndex((f) => f.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = [...frames];
+      const [moved] = reordered.splice(oldIndex, 1);
+      reordered.splice(newIndex, 0, moved);
+
+      const result = await reorderAssetsAction(
+        clientId,
+        reordered.map((f) => f.id)
+      );
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Order updated");
+      onRefresh();
+    },
+    [frames, clientId, onRefresh]
+  );
+
   const [editFrame, setEditFrame] = useState<ClientAsset | null>(null);
   const [editVariantAll, setEditVariantAll] = useState(false);
   const [editVariantRatios, setEditVariantRatios] = useState<string[]>([]);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
-  const openLightbox = useCallback((asset: ClientAsset) => {
-    setLightboxAsset(asset);
-  }, []);
-
-  const closeLightbox = useCallback(() => {
-    setLightboxAsset(null);
-  }, []);
-
-  const handleLightboxKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-    },
-    [closeLightbox]
-  );
-
-  const handleDelete = async (assetId: string) => {
-    if (!confirm("Are you sure you want to delete this frame?")) return;
-    const result = await deleteAssetAction(clientId, assetId);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const result = await deleteAssetAction(clientId, deleteTarget);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
+      setDeleteTarget(null);
       return;
     }
+    toast.success("Frame deleted");
+    setDeleteTarget(null);
     onRefresh();
   };
 
   const handleSetPrimary = async (assetId: string) => {
     const result = await setPrimaryAssetAction(clientId, assetId);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Primary frame updated");
     onRefresh();
   };
 
@@ -121,7 +172,6 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
     }
   };
 
-  // Collect existing aspect ratio variants for autocomplete in upload
   const existingVariants = Array.from(
     new Set(
       frames.flatMap((f) =>
@@ -158,7 +208,6 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
         </DialogContent>
       </Dialog>
 
-      {/* Edit aspect ratios modal */}
       <Dialog open={!!editFrame} onOpenChange={(open) => !open && closeEdit()}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col" showCloseButton>
           <DialogHeader className="flex-shrink-0">
@@ -217,9 +266,61 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
               onClick={handleSaveEdit}
               disabled={editSaving || (!editVariantAll && editVariantRatios.length === 0)}
             >
-              {editSaving ? "Saving…" : "Save"}
+              {editSaving ? "Saving..." : "Save"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete frame</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this frame? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog
+        open={!!lightboxAsset}
+        onOpenChange={(open) => !open && setLightboxAsset(null)}
+      >
+        <DialogContent className="max-w-5xl h-[90dvh] p-0 gap-0 bg-black/95 border-none [&>button]:text-white [&>button]:hover:bg-white/20">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {lightboxAsset?.display_name || lightboxAsset?.name}
+            </DialogTitle>
+            <DialogDescription>Full-size frame preview</DialogDescription>
+          </DialogHeader>
+          {lightboxAsset && (
+            <div className="relative w-full h-full">
+              <Image
+                src={lightboxAsset.file_url}
+                alt={lightboxAsset.display_name || lightboxAsset.name}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
+              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80 truncate max-w-full px-4">
+                {lightboxAsset.display_name || lightboxAsset.name}
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -236,8 +337,9 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
 
         {frames.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground mb-2">No frames uploaded yet.</p>
-            <p className="text-xs text-muted-foreground mb-4">
+            <Upload className="size-8 text-muted-foreground mx-auto mb-3" aria-hidden />
+            <p className="text-sm text-muted-foreground mb-2 text-pretty">No frames uploaded yet.</p>
+            <p className="text-xs text-muted-foreground mb-4 text-pretty">
               Upload frame images and choose one or more aspect ratios so they appear in the studio for matching canvas formats.
             </p>
             <Button onClick={() => setShowUpload(true)} variant="outline" aria-label="Upload first frame">
@@ -246,6 +348,15 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
             </Button>
           </div>
         ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+          <SortableContext
+            items={frames.map((f) => f.id)}
+            strategy={rectSortingStrategy}
+          >
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {frames.map((frame) => {
               const variantBadges =
@@ -255,11 +366,11 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
                     ? frame.variant.split(",").map((s) => s.trim()).filter(Boolean)
                     : [];
               return (
-                <div
+                <SortableItem
                   key={frame.id}
-                  className="relative group flex flex-col border rounded-lg overflow-hidden bg-card"
+                  id={frame.id}
+                  className="group flex flex-col border rounded-lg overflow-hidden bg-card"
                 >
-                  {/* Image area: fixed aspect, never overlaps title */}
                   <div className="relative w-full flex-shrink-0 min-h-0 aspect-square overflow-hidden">
                     <div
                       className="absolute inset-0"
@@ -272,8 +383,8 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
                     />
                     <button
                       type="button"
-                      onClick={() => openLightbox(frame)}
-                      className="relative w-full h-full bg-transparent flex items-center justify-center cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#5661f6] focus:ring-inset"
+                      onClick={() => setLightboxAsset(frame)}
+                      className="relative w-full h-full bg-transparent flex items-center justify-center cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                       title="View full size"
                     >
                       <Image
@@ -285,64 +396,19 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
                       />
                     </button>
 
-                    {/* Hover overlay with actions */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-                      <div className="pointer-events-auto flex items-center gap-2 flex-wrap justify-center">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => openLightbox(frame)}
-                          title="View full size"
-                        >
-                          <Expand className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => openEdit(frame)}
-                          title="Edit aspect ratios"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleSetPrimary(frame.id)}
-                          disabled={frame.is_primary}
-                          title={frame.is_primary ? "Already primary" : "Mark as Primary"}
-                        >
-                          <Star
-                            className={`h-4 w-4 ${frame.is_primary
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "fill-gray-400 text-gray-400"
-                              }`}
-                          />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(frame.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Primary badge */}
                     {frame.is_primary && (
-                      <div className="absolute top-2 right-2 z-10 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-current" />
+                      <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                        <Star className="size-3 fill-current" />
                         Primary
                       </div>
                     )}
 
-                    {/* Aspect ratio badges */}
                     {variantBadges.length > 0 && (
                       <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-1">
                         {variantBadges.map((v) => (
                           <span
                             key={v}
-                            className="bg-emerald-600/90 text-white px-2 py-1 rounded text-xs font-medium"
+                            className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs font-medium"
                           >
                             {v}
                           </span>
@@ -351,59 +417,72 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
                     )}
                   </div>
 
-                  {/* Frame info: always below image, never overlapped */}
-                  <div className="flex-shrink-0 p-2 border-t bg-card">
-                    <p className="text-sm font-medium truncate">
-                      {frame.display_name || frame.name}
-                    </p>
-                    {frame.width && frame.height && (
-                      <p className="text-xs text-muted-foreground">
-                        {frame.width} × {frame.height}px
+                  <div className="flex-shrink-0 p-2 border-t bg-card flex items-center justify-between gap-1">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {frame.display_name || frame.name}
                       </p>
-                    )}
+                      {frame.width && frame.height && (
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          {frame.width} x {frame.height}px
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={() => setLightboxAsset(frame)}
+                        title="View full size"
+                        aria-label="View full size"
+                      >
+                        <Expand className="size-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={() => openEdit(frame)}
+                        title="Edit aspect ratios"
+                        aria-label="Edit aspect ratios"
+                      >
+                        <Pencil className="size-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7"
+                        onClick={() => handleSetPrimary(frame.id)}
+                        disabled={frame.is_primary}
+                        title={frame.is_primary ? "Already primary" : "Mark as Primary"}
+                        aria-label={frame.is_primary ? "Already primary" : "Mark as Primary"}
+                      >
+                        <Star
+                          className={`size-3.5 ${frame.is_primary
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground"
+                            }`}
+                        />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget(frame.id)}
+                        title="Delete frame"
+                        aria-label="Delete frame"
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </SortableItem>
               );
             })}
           </div>
-        )}
-
-        {/* Lightbox */}
-        {lightboxAsset && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 !mt-0"
-            onClick={closeLightbox}
-            onKeyDown={handleLightboxKeyDown}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Frame preview"
-            tabIndex={0}
-          >
-            <button
-              type="button"
-              onClick={closeLightbox}
-              className="absolute top-4 right-4 z-10 rounded-full p-2 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div
-              className="relative w-full max-w-5xl h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={lightboxAsset.file_url}
-                alt={lightboxAsset.display_name || lightboxAsset.name}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
-            </div>
-            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80 truncate max-w-full px-4">
-              {lightboxAsset.display_name || lightboxAsset.name}
-            </p>
-          </div>
+          </SortableContext>
+          </DndContext>
         )}
       </div>
     </>

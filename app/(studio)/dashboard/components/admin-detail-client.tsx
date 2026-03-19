@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,12 +43,10 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
     admin.expires_at ? new Date(admin.expires_at).toISOString().slice(0, 16) : ""
   );
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSaving, setPasswordSaving] = useState(false);
 
   const isCurrentUser = admin.user_id === currentUserId;
@@ -57,15 +56,14 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (expiresAt) {
       const expiresDate = new Date(expiresAt);
       if (isNaN(expiresDate.getTime())) {
-        setError("Expiration date is not valid");
+        toast.error("Expiration date is not valid");
         return;
       }
       if (expiresDate <= new Date()) {
-        setError("Expiration date must be in the future");
+        toast.error("Expiration date must be in the future");
         return;
       }
     }
@@ -78,21 +76,21 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
     const result = await updateAdminAction(admin.id, payload);
     setSaving(false);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Admin updated");
     router.refresh();
   };
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError(null);
     if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
+      toast.error("Password must be at least 8 characters");
       return;
     }
     if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     setPasswordSaving(true);
@@ -102,9 +100,10 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
     });
     setPasswordSaving(false);
     if (result.error) {
-      setPasswordError(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Password updated");
     setShowPasswordDialog(false);
     setPassword("");
     setConfirmPassword("");
@@ -114,10 +113,11 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
   const handleConfirmDeactivate = async () => {
     const result = await deleteAdminAction(admin.id);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       setShowDeactivateDialog(false);
       return;
     }
+    toast.success("Admin deactivated");
     setShowDeactivateDialog(false);
     router.push("/dashboard/admins");
   };
@@ -143,8 +143,7 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="min-h-dvh bg-background">
-        <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4 mb-8">
             <Button
               variant="ghost"
@@ -189,7 +188,7 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
               <div>
                 <Label className="text-muted-foreground text-xs">Creation date</Label>
                 <p className="text-sm font-medium mt-1 tabular-nums">
-                  {new Date(admin.granted_at).toLocaleDateString("es-ES", {
+                  {new Date(admin.granted_at).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -203,15 +202,6 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
 
           <Card className="p-6 mb-6">
             <form onSubmit={handleSave} className="space-y-6">
-              {error && (
-                <div
-                  className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-                  role="alert"
-                >
-                  {error}
-                </div>
-              )}
-
               {isCurrentUser && (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
                   You cannot change your own active status or deactivate yourself.
@@ -314,7 +304,6 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
               type="button"
               variant="outline"
               onClick={() => {
-                setPasswordError(null);
                 setPassword("");
                 setConfirmPassword("");
                 setShowPasswordDialog(true);
@@ -325,7 +314,6 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
               Set new password
             </Button>
           </Card>
-        </div>
       </div>
 
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
@@ -339,14 +327,6 @@ export function AdminDetailClient({ admin, currentUserId }: AdminDetailClientPro
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSetPassword} className="space-y-4">
-            {passwordError && (
-              <div
-                className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-                role="alert"
-              >
-                {passwordError}
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="new_password">New password</Label>
               <Input

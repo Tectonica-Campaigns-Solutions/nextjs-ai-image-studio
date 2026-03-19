@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -41,27 +42,55 @@ interface AdminsListProps {
 
 export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const searchTerm = searchParams.get("q") ?? "";
+
   const [openCreateModal, setOpenCreateModal] = useState(false);
-  const [deactivateTarget, setDeactivateTarget] = useState<{ id: string; email: string } | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      }
+      const qs = params.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [searchParams, pathname, router]
+  );
 
   const handleConfirmDeactivate = async () => {
     if (!deactivateTarget) return;
     const result = await deleteAdminAction(deactivateTarget.id);
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       setDeactivateTarget(null);
       return;
     }
-    setError(null);
+    toast.success("Admin deactivated");
     setDeactivateTarget(null);
     router.refresh();
   };
 
-  const filteredAdmins = initialAdmins.filter((admin) =>
-    admin.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAdmins = useMemo(() => {
+    if (!searchTerm) return initialAdmins;
+    const q = searchTerm.toLowerCase();
+    return initialAdmins.filter(
+      (admin) =>
+        admin.email.toLowerCase().includes(q) ||
+        admin.display_name?.toLowerCase().includes(q)
+    );
+  }, [initialAdmins, searchTerm]);
 
   const isExpired = (expiresAt: string | null) => {
     if (!expiresAt) return false;
@@ -70,13 +99,20 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
 
   return (
     <>
-      <CreateAdminModal open={openCreateModal} onOpenChange={setOpenCreateModal} />
-      <AlertDialog open={!!deactivateTarget} onOpenChange={(open) => !open && setDeactivateTarget(null)}>
+      <CreateAdminModal
+        open={openCreateModal}
+        onOpenChange={setOpenCreateModal}
+      />
+      <AlertDialog
+        open={!!deactivateTarget}
+        onOpenChange={(open) => !open && setDeactivateTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Deactivate admin</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate this admin? This action can be reversed by editing the admin.
+              Are you sure you want to deactivate this admin? This action can be
+              reversed by editing the admin.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -90,8 +126,7 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className={cn("min-h-dvh bg-background")}>
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-semibold text-foreground mb-1 text-balance">
@@ -115,35 +150,29 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
               />
               <Input
                 type="search"
-                placeholder="Search by email…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by email or name…"
+                defaultValue={searchTerm}
+                onChange={(e) => updateParams({ q: e.target.value || null })}
                 className="pl-10"
-                aria-label="Search admins by email"
+                aria-label="Search admins"
               />
             </div>
           </div>
 
-          {error && (
-            <div
-              className="mb-6 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
-
           {filteredAdmins.length === 0 ? (
             <div className="py-20 text-center">
               <div className="mx-auto mb-4 flex size-24 items-center justify-center rounded-full bg-muted">
-                <Shield className="size-10 text-muted-foreground" aria-hidden />
+                <Shield
+                  className="size-10 text-muted-foreground"
+                  aria-hidden
+                />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2 text-balance">
-                {searchTerm ? "No admins found" : "No admins found"}
+                {searchTerm ? "No admins found" : "No admins yet"}
               </h3>
               <p className="text-muted-foreground mb-6 text-sm text-pretty">
                 {searchTerm
-                  ? "Try with other search terms"
+                  ? "Try adjusting your search"
                   : "Start creating your first admin"}
               </p>
               {!searchTerm && (
@@ -173,12 +202,18 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                                 : "Email not available")}
                           </h3>
                           {isCurrentUser && (
-                            <span className="text-muted-foreground text-xs">(You)</span>
+                            <span className="text-muted-foreground text-xs">
+                              (You)
+                            </span>
                           )}
                         </div>
-                        {admin.email && admin.email !== "N/A" && admin.display_name?.trim() && (
-                          <p className="text-muted-foreground text-xs mb-1">{admin.email}</p>
-                        )}
+                        {admin.email &&
+                          admin.email !== "N/A" &&
+                          admin.display_name?.trim() && (
+                            <p className="text-muted-foreground text-xs mb-1">
+                              {admin.email}
+                            </p>
+                          )}
                         {admin.granted_by_email && (
                           <p className="text-muted-foreground mb-2 text-xs">
                             Created by: {admin.granted_by_email}
@@ -198,13 +233,20 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => router.push(`/dashboard/admins/${admin.id}`)}
+                            onClick={() =>
+                              router.push(`/dashboard/admins/${admin.id}`)
+                            }
                           >
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="size-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => setDeactivateTarget({ id: admin.id, email: admin.email })}
+                            onClick={() =>
+                              setDeactivateTarget({
+                                id: admin.id,
+                                email: admin.email,
+                              })
+                            }
                             className="text-destructive focus:text-destructive"
                             disabled={isCurrentUser}
                           >
@@ -216,13 +258,19 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                     </div>
                     <div className="mb-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground text-xs">Status:</span>
+                        <span className="text-muted-foreground text-xs">
+                          Status:
+                        </span>
                         <span
                           className={cn(
                             "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                             !admin.is_active && "bg-muted text-muted-foreground",
-                            admin.is_active && expired && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
-                            admin.is_active && !expired && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
+                            admin.is_active &&
+                              expired &&
+                              "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
+                            admin.is_active &&
+                              !expired &&
+                              "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
                           )}
                         >
                           {!admin.is_active
@@ -234,13 +282,18 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                       </div>
                       {admin.expires_at && (
                         <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground text-xs">Expires:</span>
+                          <span className="text-muted-foreground text-xs">
+                            Expires:
+                          </span>
                           <span className="tabular-nums text-xs">
-                            {new Date(admin.expires_at).toLocaleDateString("es-ES", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {new Date(admin.expires_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
                           </span>
                         </div>
                       )}
@@ -248,11 +301,14 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
                     <div className="pt-4 border-t border-border">
                       <span className="text-muted-foreground text-xs tabular-nums">
                         Created:{" "}
-                        {new Date(admin.granted_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {new Date(admin.granted_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
                       </span>
                     </div>
                   </Card>
@@ -260,7 +316,6 @@ export function AdminsList({ initialAdmins, currentUserId }: AdminsListProps) {
               })}
             </div>
           )}
-        </div>
       </div>
     </>
   );

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getAdminsListData } from "@/app/(studio)/dashboard/data/admins";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
@@ -13,6 +14,8 @@ export default async function AdminsPage() {
     redirect("/dashboard/login?error=admin_required");
   }
   return (
-    <AdminsList initialAdmins={admins} currentUserId={auth.user.id} />
+    <Suspense>
+      <AdminsList initialAdmins={admins} currentUserId={auth.user.id} />
+    </Suspense>
   );
 }

@@ -8,28 +8,99 @@ import type {
   CanvasSessionSummary,
 } from "@/app/(studio)/dashboard/types";
 
-/**
- * Fetches all clients. Does NOT call requireAdmin - the page must do that first.
- */
-export async function getClientsListData(
-  caUserId?: string
-): Promise<Client[] | null> {
-  const supabase = await createClient();
-  let query = supabase
-    .from("clients")
-    .select("*")
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-  if (caUserId) query = query.eq("ca_user_id", caUserId);
-  const { data, error } = await query;
-  if (error) return null;
-  return (data ?? []) as Client[];
+export interface PaginatedClients {
+  clients: Client[];
+  total: number;
 }
 
-export async function getClients(caUserId?: string): Promise<Client[] | null> {
+/** Columns needed for the client list card view. */
+const CLIENTS_LIST_SELECT =
+  "id, name, ca_user_id, description, is_active, created_at, updated_at";
+
+/**
+ * Escapes special characters for PostgreSQL ilike pattern (%, _, ').
+ */
+function escapeIlikePattern(s: string): string {
+  return s
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "''")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
+export type ClientStatusFilter = "all" | "active" | "inactive";
+export type ClientSortKey = "created" | "name" | "updated";
+
+/**
+ * Fetches clients with pagination, status filter, search, and sort.
+ * Does NOT call requireAdmin - the page must do that first.
+ */
+export async function getClientsListData(
+  options: {
+    caUserId?: string;
+    search?: string;
+    status?: ClientStatusFilter;
+    sort?: ClientSortKey;
+    page?: number;
+    pageSize?: number;
+  } = {}
+): Promise<PaginatedClients | null> {
+  const {
+    caUserId,
+    search,
+    status = "all",
+    sort = "created",
+    page = 1,
+    pageSize = 25,
+  } = options;
+
+  const supabase = await createClient();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("clients")
+    .select(CLIENTS_LIST_SELECT, { count: "exact" })
+    .is("deleted_at", null);
+
+  if (caUserId) {
+    query = query.eq("ca_user_id", caUserId);
+  }
+
+  if (status === "active") {
+    query = query.eq("is_active", true);
+  } else if (status === "inactive") {
+    query = query.eq("is_active", false);
+  }
+
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    const pattern = `'%${escapeIlikePattern(trimmedSearch)}%'`;
+    query = query.or(
+      `name.ilike.${pattern},ca_user_id.ilike.${pattern},description.ilike.${pattern}`
+    );
+  }
+
+  if (sort === "name") {
+    query = query.order("name", { ascending: true });
+  } else if (sort === "updated") {
+    query = query.order("updated_at", { ascending: false, nullsFirst: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
+  if (error) return null;
+
+  return { clients: (data ?? []) as Client[], total: count ?? 0 };
+}
+
+export async function getClients(caUserId?: string): Promise<PaginatedClients | null> {
   const check = await requireAdmin();
   if (!check.success) return null;
-  return getClientsListData(caUserId);
+  return getClientsListData({ caUserId, page: 1, pageSize: 25 });
 }
 
 export async function getClientById(id: string): Promise<Client | null> {

@@ -32,6 +32,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
       email: data.email,
       description: data.description?.trim() || null,
       is_active: data.is_active,
+      allow_custom_logo: true,
     });
     if (result.error) throw new Error(result.error);
     onOpenChange(false);

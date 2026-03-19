@@ -76,3 +76,28 @@ export async function setPrimaryAssetAction(
   revalidatePath(`/dashboard/clients/${clientId}`);
   return {};
 }
+
+export async function reorderAssetsAction(
+  clientId: string,
+  orderedIds: string[]
+): Promise<AssetActionResult> {
+  const check = await requireAdmin();
+  if (!check.success) return { error: "Unauthorized" };
+  if (!isValidUUID(clientId)) return { error: "Invalid ID" };
+
+  const supabase = await createClient();
+  const updates = orderedIds.map((id, index) =>
+    supabase
+      .from("client_assets")
+      .update({ sort_order: index, updated_by: check.user.id })
+      .eq("id", id)
+      .eq("client_id", clientId)
+  );
+
+  const results = await Promise.all(updates);
+  const failed = results.find((r) => r.error);
+  if (failed) return { error: "Failed to reorder assets" };
+
+  revalidatePath(`/dashboard/clients/${clientId}`);
+  return {};
+}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { Trash2, Code, Copy, Check, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,6 +81,7 @@ export function CanvasSessionGallery({
   const handleDelete = async (sessionId: string) => {
     setDeletingId(sessionId);
     await deleteCanvasSessionAction(clientId, sessionId);
+    toast.success("Session deleted");
     setDeletingId(null);
     setDeleteDialogSessionId(null);
     onRefresh();
@@ -87,9 +89,12 @@ export function CanvasSessionGallery({
 
   if (sessions.length === 0) {
     return (
-      <p className="text-sm text-gray-500 py-4">
-        No canvas sessions saved for this client.
-      </p>
+      <div className="text-center py-12 border-2 border-dashed rounded-lg">
+        <Code className="size-8 text-muted-foreground mx-auto mb-3" aria-hidden />
+        <p className="text-sm text-muted-foreground text-pretty">
+          No canvas sessions saved for this client yet.
+        </p>
+      </div>
     );
   }
 
@@ -99,10 +104,10 @@ export function CanvasSessionGallery({
         {sessions.map((session) => (
           <div
             key={session.id}
-            className="group relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex flex-col"
+            className="group relative border border-border rounded-lg overflow-hidden bg-muted/50 flex flex-col"
           >
             {/* Thumbnail */}
-            <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
               {session.thumbnail_url ? (
                 <Image
                   src={session.thumbnail_url}
@@ -112,7 +117,7 @@ export function CanvasSessionGallery({
                   unoptimized
                 />
               ) : (
-                <div className="flex flex-col items-center gap-1 text-gray-400">
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
                   <Code className="size-8" />
                   <span className="text-xs">No preview</span>
                 </div>
@@ -122,19 +127,19 @@ export function CanvasSessionGallery({
             {/* Info */}
             <div className="p-3 flex flex-col gap-2 flex-1">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {session.name ?? "Untitled"}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
                   {formatDate(session.updated_at)}
                 </p>
-                <p className="text-xs text-gray-400 font-mono truncate mt-1">
+                <p className="text-xs text-muted-foreground/70 font-mono truncate mt-1">
                   {session.id}
                 </p>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+              <div className="flex items-center gap-2 pt-1 border-t border-border">
                 <Button
                   variant="outline"
                   size="sm"
@@ -153,7 +158,7 @@ export function CanvasSessionGallery({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="size-8 p-0"
                     title="Open in editor"
                   >
                     <ExternalLink className="size-3" />
@@ -168,7 +173,7 @@ export function CanvasSessionGallery({
                     variant="outline"
                     size="sm"
                     type="button"
-                    className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                    className="size-8 p-0 border-destructive/30 text-destructive hover:bg-destructive/10"
                     disabled={deletingId === session.id}
                     title="Delete session"
                     onClick={() => setDeleteDialogSessionId(session.id)}
@@ -191,7 +196,7 @@ export function CanvasSessionGallery({
                         Cancel
                       </AlertDialogCancel>
                       <AlertDialogAction
-                        className="bg-red-600 hover:bg-red-700 text-white gap-2"
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
                         disabled={deletingId === session.id}
                         onClick={async (e) => {
                           e.preventDefault();
@@ -238,8 +243,8 @@ export function CanvasSessionGallery({
               )}
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-auto rounded-md bg-gray-950 p-4 min-h-0">
-            <pre className="text-xs text-green-400 whitespace-pre-wrap break-all font-mono leading-relaxed">
+          <div className="flex-1 overflow-auto rounded-md bg-muted p-4 min-h-0">
+            <pre className="text-xs text-foreground whitespace-pre-wrap break-all font-mono leading-relaxed">
               {viewingSession
                 ? JSON.stringify(
                     {
