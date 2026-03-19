@@ -25,6 +25,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
     email: string;
     description?: string;
     is_active: boolean;
+    allow_custom_logo: boolean;
   }) => {
     const result = await createClientAction({
       ca_user_id: data.ca_user_id,
@@ -32,7 +33,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
       email: data.email,
       description: data.description?.trim() || null,
       is_active: data.is_active,
-      allow_custom_logo: true,
+      allow_custom_logo: data.allow_custom_logo,
     });
     if (result.error) throw new Error(result.error);
     onOpenChange(false);
@@ -41,17 +42,19 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" showCloseButton>
-        <DialogHeader>
-          <DialogTitle>New client</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 max-h-[90dvh] overflow-y-auto"
+        showCloseButton
+      >
+        <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+          <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+            New Client
+          </DialogTitle>
+          <DialogDescription className="text-on-surface-variant">
             Create a new client and associate its assets.
           </DialogDescription>
         </DialogHeader>
-        <ClientForm
-          onSave={handleSave}
-          onCancel={() => onOpenChange(false)}
-        />
+        <ClientForm onSave={handleSave} onCancel={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

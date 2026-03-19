@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { createAdminAction } from "@/app/(studio)/dashboard/actions/admins";
+import { cn } from "@/lib/utils";
 
 interface CreateAdminModalProps {
   open: boolean;
@@ -88,10 +89,20 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg" showCloseButton>
-        <DialogHeader>
-          <DialogTitle>New admin</DialogTitle>
-          <DialogDescription>
+      <DialogContent
+        className={cn(
+          "sm:max-w-lg",
+          "bg-surface-container-lowest/95 backdrop-blur-md",
+          "border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5",
+          "max-h-[90dvh] overflow-y-auto"
+        )}
+        showCloseButton
+      >
+        <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+          <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+            New Admin
+          </DialogTitle>
+          <DialogDescription className="text-on-surface-variant">
             Invite a new admin. An email invitation will be sent for them to set their password.
           </DialogDescription>
         </DialogHeader>
@@ -99,7 +110,7 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
           {error && (
             <div
               id="create-admin-error"
-              className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+              className="rounded-xl border border-error/20 bg-error/10 p-3 text-sm text-error"
               role="alert"
             >
               {error}
@@ -118,6 +129,13 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
               required
               aria-invalid={!!error}
               aria-describedby={error ? "create-admin-error" : undefined}
+              className={cn(
+                "stitch-input",
+                "!bg-surface-container-low !border-outline-variant/10",
+                "rounded-xl px-4 shadow-none",
+                "focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              )}
+              disabled={saving}
             />
             <p className="text-muted-foreground text-xs">
               An email invitation will be sent to this address.
@@ -133,6 +151,13 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
               min={new Date().toISOString().slice(0, 16)}
+              disabled={saving}
+              className={cn(
+                "stitch-input",
+                "!bg-surface-container-low !border-outline-variant/10",
+                "rounded-xl px-4 shadow-none",
+                "focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              )}
             />
             <p className="text-muted-foreground text-xs">
               Leave empty for permanent access.
@@ -143,10 +168,16 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
+              disabled={saving}
+              className="bg-surface-container-lowest border-outline-variant/10 hover:bg-surface-container-high hover:text-on-surface disabled:opacity-50"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving} className="gap-2">
+            <Button
+              type="submit"
+              disabled={saving}
+              className="gap-2 bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
+            >
               {saving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" aria-hidden />

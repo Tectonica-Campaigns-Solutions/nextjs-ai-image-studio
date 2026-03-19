@@ -13,9 +13,8 @@ export async function adminLogin(formData: FormData) {
     password: formData.get("password") as string,
   };
 
-  const { error, data: authData } = await supabase.auth.signInWithPassword(
-    data
-  );
+  const { error, data: authData } =
+    await supabase.auth.signInWithPassword(data);
 
   if (error) {
     redirect("/dashboard/login?error=invalid_credentials");
@@ -32,5 +31,5 @@ export async function adminLogin(formData: FormData) {
   // Revalidate admin and layout routes
   revalidatePath("/dashboard", "layout");
   revalidatePath("/", "layout");
-  redirect("/dashboard/clients");
+  redirect("/dashboard");
 }

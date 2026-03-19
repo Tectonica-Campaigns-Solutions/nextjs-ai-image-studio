@@ -24,6 +24,7 @@ interface ClientFormProps {
     email?: string;
     description?: string;
     is_active?: boolean;
+    allow_custom_logo?: boolean;
   };
   onSave: (data: {
     ca_user_id: string;
@@ -31,6 +32,7 @@ interface ClientFormProps {
     email: string;
     description?: string;
     is_active: boolean;
+    allow_custom_logo: boolean;
   }) => Promise<void>;
   onCancel?: () => void;
 }
@@ -57,10 +59,12 @@ export function ClientForm({
       email: initialData?.email ?? "",
       description: initialData?.description ?? "",
       is_active: initialData?.is_active ?? true,
+      allow_custom_logo: initialData?.allow_custom_logo ?? true,
     },
   });
 
   const isActive = watch("is_active");
+  const allowCustomLogo = watch("allow_custom_logo");
 
   const onSubmit = async (data: CreateClientInput) => {
     try {
@@ -71,6 +75,7 @@ export function ClientForm({
         email: data.email,
         description: data.description ?? undefined,
         is_active: data.is_active ?? true,
+        allow_custom_logo: data.allow_custom_logo ?? true,
       });
     } catch (err) {
       toast.error(
@@ -82,7 +87,7 @@ export function ClientForm({
   };
 
   return (
-    <div className={cn("rounded-lg border bg-card p-6")}>
+    <div className={cn("rounded-none border-none bg-transparent p-0")}>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-6"
@@ -96,8 +101,13 @@ export function ClientForm({
             id="ca_user_id"
             {...register("ca_user_id")}
             placeholder="ID of the user in Change Agent"
-            disabled={!!clientId}
-            className={cn(clientId && "bg-muted text-muted-foreground")}
+            disabled={!!clientId || saving}
+            autoFocus={!clientId}
+            className={cn(
+              "stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none",
+              "focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary",
+              clientId && "bg-muted text-muted-foreground"
+            )}
             aria-invalid={!!errors.ca_user_id}
           />
           {errors.ca_user_id && (
@@ -120,7 +130,9 @@ export function ClientForm({
             id="name"
             {...register("name")}
             placeholder="Name of the client"
+            disabled={saving}
             aria-invalid={!!errors.name}
+            className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
           />
           {errors.name && (
             <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -136,7 +148,9 @@ export function ClientForm({
             type="email"
             {...register("email")}
             placeholder="email@example.com"
+            disabled={saving}
             aria-invalid={!!errors.email}
+            className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
           />
           {errors.email && (
             <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -150,11 +164,12 @@ export function ClientForm({
             {...register("description")}
             placeholder="Description of the client (optional)"
             rows={4}
-            className="resize-none"
+            disabled={saving}
+            className="resize-none bg-surface-container-low border-outline-variant/10 rounded-xl shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
+        <div className="flex items-center justify-between rounded-xl bg-surface-container-low border border-outline-variant/10 p-4">
           <div>
             <Label htmlFor="is_active" className="cursor-pointer">
               Active status
@@ -167,19 +182,46 @@ export function ClientForm({
             id="is_active"
             checked={isActive}
             onCheckedChange={(checked) => setValue("is_active", checked)}
+            disabled={saving}
+            className="data-[state=checked]:bg-stitch-primary data-[state=unchecked]:bg-surface-container-high data-[state=checked]:dark:bg-stitch-primary data-[state=unchecked]:dark:bg-surface-container-high focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-xl bg-surface-container-low border border-outline-variant/10 p-4">
+          <div>
+            <Label htmlFor="allow_custom_logo" className="cursor-pointer">
+              Allow custom logo upload
+            </Label>
+            <p className="text-muted-foreground mt-1 text-xs">
+              When enabled, users can upload their own logo in the studio under
+              Logo overlay
+            </p>
+          </div>
+          <Switch
+            id="allow_custom_logo"
+            checked={allowCustomLogo}
+            onCheckedChange={(checked) => setValue("allow_custom_logo", checked)}
+            disabled={saving}
+            className="data-[state=checked]:bg-stitch-primary data-[state=unchecked]:bg-surface-container-high data-[state=checked]:dark:bg-stitch-primary data-[state=unchecked]:dark:bg-surface-container-high focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
           />
         </div>
 
         <div className="flex justify-end gap-3 border-t pt-6">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={saving}
+              className="bg-surface-container-lowest border-outline-variant/10 hover:bg-surface-container-high hover:text-on-surface disabled:opacity-50"
+            >
               Cancel
             </Button>
           )}
           <Button
             type="submit"
             disabled={saving}
-            className="min-w-[120px] gap-2"
+            className="min-w-[140px] gap-2 bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
           >
             {saving ? (
               <>

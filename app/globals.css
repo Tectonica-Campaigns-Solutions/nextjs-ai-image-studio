@@ -292,7 +292,7 @@
 }
 
 /* Mejorar contraste en inputs */
-[data-slot="input"] {
+[data-slot="input"]:not(.stitch-input) {
   background-color: hsl(var(--input)) !important;
   border-color: hsl(var(--border)) !important;
 }
@@ -310,89 +310,8 @@ button[data-variant="secondary"],
   color: hsl(var(--secondary-foreground)) !important;
 }
 
-/* FORZAR CONTRASTE MÁXIMO - ESTILOS DIRECTOS */
-* {
-  --tw-bg-opacity: 1 !important;
-}
-
-/* Forzar contraste en todo el texto */
-body,
-html {
-  color: #121212 !important;
-  background-color: #ffffff !important;
-}
-
-/* Forzar estilos de botones primarios */
-button,
-.btn,
-[role="button"] {
-  font-weight: 500 !important;
-}
-
-button.bg-primary,
-button[class*="bg-primary"],
-.bg-primary {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
-  border: 1px solid #333333 !important;
-}
-
-/* Forzar estilos de tabs */
-[role="tablist"] button,
-[data-slot="tabs-trigger"] {
-  background-color: #f1f1f1 !important;
-  color: #2a2a2a !important;
-  border: 1px solid #d1d1d1 !important;
-}
-
-[role="tablist"] button[data-state="active"],
-[data-slot="tabs-trigger"][data-state="active"] {
-  background-color: #ffffff !important;
-  color: #121212 !important;
-  border: 1px solid #1a1a1a !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Forzar estilos de inputs */
-input,
-textarea,
-[data-slot="input"] {
-  background-color: #ffffff !important;
-  border: 1px solid #d1d1d1 !important;
-  color: #121212 !important;
-}
-
-input:focus,
-textarea:focus,
-[data-slot="input"]:focus {
-  border-color: #666666 !important;
-  box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2) !important;
-}
-
-/* Forzar contraste en cards y contenedores */
-.card,
-[data-slot="card"] {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e5e5 !important;
-  color: #121212 !important;
-}
-
-/* Asegurar que los dropdowns sean visibles */
-[role="menu"],
-[role="listbox"],
-.dropdown-content {
-  background-color: #ffffff !important;
-  border: 1px solid #d1d1d1 !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-}
-
-#sidebar [data-slot="card"] {
-  border: none !important;
-}
-
-#sidebar [data-slot="input"] {
-  border-radius: 10px;
-  border: 1px solid rgba(74, 74, 74, 0.50) !important;
-  background: #0D0D0D !important;
-  color: #FFF !important;
-}
+/* NOTE:
+ * Se desactivaron reglas globales de "forzar contraste" que interferían con el
+ * diseño exportado de Stitch (clases con opacidad tipo `/20`, degradados y colores
+ * específicos de tokens).
+ */

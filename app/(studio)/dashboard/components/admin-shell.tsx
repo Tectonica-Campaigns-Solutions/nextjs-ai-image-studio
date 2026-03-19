@@ -69,7 +69,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     pathname?.startsWith("/dashboard/login") ||
     pathname?.startsWith("/dashboard/accept-invitation");
 
-  if (isAuthPage) {
+  // Para pantallas exportadas de Stitch (sidebar/top-nav incluidos),
+  // evitamos renderizar tu AdminShell para no duplicar navegación.
+  const isStitchPage =
+    pathname === "/dashboard" ||
+    pathname?.startsWith("/dashboard/clients") ||
+    pathname?.startsWith("/dashboard/admins") ||
+    pathname?.startsWith("/dashboard/assets") ||
+    pathname?.startsWith("/dashboard/frames-fonts") ||
+    pathname?.startsWith("/dashboard/canvas-sessions");
+
+  if (isAuthPage || isStitchPage) {
     return <>{children}</>;
   }
 

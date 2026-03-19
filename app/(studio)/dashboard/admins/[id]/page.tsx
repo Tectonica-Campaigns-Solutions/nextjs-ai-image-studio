@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getAdminDetailData } from "@/app/(studio)/dashboard/data/admins";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { AdminDetailClient } from "@/app/(studio)/dashboard/components/admin-detail-client";
+import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
+import { StitchAdminDetailScreen } from "@/app/(studio)/dashboard/stitch/StitchAdminDetailScreen";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,8 @@ export default async function AdminDetailPage({ params }: PageProps) {
   }
 
   return (
-    <AdminDetailClient admin={admin} currentUserId={auth.user.id} />
+    <StitchDashboardShell activeNav="admins">
+      <StitchAdminDetailScreen admin={admin} currentUserId={auth.user.id} />
+    </StitchDashboardShell>
   );
 }

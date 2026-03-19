@@ -9,7 +9,7 @@ export type FontActionResult = { error?: string };
 
 export async function deleteFontAction(
   clientId: string,
-  fontId: string
+  fontId: string,
 ): Promise<FontActionResult> {
   const check = await requireAdmin();
   if (!check.success) return { error: "Unauthorized" };
@@ -42,7 +42,7 @@ export async function deleteFontAction(
 
 export async function setPrimaryFontAction(
   clientId: string,
-  fontId: string
+  fontId: string,
 ): Promise<FontActionResult> {
   const check = await requireAdmin();
   if (!check.success) return { error: "Unauthorized" };
@@ -72,6 +72,73 @@ export async function setPrimaryFontAction(
     .eq("id", fontId);
 
   if (error) return { error: "Failed to set primary font" };
+  revalidatePath(`/dashboard/clients/${clientId}`);
+  return {};
+}
+
+const VALID_WEIGHTS = [
+  "100",
+  "200",
+  "300",
+  "400",
+  "500",
+  "600",
+  "700",
+  "800",
+  "900",
+];
+
+export async function updateFontAction(
+  clientId: string,
+  fontId: string,
+  raw: {
+    font_family?: string;
+    font_category?: string | null;
+    font_weights?: string[];
+  },
+): Promise<FontActionResult> {
+  const check = await requireAdmin();
+  if (!check.success) return { error: "Unauthorized" };
+  if (!isValidUUID(clientId) || !isValidUUID(fontId))
+    return { error: "Invalid ID" };
+
+  const supabase = await createClient();
+
+  const updateData: Record<string, unknown> = {
+    updated_by: check.user.id,
+  };
+
+  if (raw.font_family !== undefined) {
+    if (typeof raw.font_family !== "string" || raw.font_family.trim() === "") {
+      return { error: "font_family must be a non-empty string" };
+    }
+    updateData.font_family = raw.font_family.trim();
+  }
+
+  if (raw.font_category !== undefined) {
+    updateData.font_category = raw.font_category?.trim() || null;
+  }
+
+  if (raw.font_weights !== undefined) {
+    if (!Array.isArray(raw.font_weights))
+      return { error: "font_weights must be an array" };
+    const cleaned = raw.font_weights.map((w) => String(w));
+    if (!cleaned.every((w) => VALID_WEIGHTS.includes(w))) {
+      return {
+        error: `font_weights must be one of: ${VALID_WEIGHTS.join(", ")}`,
+      };
+    }
+    updateData.font_weights = cleaned;
+  }
+
+  const { error } = await supabase
+    .from("client_fonts")
+    .update(updateData)
+    .eq("id", fontId)
+    .eq("client_id", clientId)
+    .is("deleted_at", null);
+
+  if (error) return { error: "Failed to update font" };
   revalidatePath(`/dashboard/clients/${clientId}`);
   return {};
 }

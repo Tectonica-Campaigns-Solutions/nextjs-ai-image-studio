@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Assets | Curator Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed-dim": "#c3d4ff",
+              "tertiary": "#5f5c78",
+              "surface-container": "#eaedff",
+              "error-dim": "#4e0309",
+              "on-tertiary-container": "#47445f",
+              "outline": "#6079b7",
+              "on-surface-variant": "#445d99",
+              "on-secondary-fixed-variant": "#5a5b61",
+              "surface-container-high": "#e2e7ff",
+              "on-background": "#113069",
+              "secondary-container": "#e2e2e9",
+              "surface-variant": "#d9e2ff",
+              "tertiary-fixed": "#d3ceef",
+              "surface-dim": "#cdd9ff",
+              "surface-container-highest": "#d9e2ff",
+              "on-tertiary-fixed": "#34314b",
+              "surface-tint": "#005ac2",
+              "on-surface": "#113069",
+              "surface-container-low": "#f2f3ff",
+              "secondary-fixed": "#e2e2e9",
+              "on-primary": "#f7f7ff",
+              "on-error": "#fff7f6",
+              "surface": "#faf8ff",
+              "primary-container": "#d8e2ff",
+              "inverse-primary": "#4d8eff",
+              "outline-variant": "#98b1f2",
+              "on-secondary-fixed": "#3e3f45",
+              "on-secondary-container": "#505157",
+              "primary-fixed": "#d8e2ff",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary": "#fcf7ff",
+              "tertiary-fixed-dim": "#c5c0e0",
+              "secondary-fixed-dim": "#d4d4db",
+              "error": "#9f403d",
+              "error-container": "#fe8983",
+              "primary": "#005ac2",
+              "tertiary-dim": "#53506b",
+              "tertiary-container": "#d3ceef",
+              "on-primary-fixed-variant": "#0057bd",
+              "background": "#faf8ff",
+              "inverse-on-surface": "#959cb5",
+              "on-primary-fixed": "#003c86",
+              "inverse-surface": "#060e20",
+              "on-error-container": "#752121",
+              "primary-dim": "#004fab",
+              "secondary-dim": "#515359",
+              "on-secondary": "#f9f8ff",
+              "on-tertiary-fixed-variant": "#504e69",
+              "surface-bright": "#faf8ff",
+              "on-primary-container": "#004eaa",
+              "secondary": "#5e5f65"
+            },
+            fontFamily: {
+              "headline": ["Inter", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-pill::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 2px;
+            height: 16px;
+            background-color: #005ac2;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased overflow-x-hidden">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-900 flex flex-col py-6 px-4 z-50">
+<div class="mb-10 px-2 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">dataset</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Curator Pro</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Enterprise Plan</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200 group rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200 group rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm">Clients</span>
+</a>
+<!-- Active Tab: Assets -->
+<a class="relative flex items-center gap-3 px-3 py-2 text-blue-700 dark:text-blue-400 font-semibold before:absolute before:left-0 before:w-0.5 before:h-4 before:bg-blue-600 dark:before:bg-blue-400 bg-slate-100 dark:bg-slate-800/50 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+<span class="text-sm">Assets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200 group rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">frame_person</span>
+<span class="text-sm">Frames</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200 group rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">font_download</span>
+<span class="text-sm">Fonts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200 group rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">draw</span>
+<span class="text-sm">Canvas Sessions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200 group rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-3 bg-white dark:bg-slate-950 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Portrait of a creative professional woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAY_uL6wUzCVGsBFWLFNGFzADtgnc8dKZxFMOmMBje3-EgWAVZc1-SS-UDzPt0WuJ_9oYereukAcjGATEnLkPBoSlHCMwFeWi9PNn4PIexzOvvT_k4FiygchxgbedKjJ3b_XBBmudpyUr6XzvKHSoZWRWz2A8a5V01-BWuOHSPbSOiIYjE5Km-uY8NvnkVw5xMHcKj9xU0cofcp_PbN1kU_DILQ9UXDde5fmnResofYgJgJx7TFDO1ckL5WFcuYeVAlH82aBOnf4JqF"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold truncate">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 truncate">Lead Curator</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined text-lg">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-8">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400 transition-all" placeholder="Search assets, collections, tags..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-slate-200 mx-2"></div>
+<button class="bg-gradient-to-br from-primary to-primary-dim text-white text-sm font-semibold px-5 py-2 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+                Upgrade
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen bg-surface">
+<div class="p-8 max-w-7xl mx-auto">
+<!-- Page Header & Filters -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+<div>
+<h2 class="text-display-sm text-3xl font-bold tracking-tight text-on-surface mb-1">Creative Assets</h2>
+<p class="text-on-surface-variant text-sm">Manage and curate your workspace media library.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-surface-container-low p-1 rounded-lg flex items-center shadow-inner">
+<button class="px-3 py-1.5 rounded-md bg-white text-primary shadow-sm flex items-center gap-2 text-sm font-medium">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+                            Grid
+                        </button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface flex items-center gap-2 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-lg">list</span>
+                            List
+                        </button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-lg">upload</span>
+                        Upload Asset
+                    </button>
+</div>
+</div>
+<!-- Filter Strip -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-8 py-4 border-y border-outline-variant/15">
+<div class="flex items-center gap-6">
+<div class="flex flex-col gap-1.5">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">Asset Type</span>
+<div class="flex items-center gap-2">
+<button class="text-sm font-semibold text-primary px-1">All Assets</button>
+<button class="text-sm font-medium text-on-surface-variant hover:text-on-surface px-1">Images</button>
+<button class="text-sm font-medium text-on-surface-variant hover:text-on-surface px-1">SVG</button>
+<button class="text-sm font-medium text-on-surface-variant hover:text-on-surface px-1">Video</button>
+</div>
+</div>
+<div class="w-[1px] h-8 bg-outline-variant/20"></div>
+<div class="flex flex-col gap-1.5">
+<span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">Upload Date</span>
+<button class="flex items-center gap-2 text-sm font-medium text-on-surface group">
+                            Latest first
+                            <span class="material-symbols-outlined text-lg text-on-surface-variant group-hover:text-on-surface">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-sm text-on-surface-variant">Showing 12 of 124 assets</span>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Asset Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Asset Card 1 -->
+<div class="group bg-surface-container-lowest rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-outline-variant/10">
+<div class="relative aspect-square rounded-lg bg-surface-container mb-3 overflow-hidden">
+<img alt="Asset Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Minimalist 3D abstract fluid shapes in blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgUsqqIa7djuzpwt2jX9baszRi9EEtQPSXEhRxDWQq3HLRXDL0jnojmGKrR6CCbGmaeaLlKQH-4081FCpT1akCw3yMH_tPWrMrGz0VZglgTVG1wv2kRHM0PfhzPSFxE0_6POqWMD7GlLAzcAJGy145JtVh8Vir_4onryqGlRUeOqWVYQUh6yGJ6P5qwJDb0u6KpRsuANvbIZz4n7pydh5Bt4nRVDjedI8a6IFoEnPAYS-ZrXuGWPbMtfAm6uNpBzVjnaB0mfZBRRxP"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+<button class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined text-xl">open_in_full</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide">
+                            PNG
+                        </div>
+</div>
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<h3 class="text-sm font-semibold text-on-surface truncate">Abstract_Fluid_01.png</h3>
+<p class="text-xs text-on-surface-variant">4.2 MB • 2400 × 1600</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Asset Card 2 -->
+<div class="group bg-surface-container-lowest rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-outline-variant/10">
+<div class="relative aspect-square rounded-lg bg-surface-container mb-3 overflow-hidden">
+<img alt="Asset Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Clean geometric vector pattern background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAd-FtptRLfVZvGQZ3Zm2lfA1mpDhX31zzLO9wBeS48sh76V_-gIVp3obblN7k4zS_ufx1TR3Oum5PDh-kQqn2XH7VGbaaEuLQ_lZnVnRsq0cW7z_C71K4iw_uHG8fi0IgAerkdz7GEdBkh1-LHcEtYbEQVDEqbpPfDe107AeK2XLbdcrL7So3arv3oXTC-GFWQ9vojz3AlN9NH3rqKDlWUATeVX-2QQ1XAjVBt90Mt_6q_YnyADbB1KM6Oh_plf_qeXjnbstZQlHJ-"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+<button class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined text-xl">open_in_full</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-blue-600/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide">
+                            SVG
+                        </div>
+</div>
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<h3 class="text-sm font-semibold text-on-surface truncate">Brand_Pattern_v2.svg</h3>
+<p class="text-xs text-on-surface-variant">128 KB • Vector</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Asset Card 3 -->
+<div class="group bg-surface-container-lowest rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-outline-variant/10">
+<div class="relative aspect-square rounded-lg bg-surface-container mb-3 overflow-hidden">
+<img alt="Asset Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Aesthetic interior shot with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVCWJHD0Mxv-tLZ5t5W3wXJNM5t2aMUbZPT8ACGFNf6DEzemqYMFmFppaK_Pql16UCKa7osEjXx1SA4kyUXwH2J4mtLfvNQroOpoLXGhja8yllqhO1IqLuH9-kd9mCXg3eNNeCRwdFspN4aen3YF-kyS3384zXG0jtROOY5TciuKs2Am8AzNrJcrBEP4bcdfuUes86eWoRSR1vZTzbQCy_3sAa9L_LFXf-EckyzaJdLjxqI1c30a7D_ZlOmixqWmV9iF_ndW7j07pG"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+<button class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined text-xl">open_in_full</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide">
+                            JPG
+                        </div>
+</div>
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<h3 class="text-sm font-semibold text-on-surface truncate">Office_Hero_Stock.jpg</h3>
+<p class="text-xs text-on-surface-variant">8.7 MB • 4500 × 3000</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Asset Card 4 (Video) -->
+<div class="group bg-surface-container-lowest rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-outline-variant/10">
+<div class="relative aspect-square rounded-lg bg-surface-container mb-3 overflow-hidden">
+<img alt="Asset Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Dynamic shot of particles for video background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtMOV3V7Q9jTXpVl_wFneGtAfN83pMWSQ3-mGXC3LJbrXeJviS0HvIQ98mTimBnpaVSqwmRgFl_JBEB7C4Eu05J7moEQdI70SM5IOlfSokNn66raXAA9-kqV27h7CE_10iMF5e5D9HyopcYePAFK2qDYbwAa6ZCwteG0tr7nbTWek3YvIcWxKb8BJ-PlDIJaTScQNE04BiCuSEqukFhNb-vczG2HL71zWH63cSLfO1iUz8-33lM2Pd1HTEAx_pkLrNTNawlare7ucW"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+<button class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined text-xl">play_arrow</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-error/70 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide">
+                            MP4
+                        </div>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] text-white font-medium">
+                            0:24
+                        </div>
+</div>
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<h3 class="text-sm font-semibold text-on-surface truncate">Homepage_Broll_Final.mp4</h3>
+<p class="text-xs text-on-surface-variant">42.1 MB • 1080p</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Asset Card 5 -->
+<div class="group bg-surface-container-lowest rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-outline-variant/10">
+<div class="relative aspect-square rounded-lg bg-surface-container mb-3 overflow-hidden">
+<img alt="Asset Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Deep blue color gradient texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACfgJ240Qa6iqzoKobyYBMjjcng-nY-p6H_PRIYvCOEJOW98Qcb5lpA0Q-27mRKxq31CMLM1pBKNSkAujaVVH3UU6JzzwjGAsBsF8KrQTn8sboI25kk6X61rc1o5Io0cAzy9PnjOHIUqrxa4FZia51w5YH21r6PsxhZIKHAs1e4w4KDlOIBdolwx3EhDo2FbF14Mpciz1VhijMY71aB2DtOrDwFFOBL-N9WNKScJ19SygoY2RxZ8bO6uTVJxhLUxxMiE5NrIgseWOz"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+<button class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined text-xl">open_in_full</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide">
+                            PNG
+                        </div>
+</div>
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<h3 class="text-sm font-semibold text-on-surface truncate">Gradient_Mesh_Deep.png</h3>
+<p class="text-xs text-on-surface-variant">1.5 MB • 2000 × 2000</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Asset Card 6 -->
+<div class="group bg-surface-container-lowest rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-outline-variant/10">
+<div class="relative aspect-square rounded-lg bg-surface-container mb-3 overflow-hidden">
+<img alt="Asset Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Bright colorful digital abstract background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj7rsaPoqiAuXvLg1M8BgKr6laVnI0O54CQw26aUSjYmn_Y9mKTdfSKXqD0hnLUspdD7hKMK6T99I3PRdNw56jIod1eAFpn7FPyGog70oZIQg7UAZtrPXGgHFHG72EBG2FjdLfVvySflNJ3tU89xHaQTXW6l5TkdjLkV_Yf5lK39pPIKkmMWglE4Wj5OkVDo-DjWfIxWd5Ddquqvo_RBq_qV-tI0nkq1l-1ckxdkbMp-hX4uJGyU_6LXxUfj9DIxqPjIudlPgXvpUc"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+<button class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+<span class="material-symbols-outlined text-xl">open_in_full</span>
+</button>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide">
+                            PNG
+                        </div>
+</div>
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<h3 class="text-sm font-semibold text-on-surface truncate">Vibrant_Explosion.png</h3>
+<p class="text-xs text-on-surface-variant">6.3 MB • 3000 × 2000</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Empty State Placeholder (Visual example of a card, not the main empty state) -->
+<div class="group bg-surface-container-low/50 rounded-xl p-3 border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center min-h-[260px] cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-primary-dim mb-4 shadow-sm">
+<span class="material-symbols-outlined">add</span>
+</div>
+<p class="text-sm font-semibold text-on-surface-variant">Add new asset</p>
+<p class="text-[10px] text-on-surface-variant/60">Limit 50MB per file</p>
+</div>
+</div>
+<!-- Elegant Empty State (Hidden by default, shown when results are empty) -->
+<div class="hidden flex-col items-center justify-center py-32 text-center animate-in fade-in duration-700">
+<div class="relative mb-8">
+<div class="absolute inset-0 bg-primary/5 rounded-full blur-3xl scale-150"></div>
+<div class="relative w-24 h-24 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary-dim shadow-sm">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'wght' 200;">folder_off</span>
+</div>
+</div>
+<h3 class="text-2xl font-bold text-on-surface mb-2 tracking-tight">No assets found</h3>
+<p class="text-on-surface-variant max-w-sm mb-8 leading-relaxed">
+                    We couldn't find any assets matching your current search or filters. Try adjusting your criteria or upload something new.
+                </p>
+<div class="flex items-center gap-4">
+<button class="px-6 py-2.5 rounded-lg border border-outline-variant/30 text-sm font-semibold hover:bg-surface-container-low transition-colors">
+                        Clear all filters
+                    </button>
+<button class="px-6 py-2.5 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all">
+                        Upload Asset
+                    </button>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-16 flex items-center justify-between">
+<p class="text-xs font-medium text-on-surface-variant">Page 1 of 6</p>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-low disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary shadow-md shadow-primary/10">
+                        1
+                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-low">
+                        2
+                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-low">
+                        3
+                    </button>
+<span class="mx-1 text-on-surface-variant">...</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-low">
+                        6
+                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant/20 text-on-surface-variant hover:bg-surface-container-low">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

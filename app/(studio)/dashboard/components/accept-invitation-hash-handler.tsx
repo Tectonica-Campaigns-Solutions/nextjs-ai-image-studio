@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Loader2, ShieldAlert } from "lucide-react";
 
 /**
  * When Supabase redirects after an invite, tokens are in the URL hash (fragment).
@@ -58,9 +59,12 @@ export function AcceptInvitationHashHandler() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#f0f1f2] flex items-center justify-center p-6">
-        <div className="w-full max-w-md p-8 bg-white rounded-3xl border-0 shadow-drop-shadow text-center">
-          <p className="text-[#3b4451] text-sm [font-family:'Manrope',Helvetica]">
+      <div className="min-h-screen bg-surface flex items-center justify-center p-6">
+        <div className="w-full max-w-md p-8 bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 text-center">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-stitch-primary/10 text-stitch-primary flex items-center justify-center mb-4">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
+          <p className="text-on-surface text-sm font-medium">
             Completing your invitation...
           </p>
         </div>
@@ -69,9 +73,12 @@ export function AcceptInvitationHashHandler() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f1f2] flex items-center justify-center p-6">
-      <div className="w-full max-w-md p-8 bg-white rounded-3xl border-0 shadow-drop-shadow text-center">
-        <p className="text-destructive text-sm [font-family:'Manrope',Helvetica]">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-6">
+      <div className="w-full max-w-md p-8 bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 text-center">
+        <div className="w-12 h-12 mx-auto rounded-xl bg-destructive/10 text-destructive flex items-center justify-center mb-4">
+          <ShieldAlert className="size-6" />
+        </div>
+        <p className="text-destructive text-sm">
           Invitation session is invalid or expired. Please request a new
           invitation.
         </p>

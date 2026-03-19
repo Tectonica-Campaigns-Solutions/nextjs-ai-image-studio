@@ -177,10 +177,12 @@ export function FontUpload({
           }}
           disabled={uploading}
         >
-          <SelectTrigger>
+          <SelectTrigger
+            className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+          >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-sm p-1">
             <SelectItem value="google">Google Fonts</SelectItem>
             <SelectItem value="custom">Custom Font</SelectItem>
           </SelectContent>
@@ -197,10 +199,13 @@ export function FontUpload({
               onValueChange={handleGoogleFontChange}
               disabled={uploading}
             >
-              <SelectTrigger id="google-font">
+              <SelectTrigger
+                id="google-font"
+                className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              >
                 <SelectValue placeholder="Select a font" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-sm p-1">
                 {GOOGLE_FONTS.map((font) => (
                   <SelectItem key={font.family} value={font.family}>
                     {font.family}
@@ -245,7 +250,7 @@ export function FontUpload({
                 accept=".ttf,.woff,.woff2,.otf,font/ttf,font/woff,font/woff2,font/otf"
                 onChange={handleFileSelect}
                 disabled={uploading}
-                className="cursor-pointer"
+                className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary cursor-pointer"
               />
             </div>
             {file && (
@@ -264,6 +269,7 @@ export function FontUpload({
               onChange={(e) => setFontFamily(e.target.value)}
               placeholder="e.g. My Custom Font"
               disabled={uploading}
+              className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
             />
           </div>
 
@@ -303,10 +309,13 @@ export function FontUpload({
           onValueChange={setFontCategory}
           disabled={uploading}
         >
-          <SelectTrigger id="font-category">
+          <SelectTrigger
+            id="font-category"
+            className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+          >
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-sm p-1">
             <SelectItem value="sans-serif">Sans-serif</SelectItem>
             <SelectItem value="serif">Serif</SelectItem>
             <SelectItem value="display">Display</SelectItem>

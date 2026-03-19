@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Curator Pro - Frames &amp; Fonts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#c3d4ff",
+                        "tertiary": "#5f5c78",
+                        "surface-container": "#eaedff",
+                        "error-dim": "#4e0309",
+                        "on-tertiary-container": "#47445f",
+                        "outline": "#6079b7",
+                        "on-surface-variant": "#445d99",
+                        "on-secondary-fixed-variant": "#5a5b61",
+                        "surface-container-high": "#e2e7ff",
+                        "on-background": "#113069",
+                        "secondary-container": "#e2e2e9",
+                        "surface-variant": "#d9e2ff",
+                        "tertiary-fixed": "#d3ceef",
+                        "surface-dim": "#cdd9ff",
+                        "surface-container-highest": "#d9e2ff",
+                        "on-tertiary-fixed": "#34314b",
+                        "surface-tint": "#005ac2",
+                        "on-surface": "#113069",
+                        "surface-container-low": "#f2f3ff",
+                        "secondary-fixed": "#e2e2e9",
+                        "on-primary": "#f7f7ff",
+                        "on-error": "#fff7f6",
+                        "surface": "#faf8ff",
+                        "primary-container": "#d8e2ff",
+                        "inverse-primary": "#4d8eff",
+                        "outline-variant": "#98b1f2",
+                        "on-secondary-fixed": "#3e3f45",
+                        "on-secondary-container": "#505157",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#fcf7ff",
+                        "tertiary-fixed-dim": "#c5c0e0",
+                        "secondary-fixed-dim": "#d4d4db",
+                        "error": "#9f403d",
+                        "error-container": "#fe8983",
+                        "primary": "#005ac2",
+                        "tertiary-dim": "#53506b",
+                        "tertiary-container": "#d3ceef",
+                        "on-primary-fixed-variant": "#0057bd",
+                        "background": "#faf8ff",
+                        "inverse-on-surface": "#959cb5",
+                        "on-primary-fixed": "#003c86",
+                        "inverse-surface": "#060e20",
+                        "on-error-container": "#752121",
+                        "primary-dim": "#004fab",
+                        "secondary-dim": "#515359",
+                        "on-secondary": "#f9f8ff",
+                        "on-tertiary-fixed-variant": "#504e69",
+                        "surface-bright": "#faf8ff",
+                        "on-primary-container": "#004eaa",
+                        "secondary": "#5e5f65"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.75rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-900 flex flex-col h-full py-6 px-4 font-inter antialiased text-sm">
+<div class="mb-10 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">auto_awesome_motion</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Curator Pro</h1>
+<p class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Enterprise Plan</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Clients</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span>Assets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg relative text-blue-700 dark:text-blue-400 font-semibold before:absolute before:left-0 before:w-0.5 before:h-4 before:bg-blue-600 dark:before:bg-blue-400 bg-slate-100 dark:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined" data-icon="frame_person">frame_person</span>
+<span>Frames</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="font_download">font_download</span>
+<span>Fonts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="draw">draw</span>
+<span>Canvas Sessions</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-8 w-full font-inter text-sm">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary/20 text-on-surface placeholder:text-on-surface-variant/50 transition-all" placeholder="Search frames, fonts, or projects..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+<button class="bg-primary-container text-on-primary-container px-4 py-1.5 rounded-lg font-medium hover:bg-primary-container/80 transition-all active:scale-95">
+                Upgrade
+            </button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a professional designer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLlMI6EBtIyg4hmhrtbtuMZyEl55IxkmHwANEcA3XVAsItU1aN5wuhG3KnLEN2QJU_JQWQi9hwFbwwbDh2JjPpezJn4lkRN79g3KUeIkfCYT9JWN5TFozSV_xWJM0sNBrwcUCnEbu0jxgR_PZYCeV7eHQZmTz010Sl7PQz7wvvbKeW6NtGjh5FZTXnLzfhwi5Gc1Q4Ir-DuOky2EWSfNLOvUKNxamKS4Zhpab6CKI4vv_Topfs8XSAj7iMtVboJMINQmJGjrCstM7C"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 px-8 pb-12 min-h-screen bg-surface">
+<!-- Header Section -->
+<div class="flex items-end justify-between mb-10">
+<div>
+<h2 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2">Frames &amp; Fonts</h2>
+<p class="text-on-surface-variant max-w-lg">Manage your architectural layout frames and typographic systems in a unified workspace.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-container-lowest text-on-surface font-semibold shadow-sm border border-outline-variant/10 hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-xl">upload_file</span>
+                    Upload Font
+                </button>
+<button class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-br from-primary to-primary-dim text-on-primary font-semibold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-xl">add_box</span>
+                    Create Frame
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Frames (Bento/Grid Style) -->
+<div class="col-span-12 lg:col-span-7 space-y-6">
+<div class="flex items-center justify-between px-2">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Active Frames</h3>
+<div class="flex gap-2">
+<button class="p-1.5 rounded-lg bg-surface-container-high text-primary"><span class="material-symbols-outlined text-lg">grid_view</span></button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low"><span class="material-symbols-outlined text-lg">format_list_bulleted</span></button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Frame Card 1 -->
+<div class="group relative bg-surface-container-lowest rounded-xl p-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-on-surface/5 overflow-hidden">
+<div class="aspect-[4/3] rounded-lg bg-surface-container-low mb-4 relative overflow-hidden flex items-center justify-center">
+<!-- Abstract UI Shell Representation -->
+<div class="w-3/4 h-3/4 bg-white rounded shadow-sm flex flex-col p-2 gap-2 border border-outline-variant/10">
+<div class="h-4 w-full bg-surface-container-high rounded-sm"></div>
+<div class="flex gap-2 flex-1">
+<div class="w-1/4 bg-surface-container rounded-sm"></div>
+<div class="flex-1 bg-surface-container-low rounded-sm"></div>
+</div>
+</div>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors"></div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-bold text-on-surface">Mobile App Shell</h4>
+<p class="text-xs text-on-surface-variant">iPhone 15 Pro • Updated 2h ago</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Frame Card 2 -->
+<div class="group relative bg-surface-container-lowest rounded-xl p-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-on-surface/5 overflow-hidden">
+<div class="aspect-[4/3] rounded-lg bg-surface-container-low mb-4 relative overflow-hidden flex items-center justify-center">
+<!-- Abstract Desktop Shell -->
+<div class="w-[85%] h-[60%] bg-white rounded shadow-sm flex flex-col border border-outline-variant/10">
+<div class="h-3 w-full bg-slate-100 flex items-center px-1 gap-1">
+<div class="w-1 h-1 rounded-full bg-slate-300"></div>
+<div class="w-1 h-1 rounded-full bg-slate-300"></div>
+</div>
+<div class="p-2 space-y-1">
+<div class="h-2 w-1/2 bg-surface-container rounded-sm"></div>
+<div class="h-2 w-full bg-surface-container-low rounded-sm"></div>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-bold text-on-surface">Desktop Header</h4>
+<p class="text-xs text-on-surface-variant">Web Responsive • Updated yesterday</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Frame Card 3 (Featured) -->
+<div class="col-span-2 group relative bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-white hover:shadow-xl hover:shadow-on-surface/5 overflow-hidden flex gap-6 border-l-4 border-primary">
+<div class="w-48 h-32 rounded-lg bg-surface-container-low relative overflow-hidden flex items-center justify-center shrink-0">
+<div class="grid grid-cols-2 gap-2 w-full h-full p-4">
+<div class="bg-primary/10 rounded border border-primary/20"></div>
+<div class="bg-primary/10 rounded border border-primary/20"></div>
+<div class="bg-primary/10 rounded border border-primary/20"></div>
+<div class="bg-primary/10 rounded border border-primary/20"></div>
+</div>
+</div>
+<div class="flex flex-col justify-center flex-1">
+<div class="flex justify-between items-start">
+<div>
+<span class="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase tracking-wider mb-2">Master Frame</span>
+<h4 class="font-bold text-lg text-on-surface leading-tight">Design System Grid v2</h4>
+<p class="text-sm text-on-surface-variant mt-1">Core architectural constraints for all projects.</p>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="mt-4 flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full ring-2 ring-surface bg-slate-200"></div>
+<div class="w-6 h-6 rounded-full ring-2 ring-surface bg-slate-300"></div>
+<div class="w-6 h-6 rounded-full ring-2 ring-surface bg-primary text-[8px] flex items-center justify-center text-on-primary">+3</div>
+</div>
+<span class="text-[11px] font-medium text-on-surface-variant">Shared with 5 collaborators</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Fonts (Editorial List) -->
+<div class="col-span-12 lg:col-span-5 space-y-6">
+<div class="flex items-center justify-between px-2">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Font Library</h3>
+<button class="text-xs font-semibold text-primary">View All</button>
+</div>
+<div class="bg-surface-container-low rounded-2xl p-2 space-y-2">
+<!-- Font Item 1 -->
+<div class="group bg-surface-container-lowest rounded-xl p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 1;">text_fields</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Inter</h4>
+<p class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-tighter">9 Weights • Variable</p>
+</div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-lg">star</span>
+</button>
+</div>
+<div class="py-2 border-t border-outline-variant/5">
+<p class="text-2xl font-medium tracking-tight overflow-hidden whitespace-nowrap text-ellipsis" style="font-family: 'Inter';">The quick brown fox jumps.</p>
+</div>
+</div>
+<!-- Font Item 2 -->
+<div class="group bg-surface-container-lowest rounded-xl p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">text_fields</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Roboto Mono</h4>
+<p class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-tighter">5 Weights • Monospaced</p>
+</div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-primary bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+</div>
+<div class="py-2 border-t border-outline-variant/5">
+<p class="text-xl font-normal overflow-hidden whitespace-nowrap text-ellipsis opacity-80" style="font-family: monospace;">const app = (node) =&gt; { }</p>
+</div>
+</div>
+<!-- Font Item 3 -->
+<div class="group bg-surface-container-lowest rounded-xl p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">text_fields</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Open Sans</h4>
+<p class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-tighter">12 Weights • Sans Serif</p>
+</div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-lg">star</span>
+</button>
+</div>
+<div class="py-2 border-t border-outline-variant/5">
+<p class="text-2xl font-bold tracking-normal overflow-hidden whitespace-nowrap text-ellipsis" style="font-family: sans-serif;">Curating the future.</p>
+</div>
+</div>
+<!-- Font Stats Card -->
+<div class="bg-primary/5 border border-primary/10 rounded-xl p-4 mt-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">cloud_done</span>
+<span class="text-xs font-semibold text-on-primary-container">Library Sync Active</span>
+</div>
+<span class="text-[10px] bg-primary text-on-primary px-2 py-0.5 rounded-full font-bold">LIVE</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity Horizontal Flow -->
+<div class="mt-12">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4 px-2">Recently Modified</h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+<div class="min-w-[200px] h-24 bg-surface-container-low rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Styleguide_v4.pdf</p>
+<p class="text-[10px] text-on-surface-variant">Exported 3h ago</p>
+</div>
+</div>
+<div class="min-w-[200px] h-24 bg-surface-container-low rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center text-error">
+<span class="material-symbols-outlined">delete_outline</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Trash</p>
+<p class="text-[10px] text-on-surface-variant">12 items pending</p>
+</div>
+</div>
+<div class="min-w-[200px] h-24 bg-surface-container-low rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">folder_shared</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Client Assets</p>
+<p class="text-[10px] text-on-surface-variant">2 new frames added</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
