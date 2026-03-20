@@ -220,6 +220,31 @@
   .themed-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #3d3d3d;
   }
+
+  /* Subtle scrollbar for modal panels */
+  .subtle-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, currentColor 20%, transparent) transparent;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, currentColor 18%, transparent);
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, currentColor 28%, transparent);
+  }
 }
 
 .markdown-content p {

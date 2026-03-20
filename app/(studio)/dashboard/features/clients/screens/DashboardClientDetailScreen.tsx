@@ -25,6 +25,8 @@ import { COMMON_ASPECT_RATIOS } from "@/lib/aspect-ratios";
 import { AssetUpload } from "@/app/(studio)/dashboard/components/asset-upload";
 import { cx } from "@/app/(studio)/dashboard/utils/cx";
 import { formatRelativeFromNow } from "@/app/(studio)/dashboard/utils/date-formatters";
+import { FrameCard } from "@/app/(studio)/dashboard/components/frame-card";
+import { CanvasSessionCard } from "@/app/(studio)/dashboard/components/canvas-session-card";
 
 type TabKey = "assets" | "frames" | "fonts" | "canvas-sessions";
 
@@ -717,92 +719,23 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
             {activeTab === "frames" ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {visibleAssetsOrFrames.map((asset) => (
-                  <div key={asset.id} className="group relative">
-                    <div
-                      className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setLightboxAsset(asset)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") setLightboxAsset(asset);
-                      }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        alt={asset.display_name ?? asset.name}
-                        className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
-                        src={asset.file_url}
-                      />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditFrame(asset);
-                            }}
-                            disabled={assetAction.busyId !== null}
-                            className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void handleSetPrimaryFrame(asset.id);
-                            }}
-                            disabled={assetAction.busyId !== null || asset.is_primary}
-                            className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                          >
-                            {asset.is_primary ? "Primary" : "Set Primary"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteAssetId(asset.id);
-                            }}
-                            disabled={assetAction.busyId !== null}
-                            className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50"
-                          >
-                            Delete
-                          </button>
-                        </div>
-
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <p className="text-white text-xs font-bold truncate">
-                            {asset.display_name ?? asset.name}
-                          </p>
-                          <p className="text-white/75 text-[10px] truncate">
-                            File • {asset.mime_type ?? "—"}
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {(asset.variant === "*"
-                              ? ["All"]
-                              : asset.variant
-                                ? asset.variant.split(",").map((s) => s.trim()).filter(Boolean)
-                                : []
-                            ).map((v) => (
-                              <span
-                                key={`${asset.id}-${v}`}
-                                className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold"
-                              >
-                                {v}
-                              </span>
-                            ))}
-                            {asset.is_primary ? (
-                              <span className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50">
-                                Primary
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <FrameCard
+                    key={asset.id}
+                    frame={asset}
+                    sortable={false}
+                    disableActions={assetAction.busyId !== null}
+                    variantBadges={
+                      asset.variant === "*"
+                        ? ["All"]
+                        : asset.variant
+                          ? asset.variant.split(",").map((s) => s.trim()).filter(Boolean)
+                          : []
+                    }
+                    onView={() => setLightboxAsset(asset)}
+                    onEdit={() => openEditFrame(asset)}
+                    onSetPrimary={() => void handleSetPrimaryFrame(asset.id)}
+                    onDelete={() => setDeleteAssetId(asset.id)}
+                  />
                 ))}
 
                 <button
@@ -829,55 +762,14 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
             {activeTab === "canvas-sessions" ? (
               <div className="space-y-3">
                 {(visibleSessions ?? []).map((session, idx) => (
-                  <div
+                  <CanvasSessionCard
                     key={session.id}
-                    className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 flex items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-dashboard-primary/10 flex items-center justify-center text-dashboard-primary shrink-0 overflow-hidden">
-                        {session.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={session.thumbnail_url}
-                            alt={session.name ?? "Canvas session"}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <DashboardMaterialIcon
-                            icon={idx % 2 === 0 ? "brush" : "history"}
-                          />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-on-surface truncate">
-                          {session.name ?? "Untitled Session"}
-                        </p>
-                        <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium mt-1">
-                          Created {formatRelativeFromNow(session.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setDeleteSessionId(session.id)}
-                        disabled={sessionAction.busyId !== null}
-                        className="bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-destructive/90 disabled:opacity-50"
-                      >
-                        Delete
-                      </button>
-                      <a
-                        href={`/standalone/studio?session_id=${encodeURIComponent(
-                          session.id
-                        )}&user_id=${encodeURIComponent(session.ca_user_id)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-dashboard-primary text-dashboard-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
-                      >
-                        Open
-                      </a>
-                    </div>
-                  </div>
+                    session={session}
+                    fallbackIcon={idx % 2 === 0 ? "brush" : "history"}
+                    createdLabel={formatRelativeFromNow(session.created_at)}
+                    deleteDisabled={sessionAction.busyId !== null}
+                    onDelete={() => setDeleteSessionId(session.id)}
+                  />
                 ))}
                 {visibleSessions.length === 0 ? (
                   <div className="text-sm text-on-surface-variant/70">

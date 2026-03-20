@@ -92,9 +92,10 @@ export async function DashboardDashboardShell({
         }
       `}</style>
 
-      <aside className="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-900 antialiased text-sm flex flex-col py-6 px-4 z-50">
+      {/* rgb(255 255 255 / 0.8) */}
+      <aside className="h-screen w-64 fixed left-0 top-0 border-r-0 bg-white/80 dark:bg-slate-900 antialiased text-sm flex flex-col py-6 px-4 z-50">
         <div className="mb-10 px-2 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-dashboard-primary flex items-center justify-center text-dashboard-on-primary">
+          <div className="w-10 h-10 rounded-xl bg-dashboard-primary flex items-center justify-center text-dashboard-on-primary">
             <DashboardMaterialIcon icon="dashboard" />
           </div>
           <div>

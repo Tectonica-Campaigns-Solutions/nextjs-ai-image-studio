@@ -172,7 +172,7 @@ export function AssetGallery({
                         <AssetCard
                           key={asset.id}
                           asset={asset}
-                          variantBadge={asset.variant || variant}
+                          badges={[asset.variant || variant]}
                           onView={() => setLightboxAsset(asset)}
                           onSetPrimary={() => void handleSetPrimary(asset.id)}
                           onDelete={() => setDeleteTarget(asset.id)}

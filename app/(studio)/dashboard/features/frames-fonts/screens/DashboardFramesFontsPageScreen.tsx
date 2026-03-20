@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ClientAsset, ClientFont } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { deleteAssetAction, setPrimaryAssetAction } from "@/app/(studio)/dashboard/features/assets/actions/assets";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { useFontLoader } from "@/app/(studio)/dashboard/hooks/use-font-loader";
 import { GalleryLightbox } from "@/app/(studio)/dashboard/components/gallery-lightbox";
 import { cx } from "@/app/(studio)/dashboard/utils/cx";
+import { FrameCard } from "@/app/(studio)/dashboard/components/frame-card";
+import { FontCard } from "@/app/(studio)/dashboard/components/font-card";
 
 export type DashboardFramesFontsPageScreenProps = Readonly<{
   frames: ClientAsset[];
@@ -24,6 +26,7 @@ export function DashboardFramesFontsPageScreen({
   clientNames,
   initialTab = "frames",
 }: DashboardFramesFontsPageScreenProps) {
+  const router = useRouter();
   const [tab, setTab] = useState<"frames" | "fonts">(initialTab);
   const [query, setQuery] = useState("");
   const [frames, setFrames] = useState<ClientAsset[]>(initialFrames);
@@ -170,115 +173,34 @@ export function DashboardFramesFontsPageScreen({
         {tab === "frames" ? (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFrames.map((frame) => (
-              <div key={frame.id} className="group relative">
-                <button
-                  type="button"
-                  onClick={() => setLightboxAsset(frame)}
-                  className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden w-full cursor-pointer"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={frame.file_url} alt={frame.display_name ?? frame.name} className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <Link
-                        href={`/dashboard/clients/${frame.client_id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
-                      >
-                        Manage
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); void handleSetPrimaryFrame(frame); }}
-                        disabled={frame.is_primary}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                      >
-                        {frame.is_primary ? "Primary" : "Set Primary"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); void handleDeleteFrame(frame); }}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <p className="text-white text-xs font-bold truncate">{frame.display_name ?? frame.name}</p>
-                      <p className="text-white/75 text-[10px] truncate">{clientNames[frame.client_id] ?? "Client"}</p>
-                      <div className="mt-2 flex items-center gap-1.5">
-                        {frame.variant ? (
-                          <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
-                            {frame.variant === "*" ? "All" : frame.variant}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              </div>
+              <FrameCard
+                key={frame.id}
+                frame={frame}
+                sortable={false}
+                editLabel="Manage"
+                variantBadges={[
+                  clientNames[frame.client_id] ?? "Client",
+                  ...(frame.variant ? [frame.variant === "*" ? "All" : frame.variant] : []),
+                ]}
+                onView={() => setLightboxAsset(frame)}
+                onEdit={() => router.push(`/dashboard/clients/${frame.client_id}`)}
+                onSetPrimary={() => void handleSetPrimaryFrame(frame)}
+                onDelete={() => void handleDeleteFrame(frame)}
+              />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFonts.map((font) => (
-              <div key={font.id} className="group relative">
-                <div className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden border border-outline-variant/10">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-                    <p
-                      className="text-on-surface text-2xl font-extrabold leading-none break-words"
-                      style={{ fontFamily: font.font_family }}
-                    >
-                      Lorem ipsum dolor sit amet
-                    </p>
-                    <p className="mt-4 text-xs font-semibold text-on-surface-variant/90 truncate w-full">
-                      {font.font_family}
-                    </p>
-                  </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <Link
-                        href={`/dashboard/clients/${font.client_id}`}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
-                      >
-                        Manage
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => void handleSetPrimaryFont(font)}
-                        disabled={font.is_primary}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                      >
-                        {font.is_primary ? "Primary" : "Set Primary"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleDeleteFont(font)}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
-                      >
-                        Delete
-                      </button>
-                    </div>
-
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <p className="text-white text-xs font-bold truncate">{font.font_family}</p>
-                      <p className="text-white/75 text-[10px] truncate">{clientNames[font.client_id] ?? "Client"}</p>
-
-                      <div className="mt-2 flex items-center gap-1.5">
-                        {font.font_category ? (
-                          <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
-                            {font.font_category}
-                          </span>
-                        ) : null}
-                        <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
-                          {font.font_source}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <FontCard
+                key={font.id}
+                font={font}
+                editLabel="Manage"
+                extraBadges={[clientNames[font.client_id] ?? "Client"]}
+                onEdit={() => router.push(`/dashboard/clients/${font.client_id}`)}
+                onSetPrimary={() => void handleSetPrimaryFont(font)}
+                onDelete={() => void handleDeleteFont(font)}
+              />
             ))}
           </div>
         )}

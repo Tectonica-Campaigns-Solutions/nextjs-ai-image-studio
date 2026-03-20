@@ -9,8 +9,10 @@ import type { ClientFont } from "@/app/(studio)/dashboard/utils/types";
 interface FontCardProps {
   font: ClientFont;
   onEdit: () => void;
+  editLabel?: string;
   onSetPrimary: () => void;
   onDelete: () => void;
+  extraBadges?: string[];
 }
 
 /**
@@ -23,14 +25,22 @@ interface FontCardProps {
  *
          * The parent must carry the `group` class to trigger hover overlay visibility.
  */
-export function FontCard({ font, onEdit, onSetPrimary, onDelete }: FontCardProps) {
+export function FontCard({
+  font,
+  onEdit,
+  editLabel = "Edit",
+  onSetPrimary,
+  onDelete,
+  extraBadges = [],
+}: FontCardProps) {
   const badges = [
+    ...extraBadges,
     ...(font.font_category ? [font.font_category] : []),
     font.font_source === "google" ? "Google" : "Custom",
   ];
 
   const actions: GalleryOverlayAction[] = [
-    { label: "Edit", onClick: onEdit, variant: "neutral" },
+    { label: editLabel, onClick: onEdit, variant: "neutral" },
     {
       label: font.is_primary ? "Primary" : "Set Primary",
       onClick: onSetPrimary,

@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { deleteAssetAction, setPrimaryAssetAction } from "@/app/(studio)/dashboard/features/assets/actions/assets";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GalleryLightbox } from "@/app/(studio)/dashboard/components/gallery-lightbox";
 import { cx } from "@/app/(studio)/dashboard/utils/cx";
+import { AssetCard } from "@/app/(studio)/dashboard/components/asset-card";
 
 export type DashboardAssetsPageScreenProps = Readonly<{
   assets: ClientAsset[];
@@ -39,6 +41,7 @@ export function DashboardAssetsPageScreen({
   totalAssets,
   clientNames,
 }: DashboardAssetsPageScreenProps) {
+  const router = useRouter();
   const [assets, setAssets] = useState<ClientAsset[]>(initialAssets);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [typeFilter, setTypeFilter] = useState<"all" | "images" | "svg" | "video">("all");
@@ -256,20 +259,6 @@ export function DashboardAssetsPageScreen({
         <div className={view === "grid" ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-3"}>
           {filteredAssets.map((asset) => {
             const typeLabel = formatAssetType(asset.mime_type, asset.asset_type);
-            const isVideo = typeLabel === "MP4";
-            const isSvg = typeLabel === "SVG";
-
-            const pillClass = isVideo
-              ? "px-2 py-0.5 rounded bg-error/70 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide"
-              : isSvg
-                ? "px-2 py-0.5 rounded bg-blue-600/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide"
-                : "px-2 py-0.5 rounded bg-black/50 backdrop-blur-md text-[10px] text-white font-bold uppercase tracking-wide";
-
-            const durationPill = isVideo ? (
-              <div className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] text-white font-medium">
-                0:24
-              </div>
-            ) : null;
 
             if (view === "list") {
               return (
@@ -311,69 +300,16 @@ export function DashboardAssetsPageScreen({
             }
 
             return (
-              <div key={asset.id} className="group relative">
-                <button
-                  type="button"
-                  onClick={() => setLightboxAsset(asset)}
-                  className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden w-full cursor-pointer"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    alt={asset.display_name ?? asset.name}
-                    className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
-                    src={asset.file_url}
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <Link
-                        href={`/dashboard/clients/${asset.client_id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
-                      >
-                        Manage
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          void handleSetPrimary(asset);
-                        }}
-                        disabled={asset.is_primary || primaryAction.busyId !== null}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                      >
-                        {asset.is_primary ? "Primary" : primaryAction.busyId === asset.id ? "Setting..." : "Set Primary"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(asset); }}
-                        className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
-                      >
-                        Delete
-                      </button>
-                    </div>
-
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <p className="text-white text-xs font-bold truncate">
-                        {asset.display_name ?? asset.name}
-                      </p>
-                      <p className="text-white/75 text-[10px] truncate">
-                        {clientNames[asset.client_id] ?? "Client"} • {typeLabel}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        <span className={pillClass}>{typeLabel}</span>
-                        {asset.variant ? (
-                          <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
-                            {asset.variant}
-                          </span>
-                        ) : null}
-                        {durationPill}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              </div>
+              <AssetCard
+                key={asset.id}
+                asset={asset}
+                sortable={false}
+                badges={[typeLabel, ...(asset.variant ? [asset.variant] : [])]}
+                onView={() => setLightboxAsset(asset)}
+                onManage={() => router.push(`/dashboard/clients/${asset.client_id}`)}
+                onSetPrimary={() => void handleSetPrimary(asset)}
+                onDelete={() => setDeleteTarget(asset)}
+              />
             );
           })}
         </div>

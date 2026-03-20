@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import type { CanvasSessionSummary } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { deleteCanvasSessionAction } from "@/app/(studio)/dashboard/features/canvas-sessions/actions/canvas-sessions";
 import { formatRelativeFromNow } from "@/app/(studio)/dashboard/utils/date-formatters";
 import { useServerAction } from "@/app/(studio)/dashboard/hooks/use-server-action";
 import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
+import { CanvasSessionCard } from "@/app/(studio)/dashboard/components/canvas-session-card";
 
 export type DashboardCanvasSessionsPageScreenProps = Readonly<{
   sessions: CanvasSessionSummary[];
@@ -84,50 +84,16 @@ export function DashboardCanvasSessionsPageScreen({
             const thumb = s.thumbnail_url || s.background_url;
 
             return (
-              <div
+              <CanvasSessionCard
                 key={s.id}
-                className="group bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-dashboard-primary/10 flex items-center justify-center text-dashboard-primary shrink-0 overflow-hidden">
-                    {thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img alt={s.name ?? "Canvas session"} src={thumb} className="w-full h-full object-cover" />
-                    ) : (
-                      <DashboardMaterialIcon icon={idx % 2 === 0 ? "brush" : "history"} />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-on-surface truncate">{s.name ?? "Untitled Session"}</p>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium mt-1">
-                      Created {formatRelativeFromNow(s.created_at)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href={`/dashboard/clients/${s.client_id}`}
-                    className="bg-surface-container-low text-on-surface px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-surface-container-high"
-                  >
-                    Manage
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(s)}
-                    className="bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-destructive/90"
-                  >
-                    Delete
-                  </button>
-                  <a
-                    href={`/standalone/studio?session_id=${encodeURIComponent(s.id)}&user_id=${encodeURIComponent(s.ca_user_id)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-dashboard-primary text-dashboard-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
-                  >
-                    Open
-                  </a>
-                </div>
-              </div>
+                session={s}
+                fallbackIcon={idx % 2 === 0 ? "brush" : "history"}
+                createdLabel={formatRelativeFromNow(s.created_at)}
+                previewUrl={thumb}
+                manageHref={`/dashboard/clients/${s.client_id}`}
+                deleteDisabled={busyId !== null}
+                onDelete={() => setDeleteTarget(s)}
+              />
             );
           })}
 

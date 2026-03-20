@@ -1,10 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import {
-  GalleryMediaCard,
-  type GalleryOverlayAction,
-} from "./gallery-media-card";
 import { SortableItem } from "./sortable-item";
 import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
 
@@ -29,8 +25,11 @@ interface FrameCardProps {
   variantBadges: string[];
   onView: () => void;
   onEdit: () => void;
+  editLabel?: string;
   onSetPrimary: () => void;
   onDelete: () => void;
+  disableActions?: boolean;
+  sortable?: boolean;
 }
 
 /**
@@ -47,52 +46,98 @@ export function FrameCard({
   variantBadges,
   onView,
   onEdit,
+  editLabel = "Edit",
   onSetPrimary,
   onDelete,
+  disableActions = false,
+  sortable = true,
 }: FrameCardProps) {
   const label = frame.display_name || frame.name;
 
-  const actions: GalleryOverlayAction[] = [
-    { label: "View", onClick: onView, variant: "neutral" },
-    { label: "Edit", onClick: onEdit, variant: "neutral" },
-    {
-      label: frame.is_primary ? "Primary" : "Set Primary",
-      onClick: onSetPrimary,
-      variant: "primary",
-      disabled: frame.is_primary,
-    },
-    { label: "Delete", onClick: onDelete, variant: "destructive" },
-  ];
-
-  return (
-    <SortableItem
-      id={frame.id}
-      className="group relative border rounded-lg overflow-hidden bg-card"
-    >
-      <GalleryMediaCard
-        actions={actions}
-        label={label}
-        badges={variantBadges}
+  const media = (
+    <div className="group relative">
+      <div
+        className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        role="button"
+        tabIndex={0}
+        onClick={onView}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onView();
+          }
+        }}
       >
-        {/* Checkered background (transparency indicator) + image */}
-        <div className="relative w-full aspect-square overflow-hidden">
-          <div className="absolute inset-0" style={CHECKERED_STYLE} />
-          <button
-            type="button"
-            onClick={onView}
-            className="relative w-full h-full bg-transparent flex items-center justify-center cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-            title="View full size"
-          >
-            <Image
-              src={frame.file_url}
-              alt={label}
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          </button>
+        <div className="absolute inset-0" style={CHECKERED_STYLE} />
+        <Image
+          src={frame.file_url}
+          alt={label}
+          fill
+          className="object-contain group-hover:scale-[1.03] transition-transform duration-500"
+          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              disabled={disableActions}
+              className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+            >
+              {editLabel}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSetPrimary();
+              }}
+              disabled={disableActions || frame.is_primary}
+              className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+            >
+              {frame.is_primary ? "Primary" : "Set Primary"}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              disabled={disableActions}
+              className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              Delete
+            </button>
+          </div>
+
+          <div className="absolute bottom-3 left-3 right-3">
+            <p className="text-white text-xs font-bold truncate">{label}</p>
+            <p className="text-white/75 text-[10px] truncate">File • {frame.mime_type ?? "—"}</p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {variantBadges.map((badge) => (
+                <span
+                  key={`${frame.id}-${badge}`}
+                  className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold"
+                >
+                  {badge}
+                </span>
+              ))}
+              {frame.is_primary ? (
+                <span className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700">
+                  Primary
+                </span>
+              ) : null}
+            </div>
+          </div>
         </div>
-      </GalleryMediaCard>
-    </SortableItem>
+      </div>
+    </div>
   );
+
+  if (!sortable) return media;
+
+  return <SortableItem id={frame.id} className="group relative">{media}</SortableItem>;
 }
