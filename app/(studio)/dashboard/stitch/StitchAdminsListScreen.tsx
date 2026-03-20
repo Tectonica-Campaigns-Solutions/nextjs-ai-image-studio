@@ -167,7 +167,7 @@ export function StitchAdminsListScreen({
         <div className="flex items-end justify-between mb-10">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Admin</span>
+              <span>Dashboard</span>
               <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span className="text-stitch-primary font-bold">Admins</span>
             </nav>

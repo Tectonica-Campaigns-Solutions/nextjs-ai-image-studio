@@ -99,10 +99,10 @@ export async function StitchDashboardShell({
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Curator Pro
+              Tectonica.ai
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">
-              Enterprise Plan
+              Visual Studio
             </p>
           </div>
         </div>

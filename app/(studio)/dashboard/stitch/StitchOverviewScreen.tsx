@@ -3,6 +3,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StitchMaterialIcon } from "./StitchMaterialIcon";
 import type { DashboardOverviewData } from "../data/overview";
 import { CreateClientModal } from "../components/create-client-modal";
@@ -24,6 +25,7 @@ export type StitchOverviewScreenProps = Readonly<{
 
 export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
   const { stats, recentClients } = data;
+  const router = useRouter();
 
   const [createClientOpen, setCreateClientOpen] = useState(false);
 
@@ -272,7 +274,16 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
                 return (
                   <tr
                     key={c.id}
-                    className="hover:bg-surface-container-highest transition-colors duration-150 group"
+                    className="hover:bg-surface-container-highest transition-colors duration-150 group cursor-pointer"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/dashboard/clients/${c.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(`/dashboard/clients/${c.id}`);
+                      }
+                    }}
                   >
                     <td className="px-8 py-4">
                       <div className="flex items-center gap-3">
@@ -294,15 +305,12 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
                     </td>
 
                     <td className="px-8 py-4 text-right">
-                      <Link
-                        href={`/dashboard/clients/${c.id}`}
-                        className="inline-flex items-center justify-end"
-                      >
+                      <span className="inline-flex items-center justify-end">
                         <StitchMaterialIcon
                           icon="arrow_forward_ios"
                           className="text-slate-400 group-hover:text-stitch-primary transition-colors"
                         />
-                      </Link>
+                      </span>
                     </td>
                   </tr>
                 );

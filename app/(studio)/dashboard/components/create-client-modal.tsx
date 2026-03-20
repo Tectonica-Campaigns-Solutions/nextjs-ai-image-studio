@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { ClientForm } from "./client-form";
 import { createClientAction } from "@/app/(studio)/dashboard/actions/clients";
+import { toast } from "sonner";
 
 interface CreateClientModalProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
       allow_custom_logo: data.allow_custom_logo,
     });
     if (result.error) throw new Error(result.error);
+    toast.success("Client created");
     onOpenChange(false);
     router.refresh();
   };

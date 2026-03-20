@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { X, Star, Type, Pencil, Save } from "lucide-react";
@@ -292,84 +293,76 @@ export function FontGallery({
           {fonts.map((font) => (
             <div
               key={font.id}
-              className="relative group border rounded-lg overflow-hidden bg-card p-4"
+              className="group relative"
             >
-                <div className="mb-3">
-                  <div
-                    className="text-2xl font-semibold mb-2 truncate"
+              <div className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden border border-outline-variant/10">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                  <p
+                    className="text-on-surface text-2xl font-extrabold leading-none break-words"
                     style={{ fontFamily: font.font_family }}
                   >
+                    Lorem ipsum dolor sit amet
+                  </p>
+                  <p className="mt-4 text-xs font-semibold text-on-surface-variant/90 truncate w-full">
                     {font.font_family}
+                  </p>
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 pointer-events-none">
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openEdit(font.id);
+                      }}
+                      className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        void handleSetPrimary(font.id);
+                      }}
+                      disabled={font.is_primary}
+                      className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      {font.is_primary ? "Primary" : "Set Primary"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDeleteTarget(font.id);
+                      }}
+                      className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
+                    >
+                      Delete
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="px-2 py-1 bg-muted rounded">
-                      {font.font_source === "google" ? "Google Fonts" : "Custom"}
-                    </span>
-                    {font.font_category && (
-                      <span className="px-2 py-1 bg-muted rounded">
-                        {font.font_category}
+
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <p className="text-white text-xs font-bold truncate">{font.font_family}</p>
+                    <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                      {font.font_category ? (
+                        <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                          {font.font_category}
+                        </span>
+                      ) : null}
+                      <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                        {font.font_source === "google" ? "Google" : "Custom"}
                       </span>
-                    )}
+                    </div>
                   </div>
                 </div>
-
-                <div className="mb-3">
-                  <p className="text-xs text-muted-foreground mb-1">Weights:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {font.font_weights.map((weight) => (
-                      <span
-                        key={weight}
-                        className="text-xs px-2 py-1 bg-muted rounded tabular-nums"
-                      >
-                        {weight}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {font.is_primary && (
-                  <div className="absolute top-2 right-2 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                    <Star className="size-3 fill-current" />
-                    Primary
-                  </div>
-                )}
-
-                <div className="flex items-center gap-1 pt-3 border-t opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(font.id)}
-                    disabled={font.is_primary && font.font_family.length === 0}
-                    aria-label="Edit font"
-                    className="text-on-surface-variant hover:text-stitch-primary"
-                  >
-                    <Pencil className="size-3.5" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSetPrimary(font.id)}
-                    disabled={font.is_primary}
-                    title={font.is_primary ? "Already primary" : "Mark as Primary"}
-                    aria-label={font.is_primary ? "Already primary" : "Mark as Primary"}
-                  >
-                    <Star
-                      className={`size-3.5 ${font.is_primary ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
-                    />
-                    {font.is_primary ? "Primary" : "Set primary"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteTarget(font.id)}
-                    aria-label="Delete font"
-                  >
-                    <X className="size-3.5" />
-                    Delete
-                  </Button>
-                </div>
+              </div>
             </div>
           ))}
 

@@ -210,10 +210,12 @@ export function AssetUpload({
   const pendingCount = queue.filter((q) => q.status === "pending").length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* File Input */}
       <div className="space-y-2">
-        <Label>Files</Label>
+        <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+          Files
+        </Label>
         <Input
           ref={fileInputRef}
           type="file"
@@ -221,22 +223,24 @@ export function AssetUpload({
           onChange={handleFileSelect}
           disabled={uploading}
           multiple
-          className="cursor-pointer"
+          className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none cursor-pointer focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : null}
       </div>
 
       {/* Queue */}
       {queue.length > 0 && (
         <div className="space-y-2">
-          <Label>
+          <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
             {queue.length} file{queue.length !== 1 ? "s" : ""} selected
           </Label>
-          <div className="rounded-lg border divide-y max-h-48 overflow-y-auto">
+          <div className="rounded-xl border border-outline-variant/10 bg-surface-container-low p-2 max-h-48 overflow-y-auto">
             {queue.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-2 text-sm"
+                className="flex items-center gap-3 p-2 text-sm hover:bg-surface-container-high transition-colors rounded-lg"
               >
                 {item.preview && (
                   <div className="relative size-8 flex-shrink-0 rounded overflow-hidden bg-muted">
@@ -254,7 +258,7 @@ export function AssetUpload({
                   <button
                     type="button"
                     onClick={() => removeFromQueue(item.id)}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-on-surface-variant hover:text-on-surface transition-colors"
                     aria-label="Remove"
                     disabled={uploading}
                   >
@@ -284,10 +288,10 @@ export function AssetUpload({
       {/* Variant / Aspect Ratios */}
       {assetType === "frame" ? (
         <div className="space-y-2">
-          <Label>
+          <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
             Aspect ratio(s) <span className="text-destructive">*</span>
           </Label>
-          <div className="rounded-md border bg-muted/30 p-3 space-y-3 max-h-[220px] overflow-y-auto">
+          <div className="rounded-xl border border-outline-variant/10 bg-surface-container-low p-4 space-y-3 max-h-[220px] overflow-y-auto">
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={frameVariantAll}
@@ -332,7 +336,12 @@ export function AssetUpload({
         </div>
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="asset-variant">Variant (Optional)</Label>
+          <Label
+            htmlFor="asset-variant"
+            className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+          >
+            Variant (Optional)
+          </Label>
           <div className="relative">
             <Input
               id="asset-variant"
@@ -342,6 +351,7 @@ export function AssetUpload({
               placeholder={variantPlaceholder}
               disabled={uploading}
               maxLength={50}
+              className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
             />
             {existingVariants.length > 0 && (
               <datalist id="variant-options">
@@ -359,7 +369,12 @@ export function AssetUpload({
 
       {/* Is Primary */}
       <div className="flex items-center justify-between">
-        <Label htmlFor="asset-primary">Mark first file as Primary</Label>
+        <Label
+          htmlFor="asset-primary"
+          className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+        >
+          Mark first file as Primary
+        </Label>
         <Checkbox
           id="asset-primary"
           checked={isPrimary}
@@ -369,11 +384,18 @@ export function AssetUpload({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-2 pt-4 border-t">
-        <Button variant="outline" onClick={handleCancel} disabled={uploading}>
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={uploading}
+          className="bg-surface-container-lowest border-outline-variant/10 hover:bg-surface-container-high hover:text-on-surface disabled:opacity-50"
+        >
           Cancel
         </Button>
         <Button
+          type="button"
           onClick={handleUpload}
           disabled={
             pendingCount === 0 ||
@@ -382,6 +404,7 @@ export function AssetUpload({
               frameVariantRatios.length === 0) ||
             uploading
           }
+          className="bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
         >
           {uploading ? (
             <>

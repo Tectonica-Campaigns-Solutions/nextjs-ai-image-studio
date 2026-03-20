@@ -669,10 +669,10 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
               </button>
             </div>
           </div>
-      </section>
+        </section>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-8 border-b border-outline-variant/10 px-2 overflow-x-auto whitespace-nowrap">
+        {/* Navigation Tabs */}
+        <div className="flex gap-8 border-b border-outline-variant/10 px-2 overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => setActiveTab("assets")}
             className={cx(
@@ -717,257 +717,269 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
           >
             Canvas Sessions
           </button>
-      </div>
+        </div>
 
-      {/* Tab Content (Assets Preview in Stitch export) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Tab Content (Assets Preview in Stitch export) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">{tabLabel}</h3>
+              <h3 className="text-lg font-bold">{tabLabel}</h3>
             </div>
 
-          {activeTab === "assets" ? (
-            <div className="space-y-6">
-              {groupedAssets.map(([variantKey, assetsInVariant]) => (
-                <div key={variantKey} className="space-y-3">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-                    {variantKey}
-                  </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {assetsInVariant.map((asset) => (
-                      <div key={asset.id} className="group relative">
-                        <div
-                          className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer"
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => setLightboxAsset(asset)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") setLightboxAsset(asset);
-                          }}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            alt={asset.display_name ?? asset.name}
-                            className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
-                            src={asset.file_url}
-                          />
+            {activeTab === "assets" ? (
+              <div className="space-y-6">
+                {groupedAssets.map(([variantKey, assetsInVariant]) => (
+                  <div key={variantKey} className="space-y-3">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                      {variantKey}
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {assetsInVariant.map((asset) => (
+                        <div key={asset.id} className="group relative">
+                          <div
+                            className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setLightboxAsset(asset)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") setLightboxAsset(asset);
+                            }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              alt={asset.display_name ?? asset.name}
+                              className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
+                              src={asset.file_url}
+                            />
 
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                            <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteAssetId(asset.id);
-                                }}
-                                disabled={assetActionBusyId !== null}
-                                className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50"
-                              >
-                                Delete
-                              </button>
-                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
+                              <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleSetPrimaryFrame(asset.id);
+                                  }}
+                                  disabled={assetActionBusyId !== null || asset.is_primary}
+                                  className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                                >
+                                  {asset.is_primary ? "Primary" : "Set Primary"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteAssetId(asset.id);
+                                  }}
+                                  disabled={assetActionBusyId !== null}
+                                  className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50"
+                                >
+                                  Delete
+                                </button>
+                              </div>
 
-                            <div className="absolute bottom-3 left-3 right-3">
-                              <p className="text-white text-xs font-bold truncate">
-                                {asset.display_name ?? asset.name}
-                              </p>
-                              <p className="text-white/75 text-[10px] truncate">
-                                File • {asset.mime_type ?? "—"}
-                              </p>
+                              <div className="absolute bottom-3 left-3 right-3">
+                                <p className="text-white text-xs font-bold truncate">
+                                  {asset.display_name ?? asset.name}
+                                </p>
+                                <p className="text-white/75 text-[10px] truncate">
+                                  File • {asset.mime_type ?? "—"}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+                ))}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadAsset(true)}
+                    className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
+                  >
+                    <StitchMaterialIcon icon="add_circle" className="text-stitch-primary" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                      Upload Asset
+                    </span>
+                  </button>
                 </div>
-              ))}
+              </div>
+            ) : null}
+
+            {activeTab === "frames" ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {visibleAssetsOrFrames.map((asset) => (
+                  <div key={asset.id} className="group relative">
+                    <div
+                      className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setLightboxAsset(asset)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") setLightboxAsset(asset);
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt={asset.display_name ?? asset.name}
+                        className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
+                        src={asset.file_url}
+                      />
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditFrame(asset);
+                            }}
+                            disabled={assetActionBusyId !== null}
+                            className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleSetPrimaryFrame(asset.id);
+                            }}
+                            disabled={assetActionBusyId !== null || asset.is_primary}
+                            className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                          >
+                            {asset.is_primary ? "Primary" : "Set Primary"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteAssetId(asset.id);
+                            }}
+                            disabled={assetActionBusyId !== null}
+                            className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
+                        </div>
+
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <p className="text-white text-xs font-bold truncate">
+                            {asset.display_name ?? asset.name}
+                          </p>
+                          <p className="text-white/75 text-[10px] truncate">
+                            File • {asset.mime_type ?? "—"}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {(asset.variant === "*"
+                              ? ["All"]
+                              : asset.variant
+                                ? asset.variant.split(",").map((s) => s.trim()).filter(Boolean)
+                                : []
+                            ).map((v) => (
+                              <span
+                                key={`${asset.id}-${v}`}
+                                className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold"
+                              >
+                                {v}
+                              </span>
+                            ))}
+                            {asset.is_primary ? (
+                              <span className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50">
+                                Primary
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
                 <button
                   type="button"
-                  onClick={() => setShowUploadAsset(true)}
+                  onClick={() => setShowUploadFrame(true)}
                   className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
                 >
                   <StitchMaterialIcon icon="add_circle" className="text-stitch-primary" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                    Upload Asset
+                    Upload Frame
                   </span>
                 </button>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {activeTab === "frames" ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {visibleAssetsOrFrames.map((asset) => (
-                <div key={asset.id} className="group relative">
+            {activeTab === "fonts" ? (
+              <FontGallery
+                clientId={client.id}
+                fonts={data.fonts ?? []}
+                onRefresh={() => router.refresh()}
+              />
+            ) : null}
+
+            {activeTab === "canvas-sessions" ? (
+              <div className="space-y-3">
+                {(visibleSessions ?? []).map((session, idx) => (
                   <div
-                    className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setLightboxAsset(asset)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") setLightboxAsset(asset);
-                    }}
+                    key={session.id}
+                    className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 flex items-center justify-between gap-4"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt={asset.display_name ?? asset.name}
-                      className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
-                      src={asset.file_url}
-                    />
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                      <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void handleSetPrimaryFrame(asset.id);
-                          }}
-                          disabled={assetActionBusyId !== null || asset.is_primary}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50"
-                        >
-                          {asset.is_primary ? "Primary" : "Set Primary"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditFrame(asset);
-                          }}
-                          disabled={assetActionBusyId !== null}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteAssetId(asset.id);
-                          }}
-                          disabled={assetActionBusyId !== null}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500 disabled:opacity-50"
-                        >
-                          Delete
-                        </button>
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-stitch-primary/10 flex items-center justify-center text-stitch-primary shrink-0 overflow-hidden">
+                        {session.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={session.thumbnail_url}
+                            alt={session.name ?? "Canvas session"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <StitchMaterialIcon
+                            icon={idx % 2 === 0 ? "brush" : "history"}
+                          />
+                        )}
                       </div>
-
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <p className="text-white text-xs font-bold truncate">
-                          {asset.display_name ?? asset.name}
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-on-surface truncate">
+                          {session.name ?? "Untitled Session"}
                         </p>
-                        <p className="text-white/75 text-[10px] truncate">
-                          File • {asset.mime_type ?? "—"}
+                        <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium mt-1">
+                          Created {formatRelativeFromNow(session.created_at)}
                         </p>
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {(asset.variant === "*"
-                            ? ["All"]
-                            : asset.variant
-                              ? asset.variant.split(",").map((s) => s.trim()).filter(Boolean)
-                              : []
-                          ).map((v) => (
-                            <span
-                              key={`${asset.id}-${v}`}
-                              className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold"
-                            >
-                              {v}
-                            </span>
-                          ))}
-                          {asset.is_primary ? (
-                            <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded text-[10px] font-semibold">
-                              Primary
-                            </span>
-                          ) : null}
-                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => setShowUploadFrame(true)}
-                className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
-              >
-                <StitchMaterialIcon icon="add_circle" className="text-stitch-primary" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Upload Frame
-                </span>
-              </button>
-            </div>
-          ) : null}
-
-          {activeTab === "fonts" ? (
-            <FontGallery
-              clientId={client.id}
-              fonts={data.fonts ?? []}
-              onRefresh={() => router.refresh()}
-            />
-          ) : null}
-
-          {activeTab === "canvas-sessions" ? (
-            <div className="space-y-3">
-              {(visibleSessions ?? []).map((session, idx) => (
-                <div
-                  key={session.id}
-                  className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-stitch-primary/10 flex items-center justify-center text-stitch-primary shrink-0 overflow-hidden">
-                      {session.thumbnail_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={session.thumbnail_url}
-                          alt={session.name ?? "Canvas session"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <StitchMaterialIcon
-                          icon={idx % 2 === 0 ? "brush" : "history"}
-                        />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-on-surface truncate">
-                        {session.name ?? "Untitled Session"}
-                      </p>
-                      <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium mt-1">
-                        Created {formatRelativeFromNow(session.created_at)}
-                      </p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteSessionId(session.id)}
+                        disabled={deleteSessionBusyId !== null}
+                        className="bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-destructive/90 disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
+                      <a
+                        href={`/standalone/studio?session_id=${encodeURIComponent(
+                          session.id
+                        )}&user_id=${encodeURIComponent(session.ca_user_id)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-stitch-primary text-stitch-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
+                      >
+                        Open
+                      </a>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setDeleteSessionId(session.id)}
-                      disabled={deleteSessionBusyId !== null}
-                      className="bg-destructive text-destructive-foreground px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-destructive/90 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                    <a
-                      href={`/standalone/studio?session_id=${encodeURIComponent(
-                        session.id
-                      )}&user_id=${encodeURIComponent(session.ca_user_id)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-stitch-primary text-stitch-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
-                    >
-                      Open
-                    </a>
+                ))}
+                {visibleSessions.length === 0 ? (
+                  <div className="text-sm text-on-surface-variant/70">
+                    No canvas sessions saved for this client yet.
                   </div>
-                </div>
-              ))}
-              {visibleSessions.length === 0 ? (
-                <div className="text-sm text-on-surface-variant/70">
-                  No canvas sessions saved for this client yet.
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           {/* Details Sidebar */}

@@ -369,7 +369,7 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
                 <SortableItem
                   key={frame.id}
                   id={frame.id}
-                  className="group flex flex-col border rounded-lg overflow-hidden bg-card"
+                  className="group relative border rounded-lg overflow-hidden bg-card"
                 >
                   <div className="relative w-full flex-shrink-0 min-h-0 aspect-square overflow-hidden">
                     <div
@@ -396,85 +396,72 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
                       />
                     </button>
 
-                    {frame.is_primary && (
-                      <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                        <Star className="size-3 fill-current" />
-                        Primary
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
+                      <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setLightboxAsset(frame);
+                          }}
+                          className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openEdit(frame);
+                          }}
+                          className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            void handleSetPrimary(frame.id);
+                          }}
+                          disabled={frame.is_primary}
+                          className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                        >
+                          {frame.is_primary ? "Primary" : "Set Primary"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDeleteTarget(frame.id);
+                          }}
+                          className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
+                        >
+                          Delete
+                        </button>
                       </div>
-                    )}
 
-                    {variantBadges.length > 0 && (
-                      <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-1">
-                        {variantBadges.map((v) => (
-                          <span
-                            key={v}
-                            className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs font-medium"
-                          >
-                            {v}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-shrink-0 p-2 border-t bg-card flex items-center justify-between gap-1">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {frame.display_name || frame.name}
-                      </p>
-                      {frame.width && frame.height && (
-                        <p className="text-xs text-muted-foreground tabular-nums">
-                          {frame.width} x {frame.height}px
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <p className="text-white text-xs font-bold truncate">
+                          {frame.display_name || frame.name}
                         </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => setLightboxAsset(frame)}
-                        title="View full size"
-                        aria-label="View full size"
-                      >
-                        <Expand className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => openEdit(frame)}
-                        title="Edit aspect ratios"
-                        aria-label="Edit aspect ratios"
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => handleSetPrimary(frame.id)}
-                        disabled={frame.is_primary}
-                        title={frame.is_primary ? "Already primary" : "Mark as Primary"}
-                        aria-label={frame.is_primary ? "Already primary" : "Mark as Primary"}
-                      >
-                        <Star
-                          className={`size-3.5 ${frame.is_primary
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted-foreground"
-                            }`}
-                        />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteTarget(frame.id)}
-                        title="Delete frame"
-                        aria-label="Delete frame"
-                      >
-                        <X className="size-3.5" />
-                      </Button>
+                        {variantBadges.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {variantBadges.map((v) => (
+                              <span
+                                key={v}
+                                className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold"
+                              >
+                                {v}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 </SortableItem>

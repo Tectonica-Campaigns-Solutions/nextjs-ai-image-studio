@@ -266,64 +266,56 @@ export function AssetGallery({
                           />
                         </button>
 
-                        {asset.is_primary && (
-                          <div className="absolute top-2 right-2 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                            <Star className="size-3 fill-current" />
-                            Primary
-                          </div>
-                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 pointer-events-none">
+                          <div className="absolute top-3 right-3 flex items-center gap-1.5 pointer-events-auto">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setLightboxAsset(asset);
+                              }}
+                              className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+                            >
+                              View
+                            </button>
 
-                        {asset.variant && (
-                          <div className="absolute top-2 left-2 bg-muted text-muted-foreground px-2 py-1 rounded text-xs font-medium">
-                            {asset.variant}
-                          </div>
-                        )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                void handleSetPrimary(asset.id);
+                              }}
+                              disabled={asset.is_primary}
+                              className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                            >
+                              {asset.is_primary ? "Primary" : "Set Primary"}
+                            </button>
 
-                        <div className="p-2 border-t flex items-center justify-between gap-1">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDeleteTarget(asset.id);
+                              }}
+                              className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
+                            >
+                              Delete
+                            </button>
+                          </div>
+
+                          <div className="absolute bottom-3 left-3 right-3">
+                            <p className="text-white text-xs font-bold truncate">
                               {asset.display_name || asset.name}
                             </p>
-                            {asset.width && asset.height && (
-                              <p className="text-xs text-muted-foreground tabular-nums">
-                                {asset.width} x {asset.height}px
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7"
-                              onClick={() => setLightboxAsset(asset)}
-                              title="View full size"
-                              aria-label="View full size"
-                            >
-                              <Expand className="size-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7"
-                              onClick={() => handleSetPrimary(asset.id)}
-                              disabled={asset.is_primary}
-                              title={asset.is_primary ? "Already primary" : "Mark as Primary"}
-                              aria-label={asset.is_primary ? "Already primary" : "Mark as Primary"}
-                            >
-                              <Star
-                                className={`size-3.5 ${asset.is_primary ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
-                              />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7 text-destructive hover:text-destructive"
-                              onClick={() => setDeleteTarget(asset.id)}
-                              title="Delete asset"
-                              aria-label="Delete asset"
-                            >
-                              <X className="size-3.5" />
-                            </Button>
+
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                                {asset.variant || variant}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </SortableItem>

@@ -7,6 +7,10 @@ import { StitchMaterialIcon } from "./StitchMaterialIcon";
 import { deleteAssetAction, setPrimaryAssetAction } from "../actions/assets";
 import { deleteFontAction, setPrimaryFontAction } from "../actions/fonts";
 import { toast } from "sonner";
+import {
+  generateFontFaceCSS,
+  getGoogleFontsUrl,
+} from "../../standalone/studio/utils/studio-utils";
 
 export type StitchFramesFontsPageScreenProps = Readonly<{
   frames: ClientAsset[];
@@ -33,6 +37,71 @@ export function StitchFramesFontsPageScreen({
   useEffect(() => {
     setTab(initialTab);
   }, [initialTab]);
+
+  // Inject font-face for custom fonts (and load Google fonts stylesheet)
+  // so the Fonts grid can preview both custom + google fonts visually.
+  useEffect(() => {
+    const googleFonts = fonts.filter((f) => f.font_source === "google");
+    const customFonts = fonts.filter((f) => f.font_source === "custom");
+
+    if (googleFonts.length > 0) {
+      const googleFontsData = googleFonts.map((f) => ({
+        family: f.font_family,
+        weights: f.font_weights?.length > 0 ? f.font_weights : ["400"],
+      }));
+      const googleFontsUrl = getGoogleFontsUrl(googleFontsData);
+
+      if (googleFontsUrl) {
+        let link = document.querySelector(
+          `link[data-google-fonts]`
+        ) as HTMLLinkElement | null;
+
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.setAttribute("data-google-fonts", "true");
+          document.head.appendChild(link);
+        }
+
+        link.href = googleFontsUrl;
+      }
+    }
+
+    if (customFonts.length > 0) {
+      let style = document.querySelector(
+        `style[data-custom-fonts]`
+      ) as HTMLStyleElement | null;
+
+      if (!style) {
+        style = document.createElement("style");
+        style.setAttribute("data-custom-fonts", "true");
+        document.head.appendChild(style);
+      }
+
+      const fontFaceCSS = customFonts
+        .map((font) => {
+          if (!font.file_url) return "";
+          const weights =
+            font.font_weights && font.font_weights.length > 0
+              ? font.font_weights
+              : ["400"];
+
+          return weights
+            .map((weight) =>
+              generateFontFaceCSS(
+                font.font_family,
+                font.file_url as string,
+                weight
+              )
+            )
+            .join("\n");
+        })
+        .filter(Boolean)
+        .join("\n");
+
+      style.textContent = fontFaceCSS;
+    }
+  }, [fonts]);
 
   const filteredFrames = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -169,15 +238,31 @@ export function StitchFramesFontsPageScreen({
                   <img src={frame.file_url} alt={frame.display_name ?? frame.name} className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
                     <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <button type="button" onClick={() => void handleSetPrimaryFrame(frame)} disabled={frame.is_primary} className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white disabled:opacity-50">{frame.is_primary ? "Primary" : "Set Primary"}</button>
+                      <Link
+                        href={`/dashboard/clients/${frame.client_id}`}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+                      >
+                        Manage
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => void handleSetPrimaryFrame(frame)}
+                        disabled={frame.is_primary}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                      >
+                        {frame.is_primary ? "Primary" : "Set Primary"}
+                      </button>
                       <button type="button" onClick={() => void handleDeleteFrame(frame)} className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500">Delete</button>
                     </div>
                     <div className="absolute bottom-3 left-3 right-3">
                       <p className="text-white text-xs font-bold truncate">{frame.display_name ?? frame.name}</p>
                       <p className="text-white/75 text-[10px] truncate">{clientNames[frame.client_id] ?? "Client"}</p>
                       <div className="mt-2 flex items-center gap-1.5">
-                        {frame.variant ? <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">{frame.variant === "*" ? "All" : frame.variant}</span> : null}
-                        <Link href={`/dashboard/clients/${frame.client_id}`} className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">Manage</Link>
+                        {frame.variant ? (
+                          <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                            {frame.variant === "*" ? "All" : frame.variant}
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -186,21 +271,63 @@ export function StitchFramesFontsPageScreen({
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFonts.map((font) => (
-              <div key={font.id} className="group bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 hover:bg-white transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold truncate">{font.font_family}</p>
-                    <p className="text-xs text-on-surface-variant">{clientNames[font.client_id] ?? "Client"}</p>
-                    <p className="text-[10px] mt-1 text-on-surface-variant uppercase tracking-wide">{font.font_category ?? "Uncategorized"} • {font.font_source}</p>
+              <div key={font.id} className="group relative">
+                <div className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden border border-outline-variant/10">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                    <p
+                      className="text-on-surface text-2xl font-extrabold leading-none break-words"
+                      style={{ fontFamily: font.font_family }}
+                    >
+                      Lorem ipsum dolor sit amet
+                    </p>
+                    <p className="mt-4 text-xs font-semibold text-on-surface-variant/90 truncate w-full">
+                      {font.font_family}
+                    </p>
                   </div>
-                  <button type="button" onClick={() => void handleSetPrimaryFont(font)} disabled={font.is_primary} className="text-[10px] font-semibold px-2 py-1 rounded bg-surface-container-low text-slate-700 disabled:opacity-50">{font.is_primary ? "Primary" : "Set Primary"}</button>
-                </div>
-                <p className="mt-4 text-2xl truncate" style={{ fontFamily: font.font_family }}>The quick brown fox jumps.</p>
-                <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button type="button" onClick={() => void handleDeleteFont(font)} className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500">Delete</button>
-                  <Link href={`/dashboard/clients/${font.client_id}`} className="text-[10px] font-semibold px-2 py-1 rounded bg-surface-container-low text-slate-700">Manage</Link>
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                      <Link
+                        href={`/dashboard/clients/${font.client_id}`}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
+                      >
+                        Manage
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => void handleSetPrimaryFont(font)}
+                        disabled={font.is_primary}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                      >
+                        {font.is_primary ? "Primary" : "Set Primary"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteFont(font)}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
+                      >
+                        Delete
+                      </button>
+                    </div>
+
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <p className="text-white text-xs font-bold truncate">{font.font_family}</p>
+                      <p className="text-white/75 text-[10px] truncate">{clientNames[font.client_id] ?? "Client"}</p>
+
+                      <div className="mt-2 flex items-center gap-1.5">
+                        {font.font_category ? (
+                          <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                            {font.font_category}
+                          </span>
+                        ) : null}
+                        <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
+                          {font.font_source}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

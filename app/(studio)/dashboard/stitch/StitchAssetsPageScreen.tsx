@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ClientAsset } from "../types";
 import { StitchMaterialIcon } from "./StitchMaterialIcon";
-import { deleteAssetAction } from "../actions/assets";
+import { deleteAssetAction, setPrimaryAssetAction } from "../actions/assets";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -57,6 +57,7 @@ export function StitchAssetsPageScreen({
   const [query, setQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ClientAsset | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [primaryBusyAssetId, setPrimaryBusyAssetId] = useState<string | null>(null);
 
   const filteredAssets = useMemo(() => {
     const filtered = assets.filter((asset) => {
@@ -105,6 +106,29 @@ export function StitchAssetsPageScreen({
       setDeleteTarget(null);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleSetPrimary = async (asset: ClientAsset) => {
+    if (asset.is_primary) return;
+    if (primaryBusyAssetId) return;
+    setPrimaryBusyAssetId(asset.id);
+    try {
+      const result = await setPrimaryAssetAction(asset.client_id, asset.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setAssets((prev) =>
+        prev.map((a) => {
+          if (a.client_id !== asset.client_id) return a;
+          if (a.asset_type !== asset.asset_type) return a;
+          return { ...a, is_primary: a.id === asset.id };
+        })
+      );
+      toast.success("Primary asset updated");
+    } finally {
+      setPrimaryBusyAssetId(null);
     }
   };
 
@@ -284,9 +308,27 @@ export function StitchAssetsPageScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">{asset.display_name ?? asset.name}</p>
-                    <p className="text-xs text-on-surface-variant truncate">{clientNames[asset.client_id] ?? "Client"}{asset.variant ? ` • ${asset.variant}` : ""}</p>
+                    <p className="text-xs text-on-surface-variant truncate">
+                      {clientNames[asset.client_id] ?? "Client"}
+                      {asset.variant ? ` • ${asset.variant}` : ""}
+                      {asset.is_primary ? " • Primary" : ""}
+                    </p>
                   </div>
                   <Link href={`/dashboard/clients/${asset.client_id}`} className="text-xs font-semibold text-stitch-primary">Manage</Link>
+                  <button
+                    type="button"
+                    onClick={() => void handleSetPrimary(asset)}
+                    disabled={asset.is_primary || primaryBusyAssetId !== null}
+                    className="text-xs font-semibold"
+                  >
+                    {asset.is_primary ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
+                        Primary
+                      </span>
+                    ) : (
+                      <span className="text-stitch-primary">Set Primary</span>
+                    )}
+                  </button>
                   <button type="button" onClick={() => setDeleteTarget(asset)} className="text-xs font-semibold text-error">Delete</button>
                 </div>
               );
@@ -310,6 +352,18 @@ export function StitchAssetsPageScreen({
                       >
                         Manage
                       </Link>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          void handleSetPrimary(asset);
+                        }}
+                        disabled={asset.is_primary || primaryBusyAssetId !== null}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                      >
+                        {asset.is_primary ? "Primary" : primaryBusyAssetId === asset.id ? "Setting..." : "Set Primary"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(asset)}
