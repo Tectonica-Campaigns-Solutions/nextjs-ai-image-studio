@@ -60,17 +60,24 @@ export async function setPrimaryAssetAction(
 
   if (fetchError || !asset) return { error: "Asset not found" };
 
-  await supabase
+  // Two-step primary swap: clear others first, then set target.
+  // Note: without a DB transaction these two steps are not fully atomic.
+  // Use .neq to avoid clearing the target in the same call.
+  const { error: clearError } = await supabase
     .from("client_assets")
     .update({ is_primary: false })
     .eq("client_id", clientId)
     .eq("asset_type", asset.asset_type)
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .neq("id", assetId);
+
+  if (clearError) return { error: "Failed to set primary asset" };
 
   const { error } = await supabase
     .from("client_assets")
     .update({ is_primary: true, updated_by: check.user.id })
-    .eq("id", assetId);
+    .eq("id", assetId)
+    .eq("client_id", clientId);
 
   if (error) return { error: "Failed to set primary asset" };
   revalidatePath(`/dashboard/clients/${clientId}`);

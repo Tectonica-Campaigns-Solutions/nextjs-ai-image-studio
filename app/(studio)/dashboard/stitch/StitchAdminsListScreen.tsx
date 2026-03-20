@@ -16,6 +16,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cx } from "../utils/cx";
+import { formatDateLong } from "../utils/date-formatters";
+import { StatCard } from "../components/stat-card";
 
 type AdminSortKey = "granted_at" | "name";
 type AdminStatusFilter = "all" | "active" | "inactive";
@@ -34,16 +37,6 @@ function getAdminLabel(admin: Admin) {
 
 function getAdminSubLabel(admin: Admin) {
   return admin.email && admin.email !== "N/A" ? admin.email : admin.user_id;
-}
-
-function formatDateLong(iso?: string | null) {
-  if (!iso) return "—";
-  const dt = new Date(iso);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const m = months[dt.getUTCMonth()] ?? "—";
-  const day = String(dt.getUTCDate()).padStart(2, "0");
-  const y = dt.getUTCFullYear();
-  return `${m} ${day}, ${y}`;
 }
 
 export type StitchAdminsListScreenProps = Readonly<{
@@ -184,37 +177,10 @@ export function StitchAdminsListScreen({
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-6 mb-10">
-          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Total Admins</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold">{stats.total.toLocaleString()}</span>
-              <span className="text-xs font-medium text-green-600 flex items-center">+0%</span>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Active Now</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold">{stats.active.toLocaleString()}</span>
-              <span className="text-xs font-medium text-blue-600 flex items-center">Live</span>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Inactive</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold">{stats.inactive.toLocaleString()}</span>
-              <span className="text-xs font-medium text-orange-500 flex items-center">—</span>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Expired</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold">{stats.expired.toLocaleString()}</span>
-              <span className="text-xs font-medium text-rose-600 flex items-center">Soon</span>
-            </div>
-          </div>
+          <StatCard label="Total Admins" value={stats.total} meta="+0%" metaClassName="text-green-600" />
+          <StatCard label="Active Now" value={stats.active} meta="Live" metaClassName="text-blue-600" />
+          <StatCard label="Inactive" value={stats.inactive} meta="—" metaClassName="text-orange-500" />
+          <StatCard label="Expired" value={stats.expired} meta="Soon" metaClassName="text-rose-600" />
         </div>
 
         {/* Table */}
@@ -447,7 +413,4 @@ export function StitchAdminsListScreen({
   );
 }
 
-function cx(...classes: Array<string | undefined | null | false>) {
-  return classes.filter(Boolean).join(" ");
-}
 

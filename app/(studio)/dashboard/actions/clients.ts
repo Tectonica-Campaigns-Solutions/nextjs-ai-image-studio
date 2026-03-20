@@ -10,6 +10,7 @@ import {
 } from "@/app/(studio)/dashboard/schemas/clients";
 import type { CreateClientInput } from "@/app/(studio)/dashboard/schemas/clients";
 import { isValidUUID } from "@/app/(studio)/dashboard/schemas/params";
+import { firstZodError } from "@/app/(studio)/dashboard/utils/validation-helpers";
 
 export type ClientActionResult = { error?: string; clientId?: string };
 
@@ -21,10 +22,7 @@ export async function createClientAction(
 
   const parsed = createClientSchema.safeParse(raw);
   if (!parsed.success) {
-    const msg =
-      Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
-      "Validation failed";
-    return { error: String(msg) };
+    return { error: firstZodError(parsed.error) };
   }
 
   const data = parsed.data;
@@ -94,10 +92,7 @@ export async function updateClientAction(
 
   const parsed = updateClientSchema.safeParse(raw);
   if (!parsed.success) {
-    const msg =
-      Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
-      "Validation failed";
-    return { error: String(msg) };
+    return { error: firstZodError(parsed.error) };
   }
 
   const supabase = await createClient();

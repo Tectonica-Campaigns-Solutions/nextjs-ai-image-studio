@@ -2,6 +2,15 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import type { Admin } from "@/app/(studio)/dashboard/types";
 
+/** Safely reads full_name / display_name from Supabase auth user_metadata. */
+function extractDisplayName(
+  userMetadata: Record<string, unknown> | null | undefined
+): string | null {
+  if (!userMetadata) return null;
+  const name = userMetadata.full_name ?? userMetadata.display_name;
+  return typeof name === "string" ? name : null;
+}
+
 /**
  * Fetches all admins. Does NOT call requireAdmin - the page must do that first.
  * User and granter fetches are parallelized per role (Promise.all).
@@ -30,11 +39,7 @@ export async function getAdminsListData(): Promise<Admin[] | null> {
         if (!userRes.error && userRes.data?.user) {
           const u = userRes.data.user;
           email = u.email || "N/A";
-          const meta = u.user_metadata as Record<string, unknown> | undefined;
-          displayName =
-            (meta?.full_name as string) ??
-            (meta?.display_name as string) ??
-            null;
+          displayName = extractDisplayName(u.user_metadata);
         }
       } catch {
         // ignore
@@ -91,9 +96,7 @@ export async function getAdminDetailData(id: string): Promise<Admin | null> {
     if (!userError && userData?.user) {
       const u = userData.user;
       email = u.email || "N/A";
-      const meta = u.user_metadata as Record<string, unknown> | undefined;
-      displayName =
-        (meta?.full_name as string) ?? (meta?.display_name as string) ?? null;
+      displayName = extractDisplayName(u.user_metadata);
     }
   } catch {
     // ignore

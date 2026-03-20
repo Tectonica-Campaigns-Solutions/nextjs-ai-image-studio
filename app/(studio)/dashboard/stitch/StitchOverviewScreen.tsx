@@ -2,22 +2,11 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StitchMaterialIcon } from "./StitchMaterialIcon";
 import type { DashboardOverviewData } from "../data/overview";
 import { CreateClientModal } from "../components/create-client-modal";
-
-function formatRelativeTime(isoDate: string | null | undefined) {
-  if (!isoDate) return "—";
-  const dt = new Date(isoDate).getTime();
-  const diffMs = Date.now() - dt;
-  const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return "Yesterday";
-  return `${diffDays} days ago`;
-}
+import { formatRelativeTime } from "../utils/date-formatters";
 
 export type StitchOverviewScreenProps = Readonly<{
   data: DashboardOverviewData;

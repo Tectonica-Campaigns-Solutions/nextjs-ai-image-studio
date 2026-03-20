@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { GalleryLightbox } from "../components/gallery-lightbox";
 
 export type StitchAssetsPageScreenProps = Readonly<{
   assets: ClientAsset[];
@@ -58,6 +59,7 @@ export function StitchAssetsPageScreen({
   const [deleteTarget, setDeleteTarget] = useState<ClientAsset | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [primaryBusyAssetId, setPrimaryBusyAssetId] = useState<string | null>(null);
+  const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
 
   const filteredAssets = useMemo(() => {
     const filtered = assets.filter((asset) => {
@@ -161,6 +163,12 @@ export function StitchAssetsPageScreen({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <GalleryLightbox
+        asset={lightboxAsset}
+        onClose={() => setLightboxAsset(null)}
+      />
+
       <div className="p-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
@@ -302,10 +310,14 @@ export function StitchAssetsPageScreen({
             if (view === "list") {
               return (
                 <div key={asset.id} className="group bg-surface-container-lowest rounded-xl p-3 shadow-sm ring-1 ring-outline-variant/10 flex items-center gap-3">
-                  <div className="relative h-16 w-16 rounded-lg bg-surface-container overflow-hidden shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxAsset(asset)}
+                    className="relative h-16 w-16 rounded-lg bg-surface-container overflow-hidden shrink-0 cursor-pointer"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img alt={asset.display_name ?? asset.name} className="w-full h-full object-cover" src={asset.file_url} />
-                  </div>
+                  </button>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">{asset.display_name ?? asset.name}</p>
                     <p className="text-xs text-on-surface-variant truncate">
@@ -336,7 +348,11 @@ export function StitchAssetsPageScreen({
 
             return (
               <div key={asset.id} className="group relative">
-                <div className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setLightboxAsset(asset)}
+                  className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden w-full cursor-pointer"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt={asset.display_name ?? asset.name}
@@ -348,6 +364,7 @@ export function StitchAssetsPageScreen({
                     <div className="absolute top-3 right-3 flex items-center gap-1.5">
                       <Link
                         href={`/dashboard/clients/${asset.client_id}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
                       >
                         Manage
@@ -366,7 +383,7 @@ export function StitchAssetsPageScreen({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setDeleteTarget(asset)}
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(asset); }}
                         className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
                       >
                         Delete
@@ -391,7 +408,7 @@ export function StitchAssetsPageScreen({
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             );
           })}

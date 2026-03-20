@@ -1,23 +1,18 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
+import { useGallerySort } from "@/app/(studio)/dashboard/hooks/use-gallery-sort";
 import {
   SortableContext,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Star, Expand, Pencil } from "lucide-react";
+import { Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,26 +20,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { GalleryLightbox } from "./gallery-lightbox";
+import { ConfirmDialog } from "./confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssetUpload } from "./asset-upload";
-import { SortableItem } from "./sortable-item";
+import { FrameCard } from "./frame-card";
 import type { ClientAsset } from "@/app/(studio)/dashboard/types";
 import {
   deleteAssetAction,
   setPrimaryAssetAction,
-  reorderAssetsAction,
 } from "@/app/(studio)/dashboard/actions/assets";
 import { COMMON_ASPECT_RATIOS } from "@/lib/aspect-ratios";
+import { parseFrameVariant, getVariantBadges } from "../utils/frame-variant-utils";
 
 interface FrameGalleryProps {
   clientId: string;
@@ -57,36 +44,7 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
-  );
-
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-      const oldIndex = frames.findIndex((f) => f.id === active.id);
-      const newIndex = frames.findIndex((f) => f.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reordered = [...frames];
-      const [moved] = reordered.splice(oldIndex, 1);
-      reordered.splice(newIndex, 0, moved);
-
-      const result = await reorderAssetsAction(
-        clientId,
-        reordered.map((f) => f.id)
-      );
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      toast.success("Order updated");
-      onRefresh();
-    },
-    [frames, clientId, onRefresh]
-  );
+  const { sensors, handleDragEnd, items: sortedFrames } = useGallerySort(frames, clientId, onRefresh);
 
   const [editFrame, setEditFrame] = useState<ClientAsset | null>(null);
   const [editVariantAll, setEditVariantAll] = useState(false);
@@ -120,18 +78,9 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
   const openEdit = useCallback((frame: ClientAsset) => {
     setEditFrame(frame);
     setEditError(null);
-    if (frame.variant === "*") {
-      setEditVariantAll(true);
-      setEditVariantRatios([]);
-    } else if (frame.variant) {
-      setEditVariantAll(false);
-      setEditVariantRatios(
-        frame.variant.split(",").map((s) => s.trim()).filter(Boolean)
-      );
-    } else {
-      setEditVariantAll(false);
-      setEditVariantRatios([]);
-    }
+    const { isAll, ratios } = parseFrameVariant(frame.variant);
+    setEditVariantAll(isAll);
+    setEditVariantRatios(ratios);
   }, []);
 
   const closeEdit = useCallback(() => {
@@ -272,62 +221,25 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
+      <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete frame</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this frame? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title="Delete frame"
+        description="Are you sure you want to delete this frame? This action cannot be undone."
+        actionLabel="Delete"
+        onConfirm={handleConfirmDelete}
+      />
 
-      <Dialog
-        open={!!lightboxAsset}
-        onOpenChange={(open) => !open && setLightboxAsset(null)}
-      >
-        <DialogContent className="max-w-5xl h-[90dvh] p-0 gap-0 bg-black/95 border-none [&>button]:text-white [&>button]:hover:bg-white/20">
-          <DialogHeader className="sr-only">
-            <DialogTitle>
-              {lightboxAsset?.display_name || lightboxAsset?.name}
-            </DialogTitle>
-            <DialogDescription>Full-size frame preview</DialogDescription>
-          </DialogHeader>
-          {lightboxAsset && (
-            <div className="relative w-full h-full">
-              <Image
-                src={lightboxAsset.file_url}
-                alt={lightboxAsset.display_name || lightboxAsset.name}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
-              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80 truncate max-w-full px-4">
-                {lightboxAsset.display_name || lightboxAsset.name}
-              </p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <GalleryLightbox
+        asset={lightboxAsset}
+        onClose={() => setLightboxAsset(null)}
+        description="Full-size frame preview"
+      />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {frames.length} frame{frames.length !== 1 ? "s" : ""} registered
+            {sortedFrames.length} frame{sortedFrames.length !== 1 ? "s" : ""} registered
           </p>
           <Button onClick={() => setShowUpload(true)} size="sm" aria-label="Upload new frame">
             <Upload className="size-4" aria-hidden />
@@ -335,7 +247,7 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
           </Button>
         </div>
 
-        {frames.length === 0 ? (
+        {sortedFrames.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
             <Upload className="size-8 text-muted-foreground mx-auto mb-3" aria-hidden />
             <p className="text-sm text-muted-foreground mb-2 text-pretty">No frames uploaded yet.</p>
@@ -354,117 +266,22 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
             onDragEnd={handleDragEnd}
           >
           <SortableContext
-            items={frames.map((f) => f.id)}
+            items={sortedFrames.map((f) => f.id)}
             strategy={rectSortingStrategy}
           >
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {frames.map((frame) => {
-              const variantBadges =
-                frame.variant === "*"
-                  ? ["All"]
-                  : frame.variant
-                    ? frame.variant.split(",").map((s) => s.trim()).filter(Boolean)
-                    : [];
+            {sortedFrames.map((frame) => {
+              const variantBadges = getVariantBadges(frame.variant);
               return (
-                <SortableItem
+                <FrameCard
                   key={frame.id}
-                  id={frame.id}
-                  className="group relative border rounded-lg overflow-hidden bg-card"
-                >
-                  <div className="relative w-full flex-shrink-0 min-h-0 aspect-square overflow-hidden">
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage:
-                          "linear-gradient(45deg, #e5e5e5 25%, transparent 25%), linear-gradient(-45deg, #e5e5e5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e5e5 75%), linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)",
-                        backgroundSize: "10px 10px",
-                        backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setLightboxAsset(frame)}
-                      className="relative w-full h-full bg-transparent flex items-center justify-center cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                      title="View full size"
-                    >
-                      <Image
-                        src={frame.file_url}
-                        alt={frame.display_name || frame.name}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      />
-                    </button>
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
-                      <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setLightboxAsset(frame);
-                          }}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
-                        >
-                          View
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            openEdit(frame);
-                          }}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            void handleSetPrimary(frame.id);
-                          }}
-                          disabled={frame.is_primary}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                        >
-                          {frame.is_primary ? "Primary" : "Set Primary"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDeleteTarget(frame.id);
-                          }}
-                          className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
-                        >
-                          Delete
-                        </button>
-                      </div>
-
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <p className="text-white text-xs font-bold truncate">
-                          {frame.display_name || frame.name}
-                        </p>
-                        {variantBadges.length > 0 ? (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {variantBadges.map((v) => (
-                              <span
-                                key={v}
-                                className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold"
-                              >
-                                {v}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                </SortableItem>
+                  frame={frame}
+                  variantBadges={variantBadges}
+                  onView={() => setLightboxAsset(frame)}
+                  onEdit={() => openEdit(frame)}
+                  onSetPrimary={() => void handleSetPrimary(frame.id)}
+                  onDelete={() => setDeleteTarget(frame.id)}
+                />
               );
             })}
           </div>

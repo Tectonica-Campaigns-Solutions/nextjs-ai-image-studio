@@ -20,6 +20,9 @@ import {
   deleteClientAction,
   updateClientAction,
 } from "../actions/clients";
+import { cx } from "../utils/cx";
+import { formatDateLong } from "../utils/date-formatters";
+import { StatCard } from "../components/stat-card";
 
 type StitchClientsAdminScreenProps = Readonly<{
   stats: {
@@ -36,20 +39,6 @@ type StitchClientsAdminScreenProps = Readonly<{
   assetCountsByClientId: Record<string, number>;
   logoByClientId: Record<string, string | null | undefined>;
 }>;
-
-function formatDateLong(iso?: string) {
-  if (!iso) return "—";
-  const dt = new Date(iso);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const m = months[dt.getUTCMonth()] ?? "—";
-  const day = String(dt.getUTCDate()).padStart(2, "0");
-  const y = dt.getUTCFullYear();
-  return `${m} ${day}, ${y}`;
-}
-
-function cx(...classes: Array<string | undefined | null | false>) {
-  return classes.filter(Boolean).join(" ");
-}
 
 export function StitchClientsAdminScreen({
   stats,
@@ -240,35 +229,9 @@ export function StitchClientsAdminScreen({
 
           {/* Dashboard Stats Tonal Layering */}
           <div className="grid grid-cols-3 gap-6 mb-10">
-            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
-                Total Clients
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">{stats.totalClients.toLocaleString()}</span>
-                <span className="text-xs font-medium text-green-600 flex items-center">+12%</span>
-              </div>
-            </div>
-
-            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
-                Active Now
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">{stats.activeClients.toLocaleString()}</span>
-                <span className="text-xs font-medium text-blue-600 flex items-center">Stable</span>
-              </div>
-            </div>
-
-            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
-                Assets Stored
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">{stats.totalAssets.toLocaleString()}</span>
-                <span className="text-xs font-medium text-green-600 flex items-center">+4%</span>
-              </div>
-            </div>
+            <StatCard label="Total Clients" value={stats.totalClients} meta="+12%" metaClassName="text-green-600" />
+            <StatCard label="Active Now" value={stats.activeClients} meta="Stable" metaClassName="text-blue-600" />
+            <StatCard label="Assets Stored" value={stats.totalAssets} meta="+4%" metaClassName="text-green-600" />
           </div>
 
           {/* Table Section */}

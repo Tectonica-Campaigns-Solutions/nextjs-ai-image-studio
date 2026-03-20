@@ -21,6 +21,11 @@ export default function AdminError({
         <p className="text-sm text-muted-foreground mb-6 text-pretty">
           An error occurred. Please try again.
         </p>
+        {error.digest && (
+          <p className="text-xs text-muted-foreground/60 font-mono mb-4">
+            Error ID: {error.digest}
+          </p>
+        )}
         <Button onClick={() => reset()}>Try again</Button>
       </Card>
     </div>

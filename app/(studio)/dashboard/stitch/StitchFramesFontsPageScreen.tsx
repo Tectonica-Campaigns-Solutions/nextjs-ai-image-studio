@@ -11,6 +11,7 @@ import {
   generateFontFaceCSS,
   getGoogleFontsUrl,
 } from "../../standalone/studio/utils/studio-utils";
+import { GalleryLightbox } from "../components/gallery-lightbox";
 
 export type StitchFramesFontsPageScreenProps = Readonly<{
   frames: ClientAsset[];
@@ -33,6 +34,7 @@ export function StitchFramesFontsPageScreen({
   const [query, setQuery] = useState("");
   const [frames, setFrames] = useState<ClientAsset[]>(initialFrames);
   const [fonts, setFonts] = useState<ClientFont[]>(initialFonts);
+  const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
 
   useEffect(() => {
     setTab(initialTab);
@@ -173,6 +175,11 @@ export function StitchFramesFontsPageScreen({
 
   return (
     <main className="ml-0 pt-24 px-10 pb-12 min-h-screen bg-surface">
+      <GalleryLightbox
+        asset={lightboxAsset}
+        onClose={() => setLightboxAsset(null)}
+        description="Full-size frame preview"
+      />
       <div className="p-0">
         <div className="flex items-end justify-between mb-6">
           <div>
@@ -233,26 +240,37 @@ export function StitchFramesFontsPageScreen({
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFrames.map((frame) => (
               <div key={frame.id} className="group relative">
-                <div className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setLightboxAsset(frame)}
+                  className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden w-full cursor-pointer"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={frame.file_url} alt={frame.display_name ?? frame.name} className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3">
                     <div className="absolute top-3 right-3 flex items-center gap-1.5">
                       <Link
                         href={`/dashboard/clients/${frame.client_id}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
                       >
                         Manage
                       </Link>
                       <button
                         type="button"
-                        onClick={() => void handleSetPrimaryFrame(frame)}
+                        onClick={(e) => { e.stopPropagation(); void handleSetPrimaryFrame(frame); }}
                         disabled={frame.is_primary}
                         className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                       >
                         {frame.is_primary ? "Primary" : "Set Primary"}
                       </button>
-                      <button type="button" onClick={() => void handleDeleteFrame(frame)} className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500">Delete</button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); void handleDeleteFrame(frame); }}
+                        className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
+                      >
+                        Delete
+                      </button>
                     </div>
                     <div className="absolute bottom-3 left-3 right-3">
                       <p className="text-white text-xs font-bold truncate">{frame.display_name ?? frame.name}</p>
@@ -266,7 +284,7 @@ export function StitchFramesFontsPageScreen({
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               </div>
             ))}
           </div>

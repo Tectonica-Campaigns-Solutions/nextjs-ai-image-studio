@@ -2,6 +2,18 @@
  * Shared types for admin area. Use these in pages, components, actions, and API.
  */
 
+/** CSS numeric font weight values supported by the studio. */
+export type FontWeight =
+  | "100"
+  | "200"
+  | "300"
+  | "400"
+  | "500"
+  | "600"
+  | "700"
+  | "800"
+  | "900";
+
 export interface Client {
   id: string;
   ca_user_id: string;
@@ -37,7 +49,7 @@ export interface ClientFont {
   client_id: string;
   font_source: "google" | "custom";
   font_family: string;
-  font_weights: string[];
+  font_weights: FontWeight[];
   font_category: string | null;
   file_url: string | null;
   is_primary: boolean;

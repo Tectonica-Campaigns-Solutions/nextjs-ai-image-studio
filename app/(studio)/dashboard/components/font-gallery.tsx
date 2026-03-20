@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { X, Star, Type, Pencil, Save } from "lucide-react";
+import { Type, Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +22,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { FontUpload } from "./font-upload";
-import type { ClientFont } from "@/app/(studio)/dashboard/types";
+import { FontCard } from "./font-card";
+import type { ClientFont, FontWeight } from "@/app/(studio)/dashboard/types";
 import {
   deleteFontAction,
   setPrimaryFontAction,
@@ -51,7 +51,7 @@ export function FontGallery({
   const [editSaving, setEditSaving] = useState(false);
   const [editFamily, setEditFamily] = useState("");
   const [editCategory, setEditCategory] = useState<string>("");
-  const [editWeights, setEditWeights] = useState<string[]>([]);
+  const [editWeights, setEditWeights] = useState<FontWeight[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
 
   const editTarget = useMemo(
@@ -187,11 +187,11 @@ export function FontGallery({
                     <div key={w.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={`edit-weight-${w.value}`}
-                        checked={editWeights.includes(w.value)}
+                        checked={editWeights.includes(w.value as FontWeight)}
                         onCheckedChange={(checked) => {
                           const isChecked = Boolean(checked);
                           setEditWeights((prev) => {
-                            if (isChecked) return Array.from(new Set([...prev, w.value]));
+                            if (isChecked) return Array.from(new Set([...prev, w.value as FontWeight]));
                             return prev.filter((x) => x !== w.value);
                           });
                         }}
@@ -291,79 +291,13 @@ export function FontGallery({
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {fonts.map((font) => (
-            <div
+            <FontCard
               key={font.id}
-              className="group relative"
-            >
-              <div className="relative aspect-square rounded-xl bg-surface-container-low overflow-hidden border border-outline-variant/10">
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-                  <p
-                    className="text-on-surface text-2xl font-extrabold leading-none break-words"
-                    style={{ fontFamily: font.font_family }}
-                  >
-                    Lorem ipsum dolor sit amet
-                  </p>
-                  <p className="mt-4 text-xs font-semibold text-on-surface-variant/90 truncate w-full">
-                    {font.font_family}
-                  </p>
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 pointer-events-none">
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        openEdit(font.id);
-                      }}
-                      className="text-[10px] font-semibold px-2 py-1 rounded bg-white/90 text-slate-700 hover:bg-white"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        void handleSetPrimary(font.id);
-                      }}
-                      disabled={font.is_primary}
-                      className="text-[10px] font-semibold px-2 py-1 rounded bg-amber-100/95 text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                    >
-                      {font.is_primary ? "Primary" : "Set Primary"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setDeleteTarget(font.id);
-                      }}
-                      className="text-[10px] font-semibold px-2 py-1 rounded bg-red-500/90 text-white hover:bg-red-500"
-                    >
-                      Delete
-                    </button>
-                  </div>
-
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <p className="text-white text-xs font-bold truncate">{font.font_family}</p>
-                    <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-                      {font.font_category ? (
-                        <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
-                          {font.font_category}
-                        </span>
-                      ) : null}
-                      <span className="bg-white/90 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">
-                        {font.font_source === "google" ? "Google" : "Custom"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              font={font}
+              onEdit={() => openEdit(font.id)}
+              onSetPrimary={() => void handleSetPrimary(font.id)}
+              onDelete={() => setDeleteTarget(font.id)}
+            />
           ))}
 
           <button

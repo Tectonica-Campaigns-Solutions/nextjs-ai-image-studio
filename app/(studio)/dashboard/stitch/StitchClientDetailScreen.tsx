@@ -31,27 +31,14 @@ import { deleteAssetAction, setPrimaryAssetAction } from "../actions/assets";
 import { deleteCanvasSessionAction } from "../actions/canvas-sessions";
 import { COMMON_ASPECT_RATIOS } from "@/lib/aspect-ratios";
 import { AssetUpload } from "../components/asset-upload";
+import { cx } from "../utils/cx";
+import { formatRelativeFromNow } from "../utils/date-formatters";
 
 type TabKey = "assets" | "frames" | "fonts" | "canvas-sessions";
 
 type StitchClientDetailScreenProps = Readonly<{
   data: ClientDetailPageData;
 }>;
-
-function formatRelativeFromNow(iso?: string) {
-  if (!iso) return "—";
-  const dt = new Date(iso).getTime();
-  const diffMs = Date.now() - dt;
-  const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return "Yesterday";
-  return `${diffDays} days ago`;
-}
-
-function cx(...classes: Array<string | undefined | null | false>) {
-  return classes.filter(Boolean).join(" ");
-}
 
 export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps) {
   const router = useRouter();
@@ -662,9 +649,17 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
               <button
                 type="button"
                 onClick={handleToggleActive}
-                className="flex items-center gap-2 px-4 py-2 bg-error-container text-on-error-container font-semibold rounded-lg hover:opacity-90 transition-colors text-sm"
+                className={cx(
+                  "flex items-center gap-2 px-4 py-2 font-semibold rounded-lg hover:opacity-90 transition-colors text-sm",
+                  client.is_active
+                    ? "bg-error-container text-on-error-container"
+                    : "bg-emerald-100 text-emerald-800"
+                )}
               >
-                <StitchMaterialIcon icon="block" className="text-lg" />
+                <StitchMaterialIcon
+                  icon={client.is_active ? "block" : "check_circle"}
+                  className="text-lg"
+                />
                 {client.is_active ? "Deactivate" : "Activate"}
               </button>
             </div>
