@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ClientAsset } from "../types";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import { deleteAssetAction, setPrimaryAssetAction } from "../actions/assets";
 import { toast } from "sonner";
 import {
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GalleryLightbox } from "../components/gallery-lightbox";
 
-export type StitchAssetsPageScreenProps = Readonly<{
+export type DashboardAssetsPageScreenProps = Readonly<{
   assets: ClientAsset[];
   totalAssets: number;
   showingCount: number;
@@ -46,11 +46,11 @@ function cx(...classes: Array<string | undefined | null | false>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export function StitchAssetsPageScreen({
+export function DashboardAssetsPageScreen({
   assets: initialAssets,
   totalAssets,
   clientNames,
-}: StitchAssetsPageScreenProps) {
+}: DashboardAssetsPageScreenProps) {
   const [assets, setAssets] = useState<ClientAsset[]>(initialAssets);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [typeFilter, setTypeFilter] = useState<"all" | "images" | "svg" | "video">("all");
@@ -174,8 +174,8 @@ export function StitchAssetsPageScreen({
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
               <span>Dashboard</span>
-              <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-stitch-primary font-bold">Assets</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span className="text-dashboard-primary font-bold">Assets</span>
             </nav>
             <h2 className="text-3xl font-bold tracking-tight text-on-surface mb-1">
               Creative Assets
@@ -192,11 +192,11 @@ export function StitchAssetsPageScreen({
                 className={cx(
                   "px-3 py-1.5 rounded-md flex items-center gap-2 text-sm font-medium transition-colors",
                   view === "grid"
-                    ? "bg-white text-stitch-primary shadow-sm"
+                    ? "bg-white text-dashboard-primary shadow-sm"
                     : "text-on-surface-variant hover:text-on-surface"
                 )}
               >
-                <StitchMaterialIcon
+                <DashboardMaterialIcon
                   icon="grid_view"
                   className="text-lg"
                 />
@@ -208,11 +208,11 @@ export function StitchAssetsPageScreen({
                 className={cx(
                   "px-3 py-1.5 rounded-md flex items-center gap-2 text-sm font-medium transition-colors",
                   view === "list"
-                    ? "bg-white text-stitch-primary shadow-sm"
+                    ? "bg-white text-dashboard-primary shadow-sm"
                     : "text-on-surface-variant hover:text-on-surface"
                 )}
               >
-                <StitchMaterialIcon icon="list" className="text-lg" />
+                <DashboardMaterialIcon icon="list" className="text-lg" />
                 List
               </button>
             </div>
@@ -220,7 +220,7 @@ export function StitchAssetsPageScreen({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search assets..."
-              className="h-10 rounded-xl border border-outline-variant/15 bg-surface-container-low px-3 text-sm outline-none focus:border-stitch-primary"
+              className="h-10 rounded-xl border border-outline-variant/15 bg-surface-container-low px-3 text-sm outline-none focus:border-dashboard-primary"
             />
           </div>
         </div>
@@ -233,16 +233,16 @@ export function StitchAssetsPageScreen({
                 Asset Type
               </span>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setTypeFilter("all")} className={cx("text-sm px-1", typeFilter === "all" ? "font-semibold text-stitch-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
+                <button type="button" onClick={() => setTypeFilter("all")} className={cx("text-sm px-1", typeFilter === "all" ? "font-semibold text-dashboard-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
                   All Assets
                 </button>
-                <button type="button" onClick={() => setTypeFilter("images")} className={cx("text-sm px-1", typeFilter === "images" ? "font-semibold text-stitch-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
+                <button type="button" onClick={() => setTypeFilter("images")} className={cx("text-sm px-1", typeFilter === "images" ? "font-semibold text-dashboard-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
                   Images
                 </button>
-                <button type="button" onClick={() => setTypeFilter("svg")} className={cx("text-sm px-1", typeFilter === "svg" ? "font-semibold text-stitch-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
+                <button type="button" onClick={() => setTypeFilter("svg")} className={cx("text-sm px-1", typeFilter === "svg" ? "font-semibold text-dashboard-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
                   SVG
                 </button>
-                <button type="button" onClick={() => setTypeFilter("video")} className={cx("text-sm px-1", typeFilter === "video" ? "font-semibold text-stitch-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
+                <button type="button" onClick={() => setTypeFilter("video")} className={cx("text-sm px-1", typeFilter === "video" ? "font-semibold text-dashboard-primary" : "font-medium text-on-surface-variant hover:text-on-surface")}>
                   Video
                 </button>
               </div>
@@ -259,7 +259,7 @@ export function StitchAssetsPageScreen({
                     className="flex items-center gap-2 text-sm font-medium text-on-surface-variant group"
                   >
                     {uploadDateSort === "latest" ? "Latest first" : "Oldest first"}
-                    <StitchMaterialIcon
+                    <DashboardMaterialIcon
                       icon="expand_more"
                       className="text-lg group-hover:text-on-surface"
                     />
@@ -326,7 +326,7 @@ export function StitchAssetsPageScreen({
                       {asset.is_primary ? " • Primary" : ""}
                     </p>
                   </div>
-                  <Link href={`/dashboard/clients/${asset.client_id}`} className="text-xs font-semibold text-stitch-primary">Manage</Link>
+                  <Link href={`/dashboard/clients/${asset.client_id}`} className="text-xs font-semibold text-dashboard-primary">Manage</Link>
                   <button
                     type="button"
                     onClick={() => void handleSetPrimary(asset)}
@@ -338,7 +338,7 @@ export function StitchAssetsPageScreen({
                         Primary
                       </span>
                     ) : (
-                      <span className="text-stitch-primary">Set Primary</span>
+                      <span className="text-dashboard-primary">Set Primary</span>
                     )}
                   </button>
                   <button type="button" onClick={() => setDeleteTarget(asset)} className="text-xs font-semibold text-error">Delete</button>

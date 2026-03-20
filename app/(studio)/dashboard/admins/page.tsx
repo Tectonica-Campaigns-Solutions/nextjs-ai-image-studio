@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getAdminsListData } from "@/app/(studio)/dashboard/data/admins";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
-import { StitchAdminsListScreen } from "@/app/(studio)/dashboard/stitch/StitchAdminsListScreen";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
+import { DashboardAdminsListScreen } from "@/app/(studio)/dashboard/screens/DashboardAdminsListScreen";
 
 export default async function AdminsPage() {
   const auth = await requireAdmin();
@@ -14,8 +14,8 @@ export default async function AdminsPage() {
     redirect("/dashboard/login?error=admin_required");
   }
   return (
-    <StitchDashboardShell activeNav="admins">
-      <StitchAdminsListScreen admins={admins} currentUserId={auth.user.id} />
-    </StitchDashboardShell>
+    <DashboardDashboardShell activeNav="admins">
+      <DashboardAdminsListScreen admins={admins} currentUserId={auth.user.id} />
+    </DashboardDashboardShell>
   );
 }

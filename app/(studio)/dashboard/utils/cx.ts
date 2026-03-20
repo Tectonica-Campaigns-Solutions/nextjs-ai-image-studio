@@ -1,5 +1,5 @@
 /**
- * Minimal conditional className helper used by the dashboard's Stitch screens.
+ * Minimal conditional className helper used by the dashboard's Dashboard screens.
  * Filters out falsy values and joins the rest with a space.
  *
  * For components that already import shadcn's `cn` (clsx + tailwind-merge) use

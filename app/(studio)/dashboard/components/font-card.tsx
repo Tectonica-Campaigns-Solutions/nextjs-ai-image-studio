@@ -18,10 +18,10 @@ interface FontCardProps {
  *
  * Unlike asset/frame cards, the media content is a text-based font preview
  * (no image). Because the preview is `absolute inset-0`, the `aspect-square`
- * and border classes are passed to `GalleryMediaCard`'s root via `className`
- * so that the wrapper has an explicit height.
+         * and border classes are passed to `GalleryMediaCard`'s root via `className`
+         * so that the wrapper has an explicit height.
  *
- * The parent must carry the `group` class to trigger hover overlay visibility.
+         * The parent must carry the `group` class to trigger hover overlay visibility.
  */
 export function FontCard({ font, onEdit, onSetPrimary, onDelete }: FontCardProps) {
   const badges = [
@@ -48,7 +48,7 @@ export function FontCard({ font, onEdit, onSetPrimary, onDelete }: FontCardProps
         badges={badges}
         /*
          * The font preview children are all `absolute inset-0`, so we must
-         * give the GalleryMediaCard root the aspect ratio and the Stitch
+         * give the GalleryMediaCard root the aspect ratio and the Dashboard
          * surface styles to establish a real height.
          */
         className="aspect-square rounded-xl bg-surface-container-low overflow-hidden border border-outline-variant/10"

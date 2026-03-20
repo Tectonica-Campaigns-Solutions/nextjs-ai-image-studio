@@ -3,16 +3,16 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import type { DashboardOverviewData } from "../data/overview";
 import { CreateClientModal } from "../components/create-client-modal";
 import { formatRelativeTime } from "../utils/date-formatters";
 
-export type StitchOverviewScreenProps = Readonly<{
+export type DashboardOverviewScreenProps = Readonly<{
   data: DashboardOverviewData;
 }>;
 
-export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
+export function DashboardOverviewScreen({ data }: DashboardOverviewScreenProps) {
   const { stats, recentClients } = data;
   const router = useRouter();
 
@@ -55,11 +55,11 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
         <div className="flex gap-3">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-br from-stitch-primary to-stitch-primary-dim text-stitch-on-primary font-bold text-sm shadow-lg shadow-stitch-primary/20 active:scale-[0.98] transition-transform border-none"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary font-bold text-sm shadow-lg shadow-dashboard-primary/20 active:scale-[0.98] transition-transform border-none"
             onClick={() => setCreateClientOpen(true)}
             aria-haspopup="dialog"
           >
-            <StitchMaterialIcon
+            <DashboardMaterialIcon
               icon="add_circle"
               className="text-[20px]"
               filled
@@ -85,8 +85,8 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
               <h3 className="text-5xl font-extrabold tracking-tighter text-on-surface">
                 {stats.activeClients}
               </h3>
-              <span className="text-stitch-primary font-bold text-sm bg-stitch-primary-container px-2 py-0.5 rounded-lg flex items-center">
-                <StitchMaterialIcon icon="trending_up" className="text-[16px]" />
+              <span className="text-dashboard-primary font-bold text-sm bg-dashboard-primary-container px-2 py-0.5 rounded-lg flex items-center">
+                <DashboardMaterialIcon icon="trending_up" className="text-[16px]" />
                 {activePct}%
               </span>
             </div>
@@ -96,13 +96,13 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
             <p className="text-sm text-on-surface-variant">Across your workspace</p>
           </div>
 
-          <div className="absolute top-0 right-0 w-32 h-32 bg-stitch-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-dashboard-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
         </div>
 
         {/* Secondary Metrics */}
         <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center gap-6">
           <div className="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-            <StitchMaterialIcon icon="inventory_2" className="text-3xl" />
+            <DashboardMaterialIcon icon="inventory_2" className="text-3xl" />
           </div>
           <div>
             <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
@@ -119,7 +119,7 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
 
         <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center gap-6">
           <div className="w-14 h-14 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container">
-            <StitchMaterialIcon icon="timer" className="text-3xl" />
+            <DashboardMaterialIcon icon="timer" className="text-3xl" />
           </div>
           <div>
             <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
@@ -168,7 +168,7 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
                     {/* bottom: assets */}
                     <div
                       style={{ height: `${aPct}%` }}
-                      className="bg-stitch-primary/25 transition-colors rounded-b-lg"
+                      className="bg-dashboard-primary/25 transition-colors rounded-b-lg"
                     />
                     <div
                       style={{ height: `${fPct}%` }}
@@ -180,7 +180,7 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
                     />
 
                     {total > 0 ? (
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-stitch-on-primary text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-dashboard-on-primary text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                         {weekdayLabel(d)} • {a} assets • {f} fonts • {s} sessions
                       </div>
                     ) : null}
@@ -214,9 +214,9 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
 
                 return (
                   <div key={c.id} className="flex gap-4">
-                    <div
-                      className={activeDot ? "w-2 h-2 rounded-full bg-stitch-primary mt-1.5 shrink-0" : "w-2 h-2 rounded-full bg-slate-300 mt-1.5 shrink-0"}
-                    />
+                        <div
+                          className={activeDot ? "w-2 h-2 rounded-full bg-dashboard-primary mt-1.5 shrink-0" : "w-2 h-2 rounded-full bg-slate-300 mt-1.5 shrink-0"}
+                        />
                     <div>
                       <p className="text-sm font-semibold text-on-surface">{title}</p>
                       <p className="text-[11px] text-on-surface-variant mt-0.5">
@@ -276,7 +276,7 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
                   >
                     <td className="px-8 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-stitch-primary/10 flex items-center justify-center text-stitch-primary font-bold text-xs">
+                        <div className="w-8 h-8 rounded bg-dashboard-primary/10 flex items-center justify-center text-dashboard-primary font-bold text-xs">
                           {c.name.charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm font-semibold">
@@ -295,9 +295,9 @@ export function StitchOverviewScreen({ data }: StitchOverviewScreenProps) {
 
                     <td className="px-8 py-4 text-right">
                       <span className="inline-flex items-center justify-end">
-                        <StitchMaterialIcon
+                        <DashboardMaterialIcon
                           icon="arrow_forward_ios"
-                          className="text-slate-400 group-hover:text-stitch-primary transition-colors"
+                          className="text-slate-400 group-hover:text-dashboard-primary transition-colors"
                         />
                       </span>
                     </td>

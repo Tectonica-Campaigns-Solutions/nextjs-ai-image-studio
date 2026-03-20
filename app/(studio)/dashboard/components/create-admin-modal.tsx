@@ -130,10 +130,10 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
               aria-invalid={!!error}
               aria-describedby={error ? "create-admin-error" : undefined}
               className={cn(
-                "stitch-input",
+                "dashboard-input",
                 "!bg-surface-container-low !border-outline-variant/10",
                 "rounded-xl px-4 shadow-none",
-                "focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                "focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               )}
               disabled={saving}
             />
@@ -153,10 +153,10 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
               min={new Date().toISOString().slice(0, 16)}
               disabled={saving}
               className={cn(
-                "stitch-input",
+                "dashboard-input",
                 "!bg-surface-container-low !border-outline-variant/10",
                 "rounded-xl px-4 shadow-none",
-                "focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                "focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               )}
             />
             <p className="text-muted-foreground text-xs">
@@ -176,7 +176,7 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
             <Button
               type="submit"
               disabled={saving}
-              className="gap-2 bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
+              className="gap-2 bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
             >
               {saving ? (
                 <>

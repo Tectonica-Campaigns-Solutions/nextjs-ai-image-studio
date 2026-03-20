@@ -61,7 +61,7 @@ export function AcceptInvitationHashHandler() {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center p-6">
         <div className="w-full max-w-md p-8 bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 text-center">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-stitch-primary/10 text-stitch-primary flex items-center justify-center mb-4">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-dashboard-primary/10 text-dashboard-primary flex items-center justify-center mb-4">
             <Loader2 className="size-6 animate-spin" />
           </div>
           <p className="text-on-surface text-sm font-medium">

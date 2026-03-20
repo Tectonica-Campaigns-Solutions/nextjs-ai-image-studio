@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
-import { StitchFramesFontsPageScreen } from "@/app/(studio)/dashboard/stitch/StitchFramesFontsPageScreen";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
+import { DashboardFramesFontsPageScreen } from "@/app/(studio)/dashboard/screens/DashboardFramesFontsPageScreen";
 import type { ClientAsset, ClientFont } from "@/app/(studio)/dashboard/types";
 
 type FramesFontsPageProps = {
@@ -62,14 +62,14 @@ export default async function FramesFontsPage({
   }
 
   return (
-    <StitchDashboardShell activeNav={tab}>
-      <StitchFramesFontsPageScreen
+    <DashboardDashboardShell activeNav={tab}>
+      <DashboardFramesFontsPageScreen
         frames={framesRes.data as ClientAsset[]}
         fonts={fontsRes.data as ClientFont[]}
         clientNames={Object.fromEntries((clientsRes.data ?? []).map((c) => [c.id, c.name]))}
         initialTab={tab}
       />
-    </StitchDashboardShell>
+    </DashboardDashboardShell>
   );
 }
 

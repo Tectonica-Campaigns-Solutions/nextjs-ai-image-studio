@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Admin } from "../types";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import {
   deleteAdminAction,
   updateAdminAction,
@@ -39,15 +39,15 @@ function getAdminSubLabel(admin: Admin) {
   return admin.email && admin.email !== "N/A" ? admin.email : admin.user_id;
 }
 
-export type StitchAdminsListScreenProps = Readonly<{
+export type DashboardAdminsListScreenProps = Readonly<{
   admins: Admin[];
   currentUserId: string | null;
 }>;
 
-export function StitchAdminsListScreen({
+export function DashboardAdminsListScreen({
   admins,
   currentUserId,
-}: StitchAdminsListScreenProps) {
+}: DashboardAdminsListScreenProps) {
   const router = useRouter();
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -161,16 +161,16 @@ export function StitchAdminsListScreen({
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
               <span>Dashboard</span>
-              <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-stitch-primary font-bold">Admins</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span className="text-dashboard-primary font-bold">Admins</span>
             </nav>
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">Admins</h2>
           </div>
           <button
-            className="bg-gradient-to-br from-stitch-primary to-stitch-primary-dim text-stitch-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-stitch-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+            className="bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-dashboard-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
             onClick={() => setCreateOpen(true)}
           >
-            <StitchMaterialIcon icon="add" className="text-sm" />
+            <DashboardMaterialIcon icon="add" className="text-sm" />
             Create Admin
           </button>
         </div>
@@ -208,7 +208,7 @@ export function StitchAdminsListScreen({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className={status === "all" ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-stitch-primary text-stitch-on-primary" : "px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"}
+                  className={status === "all" ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-dashboard-primary text-dashboard-on-primary" : "px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"}
                   onClick={() => {
                     setStatus("all");
                     setPage(1);
@@ -218,7 +218,7 @@ export function StitchAdminsListScreen({
                 </button>
                 <button
                   type="button"
-                  className={status === "active" ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-stitch-primary text-stitch-on-primary" : "px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"}
+                  className={status === "active" ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-dashboard-primary text-dashboard-on-primary" : "px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"}
                   onClick={() => {
                     setStatus("active");
                     setPage(1);
@@ -228,7 +228,7 @@ export function StitchAdminsListScreen({
                 </button>
                 <button
                   type="button"
-                  className={status === "inactive" ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-stitch-primary text-stitch-on-primary" : "px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"}
+                  className={status === "inactive" ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-dashboard-primary text-dashboard-on-primary" : "px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"}
                   onClick={() => {
                     setStatus("inactive");
                     setPage(1);
@@ -319,12 +319,12 @@ export function StitchAdminsListScreen({
                           <DropdownMenuTrigger asChild>
                             <button
                               type="button"
-                              className="text-on-surface-variant hover:text-stitch-primary transition-colors"
+                              className="text-on-surface-variant hover:text-dashboard-primary transition-colors"
                               onClick={(e) => e.stopPropagation()}
                               disabled={!!busyAdminId && busyAdminId !== admin.id}
                               aria-label="Admin actions"
                             >
-                              <StitchMaterialIcon icon="more_horiz" className="text-lg" />
+                              <DashboardMaterialIcon icon="more_horiz" className="text-lg" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-[220px] bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-1 shadow-lg">
@@ -372,7 +372,7 @@ export function StitchAdminsListScreen({
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              <StitchMaterialIcon icon="chevron_left" className="text-sm" />
+              <DashboardMaterialIcon icon="chevron_left" className="text-sm" />
               Previous
             </button>
 
@@ -383,7 +383,7 @@ export function StitchAdminsListScreen({
                   className={cx(
                     "w-8 h-8 flex items-center justify-center text-xs rounded-lg transition-colors",
                     p === page
-                      ? "font-bold bg-stitch-primary text-stitch-on-primary shadow-md shadow-stitch-primary/20"
+                      ? "font-bold bg-dashboard-primary text-dashboard-on-primary shadow-md shadow-dashboard-primary/20"
                       : "font-medium hover:bg-surface-container-low"
                   )}
                   onClick={() => setPage(p)}
@@ -402,7 +402,7 @@ export function StitchAdminsListScreen({
               disabled={page >= totalPages}
             >
               Next
-              <StitchMaterialIcon icon="chevron_right" className="text-sm" />
+              <DashboardMaterialIcon icon="chevron_right" className="text-sm" />
             </button>
           </div>
         </div>

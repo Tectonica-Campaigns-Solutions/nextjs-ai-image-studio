@@ -164,7 +164,7 @@ export function FontGallery({
                   value={editFamily}
                   onChange={(e) => setEditFamily(e.target.value)}
                   disabled={editSaving}
-                  className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                  className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
                 />
               </div>
 
@@ -176,7 +176,7 @@ export function FontGallery({
                   onChange={(e) => setEditCategory(e.target.value)}
                   disabled={editSaving}
                   placeholder="e.g. sans-serif"
-                  className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                  className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export function FontGallery({
                     editFamily.trim().length === 0 ||
                     editWeights.length === 0
                   }
-                  className="min-w-[140px] gap-2 bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
+                  className="min-w-[140px] gap-2 bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
                 >
                   {editSaving ? (
                     "Saving..."
@@ -306,7 +306,7 @@ export function FontGallery({
             className="group relative rounded-xl bg-surface-container-low border-2 border-dashed border-outline-variant/30 min-h-[220px] p-6 flex flex-col items-center justify-center gap-3 hover:bg-surface-container-high transition-colors"
             aria-label="Add new font"
           >
-            <div className="w-12 h-12 rounded-full bg-stitch-primary/10 text-stitch-primary flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-dashboard-primary/10 text-dashboard-primary flex items-center justify-center">
               <Type className="size-6" aria-hidden />
             </div>
             <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">

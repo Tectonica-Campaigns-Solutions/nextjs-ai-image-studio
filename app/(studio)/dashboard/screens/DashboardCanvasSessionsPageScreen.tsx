@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import type { CanvasSessionSummary } from "../types";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import { deleteCanvasSessionAction } from "../actions/canvas-sessions";
 import { toast } from "sonner";
 import {
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export type StitchCanvasSessionsPageScreenProps = Readonly<{
+export type DashboardCanvasSessionsPageScreenProps = Readonly<{
   sessions: CanvasSessionSummary[];
   totalSessions: number;
   showingCount: number;
@@ -35,11 +35,11 @@ function formatRelativeFromNow(iso?: string) {
   return `${diffDays} days ago`;
 }
 
-export function StitchCanvasSessionsPageScreen({
+export function DashboardCanvasSessionsPageScreen({
   sessions: initialSessions,
   totalSessions,
   clientNames,
-}: StitchCanvasSessionsPageScreenProps) {
+}: DashboardCanvasSessionsPageScreenProps) {
   const [sessions, setSessions] = useState(initialSessions);
   const [query, setQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<CanvasSessionSummary | null>(null);
@@ -103,8 +103,8 @@ export function StitchCanvasSessionsPageScreen({
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
               <span>Dashboard</span>
-              <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-stitch-primary font-bold">Canvas Sessions</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span className="text-dashboard-primary font-bold">Canvas Sessions</span>
             </nav>
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface leading-tight">
               Canvas Sessions
@@ -114,7 +114,7 @@ export function StitchCanvasSessionsPageScreen({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search sessions..."
-            className="h-10 rounded-xl border border-outline-variant/15 bg-surface-container-low px-3 text-sm outline-none focus:border-stitch-primary"
+            className="h-10 rounded-xl border border-outline-variant/15 bg-surface-container-low px-3 text-sm outline-none focus:border-dashboard-primary"
           />
         </div>
 
@@ -128,12 +128,12 @@ export function StitchCanvasSessionsPageScreen({
                 className="group bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 flex items-center justify-between gap-4"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-stitch-primary/10 flex items-center justify-center text-stitch-primary shrink-0 overflow-hidden">
+                  <div className="w-10 h-10 rounded-lg bg-dashboard-primary/10 flex items-center justify-center text-dashboard-primary shrink-0 overflow-hidden">
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img alt={s.name ?? "Canvas session"} src={thumb} className="w-full h-full object-cover" />
                     ) : (
-                      <StitchMaterialIcon icon={idx % 2 === 0 ? "brush" : "history"} />
+                      <DashboardMaterialIcon icon={idx % 2 === 0 ? "brush" : "history"} />
                     )}
                   </div>
                   <div className="min-w-0">
@@ -161,7 +161,7 @@ export function StitchCanvasSessionsPageScreen({
                     href={`/standalone/studio?session_id=${encodeURIComponent(s.id)}&user_id=${encodeURIComponent(s.ca_user_id)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-stitch-primary text-stitch-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
+                    className="bg-dashboard-primary text-dashboard-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
                   >
                     Open
                   </a>

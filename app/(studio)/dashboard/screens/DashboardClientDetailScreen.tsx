@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import type { ClientDetailPageData } from "../data/clients";
 import type { ClientAsset } from "../types";
 import {
@@ -36,11 +36,11 @@ import { formatRelativeFromNow } from "../utils/date-formatters";
 
 type TabKey = "assets" | "frames" | "fonts" | "canvas-sessions";
 
-type StitchClientDetailScreenProps = Readonly<{
+type DashboardClientDetailScreenProps = Readonly<{
   data: ClientDetailPageData;
 }>;
 
-export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps) {
+export function DashboardClientDetailScreen({ data }: DashboardClientDetailScreenProps) {
   const router = useRouter();
   const client = data.client;
 
@@ -408,7 +408,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
               <AlertDialogAction
                 disabled={toggleBusy}
                 onClick={() => void handleConfirmToggleActive()}
-                className="bg-stitch-primary text-stitch-on-primary hover:opacity-95 disabled:opacity-70 shadow-sm shadow-stitch-primary/20"
+                className="bg-dashboard-primary text-dashboard-on-primary hover:opacity-95 disabled:opacity-70 shadow-sm shadow-dashboard-primary/20"
               >
                 {toggleBusy
                   ? toggleTargetIsActive
@@ -564,7 +564,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                   type="button"
                   onClick={() => void handleSaveEditFrame()}
                   disabled={editSaving || (!editVariantAll && editVariantRatios.length === 0)}
-                  className="px-4 py-2 rounded-lg bg-stitch-primary text-stitch-on-primary text-sm font-semibold hover:opacity-90 disabled:opacity-70 shadow-sm shadow-stitch-primary/20"
+                  className="px-4 py-2 rounded-lg bg-dashboard-primary text-dashboard-on-primary text-sm font-semibold hover:opacity-90 disabled:opacity-70 shadow-sm shadow-dashboard-primary/20"
                 >
                   {editSaving ? "Saving..." : "Save"}
                 </button>
@@ -605,8 +605,23 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
         </Dialog>
 
         {/* Client Hero Header */}
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
+              <span>Dashboard</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span className="text-dashboard-primary font-bold">Clients</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span>{client.name}</span>
+            </nav>
+            <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
+              Client Detail
+            </h2>
+          </div>
+        </div>
+
         <section className="relative bg-surface-container-lowest rounded-xl p-8 overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-stitch-primary-container/20 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-dashboard-primary-container/20 to-transparent pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div className="flex items-center gap-6">
@@ -630,7 +645,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                   <h2 className="text-3xl font-extrabold tracking-tight text-on-surface">
                     {client.name}
                   </h2>
-                  <span className="bg-stitch-primary/10 text-stitch-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="bg-dashboard-primary/10 text-dashboard-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                     {statusLabel}
                   </span>
                 </div>
@@ -643,7 +658,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                 onClick={() => setEditOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-surface-container-low text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high transition-colors text-sm"
               >
-                <StitchMaterialIcon icon="edit" className="text-lg" />
+                <DashboardMaterialIcon icon="edit" className="text-lg" />
                 Edit Client
               </button>
               <button
@@ -656,7 +671,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                     : "bg-emerald-100 text-emerald-800"
                 )}
               >
-                <StitchMaterialIcon
+                <DashboardMaterialIcon
                   icon={client.is_active ? "block" : "check_circle"}
                   className="text-lg"
                 />
@@ -714,7 +729,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
           </button>
         </div>
 
-        {/* Tab Content (Assets Preview in Stitch export) */}
+        {/* Tab Content (Assets Preview in Dashboard export) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
@@ -794,7 +809,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                     onClick={() => setShowUploadAsset(true)}
                     className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
                   >
-                    <StitchMaterialIcon icon="add_circle" className="text-stitch-primary" />
+                    <DashboardMaterialIcon icon="add_circle" className="text-dashboard-primary" />
                     <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                       Upload Asset
                     </span>
@@ -899,7 +914,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                   onClick={() => setShowUploadFrame(true)}
                   className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
                 >
-                  <StitchMaterialIcon icon="add_circle" className="text-stitch-primary" />
+                  <DashboardMaterialIcon icon="add_circle" className="text-dashboard-primary" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                     Upload Frame
                   </span>
@@ -923,7 +938,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                     className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-4 flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-stitch-primary/10 flex items-center justify-center text-stitch-primary shrink-0 overflow-hidden">
+                      <div className="w-10 h-10 rounded-lg bg-dashboard-primary/10 flex items-center justify-center text-dashboard-primary shrink-0 overflow-hidden">
                         {session.thumbnail_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -932,7 +947,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <StitchMaterialIcon
+                          <DashboardMaterialIcon
                             icon={idx % 2 === 0 ? "brush" : "history"}
                           />
                         )}
@@ -961,7 +976,7 @@ export function StitchClientDetailScreen({ data }: StitchClientDetailScreenProps
                         )}&user_id=${encodeURIComponent(session.ca_user_id)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-stitch-primary text-stitch-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
+                        className="bg-dashboard-primary text-dashboard-on-primary px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90"
                       >
                         Open
                       </a>

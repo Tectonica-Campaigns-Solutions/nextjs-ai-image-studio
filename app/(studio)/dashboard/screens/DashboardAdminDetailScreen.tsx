@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Admin } from "../types";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import { updateAdminAction, deleteAdminAction } from "../actions/admins";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export type StitchAdminDetailScreenProps = Readonly<{
+export type DashboardAdminDetailScreenProps = Readonly<{
   admin: Admin;
   currentUserId: string | null;
 }>;
@@ -49,10 +49,10 @@ function displayName(admin: Admin) {
   return "Admin";
 }
 
-export function StitchAdminDetailScreen({
+export function DashboardAdminDetailScreen({
   admin,
   currentUserId,
-}: StitchAdminDetailScreenProps) {
+}: DashboardAdminDetailScreenProps) {
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
@@ -161,10 +161,10 @@ export function StitchAdminDetailScreen({
         <div className="flex items-end justify-between mb-10">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Admin</span>
-              <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-stitch-primary font-bold">Admins</span>
-              <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span>Dashboard</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span className="text-dashboard-primary font-bold">Admins</span>
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span>{displayName(admin)}</span>
             </nav>
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -221,7 +221,7 @@ export function StitchAdminDetailScreen({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={saving}
-                    className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none"
+                    className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none"
                     placeholder="Display name"
                   />
                 </div>
@@ -240,7 +240,7 @@ export function StitchAdminDetailScreen({
                     checked={isActive}
                     disabled={saving || isSelf}
                     onCheckedChange={(checked) => setIsActive(checked)}
-                    className="data-[state=checked]:bg-stitch-primary data-[state=unchecked]:bg-surface-container-high focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                    className="data-[state=checked]:bg-dashboard-primary data-[state=unchecked]:bg-surface-container-high focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
                   />
                 </div>
 
@@ -255,7 +255,7 @@ export function StitchAdminDetailScreen({
                       value={expiresAt}
                       onChange={(e) => setExpiresAt(e.target.value)}
                       disabled={saving}
-                      className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none"
+                      className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none"
                     />
                   </div>
                 ) : null}
@@ -282,7 +282,7 @@ export function StitchAdminDetailScreen({
                   </Button>
                   <button
                     type="button"
-                    className="bg-stitch-primary text-stitch-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm shadow-stitch-primary/20 hover:opacity-90 transition-all disabled:opacity-70"
+                    className="bg-dashboard-primary text-dashboard-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm shadow-dashboard-primary/20 hover:opacity-90 transition-all disabled:opacity-70"
                     onClick={handleSave}
                     disabled={saving}
                   >

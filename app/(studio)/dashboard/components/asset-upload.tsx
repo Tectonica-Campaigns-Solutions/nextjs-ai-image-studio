@@ -223,7 +223,7 @@ export function AssetUpload({
           onChange={handleFileSelect}
           disabled={uploading}
           multiple
-          className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none cursor-pointer focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+          className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none cursor-pointer focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
         />
         {error ? (
           <p className="text-sm text-destructive">{error}</p>
@@ -351,7 +351,7 @@ export function AssetUpload({
               placeholder={variantPlaceholder}
               disabled={uploading}
               maxLength={50}
-              className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
             />
             {existingVariants.length > 0 && (
               <datalist id="variant-options">
@@ -404,7 +404,7 @@ export function AssetUpload({
               frameVariantRatios.length === 0) ||
             uploading
           }
-          className="bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
+          className="bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
         >
           {uploading ? (
             <>

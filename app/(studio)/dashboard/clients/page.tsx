@@ -6,9 +6,9 @@ import {
 } from "@/app/(studio)/dashboard/data/clients";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { createClient } from "@/lib/supabase/server";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
 import { getDashboardOverviewData } from "@/app/(studio)/dashboard/data/overview";
-import { StitchClientsAdminScreen } from "@/app/(studio)/dashboard/stitch/StitchClientsAdminScreen";
+import { DashboardClientsAdminScreen } from "@/app/(studio)/dashboard/screens/DashboardClientsAdminScreen";
 
 const PAGE_SIZE = 25;
 
@@ -72,8 +72,8 @@ export default async function ClientsPage() {
   }
 
   return (
-    <StitchDashboardShell activeNav="clients">
-      <StitchClientsAdminScreen
+    <DashboardDashboardShell activeNav="clients">
+      <DashboardClientsAdminScreen
         stats={overview.stats}
         clients={result.clients}
         totalClients={result.total}
@@ -82,6 +82,6 @@ export default async function ClientsPage() {
         assetCountsByClientId={assetCountsByClientId}
         logoByClientId={logoByClientId}
       />
-    </StitchDashboardShell>
+    </DashboardDashboardShell>
   );
 }

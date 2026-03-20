@@ -24,7 +24,7 @@ export default async function AdminLoginPage({
     <div className="min-h-screen bg-surface flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 p-8">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-xl bg-stitch-primary text-stitch-on-primary flex items-center justify-center mb-5 shadow-sm shadow-stitch-primary/25">
+          <div className="w-14 h-14 rounded-xl bg-dashboard-primary text-dashboard-on-primary flex items-center justify-center mb-5 shadow-sm shadow-dashboard-primary/25">
             <Shield className="w-7 h-7" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-on-surface text-center mb-2">
@@ -59,7 +59,7 @@ export default async function AdminLoginPage({
               type="email"
               id="email"
               name="email"
-              className="stitch-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              className="dashboard-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               placeholder="admin@company.com"
               required
             />
@@ -76,7 +76,7 @@ export default async function AdminLoginPage({
               type="password"
               id="password"
               name="password"
-              className="stitch-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              className="dashboard-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               placeholder="Enter your password"
               required
             />
@@ -84,7 +84,7 @@ export default async function AdminLoginPage({
 
           <Button
             formAction={adminLogin}
-            className="w-full h-11 rounded-xl bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 font-semibold hover:opacity-90 shadow-sm shadow-stitch-primary/20"
+            className="w-full h-11 rounded-xl bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 font-semibold hover:opacity-90 shadow-sm shadow-dashboard-primary/20"
           >
             <Lock className="size-4 mr-2" />
             Sign in

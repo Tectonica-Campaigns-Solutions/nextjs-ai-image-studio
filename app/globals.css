@@ -292,7 +292,7 @@
 }
 
 /* Mejorar contraste en inputs */
-[data-slot="input"]:not(.stitch-input) {
+[data-slot="input"]:not(.dashboard-input) {
   background-color: hsl(var(--input)) !important;
   border-color: hsl(var(--border)) !important;
 }
@@ -312,6 +312,6 @@ button[data-variant="secondary"],
 
 /* NOTE:
  * Se desactivaron reglas globales de "forzar contraste" que interferían con el
- * diseño exportado de Stitch (clases con opacidad tipo `/20`, degradados y colores
+ * diseño exportado de Dashboard (clases con opacidad tipo `/20`, degradados y colores
  * específicos de tokens).
  */

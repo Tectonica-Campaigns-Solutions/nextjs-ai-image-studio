@@ -51,11 +51,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Stitch (Kinetic Minimalist) tokens for pixel-like fidelity.
-        "stitch-primary": "#005ac2",
-        "stitch-primary-dim": "#004fab",
-        "stitch-primary-container": "#d8e2ff",
-        "stitch-on-primary": "#f7f7ff",
+        // Dashboard tokens for pixel-like fidelity.
+        "dashboard-primary": "#005ac2",
+        "dashboard-primary-dim": "#004fab",
+        "dashboard-primary-container": "#d8e2ff",
+        "dashboard-on-primary": "#f7f7ff",
         // Surfaces
         surface: "#faf8ff",
         "on-surface": "#113069",

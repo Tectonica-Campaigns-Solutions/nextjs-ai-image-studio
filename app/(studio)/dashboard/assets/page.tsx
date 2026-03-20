@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
-import { StitchAssetsPageScreen } from "@/app/(studio)/dashboard/stitch/StitchAssetsPageScreen";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
+import { DashboardAssetsPageScreen } from "@/app/(studio)/dashboard/screens/DashboardAssetsPageScreen";
 import type { ClientAsset } from "@/app/(studio)/dashboard/types";
 
 export default async function AssetsPage() {
@@ -39,14 +39,14 @@ export default async function AssetsPage() {
   );
 
   return (
-    <StitchDashboardShell activeNav="assets">
-      <StitchAssetsPageScreen
+    <DashboardDashboardShell activeNav="assets">
+      <DashboardAssetsPageScreen
         assets={data as ClientAsset[]}
         totalAssets={count ?? 0}
         showingCount={data.length}
         clientNames={clientNames}
       />
-    </StitchDashboardShell>
+    </DashboardDashboardShell>
   );
 }
 

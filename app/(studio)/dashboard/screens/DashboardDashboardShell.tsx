@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import { createClient } from "@/lib/supabase/server";
 
-export type StitchNavKey =
+export type DashboardNavKey =
   | "overview"
   | "clients"
   | "admins"
@@ -13,8 +13,8 @@ export type StitchNavKey =
   | "fonts"
   | "canvas-sessions";
 
-export type StitchDashboardShellProps = Readonly<{
-  activeNav: StitchNavKey;
+export type DashboardDashboardShellProps = Readonly<{
+  activeNav: DashboardNavKey;
   children: React.ReactNode;
 }>;
 
@@ -58,10 +58,10 @@ function navItemClass(isActive: boolean) {
   ].join(" ");
 }
 
-export async function StitchDashboardShell({
+export async function DashboardDashboardShell({
   activeNav,
   children,
-}: StitchDashboardShellProps) {
+}: DashboardDashboardShellProps) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -82,7 +82,7 @@ export async function StitchDashboardShell({
 
   return (
     <div
-      className="stitch-dashboard bg-surface text-on-surface antialiased overflow-x-hidden"
+      className="dashboard-dashboard bg-surface text-on-surface antialiased overflow-x-hidden"
       style={{ fontFamily: "Inter, sans-serif" }}
     >
       <style>{`
@@ -94,8 +94,8 @@ export async function StitchDashboardShell({
 
       <aside className="h-screen w-64 fixed left-0 top-0 border-r-0 bg-slate-50 dark:bg-slate-900 antialiased text-sm flex flex-col py-6 px-4 z-50">
         <div className="mb-10 px-2 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-stitch-primary flex items-center justify-center text-stitch-on-primary">
-            <StitchMaterialIcon icon="dashboard" />
+            <div className="w-10 h-10 rounded-xl bg-dashboard-primary flex items-center justify-center text-dashboard-on-primary">
+            <DashboardMaterialIcon icon="dashboard" />
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
@@ -109,7 +109,7 @@ export async function StitchDashboardShell({
 
         <nav className="flex-1 space-y-1">
           <Link className={navItemClass(activeNav === "overview")} href="/dashboard">
-            <StitchMaterialIcon
+            <DashboardMaterialIcon
               icon="dashboard"
               className="text-blue-700 dark:text-blue-400"
             />
@@ -120,7 +120,7 @@ export async function StitchDashboardShell({
             className={navItemClass(activeNav === "clients")}
             href="/dashboard/clients"
           >
-            <StitchMaterialIcon icon="group" />
+            <DashboardMaterialIcon icon="group" />
             <span>Clients</span>
           </Link>
 
@@ -128,7 +128,7 @@ export async function StitchDashboardShell({
             className={navItemClass(activeNav === "admins")}
             href="/dashboard/admins"
           >
-            <StitchMaterialIcon icon="shield" />
+            <DashboardMaterialIcon icon="shield" />
             <span>Admins</span>
           </Link>
 
@@ -136,7 +136,7 @@ export async function StitchDashboardShell({
             className={navItemClass(activeNav === "assets")}
             href="/dashboard/assets"
           >
-            <StitchMaterialIcon icon="folder_open" />
+            <DashboardMaterialIcon icon="folder_open" />
             <span>Assets</span>
           </Link>
 
@@ -144,7 +144,7 @@ export async function StitchDashboardShell({
             className={navItemClass(activeNav === "frames")}
             href="/dashboard/frames-fonts?tab=frames"
           >
-            <StitchMaterialIcon icon="frame_person" />
+            <DashboardMaterialIcon icon="frame_person" />
             <span>Frames</span>
           </Link>
 
@@ -152,7 +152,7 @@ export async function StitchDashboardShell({
             className={navItemClass(activeNav === "fonts")}
             href="/dashboard/frames-fonts?tab=fonts"
           >
-            <StitchMaterialIcon icon="font_download" />
+            <DashboardMaterialIcon icon="font_download" />
             <span>Fonts</span>
           </Link>
 
@@ -160,7 +160,7 @@ export async function StitchDashboardShell({
             className={navItemClass(activeNav === "canvas-sessions")}
             href="/dashboard/canvas-sessions"
           >
-            <StitchMaterialIcon icon="draw" />
+            <DashboardMaterialIcon icon="draw" />
             <span>Canvas Sessions</span>
           </Link>
         </nav>
@@ -171,7 +171,7 @@ export async function StitchDashboardShell({
       <main className="ml-64 min-h-screen">
         <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-end px-8 border-none">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-stitch-primary/10 text-stitch-primary border border-stitch-primary/20 flex items-center justify-center text-xs font-bold uppercase tracking-wide">
+            <div className="w-9 h-9 rounded-full bg-dashboard-primary/10 text-dashboard-primary border border-dashboard-primary/20 flex items-center justify-center text-xs font-bold uppercase tracking-wide">
               {userInitials}
             </div>
             <form action={handleSignOut}>
@@ -181,7 +181,7 @@ export async function StitchDashboardShell({
                 aria-label="Cerrar sesión"
                 title="Cerrar sesión"
               >
-                <StitchMaterialIcon icon="logout" className="text-[18px]" />
+                <DashboardMaterialIcon icon="logout" className="text-[18px]" />
               </button>
             </form>
           </div>

@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getClientDetailPageData } from "@/app/(studio)/dashboard/data/clients";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
-import { StitchClientDetailScreen } from "@/app/(studio)/dashboard/stitch/StitchClientDetailScreen";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
+import { DashboardClientDetailScreen } from "@/app/(studio)/dashboard/screens/DashboardClientDetailScreen";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -22,8 +22,8 @@ export default async function ClientDetailPage({ params }: PageProps) {
   }
 
   return (
-    <StitchDashboardShell activeNav="clients">
-      <StitchClientDetailScreen data={data} />
-    </StitchDashboardShell>
+    <DashboardDashboardShell activeNav="clients">
+      <DashboardClientDetailScreen data={data} />
+    </DashboardDashboardShell>
   );
 }

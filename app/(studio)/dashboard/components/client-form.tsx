@@ -104,8 +104,8 @@ export function ClientForm({
             disabled={!!clientId || saving}
             autoFocus={!clientId}
             className={cn(
-              "stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none",
-              "focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary",
+              "dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none",
+              "focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary",
               clientId && "bg-muted text-muted-foreground"
             )}
             aria-invalid={!!errors.ca_user_id}
@@ -132,7 +132,7 @@ export function ClientForm({
             placeholder="Name of the client"
             disabled={saving}
             aria-invalid={!!errors.name}
-            className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+            className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
           />
           {errors.name && (
             <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -150,7 +150,7 @@ export function ClientForm({
             placeholder="email@example.com"
             disabled={saving}
             aria-invalid={!!errors.email}
-            className="stitch-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+            className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
           />
           {errors.email && (
             <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -165,7 +165,7 @@ export function ClientForm({
             placeholder="Description of the client (optional)"
             rows={4}
             disabled={saving}
-            className="resize-none bg-surface-container-low border-outline-variant/10 rounded-xl shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+            className="resize-none bg-surface-container-low border-outline-variant/10 rounded-xl shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
           />
         </div>
 
@@ -183,7 +183,7 @@ export function ClientForm({
             checked={isActive}
             onCheckedChange={(checked) => setValue("is_active", checked)}
             disabled={saving}
-            className="data-[state=checked]:bg-stitch-primary data-[state=unchecked]:bg-surface-container-high data-[state=checked]:dark:bg-stitch-primary data-[state=unchecked]:dark:bg-surface-container-high focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+            className="data-[state=checked]:bg-dashboard-primary data-[state=unchecked]:bg-surface-container-high data-[state=checked]:dark:bg-dashboard-primary data-[state=unchecked]:dark:bg-surface-container-high focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
           />
         </div>
 
@@ -202,7 +202,7 @@ export function ClientForm({
             checked={allowCustomLogo}
             onCheckedChange={(checked) => setValue("allow_custom_logo", checked)}
             disabled={saving}
-            className="data-[state=checked]:bg-stitch-primary data-[state=unchecked]:bg-surface-container-high data-[state=checked]:dark:bg-stitch-primary data-[state=unchecked]:dark:bg-surface-container-high focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+            className="data-[state=checked]:bg-dashboard-primary data-[state=unchecked]:bg-surface-container-high data-[state=checked]:dark:bg-dashboard-primary data-[state=unchecked]:dark:bg-surface-container-high focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
           />
         </div>
 
@@ -221,7 +221,7 @@ export function ClientForm({
           <Button
             type="submit"
             disabled={saving}
-            className="min-w-[140px] gap-2 bg-stitch-primary text-stitch-on-primary border border-stitch-primary/10 hover:opacity-90 shadow-sm shadow-stitch-primary/20 disabled:opacity-70"
+            className="min-w-[140px] gap-2 bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
           >
             {saving ? (
               <>

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
-import { StitchCanvasSessionsPageScreen } from "@/app/(studio)/dashboard/stitch/StitchCanvasSessionsPageScreen";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
+import { DashboardCanvasSessionsPageScreen } from "@/app/(studio)/dashboard/screens/DashboardCanvasSessionsPageScreen";
 import type { CanvasSessionSummary } from "@/app/(studio)/dashboard/types";
 
 export default async function CanvasSessionsPage() {
@@ -32,14 +32,14 @@ export default async function CanvasSessionsPage() {
   }
 
   return (
-    <StitchDashboardShell activeNav="canvas-sessions">
-      <StitchCanvasSessionsPageScreen
+    <DashboardDashboardShell activeNav="canvas-sessions">
+      <DashboardCanvasSessionsPageScreen
         sessions={data as CanvasSessionSummary[]}
         totalSessions={count ?? 0}
         showingCount={data.length}
         clientNames={Object.fromEntries((clientsRes.data ?? []).map((c) => [c.id, c.name]))}
       />
-    </StitchDashboardShell>
+    </DashboardDashboardShell>
   );
 }
 

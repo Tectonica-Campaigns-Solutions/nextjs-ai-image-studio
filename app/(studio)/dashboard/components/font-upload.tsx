@@ -181,7 +181,7 @@ export function FontUpload({
             disabled={uploading}
           >
             <SelectTrigger
-              className="stitch-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
             >
               <SelectValue />
             </SelectTrigger>
@@ -206,7 +206,7 @@ export function FontUpload({
           >
             <SelectTrigger
               id="font-category"
-              className="stitch-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+              className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
             >
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
@@ -238,7 +238,7 @@ export function FontUpload({
             >
               <SelectTrigger
                 id="google-font"
-                className="stitch-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               >
                 <SelectValue placeholder="Select a font" />
               </SelectTrigger>
@@ -267,7 +267,7 @@ export function FontUpload({
                   aria-pressed={selectedWeights.includes(weight.value)}
                   className={
                     selectedWeights.includes(weight.value)
-                      ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-stitch-primary/30 bg-stitch-primary/10 text-stitch-primary hover:bg-stitch-primary/15 transition-colors"
+                      ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors"
                       : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors"
                   }
                 >
@@ -300,7 +300,7 @@ export function FontUpload({
                 accept=".ttf,.woff,.woff2,.otf,font/ttf,font/woff,font/woff2,font/otf"
                 onChange={handleFileSelect}
                 disabled={uploading}
-                className="stitch-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary cursor-pointer"
+                className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary cursor-pointer"
               />
               {file && (
                 <p className="text-sm text-muted-foreground">
@@ -323,7 +323,7 @@ export function FontUpload({
                 onChange={(e) => setFontFamily(e.target.value)}
                 placeholder="e.g. My Custom Font"
                 disabled={uploading}
-                className="stitch-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-stitch-primary/20 focus-visible:border-stitch-primary"
+                className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               />
             </div>
           </div>
@@ -346,7 +346,7 @@ export function FontUpload({
                   aria-pressed={selectedWeights.includes(weight.value)}
                   className={
                     selectedWeights.includes(weight.value)
-                      ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-stitch-primary/30 bg-stitch-primary/10 text-stitch-primary hover:bg-stitch-primary/15 transition-colors"
+                      ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors"
                       : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors"
                   }
                 >

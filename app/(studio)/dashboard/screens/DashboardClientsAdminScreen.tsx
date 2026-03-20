@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import type { Client } from "../types";
 import { CreateClientModal } from "../components/create-client-modal";
 import {
@@ -24,7 +24,7 @@ import { cx } from "../utils/cx";
 import { formatDateLong } from "../utils/date-formatters";
 import { StatCard } from "../components/stat-card";
 
-type StitchClientsAdminScreenProps = Readonly<{
+type DashboardClientsAdminScreenProps = Readonly<{
   stats: {
     totalClients: number;
     activeClients: number;
@@ -40,7 +40,7 @@ type StitchClientsAdminScreenProps = Readonly<{
   logoByClientId: Record<string, string | null | undefined>;
 }>;
 
-export function StitchClientsAdminScreen({
+export function DashboardClientsAdminScreen({
   stats,
   clients,
   totalClients,
@@ -48,7 +48,7 @@ export function StitchClientsAdminScreen({
   pageSize,
   assetCountsByClientId,
   logoByClientId,
-}: StitchClientsAdminScreenProps) {
+}: DashboardClientsAdminScreenProps) {
   const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -213,16 +213,16 @@ export function StitchClientsAdminScreen({
             <div>
               <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
                 <span>Dashboard</span>
-                <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
-                <span className="text-stitch-primary font-bold">Clients</span>
+                <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+                <span className="text-dashboard-primary font-bold">Clients</span>
               </nav>
               <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">Clients</h2>
             </div>
             <button
-              className="bg-gradient-to-br from-stitch-primary to-stitch-primary-dim text-stitch-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-stitch-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+              className="bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-dashboard-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
               onClick={() => setCreateOpen(true)}
             >
-              <StitchMaterialIcon icon="add" className="text-sm" />
+              <DashboardMaterialIcon icon="add" className="text-sm" />
               Create Client
             </button>
           </div>
@@ -253,7 +253,7 @@ export function StitchClientsAdminScreen({
                     }}
                   >
                     Filter
-                    <StitchMaterialIcon icon="expand_more" className="text-xs" />
+                    <DashboardMaterialIcon icon="expand_more" className="text-xs" />
                   </button>
                   {filterOpen ? (
                     <div className="absolute left-0 top-full mt-2 w-[340px] bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-lg p-4 z-40">
@@ -267,7 +267,7 @@ export function StitchClientsAdminScreen({
                         <input
                           value={localSearch}
                           onChange={(e) => handleSearchChange(e.target.value)}
-                          className="w-full bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-stitch-primary/20 placeholder:text-on-surface-variant/50"
+                          className="w-full bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-dashboard-primary/20 placeholder:text-on-surface-variant/50"
                           placeholder="Search clients..."
                         />
                       </div>
@@ -289,7 +289,7 @@ export function StitchClientsAdminScreen({
                                 className={cx(
                                   "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors",
                                   active
-                                    ? "bg-stitch-primary text-stitch-on-primary"
+                                    ? "bg-dashboard-primary text-dashboard-on-primary"
                                     : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
                                 )}
                                 onClick={() => {
@@ -321,7 +321,7 @@ export function StitchClientsAdminScreen({
                     }}
                   >
                     Sort
-                    <StitchMaterialIcon icon="expand_more" className="text-xs" />
+                    <DashboardMaterialIcon icon="expand_more" className="text-xs" />
                   </button>
                   {sortOpen ? (
                     <div className="absolute left-0 top-full mt-2 w-[280px] bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-lg p-3 z-40">
@@ -342,7 +342,7 @@ export function StitchClientsAdminScreen({
                               className={cx(
                                 "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
                                 active
-                                  ? "bg-stitch-primary text-stitch-on-primary"
+                                  ? "bg-dashboard-primary text-dashboard-on-primary"
                                   : "hover:bg-surface-container-high text-on-surface-variant"
                               )}
                               onClick={() => {
@@ -448,7 +448,7 @@ export function StitchClientsAdminScreen({
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                className="text-on-surface-variant hover:text-stitch-primary transition-colors"
+                                className="text-on-surface-variant hover:text-dashboard-primary transition-colors"
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label="Client actions"
                                 disabled={
@@ -456,7 +456,7 @@ export function StitchClientsAdminScreen({
                                   actionBusyForClientId !== client.id
                                 }
                               >
-                                <StitchMaterialIcon
+                    <DashboardMaterialIcon
                                   icon="more_horiz"
                                   className="text-lg"
                                 />
@@ -510,7 +510,7 @@ export function StitchClientsAdminScreen({
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
               >
-                <StitchMaterialIcon icon="chevron_left" className="text-sm" />
+                <DashboardMaterialIcon icon="chevron_left" className="text-sm" />
                 Previous
               </button>
 
@@ -532,7 +532,7 @@ export function StitchClientsAdminScreen({
                       className={cx(
                         "w-8 h-8 flex items-center justify-center text-xs rounded-lg transition-colors",
                         isCurrent
-                          ? "font-bold bg-stitch-primary text-stitch-on-primary shadow-md shadow-stitch-primary/20"
+                          ? "font-bold bg-dashboard-primary text-dashboard-on-primary shadow-md shadow-dashboard-primary/20"
                           : "font-medium hover:bg-surface-container-low"
                       )}
                       onClick={() => setPage(num)}
@@ -549,7 +549,7 @@ export function StitchClientsAdminScreen({
                 disabled={page >= totalPages}
               >
                 Next
-                <StitchMaterialIcon icon="chevron_right" className="text-sm" />
+                <DashboardMaterialIcon icon="chevron_right" className="text-sm" />
               </button>
             </div>
           </div>

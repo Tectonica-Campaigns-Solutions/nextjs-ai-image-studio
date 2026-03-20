@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { getDashboardOverviewData } from "@/app/(studio)/dashboard/data/overview";
-import { StitchDashboardShell } from "@/app/(studio)/dashboard/stitch/StitchDashboardShell";
-import { StitchOverviewScreen } from "@/app/(studio)/dashboard/stitch/StitchOverviewScreen";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
+import { DashboardOverviewScreen } from "@/app/(studio)/dashboard/screens/DashboardOverviewScreen";
 
 export default async function DashboardPage() {
   const auth = await requireAdmin();
@@ -16,8 +16,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    <StitchDashboardShell activeNav="overview">
-      <StitchOverviewScreen data={data} />
-    </StitchDashboardShell>
+    <DashboardDashboardShell activeNav="overview">
+      <DashboardOverviewScreen data={data} />
+    </DashboardDashboardShell>
   );
 }

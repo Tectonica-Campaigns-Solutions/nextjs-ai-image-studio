@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { ClientAsset, ClientFont } from "../types";
-import { StitchMaterialIcon } from "./StitchMaterialIcon";
+import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 import { deleteAssetAction, setPrimaryAssetAction } from "../actions/assets";
 import { deleteFontAction, setPrimaryFontAction } from "../actions/fonts";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import {
 } from "../../standalone/studio/utils/studio-utils";
 import { GalleryLightbox } from "../components/gallery-lightbox";
 
-export type StitchFramesFontsPageScreenProps = Readonly<{
+export type DashboardFramesFontsPageScreenProps = Readonly<{
   frames: ClientAsset[];
   fonts: ClientFont[];
   clientNames: Record<string, string>;
@@ -24,12 +24,12 @@ function cx(...classes: Array<string | undefined | null | false>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export function StitchFramesFontsPageScreen({
+export function DashboardFramesFontsPageScreen({
   frames: initialFrames,
   fonts: initialFonts,
   clientNames,
   initialTab = "frames",
-}: StitchFramesFontsPageScreenProps) {
+}: DashboardFramesFontsPageScreenProps) {
   const [tab, setTab] = useState<"frames" | "fonts">(initialTab);
   const [query, setQuery] = useState("");
   const [frames, setFrames] = useState<ClientAsset[]>(initialFrames);
@@ -185,8 +185,8 @@ export function StitchFramesFontsPageScreen({
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
               <span>Dashboard</span>
-              <StitchMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-stitch-primary font-bold">
+              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
+              <span className="text-dashboard-primary font-bold">
                 {tab === "frames" ? "Frames" : "Fonts"}
               </span>
             </nav>
@@ -232,7 +232,7 @@ export function StitchFramesFontsPageScreen({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Search ${tab}...`}
-            className="h-10 w-full max-w-md rounded-xl border border-outline-variant/15 bg-surface-container-low px-3 text-sm outline-none focus:border-stitch-primary"
+            className="h-10 w-full max-w-md rounded-xl border border-outline-variant/15 bg-surface-container-low px-3 text-sm outline-none focus:border-dashboard-primary"
           />
         </div>
 

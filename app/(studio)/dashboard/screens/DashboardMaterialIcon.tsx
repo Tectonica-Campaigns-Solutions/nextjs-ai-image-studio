@@ -4,17 +4,17 @@ function cx(...classes: Array<string | undefined | null | false>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export type StitchMaterialIconProps = Readonly<{
+export type DashboardMaterialIconProps = Readonly<{
   icon: string;
   className?: string;
   filled?: boolean;
 }>;
 
-export function StitchMaterialIcon({
+export function DashboardMaterialIcon({
   icon,
   className,
   filled,
-}: StitchMaterialIconProps) {
+}: DashboardMaterialIconProps) {
   return (
     <span
       className={cx("material-symbols-outlined", className)}
