@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { createAdminAction } from "@/app/(studio)/dashboard/actions/admins";
+import { createAdminAction } from "@/app/(studio)/dashboard/features/admins/actions/admins";
 import { cn } from "@/lib/utils";
 
 interface CreateAdminModalProps {

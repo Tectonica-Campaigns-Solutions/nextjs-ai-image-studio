@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { getDashboardOverviewData } from "@/app/(studio)/dashboard/data/overview";
-import { DashboardDashboardShell } from "@/app/(studio)/dashboard/screens/DashboardDashboardShell";
-import { DashboardOverviewScreen } from "@/app/(studio)/dashboard/screens/DashboardOverviewScreen";
+import { getDashboardOverviewData } from "@/app/(studio)/dashboard/features/overview/data/overview";
+import { DashboardDashboardShell } from "@/app/(studio)/dashboard/components/DashboardDashboardShell";
+import { DashboardOverviewScreen } from "@/app/(studio)/dashboard/features/overview/screens/DashboardOverviewScreen";
 
 export default async function DashboardPage() {
   const auth = await requireAdmin();

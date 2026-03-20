@@ -24,11 +24,11 @@ import { GalleryLightbox } from "./gallery-lightbox";
 import { ConfirmDialog } from "./confirm-dialog";
 import { AssetUpload } from "./asset-upload";
 import { AssetCard } from "./asset-card";
-import type { ClientAsset } from "@/app/(studio)/dashboard/types";
+import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
 import {
   deleteAssetAction,
   setPrimaryAssetAction,
-} from "@/app/(studio)/dashboard/actions/assets";
+} from "@/app/(studio)/dashboard/features/assets/actions/assets";
 
 interface AssetGalleryProps {
   clientId: string;
@@ -152,37 +152,37 @@ export function AssetGallery({
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-          <div className="space-y-6">
-            {Object.entries(groupedAssets).map(([variant, variantAssets]) => (
-              <div key={variant} className="space-y-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-xs font-medium">
-                    {variant}
-                  </span>
-                  <span className="text-muted-foreground font-normal">
-                    ({variantAssets.length} asset{variantAssets.length !== 1 ? "s" : ""})
-                  </span>
-                </h3>
-                <SortableContext
-                  items={variantAssets.map((a) => a.id)}
-                  strategy={rectSortingStrategy}
-                >
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {variantAssets.map((asset) => (
-                    <AssetCard
-                      key={asset.id}
-                      asset={asset}
-                      variantBadge={asset.variant || variant}
-                      onView={() => setLightboxAsset(asset)}
-                      onSetPrimary={() => void handleSetPrimary(asset.id)}
-                      onDelete={() => setDeleteTarget(asset.id)}
-                    />
-                  ))}
+            <div className="space-y-6">
+              {Object.entries(groupedAssets).map(([variant, variantAssets]) => (
+                <div key={variant} className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-xs font-medium">
+                      {variant}
+                    </span>
+                    <span className="text-muted-foreground font-normal">
+                      ({variantAssets.length} asset{variantAssets.length !== 1 ? "s" : ""})
+                    </span>
+                  </h3>
+                  <SortableContext
+                    items={variantAssets.map((a) => a.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {variantAssets.map((asset) => (
+                        <AssetCard
+                          key={asset.id}
+                          asset={asset}
+                          variantBadge={asset.variant || variant}
+                          onView={() => setLightboxAsset(asset)}
+                          onSetPrimary={() => void handleSetPrimary(asset.id)}
+                          onDelete={() => setDeleteTarget(asset.id)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
                 </div>
-                </SortableContext>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </DndContext>
         )}
       </div>

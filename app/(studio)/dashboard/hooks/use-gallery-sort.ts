@@ -10,7 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { toast } from "sonner";
-import { reorderAssetsAction } from "@/app/(studio)/dashboard/actions/assets";
+import { reorderAssetsAction } from "@/app/(studio)/dashboard/features/assets/actions/assets";
 
 /**
  * Provides DnD sensors, a drag-end handler, and optimistically-updated items

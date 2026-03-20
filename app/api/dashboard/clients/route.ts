@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { createClientSchema } from "@/app/(studio)/dashboard/schemas/clients";
+import { createClientSchema } from "@/app/(studio)/dashboard/features/clients/schemas/clients";
 import { errorResponse } from "@/app/api/dashboard/_lib/api-response";
 import { NextRequest, NextResponse } from "next/server";
 

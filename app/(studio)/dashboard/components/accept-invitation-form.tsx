@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, Loader2, Lock } from "lucide-react";
-import { setupPasswordAction } from "@/app/(studio)/dashboard/actions/auth";
+import { setupPasswordAction } from "@/app/(studio)/dashboard/features/auth/actions/auth";
 
 interface AcceptInvitationFormProps {
   userEmail: string | null;

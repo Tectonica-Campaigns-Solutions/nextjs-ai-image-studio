@@ -4,7 +4,7 @@ import {
   GalleryMediaCard,
   type GalleryOverlayAction,
 } from "./gallery-media-card";
-import type { ClientFont } from "@/app/(studio)/dashboard/types";
+import type { ClientFont } from "@/app/(studio)/dashboard/utils/types";
 
 interface FontCardProps {
   font: ClientFont;

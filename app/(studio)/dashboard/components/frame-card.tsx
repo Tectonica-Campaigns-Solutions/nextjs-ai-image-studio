@@ -6,7 +6,7 @@ import {
   type GalleryOverlayAction,
 } from "./gallery-media-card";
 import { SortableItem } from "./sortable-item";
-import type { ClientAsset } from "@/app/(studio)/dashboard/types";
+import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
 
 // Stable reference — defined once at module level to avoid object recreation.
 const CHECKERED_STYLE: React.CSSProperties = {

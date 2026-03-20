@@ -25,11 +25,11 @@ import { ConfirmDialog } from "./confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssetUpload } from "./asset-upload";
 import { FrameCard } from "./frame-card";
-import type { ClientAsset } from "@/app/(studio)/dashboard/types";
+import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
 import {
   deleteAssetAction,
   setPrimaryAssetAction,
-} from "@/app/(studio)/dashboard/actions/assets";
+} from "@/app/(studio)/dashboard/features/assets/actions/assets";
 import { COMMON_ASPECT_RATIOS } from "@/lib/aspect-ratios";
 import { parseFrameVariant, getVariantBadges } from "../utils/frame-variant-utils";
 
@@ -265,27 +265,27 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-          <SortableContext
-            items={sortedFrames.map((f) => f.id)}
-            strategy={rectSortingStrategy}
-          >
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {sortedFrames.map((frame) => {
-              const variantBadges = getVariantBadges(frame.variant);
-              return (
-                <FrameCard
-                  key={frame.id}
-                  frame={frame}
-                  variantBadges={variantBadges}
-                  onView={() => setLightboxAsset(frame)}
-                  onEdit={() => openEdit(frame)}
-                  onSetPrimary={() => void handleSetPrimary(frame.id)}
-                  onDelete={() => setDeleteTarget(frame.id)}
-                />
-              );
-            })}
-          </div>
-          </SortableContext>
+            <SortableContext
+              items={sortedFrames.map((f) => f.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {sortedFrames.map((frame) => {
+                  const variantBadges = getVariantBadges(frame.variant);
+                  return (
+                    <FrameCard
+                      key={frame.id}
+                      frame={frame}
+                      variantBadges={variantBadges}
+                      onView={() => setLightboxAsset(frame)}
+                      onEdit={() => openEdit(frame)}
+                      onSetPrimary={() => void handleSetPrimary(frame.id)}
+                      onDelete={() => setDeleteTarget(frame.id)}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
           </DndContext>
         )}
       </div>

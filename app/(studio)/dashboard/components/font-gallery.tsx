@@ -23,12 +23,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FontUpload } from "./font-upload";
 import { FontCard } from "./font-card";
-import type { ClientFont, FontWeight } from "@/app/(studio)/dashboard/types";
+import type { ClientFont, FontWeight } from "@/app/(studio)/dashboard/utils/types";
+import { useFontLoader } from "@/app/(studio)/dashboard/hooks/use-font-loader";
 import {
   deleteFontAction,
   setPrimaryFontAction,
   updateFontAction,
-} from "@/app/(studio)/dashboard/actions/fonts";
+} from "@/app/(studio)/dashboard/features/frames-fonts/actions/fonts";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,6 +54,8 @@ export function FontGallery({
   const [editCategory, setEditCategory] = useState<string>("");
   const [editWeights, setEditWeights] = useState<FontWeight[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
+
+  useFontLoader(fonts);
 
   const editTarget = useMemo(
     () => fonts.find((f) => f.id === editTargetId) ?? null,

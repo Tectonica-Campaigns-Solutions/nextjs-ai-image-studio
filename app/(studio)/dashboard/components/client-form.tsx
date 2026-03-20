@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import {
   createClientSchema,
   type CreateClientInput,
-} from "@/app/(studio)/dashboard/schemas/clients";
+} from "@/app/(studio)/dashboard/features/clients/schemas/clients";
 
 interface ClientFormProps {
   clientId?: string;

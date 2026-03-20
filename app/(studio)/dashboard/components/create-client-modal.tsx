@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ClientForm } from "./client-form";
-import { createClientAction } from "@/app/(studio)/dashboard/actions/clients";
+import { createClientAction } from "@/app/(studio)/dashboard/features/clients/actions/clients";
 import { toast } from "sonner";
 
 interface CreateClientModalProps {

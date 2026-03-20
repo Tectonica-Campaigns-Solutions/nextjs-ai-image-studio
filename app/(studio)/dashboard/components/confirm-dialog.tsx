@@ -16,14 +16,20 @@ interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
-  /** Label for the destructive confirm button. Defaults to "Confirm". */
+  /** Label for the confirm button. Defaults to "Confirm". */
   actionLabel?: string;
+  /** Label shown while busy. Defaults to actionLabel + "..." */
+  busyLabel?: string;
+  /** Whether the action is currently in progress. Disables buttons. */
+  busy?: boolean;
   onConfirm: () => void;
+  /** Button variant. Defaults to "destructive". */
+  variant?: "destructive" | "primary";
 }
 
 /**
- * Reusable destructive-action confirmation dialog used throughout the
- * dashboard (delete / deactivate flows).
+ * Reusable confirmation dialog used throughout the dashboard
+ * (delete / deactivate / activate flows).
  */
 export function ConfirmDialog({
   open,
@@ -31,22 +37,40 @@ export function ConfirmDialog({
   title,
   description,
   actionLabel = "Confirm",
+  busyLabel,
+  busy = false,
   onConfirm,
+  variant = "destructive",
 }: ConfirmDialogProps) {
+  const actionClassName =
+    variant === "primary"
+      ? "bg-dashboard-primary text-dashboard-on-primary hover:opacity-95 disabled:opacity-70 shadow-sm shadow-dashboard-primary/20"
+      : "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-70";
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+      <AlertDialogContent className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5">
+        <AlertDialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+          <AlertDialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-on-surface-variant">
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel
+            disabled={busy}
+            className="bg-surface-container-lowest border border-outline-variant/10 hover:bg-surface-container-high hover:text-on-surface disabled:opacity-50"
+          >
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={busy}
+            className={actionClassName}
           >
-            {actionLabel}
+            {busy ? (busyLabel ?? `${actionLabel}...`) : actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
