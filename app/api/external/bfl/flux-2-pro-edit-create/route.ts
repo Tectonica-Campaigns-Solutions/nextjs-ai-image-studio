@@ -128,8 +128,8 @@ async function uploadReferenceImage(
  * - Reference images uploaded to Supabase (not FAL storage)
  * - User images uploaded to Supabase (not FAL storage)
  * - BFL images are each independent params (input_image, input_image_2 … input_image_8)
- * - Result signed URL is downloaded server-side; base64 returned to client
- * - No enable_safety_checker param (not in BFL API)
+ * - Result is downloaded server-side then re-uploaded to Supabase; client receives a public URL
+ * - enable_safety_checker: false → overrides safety_tolerance to 5 (BFL’s maximum permissiveness)
  * - safety_tolerance: BFL accepts integer 0-5 (mapping is 1:1 with FAL string "1"-"5")
  *
  * Body parameters (JSON):
@@ -208,6 +208,8 @@ export async function POST(request: NextRequest) {
     const safetyTolerance = settings.safety_tolerance || settings.safetyTolerance || "2"
     const outputFormat: "jpeg" | "png" = settings.output_format || settings.outputFormat || "jpeg"
     const seed: number | undefined = settings.seed ? parseInt(settings.seed.toString()) : undefined
+    // enable_safety_checker defaults to true; when false, mapFalToBflParams overrides safety_tolerance to 5
+    const enableSafetyChecker = settings.enable_safety_checker !== false
 
     // ── Validation ────────────────────────────────────────────────────────────
 
@@ -397,6 +399,7 @@ export async function POST(request: NextRequest) {
       image_size: imageSize,
       safety_tolerance: safetyToleranceStr,
       output_format: outputFormat,
+      enable_safety_checker: enableSafetyChecker,
       ...(seed !== undefined && { seed }),
     }
 
@@ -437,13 +440,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`${LOG_PREFIX} ✅ BFL generation complete. Seed: ${bflResult.seed}`)
 
-    // ── Download result ───────────────────────────────────────────────────────
+    // ── Download result & upload to Supabase ──────────────────────────────────
     // BFL signed URLs expire in 10 min and have no CORS headers.
-    // We must download server-side before returning to the client.
-    // The addDisclaimerToImage function is skipped here to match the FAL endpoint
-    // behavior (which returned raw URLs without a disclaimer overlay).
+    // We download the buffer server-side, then re-upload to Supabase so the
+    // client receives a stable, permanent public URL — identical to how FAL
+    // returns its CDN URLs.
 
-    let resultBase64: string
+    let resultUrl: string
     let resultWidth = bflResult.width ?? 1024
     let resultHeight = bflResult.height ?? 1024
 
@@ -452,10 +455,11 @@ export async function POST(request: NextRequest) {
       const metadata = await sharp(resultBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      resultBase64 = `data:image/${outputFormat};base64,${resultBuffer.toString("base64")}`
-      console.log(`${LOG_PREFIX} ✅ Result downloaded: ${resultWidth}x${resultHeight}`)
+      const outputFileName = `bfl-output/${Date.now()}-${Math.random().toString(36).slice(2)}.${outputFormat}`
+      resultUrl = await uploadImageToSupabase(resultBuffer, outputFileName, `image/${outputFormat}`)
+      console.log(`${LOG_PREFIX} ✅ Result uploaded to Supabase: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
-      console.error(`${LOG_PREFIX} Failed to download BFL result:`, downloadError)
+      console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)
       return NextResponse.json({
         error: "Failed to download generated image",
         details: downloadError instanceof Error ? downloadError.message : "Unknown error",
@@ -466,7 +470,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      images: [{ url: resultBase64, width: resultWidth, height: resultHeight }],
+      images: [{ url: resultUrl, width: resultWidth, height: resultHeight }],
       prompt: finalPrompt,
       originalPrompt: prompt,
       seed: bflResult.seed,
@@ -510,9 +514,10 @@ export async function GET() {
     provider: "Black Forest Labs (bfl)",
     model: BFL_ENDPOINT_FLUX2_PRO,
     notes: [
-      "enable_safety_checker is not supported by BFL — omitted",
+      "enable_safety_checker: false overrides safety_tolerance to 5 (BFL maximum permissiveness)",
+      "enable_safety_checker: true (default) uses the safety_tolerance value as-is",
       "safety_tolerance maps directly (1-5 → 0-5 BFL range, same integer)",
-      "Result is returned as base64 data URL (BFL signed URLs expire in 10 min)",
+      "Result is returned as a public Supabase URL (stable, no expiry) — same pattern as FAL CDN URLs",
       "Reference images are uploaded to Supabase 'User images' bucket",
       "cost field reflects BFL credits charged per request",
     ],

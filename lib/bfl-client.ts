@@ -90,7 +90,12 @@ export interface BflInput {
   safety_tolerance?: string | number
   output_format?: "jpeg" | "png"
   seed?: number
-  // Note: enable_safety_checker has no equivalent in BFL — intentionally omitted.
+  /**
+   * FAL safety-checker flag — has no direct BFL equivalent.
+   * When false (checker disabled), safety_tolerance is overridden to 5 (BFL maximum permissiveness).
+   * When true (default), the user-supplied safety_tolerance value is used as-is.
+   */
+  enable_safety_checker?: boolean
 }
 
 export interface BflResult {
@@ -169,6 +174,12 @@ export function mapFalToBflParams(input: BflInput): Record<string, unknown> {
 
   if (input.seed !== undefined) {
     params.seed = input.seed
+  }
+
+  // When FAL's enable_safety_checker is explicitly disabled, override safety_tolerance
+  // to BFL's maximum permissive value (5). This gives the toggle meaningful behavior.
+  if (input.enable_safety_checker === false) {
+    params.safety_tolerance = 5
   }
 
   return params

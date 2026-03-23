@@ -2623,7 +2623,7 @@ export default function ImageEditor() {
                     </div>
                     {flux2ProCreateProvider === "bfl" && (
                       <p className="text-xs text-muted-foreground">
-                        Calls the BFL direct API. Returns base64 image. Credit cost shown after generation.
+                        Calls the BFL direct API. Returns a hosted image URL (same as FAL). Credit cost shown after generation. Safety Checker toggle: when off, overrides to BFL&apos;s most permissive setting.
                       </p>
                     )}
                   </div>
