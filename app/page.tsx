@@ -142,6 +142,8 @@ export default function ImageEditor() {
   const [flux2ProApplyError, setFlux2ProApplyError] = useState<string>("")
   const [showFlux2ProApplyAdvanced, setShowFlux2ProApplyAdvanced] = useState(false)
   const [flux2ProApplyUserImagePreview, setFlux2ProApplyUserImagePreview] = useState<string>("")
+  const [flux2ProApplyProvider, setFlux2ProApplyProvider] = useState<"fal" | "bfl">("fal")
+  const [flux2ProApplyBflCost, setFlux2ProApplyBflCost] = useState<number | null>(null)
 
   // Composition Rule States (one per Flux 2 Pro tab)
   const [flux2ProEditCompositionRule, setFlux2ProEditCompositionRule] = useState("")
@@ -1555,6 +1557,7 @@ export default function ImageEditor() {
 
     setIsFlux2ProApplyGenerating(true)
     setFlux2ProApplyError("")
+    setFlux2ProApplyBflCost(null)
 
     try {
       // Prepare JSON body
@@ -1623,8 +1626,13 @@ export default function ImageEditor() {
       }
 
       console.log("[FRONTEND] Flux 2 Pro Edit Apply - Sending request")
+      console.log("[FRONTEND] Provider:", flux2ProApplyProvider)
 
-      const response = await fetch("/api/external/flux-2-pro-edit-apply", {
+      const applyEndpoint = flux2ProApplyProvider === "bfl"
+        ? "/api/external/bfl/flux-2-pro-edit-apply"
+        : "/api/external/flux-2-pro-edit-apply"
+
+      const response = await fetch(applyEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -1655,6 +1663,10 @@ export default function ImageEditor() {
         setFlux2ProApplyResultUrl(result.image)
       } else {
         throw new Error("No image received from server")
+      }
+
+      if (result.cost !== undefined) {
+        setFlux2ProApplyBflCost(result.cost)
       }
     } catch (err) {
       setFlux2ProApplyError(err instanceof Error ? err.message : "Failed to apply style")
@@ -3157,8 +3169,38 @@ export default function ImageEditor() {
                   <CardDescription>Scene-based style transfer with optimized reference images (people, landscape, urban, monument)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Provider Selector */}
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={flux2ProApplyProvider === "fal" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProApplyProvider("fal")}
+                        className="flex-1"
+                      >
+                        FAL (fal-ai)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={flux2ProApplyProvider === "bfl" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProApplyProvider("bfl")}
+                        className="flex-1"
+                      >
+                        BFL (Black Forest Labs)
+                      </Button>
+                    </div>
+                    {flux2ProApplyProvider === "bfl" && (
+                      <p className="text-xs text-muted-foreground">
+                        Calls the BFL direct API. Returns a hosted image URL. Credit cost shown after generation. Safety Checker toggle: when off, overrides to BFL&apos;s most permissive setting.
+                      </p>
+                    )}
+                  </div>
+
                   <form onSubmit={handleFlux2ProApplySubmit} className="space-y-4">
-                    {/* Scene Type Selector */}
+                    {/* Scene Type Selector */}}
                     <div className="space-y-2">
                       <Label htmlFor="flux-2-pro-apply-scene-type">Scene Type</Label>
                       <Select
@@ -3471,6 +3513,14 @@ export default function ImageEditor() {
                           {flux2ProApplyPrompt}
                         </p>
                       </div>
+
+                      {flux2ProApplyBflCost !== null && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                          <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                            BFL Credit Cost: {flux2ProApplyBflCost}
+                          </p>
+                        </div>
+                      )}
                       
                       <div className="flex gap-2">
                         <Button
