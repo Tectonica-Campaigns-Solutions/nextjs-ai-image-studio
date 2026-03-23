@@ -117,6 +117,8 @@ export default function ImageEditor() {
   const [showFlux2ProCreateAdvanced, setShowFlux2ProCreateAdvanced] = useState(false)
   const [flux2ProCreateUserImagePreview, setFlux2ProCreateUserImagePreview] = useState<string>("")
   const [flux2ProCreateWithBranding, setFlux2ProCreateWithBranding] = useState(true)
+  const [flux2ProCreateProvider, setFlux2ProCreateProvider] = useState<"fal" | "bfl">("fal")
+  const [flux2ProCreateBflCost, setFlux2ProCreateBflCost] = useState<number | null>(null)
 
   // Flux 2 Pro Edit Apply States (scene-based style transfer with sceneType)
   const [flux2ProApplySceneType, setFlux2ProApplySceneType] = useState<'people' | 'landscape' | 'urban' | 'monument'>('people')
@@ -1382,6 +1384,7 @@ export default function ImageEditor() {
 
     setIsFlux2ProCreateGenerating(true)
     setFlux2ProCreateError("")
+    setFlux2ProCreateBflCost(null)
 
     try {
       // Prepare JSON body (not FormData)
@@ -1450,8 +1453,13 @@ export default function ImageEditor() {
       console.log("[FRONTEND] Flux 2 Pro Edit Create - Sending request")
       console.log("[FRONTEND] withBranding:", flux2ProCreateWithBranding)
       console.log("[FRONTEND] Has user image:", !!(flux2ProCreateUserImage || flux2ProCreateImageUrl || flux2ProCreateBase64Image))
+      console.log("[FRONTEND] Provider:", flux2ProCreateProvider)
 
-      const response = await fetch("/api/external/flux-2-pro-edit-create", {
+      const endpoint = flux2ProCreateProvider === "bfl"
+        ? "/api/external/bfl/flux-2-pro-edit-create"
+        : "/api/external/flux-2-pro-edit-create"
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -1478,6 +1486,10 @@ export default function ImageEditor() {
       
       if (result.prompt) {
         setFlux2ProCreateGeneratedPrompt(result.prompt)
+      }
+
+      if (result.cost !== undefined) {
+        setFlux2ProCreateBflCost(result.cost)
       }
       
       if (result.images && result.images[0]?.url) {
@@ -2586,6 +2598,36 @@ export default function ImageEditor() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Provider Selector */}
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={flux2ProCreateProvider === "fal" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProCreateProvider("fal")}
+                        className="flex-1"
+                      >
+                        FAL (fal-ai)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={flux2ProCreateProvider === "bfl" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProCreateProvider("bfl")}
+                        className="flex-1"
+                      >
+                        BFL (Black Forest Labs)
+                      </Button>
+                    </div>
+                    {flux2ProCreateProvider === "bfl" && (
+                      <p className="text-xs text-muted-foreground">
+                        Calls the BFL direct API. Returns base64 image. Credit cost shown after generation.
+                      </p>
+                    )}
+                  </div>
+
                   <form onSubmit={handleFlux2ProCreateSubmit} className="space-y-4">
                     {/* Prompt */}
                     <div className="space-y-2">
@@ -2948,6 +2990,14 @@ export default function ImageEditor() {
                           <p className="text-xs font-medium mb-1">Prompt Used:</p>
                           <p className="text-xs text-muted-foreground">
                             {flux2ProCreateGeneratedPrompt}
+                          </p>
+                        </div>
+                      )}
+
+                      {flux2ProCreateBflCost !== null && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                          <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                            BFL Credit Cost: {flux2ProCreateBflCost}
                           </p>
                         </div>
                       )}
