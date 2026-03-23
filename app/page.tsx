@@ -95,6 +95,8 @@ export default function ImageEditor() {
   const [flux2ProGeneratedPrompt, setFlux2ProGeneratedPrompt] = useState<string>("")
   const [showFlux2ProAdvanced, setShowFlux2ProAdvanced] = useState(false)
   const [flux2ProImagePreviews, setFlux2ProImagePreviews] = useState<string[]>(Array(9).fill(""))
+  const [flux2ProEditProvider, setFlux2ProEditProvider] = useState<"fal" | "bfl">("fal")
+  const [flux2ProEditBflCost, setFlux2ProEditBflCost] = useState<number | null>(null)
 
   // Flux 2 Pro Edit Create States (with 8 pre-loaded reference images)
   const [flux2ProCreatePrompt, setFlux2ProCreatePrompt] = useState("")
@@ -1264,6 +1266,7 @@ export default function ImageEditor() {
 
     setIsFlux2ProGenerating(true)
     setFlux2ProError("")
+    setFlux2ProEditBflCost(null)
 
     try {
       const formData = new FormData()
@@ -1314,8 +1317,13 @@ export default function ImageEditor() {
       }
 
       console.log("[FRONTEND] Flux 2 Pro Edit - Sending request with", totalImages, "images")
+      console.log("[FRONTEND] Provider:", flux2ProEditProvider)
 
-      const response = await fetch("/api/external/flux-2-pro-edit-edit", {
+      const editEndpoint = flux2ProEditProvider === "bfl"
+        ? "/api/external/bfl/flux-2-pro-edit-edit"
+        : "/api/external/flux-2-pro-edit-edit"
+
+      const response = await fetch(editEndpoint, {
         method: "POST",
         body: formData,
       })
@@ -1332,6 +1340,10 @@ export default function ImageEditor() {
       
       if (result.prompt) {
         setFlux2ProGeneratedPrompt(result.prompt)
+      }
+
+      if (result.cost !== undefined) {
+        setFlux2ProEditBflCost(result.cost)
       }
       
       if (result.images && result.images[0]?.url) {
@@ -2185,6 +2197,36 @@ export default function ImageEditor() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Provider Selector */}
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={flux2ProEditProvider === "fal" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProEditProvider("fal")}
+                        className="flex-1"
+                      >
+                        FAL (fal-ai)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={flux2ProEditProvider === "bfl" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProEditProvider("bfl")}
+                        className="flex-1"
+                      >
+                        BFL (Black Forest Labs)
+                      </Button>
+                    </div>
+                    {flux2ProEditProvider === "bfl" && (
+                      <p className="text-xs text-muted-foreground">
+                        Calls the BFL direct API. Returns a hosted image URL. Credit cost shown after generation. Safety Checker toggle: when off, overrides to BFL&apos;s most permissive setting.
+                      </p>
+                    )}
+                  </div>
+
                   <form onSubmit={handleFlux2ProSubmit} className="space-y-4">
                     {/* Prompt */}
                     <div className="space-y-2">
@@ -2492,6 +2534,14 @@ export default function ImageEditor() {
                           <p className="text-xs font-medium mb-1">Prompt Used:</p>
                           <p className="text-xs text-muted-foreground">
                             {flux2ProGeneratedPrompt}
+                          </p>
+                        </div>
+                      )}
+
+                      {flux2ProEditBflCost !== null && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                          <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                            BFL Credit Cost: {flux2ProEditBflCost}
                           </p>
                         </div>
                       )}
