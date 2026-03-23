@@ -49,9 +49,12 @@ const MAX_POLL_DELAY_MS = 3_000
 
 /**
  * Default generation timeout (ms).
- * 55 s leaves a 5 s buffer in a 60 s serverless function window (Vercel/Railway).
+ * 3 minutes — generous enough for BFL (typical: 15–40 s) while still
+ * protecting against a permanently-stuck API task.
+ * On Railway there is no serverless function time limit, so this can be high.
+ * On Vercel the platform cap (60 s default, 300 s Pro) would override this anyway.
  */
-const DEFAULT_TIMEOUT_MS = 55_000
+const DEFAULT_TIMEOUT_MS = 180_000
 
 /** Supabase bucket that holds uploaded input images */
 const SUPABASE_BUCKET = "User images"
