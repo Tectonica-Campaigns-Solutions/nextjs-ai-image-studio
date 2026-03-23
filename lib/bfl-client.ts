@@ -54,7 +54,7 @@ const MAX_POLL_DELAY_MS = 3_000
  * On Railway there is no serverless function time limit, so this can be high.
  * On Vercel the platform cap (60 s default, 300 s Pro) would override this anyway.
  */
-const DEFAULT_TIMEOUT_MS = 180_000
+const DEFAULT_TIMEOUT_MS = 300_000
 
 /** Supabase bucket that holds uploaded input images */
 const SUPABASE_BUCKET = "User images"
