@@ -171,6 +171,8 @@ export default function ImageEditor() {
   const [flux2ProCombineGeneratedPrompt, setFlux2ProCombineGeneratedPrompt] = useState<string>("")
   const [showFlux2ProCombineAdvanced, setShowFlux2ProCombineAdvanced] = useState(false)
   const [flux2ProCombineImagePreviews, setFlux2ProCombineImagePreviews] = useState<string[]>(["", ""])
+  const [flux2ProCombineProvider, setFlux2ProCombineProvider] = useState<"fal" | "bfl">("fal")
+  const [flux2ProCombineBflCost, setFlux2ProCombineBflCost] = useState<number | null>(null)
 
   // JSON Enhancement States (RAG removed)
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
@@ -1742,6 +1744,7 @@ export default function ImageEditor() {
 
     setIsFlux2ProCombineGenerating(true)
     setFlux2ProCombineError("")
+    setFlux2ProCombineBflCost(null)
 
     try {
       const formData = new FormData()
@@ -1804,8 +1807,13 @@ export default function ImageEditor() {
       }
 
       console.log("[FRONTEND] Flux 2 Pro Combine - Sending request with 2 images")
+      console.log("[FRONTEND] Provider:", flux2ProCombineProvider)
 
-      const response = await fetch("/api/external/flux-2-pro-edit-combine", {
+      const combineEndpoint = flux2ProCombineProvider === "bfl"
+        ? "/api/external/bfl/flux-2-pro-edit-combine"
+        : "/api/external/flux-2-pro-edit-combine"
+
+      const response = await fetch(combineEndpoint, {
         method: "POST",
         body: formData,
       })
@@ -1832,6 +1840,10 @@ export default function ImageEditor() {
         setFlux2ProCombineResultUrl(result.image)
       } else {
         throw new Error("No image received from server")
+      }
+
+      if (result.cost !== undefined) {
+        setFlux2ProCombineBflCost(result.cost)
       }
     } catch (err) {
       setFlux2ProCombineError(err instanceof Error ? err.message : "Failed to combine images")
@@ -3626,6 +3638,36 @@ export default function ImageEditor() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Provider Selector */}
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={flux2ProCombineProvider === "fal" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProCombineProvider("fal")}
+                        className="flex-1"
+                      >
+                        FAL (fal-ai)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={flux2ProCombineProvider === "bfl" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFlux2ProCombineProvider("bfl")}
+                        className="flex-1"
+                      >
+                        BFL (Black Forest Labs)
+                      </Button>
+                    </div>
+                    {flux2ProCombineProvider === "bfl" && (
+                      <p className="text-xs text-muted-foreground">
+                        Calls the BFL direct API. Returns a hosted image URL. Credit cost shown after generation. Safety Checker toggle: when off, overrides to BFL&apos;s most permissive setting.
+                      </p>
+                    )}
+                  </div>
+
                   <form onSubmit={handleFlux2ProCombineSubmit} className="space-y-4">
                     {/* Prompt */}
                     <div className="space-y-2">
@@ -3943,6 +3985,14 @@ export default function ImageEditor() {
                           <p className="text-xs font-medium mb-1">Prompt Used:</p>
                           <p className="text-xs text-muted-foreground">
                             {flux2ProCombineGeneratedPrompt}
+                          </p>
+                        </div>
+                      )}
+
+                      {flux2ProCombineBflCost !== null && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                          <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                            BFL Credit Cost: {flux2ProCombineBflCost}
                           </p>
                         </div>
                       )}
