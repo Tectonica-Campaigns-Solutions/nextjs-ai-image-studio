@@ -15,6 +15,15 @@ const nextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/**",
       },
+      // BFL result delivery endpoints (signed URLs, for direct <Image> use if needed)
+      {
+        protocol: "https",
+        hostname: "delivery-eu.bfl.ai",
+      },
+      {
+        protocol: "https",
+        hostname: "delivery-us.bfl.ai",
+      },
     ],
   },
   // Vercel-specific optimizations
