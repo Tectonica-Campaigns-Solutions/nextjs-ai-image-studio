@@ -6,6 +6,7 @@ import {
   uploadImageToSupabase,
   prepareBase64ForBfl,
   prepareFileForBfl,
+  deleteSupabaseImages,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
   type BflInput,
@@ -264,13 +265,15 @@ export async function POST(request: NextRequest) {
     // Files and Base64 are uploaded to Supabase; plain URLs are passed directly.
 
     const allImageUrls: string[] = []
+    const tempPaths: string[] = []
 
     if (imageFiles.length > 0) {
       console.log(`${LOG_PREFIX} Uploading File image to Supabase...`)
       try {
-        const url = await prepareFileForBfl(imageFiles[0], 0)
-        allImageUrls.push(url)
-        console.log(`${LOG_PREFIX} ✅ File image uploaded: ${url}`)
+        const { url: fileUrl, path: filePath } = await prepareFileForBfl(imageFiles[0], 0)
+        allImageUrls.push(fileUrl)
+        tempPaths.push(filePath)
+        console.log(`${LOG_PREFIX} ✅ File image uploaded: ${fileUrl}`)
       } catch (fileError) {
         console.error(`${LOG_PREFIX} File upload failed:`, fileError)
         return NextResponse.json({
@@ -281,9 +284,10 @@ export async function POST(request: NextRequest) {
     } else if (base64Images.length > 0) {
       console.log(`${LOG_PREFIX} Uploading Base64 image to Supabase...`)
       try {
-        const url = await prepareBase64ForBfl(base64Images[0], 0)
-        allImageUrls.push(url)
-        console.log(`${LOG_PREFIX} ✅ Base64 image uploaded: ${url}`)
+        const { url: b64Url, path: b64Path } = await prepareBase64ForBfl(base64Images[0], 0)
+        allImageUrls.push(b64Url)
+        tempPaths.push(b64Path)
+        console.log(`${LOG_PREFIX} ✅ Base64 image uploaded: ${b64Url}`)
       } catch (b64Error) {
         console.error(`${LOG_PREFIX} Base64 upload failed:`, b64Error)
         return NextResponse.json({
@@ -388,6 +392,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Response ──────────────────────────────────────────────────────────────
+
+    deleteSupabaseImages(tempPaths).catch(err =>
+      console.warn(`${LOG_PREFIX} Cleanup error (non-fatal):`, err)
+    )
 
     return NextResponse.json({
       success: true,

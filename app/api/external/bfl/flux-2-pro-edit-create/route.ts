@@ -7,6 +7,7 @@ import {
   resizeImageForBfl,
   uploadImageToSupabase,
   prepareBase64ForBfl,
+  deleteSupabaseImages,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
   type BflInput,
@@ -108,11 +109,12 @@ async function uploadReferenceImage(
   filePath: string,
   orgType: string,
   index: number
-): Promise<string> {
+): Promise<{ url: string; path: string }> {
   const rawBuffer = await fs.readFile(filePath)
   const resized = await resizeImageForBfl(rawBuffer)
   const fileName = `bfl-ref/${orgType.toLowerCase()}-${Date.now()}-ref${index + 1}.jpeg`
-  return uploadImageToSupabase(resized, fileName, "image/jpeg")
+  const url = await uploadImageToSupabase(resized, fileName, "image/jpeg")
+  return { url, path: fileName }
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -305,6 +307,7 @@ export async function POST(request: NextRequest) {
     // ── Upload reference images to Supabase ───────────────────────────────────
 
     const allImageUrls: string[] = []
+    const tempPaths: string[] = []
 
     if (useBranding && referenceImageFilenames.length > 0) {
       console.log(`${LOG_PREFIX} Uploading ${referenceImageFilenames.length} reference images to Supabase...`)
@@ -314,9 +317,10 @@ export async function POST(request: NextRequest) {
         const fullPath = path.join(process.cwd(), "public", folderName, filename)
 
         try {
-          const url = await uploadReferenceImage(fullPath, orgType, i)
-          allImageUrls.push(url)
-          console.log(`${LOG_PREFIX} ✅ Reference ${i + 1}/${referenceImageFilenames.length} uploaded: ${url}`)
+          const { url: refUrl, path: refPath } = await uploadReferenceImage(fullPath, orgType, i)
+          allImageUrls.push(refUrl)
+          tempPaths.push(refPath)
+          console.log(`${LOG_PREFIX} ✅ Reference ${i + 1}/${referenceImageFilenames.length} uploaded: ${refUrl}`)
         } catch (uploadError) {
           console.error(`${LOG_PREFIX} Failed to upload reference image ${i + 1}:`, uploadError)
           return NextResponse.json({
@@ -338,10 +342,11 @@ export async function POST(request: NextRequest) {
       console.log(`${LOG_PREFIX} Uploading user Base64 image to Supabase...`)
       try {
         // Index 0 so the filename reflects "user image 1"
-        const url = await prepareBase64ForBfl(base64Image, 0)
-        allImageUrls.unshift(url) // User image FIRST → @image1
+        const { url: imgUrl, path: imgPath } = await prepareBase64ForBfl(base64Image, 0)
+        allImageUrls.unshift(imgUrl) // User image FIRST → @image1
+        tempPaths.push(imgPath)
         userImageCount = 1
-        console.log(`${LOG_PREFIX} ✅ User Base64 image uploaded → @image1: ${url}`)
+        console.log(`${LOG_PREFIX} ✅ User Base64 image uploaded → @image1: ${imgUrl}`)
       } catch (b64Error) {
         console.error(`${LOG_PREFIX} Base64 upload failed:`, b64Error)
         return NextResponse.json({
@@ -467,6 +472,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Response ──────────────────────────────────────────────────────────────
+
+    deleteSupabaseImages(tempPaths).catch(err =>
+      console.warn(`${LOG_PREFIX} Cleanup error (non-fatal):`, err)
+    )
 
     return NextResponse.json({
       success: true,

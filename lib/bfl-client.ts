@@ -441,7 +441,7 @@ export async function uploadImageToSupabase(
  * Prepares a File object for BFL:
  * File → validate → resize (4MP, multiples of 16) → upload to Supabase → public URL
  */
-export async function prepareFileForBfl(file: File, index: number): Promise<string> {
+export async function prepareFileForBfl(file: File, index: number): Promise<{ url: string; path: string }> {
   if (!file.type.startsWith("image/")) {
     throw new Error(`File "${file.name}" is not an image`)
   }
@@ -456,7 +456,8 @@ export async function prepareFileForBfl(file: File, index: number): Promise<stri
   const buffer = Buffer.from(await file.arrayBuffer())
   const resized = await resizeImageForBfl(buffer)
   const fileName = `bfl-input/${Date.now()}-img${index + 1}.jpeg`
-  return uploadImageToSupabase(resized, fileName, "image/jpeg")
+  const url = await uploadImageToSupabase(resized, fileName, "image/jpeg")
+  return { url, path: fileName }
 }
 
 /**
@@ -466,7 +467,7 @@ export async function prepareFileForBfl(file: File, index: number): Promise<stri
 export async function prepareBase64ForBfl(
   base64Data: string,
   index: number
-): Promise<string> {
+): Promise<{ url: string; path: string }> {
   let imageBuffer: Buffer
   let mimeType = "image/jpeg"
 
@@ -488,7 +489,24 @@ export async function prepareBase64ForBfl(
   const ext = mimeType === "image/png" ? "png" : "jpeg"
   const fileName = `bfl-input/${Date.now()}-img${index + 1}.${ext}`
   const uploadMime = ext === "png" ? "image/png" : "image/jpeg"
-  return uploadImageToSupabase(resized, fileName, uploadMime)
+  const url = await uploadImageToSupabase(resized, fileName, uploadMime)
+  return { url, path: fileName }
+}
+
+/**
+ * Deletes temporary input/reference images from Supabase Storage.
+ * Best-effort — errors are logged but never re-thrown.
+ * Call fire-and-forget (no await) to avoid delaying the API response.
+ */
+export async function deleteSupabaseImages(paths: string[]): Promise<void> {
+  if (paths.length === 0) return
+  const supabase = createAdminClient()
+  const { error } = await supabase.storage.from(SUPABASE_BUCKET).remove(paths)
+  if (error) {
+    console.warn(`[BFL Client] Cleanup: failed to delete ${paths.length} file(s): ${error.message}`)
+  } else {
+    console.log(`[BFL Client] Cleanup: ✅ deleted ${paths.length} temporary file(s)`)
+  }
 }
 
 // ─── Main Generation Flow ─────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ import {
   uploadImageToSupabase,
   prepareBase64ForBfl,
   prepareFileForBfl,
+  deleteSupabaseImages,
   resizeImageForBfl,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
@@ -300,6 +301,7 @@ export async function POST(request: NextRequest) {
     // ── Prepare images → Supabase URLs ───────────────────────────────────────
 
     const allImageUrls: string[] = []
+    const tempPaths: string[] = []
     let imageIndex = 0 // global index across all image sources
 
     // Files from FormData
@@ -308,10 +310,11 @@ export async function POST(request: NextRequest) {
       const label = `@image${allImageUrls.length + 1}`
       console.log(`${LOG_PREFIX} Uploading file ${label} (${file.name}, ${file.size}B)…`)
       try {
-        const url = await prepareFileForBfl(file, imageIndex)
-        allImageUrls.push(url)
+        const { url: fileUrl, path: filePath } = await prepareFileForBfl(file, imageIndex)
+        allImageUrls.push(fileUrl)
+        tempPaths.push(filePath)
         imageIndex++
-        console.log(`${LOG_PREFIX} ✅ File ${label} → ${url}`)
+        console.log(`${LOG_PREFIX} ✅ File ${label} → ${fileUrl}`)
       } catch (fileError) {
         console.error(`${LOG_PREFIX} File upload failed for ${label}:`, fileError)
         return NextResponse.json({
@@ -326,10 +329,11 @@ export async function POST(request: NextRequest) {
       const label = `@image${allImageUrls.length + 1}`
       console.log(`${LOG_PREFIX} Uploading Base64 ${label} (len: ${base64Images[i].length})…`)
       try {
-        const url = await prepareBase64ForBfl(base64Images[i], imageIndex)
-        allImageUrls.push(url)
+        const { url: b64Url, path: b64Path } = await prepareBase64ForBfl(base64Images[i], imageIndex)
+        allImageUrls.push(b64Url)
+        tempPaths.push(b64Path)
         imageIndex++
-        console.log(`${LOG_PREFIX} ✅ Base64 ${label} → ${url}`)
+        console.log(`${LOG_PREFIX} ✅ Base64 ${label} → ${b64Url}`)
       } catch (b64Error) {
         console.error(`${LOG_PREFIX} Base64 upload failed for ${label}:`, b64Error)
         return NextResponse.json({
@@ -445,6 +449,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Response ──────────────────────────────────────────────────────────────
+
+    deleteSupabaseImages(tempPaths).catch(err =>
+      console.warn(`${LOG_PREFIX} Cleanup error (non-fatal):`, err)
+    )
 
     return NextResponse.json({
       success: true,

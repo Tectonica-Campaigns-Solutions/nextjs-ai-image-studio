@@ -4,6 +4,7 @@ import {
   downloadBflImage,
   uploadImageToSupabase,
   prepareBase64ForBfl,
+  deleteSupabaseImages,
   resizeImageForBfl,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
@@ -304,14 +305,16 @@ export async function POST(request: NextRequest) {
     // Order: user image FIRST (@image1), then style reference(s) (@image2, @image3, …)
 
     const allImageUrls: string[] = []
+    const tempPaths: string[] = []
 
     // User image (@image1)
     console.log(`${LOG_PREFIX} Processing user image (@image1)...`)
     if (base64Image) {
       try {
-        const url = await prepareBase64ForBfl(base64Image, 0)
-        allImageUrls.push(url)
-        console.log(`${LOG_PREFIX} ✅ User base64 image uploaded (@image1): ${url}`)
+        const { url: imgUrl, path: imgPath } = await prepareBase64ForBfl(base64Image, 0)
+        allImageUrls.push(imgUrl)
+        tempPaths.push(imgPath)
+        console.log(`${LOG_PREFIX} ✅ User base64 image uploaded (@image1): ${imgUrl}`)
       } catch (b64Error) {
         console.error(`${LOG_PREFIX} Base64 upload failed:`, b64Error)
         return NextResponse.json({
@@ -340,6 +343,7 @@ export async function POST(request: NextRequest) {
         const fileName = `bfl-ref/${orgType.toLowerCase()}-apply-${sceneType}-ref${i + 1}-${Date.now()}.jpeg`
         const url = await uploadImageToSupabase(resized, fileName, "image/jpeg")
         allImageUrls.push(url)
+        tempPaths.push(fileName)
         console.log(`${LOG_PREFIX} ✅ Style reference ${label} uploaded: ${url}`)
       } catch (refError) {
         console.error(`${LOG_PREFIX} Failed to upload style reference ${label}:`, refError)
@@ -420,6 +424,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Response ──────────────────────────────────────────────────────────────
+
+    deleteSupabaseImages(tempPaths).catch(err =>
+      console.warn(`${LOG_PREFIX} Cleanup error (non-fatal):`, err)
+    )
 
     return NextResponse.json({
       success: true,
