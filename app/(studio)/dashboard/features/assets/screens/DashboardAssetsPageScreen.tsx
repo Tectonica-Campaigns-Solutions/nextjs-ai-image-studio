@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
@@ -51,6 +51,9 @@ export function DashboardAssetsPageScreen({
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
   const deleteAction = useServerAction();
   const primaryAction = useServerAction();
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const [listScrollTop, setListScrollTop] = useState(0);
+  const [listViewportHeight, setListViewportHeight] = useState(560);
 
   const filteredAssets = useMemo(() => {
     const filtered = assets.filter((asset) => {
@@ -84,6 +87,44 @@ export function DashboardAssetsPageScreen({
       return tb - ta;
     });
   }, [assets, clientNames, query, typeFilter, uploadDateSort]);
+
+  const LIST_ROW_HEIGHT = 92;
+  const LIST_OVERSCAN = 6;
+  const isListVirtualized = view === "list" && filteredAssets.length > 60;
+
+  useEffect(() => {
+    if (!isListVirtualized) return;
+    const el = listContainerRef.current;
+    if (!el) return;
+
+    const syncHeight = () => {
+      setListViewportHeight(el.clientHeight || 560);
+    };
+
+    syncHeight();
+    window.addEventListener("resize", syncHeight);
+    return () => window.removeEventListener("resize", syncHeight);
+  }, [isListVirtualized]);
+
+  const virtualizedList = useMemo(() => {
+    if (!isListVirtualized) {
+      return {
+        items: filteredAssets,
+        paddingTop: 0,
+        paddingBottom: 0,
+      };
+    }
+
+    const startIndex = Math.max(0, Math.floor(listScrollTop / LIST_ROW_HEIGHT) - LIST_OVERSCAN);
+    const visibleCount = Math.ceil(listViewportHeight / LIST_ROW_HEIGHT) + LIST_OVERSCAN * 2;
+    const endIndex = Math.min(filteredAssets.length, startIndex + visibleCount);
+
+    return {
+      items: filteredAssets.slice(startIndex, endIndex),
+      paddingTop: startIndex * LIST_ROW_HEIGHT,
+      paddingBottom: Math.max(0, (filteredAssets.length - endIndex) * LIST_ROW_HEIGHT),
+    };
+  }, [filteredAssets, isListVirtualized, listScrollTop, listViewportHeight]);
 
   const handleDelete = () => {
     if (!deleteTarget) return;
@@ -257,9 +298,64 @@ export function DashboardAssetsPageScreen({
           <div className="flex items-center gap-4" />
         </div>
 
-        {/* Asset Grid */}
-        <div className={view === "grid" ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-3"}>
-          {filteredAssets.map((asset) => {
+        {/* Asset Grid / List */}
+        <div
+          ref={view === "list" ? listContainerRef : null}
+          onScroll={
+            view === "list"
+              ? (e) => setListScrollTop(e.currentTarget.scrollTop)
+              : undefined
+          }
+          className={cx(
+            view === "grid" ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-3",
+            view === "list" && isListVirtualized && "max-h-[70vh] overflow-y-auto pr-1",
+          )}
+        >
+          {view === "list" && isListVirtualized ? (
+            <div style={{ paddingTop: virtualizedList.paddingTop, paddingBottom: virtualizedList.paddingBottom }}>
+              {virtualizedList.items.map((asset) => {
+                const typeLabel = formatAssetType(asset.mime_type, asset.asset_type);
+
+                return (
+                  <div key={asset.id} className="group bg-surface-container-lowest rounded-xl p-3 shadow-sm ring-1 ring-outline-variant/10 flex items-center gap-3 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setLightboxAsset(asset)}
+                      className="relative h-16 w-16 rounded-lg bg-surface-container overflow-hidden shrink-0 cursor-pointer"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img alt={asset.display_name ?? asset.name} className="w-full h-full object-cover" src={asset.file_url} />
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{asset.display_name ?? asset.name}</p>
+                      <p className="text-xs text-on-surface-variant truncate">
+                        {clientNames[asset.client_id] ?? "Client"}
+                        {asset.variant ? ` • ${asset.variant}` : ""}
+                        {asset.is_primary ? " • Primary" : ""}
+                        {typeLabel ? ` • ${typeLabel}` : ""}
+                      </p>
+                    </div>
+                    <Link href={`/dashboard/clients/${asset.client_id}`} className="text-xs font-semibold text-dashboard-primary">Manage</Link>
+                    <button
+                      type="button"
+                      onClick={() => void handleSetPrimary(asset)}
+                      disabled={asset.is_primary || primaryAction.busyId !== null}
+                      className="text-xs font-semibold"
+                    >
+                      {asset.is_primary ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
+                          Primary
+                        </span>
+                      ) : (
+                        <span className="text-dashboard-primary">Set Primary</span>
+                      )}
+                    </button>
+                    <button type="button" onClick={() => setDeleteTarget(asset)} className="text-xs font-semibold text-error">Delete</button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : filteredAssets.map((asset) => {
             const typeLabel = formatAssetType(asset.mime_type, asset.asset_type);
 
             if (view === "list") {

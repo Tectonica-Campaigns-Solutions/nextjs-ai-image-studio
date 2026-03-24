@@ -32,20 +32,15 @@ export function DashboardNotifications() {
   useEffect(() => {
     async function fetchNotifications() {
       try {
-        const res = await fetch("/api/dashboard/check-role");
+        const res = await fetch("/api/dashboard/notifications", {
+          method: "GET",
+          cache: "no-store",
+        });
         if (res.ok) {
           const data = await res.json();
-          const items: NotificationItem[] = [];
-
-          if (data.isAdmin) {
-            items.push({
-              id: "welcome",
-              title: "Welcome back",
-              description: "You are signed in as an admin.",
-              type: "success",
-              timestamp: new Date().toISOString(),
-            });
-          }
+          const items = Array.isArray(data?.notifications)
+            ? (data.notifications as NotificationItem[])
+            : [];
           setNotifications(items);
         }
       } catch {

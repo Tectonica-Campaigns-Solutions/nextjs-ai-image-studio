@@ -88,3 +88,4 @@ export async function getAuditLogData(): Promise<AuditEntry[]> {
   entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   return entries.slice(0, 50);
 }
+
