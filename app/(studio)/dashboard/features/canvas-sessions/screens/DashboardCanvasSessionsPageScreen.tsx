@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import type { CanvasSessionSummary } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { deleteCanvasSessionAction } from "@/app/(studio)/dashboard/features/canvas-sessions/actions/canvas-sessions";
@@ -63,7 +64,9 @@ export function DashboardCanvasSessionsPageScreen({
         <div className="flex items-end justify-between mb-10">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Dashboard</span>
+              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
+                Dashboard
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span className="text-dashboard-primary font-bold">Canvas Sessions</span>
             </nav>

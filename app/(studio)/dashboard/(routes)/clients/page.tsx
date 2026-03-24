@@ -9,8 +9,13 @@ import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { DashboardDashboardShell } from "@/app/(studio)/dashboard/components/DashboardDashboardShell";
 import { getDashboardOverviewData } from "@/app/(studio)/dashboard/features/overview/data/overview";
 import { DashboardClientsAdminScreen } from "@/app/(studio)/dashboard/features/clients/screens/DashboardClientsAdminScreen";
+import { Metadata } from "next";
 
 const PAGE_SIZE = 25;
+
+export const metadata: Metadata = {
+  title: "Clients | Tectonica.ai",
+};
 
 export default async function ClientsPage() {
   const auth = await requireAdmin();

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Admin } from "@/app/(studio)/dashboard/utils/types";
@@ -127,9 +128,13 @@ export function DashboardAdminDetailScreen({
         <div className="flex items-end justify-between mb-10">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Dashboard</span>
+              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
+                Dashboard
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-dashboard-primary font-bold">Admins</span>
+              <Link href="/dashboard/admins" className="text-dashboard-primary font-bold hover:opacity-80 transition-opacity">
+                Admins
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span>{displayName(admin)}</span>
             </nav>

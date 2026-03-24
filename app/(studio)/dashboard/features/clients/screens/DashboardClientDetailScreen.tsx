@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
@@ -506,9 +507,13 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
         <div className="flex items-end justify-between mb-10">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Dashboard</span>
+              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
+                Dashboard
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span className="text-dashboard-primary font-bold">Clients</span>
+              <Link href="/dashboard/clients" className="text-dashboard-primary font-bold hover:opacity-80 transition-opacity">
+                Clients
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span>{client.name}</span>
             </nav>

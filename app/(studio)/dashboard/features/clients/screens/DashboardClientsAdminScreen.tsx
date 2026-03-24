@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { paginateItems } from "@/app/(studio)/dashboard/utils/data-utils";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import type { Client } from "@/app/(studio)/dashboard/utils/types";
@@ -171,7 +172,9 @@ export function DashboardClientsAdminScreen({
           <div className="flex items-end justify-between mb-10">
             <div>
               <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-                <span>Dashboard</span>
+                <Link href="/dashboard" className="hover:text-on-surface transition-colors">
+                  Dashboard
+                </Link>
                 <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
                 <span className="text-dashboard-primary font-bold">Clients</span>
               </nav>

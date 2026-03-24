@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ClientAsset, ClientFont } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
@@ -118,7 +119,9 @@ export function DashboardFramesFontsPageScreen({
         <div className="flex items-end justify-between mb-6">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Dashboard</span>
+              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
+                Dashboard
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span className="text-dashboard-primary font-bold">
                 {tab === "frames" ? "Frames" : "Fonts"}

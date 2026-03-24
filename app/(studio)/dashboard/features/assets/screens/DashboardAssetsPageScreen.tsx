@@ -140,7 +140,9 @@ export function DashboardAssetsPageScreen({
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <span>Dashboard</span>
+              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
+                Dashboard
+              </Link>
               <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
               <span className="text-dashboard-primary font-bold">Assets</span>
             </nav>

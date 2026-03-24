@@ -3,6 +3,11 @@ import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { getAssetsPageData } from "@/app/(studio)/dashboard/features/assets/data/assets";
 import { DashboardDashboardShell } from "@/app/(studio)/dashboard/components/DashboardDashboardShell";
 import { DashboardAssetsPageScreen } from "@/app/(studio)/dashboard/features/assets/screens/DashboardAssetsPageScreen";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Assets | Tectonica.ai",
+};
 
 export default async function AssetsPage() {
   const auth = await requireAdmin();

@@ -3,11 +3,16 @@ import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { getFramesFontsPageData } from "@/app/(studio)/dashboard/features/frames-fonts/data/frames-fonts";
 import { DashboardDashboardShell } from "@/app/(studio)/dashboard/components/DashboardDashboardShell";
 import { DashboardFramesFontsPageScreen } from "@/app/(studio)/dashboard/features/frames-fonts/screens/DashboardFramesFontsPageScreen";
+import { Metadata } from "next";
 
 type FramesFontsPageProps = {
   searchParams: Promise<{
     tab?: string;
   }>;
+};
+
+export const metadata: Metadata = {
+  title: "Frames & Fonts | Tectonica.ai",
 };
 
 export default async function FramesFontsPage({
