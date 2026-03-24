@@ -455,7 +455,7 @@ export async function prepareFileForBfl(file: File, index: number): Promise<{ ur
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const resized = await resizeImageForBfl(buffer)
-  const fileName = `bfl-input/${Date.now()}-img${index + 1}.jpeg`
+  const fileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img${index + 1}.jpeg`
   const url = await uploadImageToSupabase(resized, fileName, "image/jpeg")
   return { url, path: fileName }
 }
@@ -487,7 +487,7 @@ export async function prepareBase64ForBfl(
 
   const resized = await resizeImageForBfl(imageBuffer)
   const ext = mimeType === "image/png" ? "png" : "jpeg"
-  const fileName = `bfl-input/${Date.now()}-img${index + 1}.${ext}`
+  const fileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img${index + 1}.${ext}`
   const uploadMime = ext === "png" ? "image/png" : "image/jpeg"
   const url = await uploadImageToSupabase(resized, fileName, uploadMime)
   return { url, path: fileName }

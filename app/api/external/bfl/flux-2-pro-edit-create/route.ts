@@ -112,7 +112,7 @@ async function uploadReferenceImage(
 ): Promise<{ url: string; path: string }> {
   const rawBuffer = await fs.readFile(filePath)
   const resized = await resizeImageForBfl(rawBuffer)
-  const fileName = `bfl-ref/${orgType.toLowerCase()}-${Date.now()}-ref${index + 1}.jpeg`
+  const fileName = `bfl-ref/${orgType.toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2)}-ref${index + 1}.jpeg`
   const url = await uploadImageToSupabase(resized, fileName, "image/jpeg")
   return { url, path: fileName }
 }

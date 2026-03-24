@@ -340,7 +340,7 @@ export async function POST(request: NextRequest) {
       try {
         const rawBuffer = await fs.readFile(fullPath)
         const resized = await resizeImageForBfl(rawBuffer)
-        const fileName = `bfl-ref/${orgType.toLowerCase()}-apply-${sceneType}-ref${i + 1}-${Date.now()}.jpeg`
+        const fileName = `bfl-ref/${orgType.toLowerCase()}-apply-${sceneType}-ref${i + 1}-${Date.now()}-${Math.random().toString(36).slice(2)}.jpeg`
         const url = await uploadImageToSupabase(resized, fileName, "image/jpeg")
         allImageUrls.push(url)
         tempPaths.push(fileName)
