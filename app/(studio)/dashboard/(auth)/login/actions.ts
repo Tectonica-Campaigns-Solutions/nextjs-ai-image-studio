@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { isAdmin } from "../utils/admin-utils";
+import { isAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -13,22 +13,19 @@ export async function adminLogin(formData: FormData) {
     password: formData.get("password") as string,
   };
 
-  const { error, data: authData } =
+  const { error } =
     await supabase.auth.signInWithPassword(data);
 
   if (error) {
     redirect("/dashboard/login?error=invalid_credentials");
   }
 
-  // Verify that the user has admin role
   const admin = await isAdmin();
   if (!admin) {
-    // Logout if not admin
     await supabase.auth.signOut();
     redirect("/dashboard/login?error=not_admin");
   }
 
-  // Revalidate admin and layout routes
   revalidatePath("/dashboard", "layout");
   revalidatePath("/", "layout");
   redirect("/dashboard");

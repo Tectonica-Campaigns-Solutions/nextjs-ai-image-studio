@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { IBM_Plex_Sans, Manrope } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 
 
 export const metadata: Metadata = {
@@ -25,10 +26,12 @@ export default function StudioLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
-      className={`font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable}`}
-    >
-      {children}
-    </div>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <div
+        className={`font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable}`}
+      >
+        {children}
+      </div>
+    </ThemeProvider>
   );
 }

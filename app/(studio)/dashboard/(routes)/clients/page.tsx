@@ -5,8 +5,6 @@ import {
   type ClientStatusFilter,
   type ClientSortKey,
 } from "@/app/(studio)/dashboard/features/clients/data/clients";
-import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { DashboardDashboardShell } from "@/app/(studio)/dashboard/components/DashboardDashboardShell";
 import { getDashboardOverviewData } from "@/app/(studio)/dashboard/features/overview/data/overview";
 import { DashboardClientsAdminScreen } from "@/app/(studio)/dashboard/features/clients/screens/DashboardClientsAdminScreen";
 import { Metadata } from "next";
@@ -14,24 +12,31 @@ import { Metadata } from "next";
 const PAGE_SIZE = 25;
 
 export const metadata: Metadata = {
-  title: "Clients | Tectonica.ai",
+  title: "Clients",
 };
 
-export default async function ClientsPage() {
-  const auth = await requireAdmin();
-  if (!auth.success) {
-    redirect("/dashboard/login?error=admin_required");
-  }
+type ClientsPageProps = {
+  searchParams: Promise<{
+    page?: string;
+    status?: string;
+    sort?: string;
+    search?: string;
+  }>;
+};
 
-  // Load a bigger dataset once and do filter/sort/pagination in the browser.
-  // This avoids slow backend filtering queries on every UI interaction.
-  const LOAD_LIMIT = 5000;
+export default async function ClientsPage({ searchParams }: ClientsPageProps) {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const status = (params.status ?? "all") as ClientStatusFilter;
+  const sort = (params.sort ?? "created") as ClientSortKey;
+  const search = params.search || undefined;
+
   const result = await getClientsListData({
-    page: 1,
-    pageSize: LOAD_LIMIT,
-    status: "all" as ClientStatusFilter,
-    sort: "created" as ClientSortKey,
-    search: undefined,
+    page,
+    pageSize: PAGE_SIZE,
+    status,
+    sort,
+    search,
   });
   if (result === null) {
     redirect("/dashboard/login?error=admin_required");
@@ -47,16 +52,17 @@ export default async function ClientsPage() {
     await getClientsLogosAndAssetCounts(clientIds);
 
   return (
-    <DashboardDashboardShell activeNav="clients">
-      <DashboardClientsAdminScreen
-        stats={overview.stats}
-        clients={result.clients}
-        totalClients={result.total}
-        currentPage={1}
-        pageSize={PAGE_SIZE}
-        assetCountsByClientId={assetCountsByClientId}
-        logoByClientId={logoByClientId}
-      />
-    </DashboardDashboardShell>
+    <DashboardClientsAdminScreen
+      stats={overview.stats}
+      clients={result.clients}
+      totalClients={result.total}
+      currentPage={page}
+      pageSize={PAGE_SIZE}
+      currentStatus={status}
+      currentSort={sort}
+      currentSearch={search ?? ""}
+      assetCountsByClientId={assetCountsByClientId}
+      logoByClientId={logoByClientId}
+    />
   );
 }

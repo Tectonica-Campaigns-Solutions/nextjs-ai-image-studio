@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { paginateItems } from "@/app/(studio)/dashboard/utils/data-utils";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
+import { DashboardBreadcrumb } from "@/app/(studio)/dashboard/components/dashboard-breadcrumb";
+import { DashboardEmptyState } from "@/app/(studio)/dashboard/components/dashboard-empty-state";
 import type { Client } from "@/app/(studio)/dashboard/utils/types";
 import { CreateClientModal } from "@/app/(studio)/dashboard/components/create-client-modal";
 import type {
@@ -28,6 +29,9 @@ type DashboardClientsAdminScreenProps = Readonly<{
   totalClients: number;
   currentPage: number;
   pageSize: number;
+  currentStatus: ClientStatusFilter;
+  currentSort: ClientSortKey;
+  currentSearch: string;
   assetCountsByClientId: Record<string, number>;
   logoByClientId: Record<string, string | null | undefined>;
 }>;
@@ -38,36 +42,39 @@ export function DashboardClientsAdminScreen({
   totalClients,
   currentPage,
   pageSize,
+  currentStatus,
+  currentSort,
+  currentSearch,
   assetCountsByClientId,
   logoByClientId,
 }: DashboardClientsAdminScreenProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Keep a local copy so filters/sort/pagination are client-side (no query params).
-  const [clientsState, setClientsState] = useState<Client[]>(clients);
-  useEffect(() => {
-    setClientsState(clients);
-    // Ensure newly created/updated clients are visible on refresh.
-    setPage(1);
+  const totalPages = Math.max(1, Math.ceil(totalClients / pageSize));
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    const allIds = clients.map((c) => c.id);
+    setSelectedIds((prev) =>
+      prev.length === allIds.length ? [] : allIds
+    );
   }, [clients]);
-
-  const [page, setPage] = useState(Math.max(1, currentPage));
-  useEffect(() => {
-    setPage(1);
-  }, [currentPage]);
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const filterMenuRef = useRef<HTMLDivElement | null>(null);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const [statusFilter, setStatusFilter] =
-    useState<ClientStatusFilter>("all");
-  const [sortKey, setSortKey] = useState<ClientSortKey>("created");
-
-  const [localSearch, setLocalSearch] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [localSearch, setLocalSearch] = useState(currentSearch);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -76,24 +83,33 @@ export function DashboardClientsAdminScreen({
     };
   }, []);
 
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter, sortKey, searchQuery]);
+  const updateParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined || value === "" || (key === "page" && value === "1") || (key === "status" && value === "all") || (key === "sort" && value === "created")) {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      }
+      const qs = params.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
-
       const clickedInsideFilter = filterMenuRef.current?.contains(target) ?? false;
       const clickedInsideSort = sortMenuRef.current?.contains(target) ?? false;
-
       if (!clickedInsideFilter && !clickedInsideSort) {
         setFilterOpen(false);
         setSortOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("touchstart", handlePointerDown);
     return () => {
@@ -102,65 +118,16 @@ export function DashboardClientsAdminScreen({
     };
   }, []);
 
-  const handleSearchChange = useCallback((value: string) => {
-    setLocalSearch(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setSearchQuery(value.trim());
-    }, 250);
-  }, []);
-
-  const filteredSortedClients = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-
-    let list = clientsState;
-    if (statusFilter === "active") list = list.filter((c) => c.is_active);
-    if (statusFilter === "inactive") list = list.filter((c) => !c.is_active);
-
-    if (q) {
-      list = list.filter((c) => {
-        const haystack = [
-          c.name,
-          c.ca_user_id,
-          c.email ?? "",
-          c.description ?? "",
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(q);
-      });
-    }
-
-    const sorted = [...list];
-    sorted.sort((a, b) => {
-      if (sortKey === "name") {
-        return (a.name ?? "").localeCompare(b.name ?? "");
-      }
-      if (sortKey === "updated") {
-        const aT = a.updated_at ? new Date(a.updated_at).getTime() : -1;
-        const bT = b.updated_at ? new Date(b.updated_at).getTime() : -1;
-        return bT - aT;
-      }
-      // created
-      const aT = a.created_at ? new Date(a.created_at).getTime() : -1;
-      const bT = b.created_at ? new Date(b.created_at).getTime() : -1;
-      return bT - aT;
-    });
-
-    return sorted;
-  }, [clientsState, searchQuery, statusFilter, sortKey]);
-
-  const { paged: pagedClients, totalPages } = useMemo(
-    () => paginateItems(filteredSortedClients, page, pageSize),
-    [filteredSortedClients, page, pageSize]
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setLocalSearch(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        updateParams({ search: value.trim() || undefined, page: "1" });
+      }, 350);
+    },
+    [updateParams],
   );
-
-  useEffect(() => {
-    setPage((p) => Math.min(p, totalPages));
-  }, [totalPages]);
-
-  const showingCount = pagedClients.length;
 
   return (
     <>
@@ -168,16 +135,9 @@ export function DashboardClientsAdminScreen({
 
       <div className="pt-16 px-10 min-h-screen bg-surface">
         <div className="w-full py-10 space-y-8">
-          {/* Page Header */}
           <div className="flex items-end justify-between mb-10">
             <div>
-              <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-                <Link href="/dashboard" className="hover:text-on-surface transition-colors">
-                  Dashboard
-                </Link>
-                <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-                <span className="text-dashboard-primary font-bold">Clients</span>
-              </nav>
+              <DashboardBreadcrumb segments={[{ label: "Clients" }]} />
               <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">Clients</h2>
             </div>
             <button
@@ -189,7 +149,6 @@ export function DashboardClientsAdminScreen({
             </button>
           </div>
 
-          {/* Dashboard Stats Tonal Layering */}
           <div className="grid grid-cols-3 gap-6 mb-10">
             <StatCard label="Total Clients" value={stats.totalClients} meta="+12%" metaClassName="text-green-600" />
             <StatCard label="Active Now" value={stats.activeClients} meta="Stable" metaClassName="text-blue-600" />
@@ -212,7 +171,7 @@ export function DashboardClientsAdminScreen({
                       setSortOpen(false);
                     }}
                   >
-                    Filter
+                    Filter{currentStatus !== "all" ? ` (${currentStatus})` : ""}
                     <DashboardMaterialIcon icon="expand_more" className="text-xs" />
                   </button>
                   {filterOpen ? (
@@ -241,7 +200,7 @@ export function DashboardClientsAdminScreen({
                             { key: "active", label: "Active" },
                             { key: "inactive", label: "Inactive" },
                           ] as Array<{ key: ClientStatusFilter; label: string }>).map((opt) => {
-                            const active = statusFilter === opt.key;
+                            const active = currentStatus === opt.key;
                             return (
                               <button
                                 key={opt.key}
@@ -253,7 +212,7 @@ export function DashboardClientsAdminScreen({
                                     : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
                                 )}
                                 onClick={() => {
-                                  setStatusFilter(opt.key as ClientStatusFilter);
+                                  updateParams({ status: opt.key, page: "1" });
                                   setFilterOpen(false);
                                 }}
                               >
@@ -294,7 +253,7 @@ export function DashboardClientsAdminScreen({
                           { key: "name", label: "Name" },
                           { key: "updated", label: "Last updated" },
                         ] as Array<{ key: ClientSortKey; label: string }>).map((opt) => {
-                          const active = sortKey === opt.key;
+                          const active = currentSort === opt.key;
                           return (
                             <button
                               key={opt.key}
@@ -306,7 +265,7 @@ export function DashboardClientsAdminScreen({
                                   : "hover:bg-surface-container-high text-on-surface-variant"
                               )}
                               onClick={() => {
-                                setSortKey(opt.key as ClientSortKey);
+                                updateParams({ sort: opt.key, page: "1" });
                                 setSortOpen(false);
                               }}
                             >
@@ -320,9 +279,37 @@ export function DashboardClientsAdminScreen({
                 </div>
               </>
             }
-            showingLabel={`Showing ${showingCount} of ${filteredSortedClients.length} results`}
+            showingLabel={`Showing ${clients.length} of ${totalClients} results`}
+            selectedIds={selectedIds}
+            bulkActions={[
+              {
+                label: "Export CSV",
+                icon: "download",
+                onAction: (ids) => {
+                  const selected = clients.filter((c) => ids.includes(c.id));
+                  const csv = ["Name,Email,Status,Created"]
+                    .concat(selected.map((c) => `"${c.name}","${c.email ?? c.ca_user_id}","${c.is_active ? "Active" : "Inactive"}","${c.created_at}"`))
+                    .join("\n");
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "clients-export.csv";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                },
+              },
+            ]}
             header={
               <tr className="bg-surface-container-low">
+                <th className="px-3 py-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === clients.length && clients.length > 0}
+                    onChange={toggleSelectAll}
+                    className="rounded border-outline-variant/30"
+                  />
+                </th>
                 <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                   Client Name
                 </th>
@@ -339,7 +326,7 @@ export function DashboardClientsAdminScreen({
             }
             body={
               <>
-                {pagedClients.map((client) => {
+                {clients.map((client) => {
                   const assetsCount = assetCountsByClientId[client.id] ?? 0;
                   const statusActive = client.is_active;
                   const avatarUrl = logoByClientId[client.id];
@@ -349,9 +336,20 @@ export function DashboardClientsAdminScreen({
                   return (
                     <tr
                       key={client.id}
-                      className="group hover:bg-surface-container-highest transition-colors cursor-pointer"
+                      className={cx(
+                        "group hover:bg-surface-container-highest transition-colors cursor-pointer",
+                        selectedIds.includes(client.id) && "bg-dashboard-primary/[0.03]"
+                      )}
                       onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                     >
+                      <td className="px-3 py-4 w-10" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(client.id)}
+                          onChange={() => toggleSelect(client.id)}
+                          className="rounded border-outline-variant/30"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {avatarUrl ? (
@@ -398,14 +396,21 @@ export function DashboardClientsAdminScreen({
                 })}
               </>
             }
-            page={page}
+            emptyState={
+              <DashboardEmptyState
+                icon="group"
+                title="No clients found"
+                description={currentSearch ? "Try a different search term." : "Create your first client to get started."}
+                actionLabel={!currentSearch ? "Create Client" : undefined}
+                onAction={!currentSearch ? () => setCreateOpen(true) : undefined}
+              />
+            }
+            page={currentPage}
             totalPages={totalPages}
-            onPageChange={setPage}
+            onPageChange={(p) => updateParams({ page: String(p) })}
           />
-
         </div>
       </div>
     </>
   );
 }
-

@@ -1,5 +1,9 @@
 export { DashboardDashboardShell } from "./DashboardDashboardShell";
-export type { DashboardDashboardShellProps, DashboardNavKey } from "./DashboardDashboardShell";
+export type { DashboardDashboardShellProps } from "./DashboardDashboardShell";
+export { DashboardSidebarNav } from "./DashboardSidebarNav";
+export { DashboardBreadcrumb } from "./dashboard-breadcrumb";
+export type { BreadcrumbSegment } from "./dashboard-breadcrumb";
+export { DashboardEmptyState } from "./dashboard-empty-state";
 export { DashboardMaterialIcon } from "./DashboardMaterialIcon";
 export type { DashboardMaterialIconProps } from "./DashboardMaterialIcon";
 export { StatCard } from "./stat-card";

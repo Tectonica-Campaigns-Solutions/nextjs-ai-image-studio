@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { getFramesFontsPageData } from "@/app/(studio)/dashboard/features/frames-fonts/data/frames-fonts";
-import { DashboardDashboardShell } from "@/app/(studio)/dashboard/components/DashboardDashboardShell";
 import { DashboardFramesFontsPageScreen } from "@/app/(studio)/dashboard/features/frames-fonts/screens/DashboardFramesFontsPageScreen";
 import { Metadata } from "next";
 
@@ -12,17 +10,12 @@ type FramesFontsPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Frames & Fonts | Tectonica.ai",
+  title: "Frames & Fonts",
 };
 
 export default async function FramesFontsPage({
   searchParams,
 }: FramesFontsPageProps) {
-  const auth = await requireAdmin();
-  if (!auth.success) {
-    redirect("/dashboard/login?error=admin_required");
-  }
-
   const params = await searchParams;
   const tab = params.tab === "fonts" ? "fonts" : "frames";
 
@@ -32,13 +25,11 @@ export default async function FramesFontsPage({
   }
 
   return (
-    <DashboardDashboardShell activeNav={tab}>
-      <DashboardFramesFontsPageScreen
-        frames={data.frames}
-        fonts={data.fonts}
-        clientNames={data.clientNames}
-        initialTab={tab}
-      />
-    </DashboardDashboardShell>
+    <DashboardFramesFontsPageScreen
+      frames={data.frames}
+      fonts={data.fonts}
+      clientNames={data.clientNames}
+      initialTab={tab}
+    />
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
+import { DashboardBreadcrumb } from "@/app/(studio)/dashboard/components/dashboard-breadcrumb";
 import type { ClientDetailPageData } from "../data/clients";
 import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
 import {
@@ -506,17 +507,10 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
         {/* Client Hero Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
-            <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
-                Dashboard
-              </Link>
-              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <Link href="/dashboard/clients" className="text-dashboard-primary font-bold hover:opacity-80 transition-opacity">
-                Clients
-              </Link>
-              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span>{client.name}</span>
-            </nav>
+            <DashboardBreadcrumb segments={[
+              { label: "Clients", href: "/dashboard/clients" },
+              { label: client.name },
+            ]} />
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
               Client Detail
             </h2>

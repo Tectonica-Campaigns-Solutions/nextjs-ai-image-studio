@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Admin } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
+import { DashboardBreadcrumb } from "@/app/(studio)/dashboard/components/dashboard-breadcrumb";
 import { updateAdminAction, deleteAdminAction } from "../actions/admins";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
@@ -127,17 +128,10 @@ export function DashboardAdminDetailScreen({
 
         <div className="flex items-end justify-between mb-10">
           <div>
-            <nav className="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-2 uppercase tracking-widest">
-              <Link href="/dashboard" className="hover:text-on-surface transition-colors">
-                Dashboard
-              </Link>
-              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <Link href="/dashboard/admins" className="text-dashboard-primary font-bold hover:opacity-80 transition-opacity">
-                Admins
-              </Link>
-              <DashboardMaterialIcon icon="chevron_right" className="text-[10px]" />
-              <span>{displayName(admin)}</span>
-            </nav>
+            <DashboardBreadcrumb segments={[
+              { label: "Admins", href: "/dashboard/admins" },
+              { label: displayName(admin) },
+            ]} />
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">
               Admin Detail
             </h2>

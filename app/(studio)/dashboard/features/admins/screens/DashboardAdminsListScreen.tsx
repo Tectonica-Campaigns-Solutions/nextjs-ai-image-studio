@@ -11,6 +11,8 @@ import { cx } from "@/app/(studio)/dashboard/utils/cx";
 import { formatDateLong } from "@/app/(studio)/dashboard/utils/date-formatters";
 import { StatCard } from "@/app/(studio)/dashboard/components/stat-card";
 import { DashboardEntityTable } from "@/app/(studio)/dashboard/components/dashboard-entity-table";
+import { DashboardEmptyState } from "@/app/(studio)/dashboard/components/dashboard-empty-state";
+import { downloadCSV } from "@/app/(studio)/dashboard/utils/export-utils";
 
 type AdminSortKey = "granted_at" | "name";
 type AdminStatusFilter = "all" | "active" | "inactive";
@@ -38,7 +40,7 @@ export type DashboardAdminsListScreenProps = Readonly<{
 
 export function DashboardAdminsListScreen({
   admins,
-  currentUserId: _currentUserId,
+  currentUserId,
 }: DashboardAdminsListScreenProps) {
   const router = useRouter();
 
@@ -132,13 +134,33 @@ export function DashboardAdminsListScreen({
             </nav>
             <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">Admins</h2>
           </div>
-          <button
-            className="bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-dashboard-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
-            onClick={() => setCreateOpen(true)}
-          >
-            <DashboardMaterialIcon icon="add" className="text-sm" />
-            Create Admin
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-low text-on-surface-variant font-semibold text-sm hover:bg-surface-container transition-colors"
+              onClick={() => {
+                downloadCSV(
+                  "admins-export.csv",
+                  ["Name", "Email", "Status", "Granted At"],
+                  admins.map((a) => [
+                    getAdminLabel(a),
+                    a.email ?? "",
+                    a.is_active ? "Active" : "Inactive",
+                    a.granted_at ?? "",
+                  ]),
+                );
+              }}
+            >
+              <DashboardMaterialIcon icon="download" className="text-sm" />
+              Export
+            </button>
+            <button
+              className="bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-dashboard-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+              onClick={() => setCreateOpen(true)}
+            >
+              <DashboardMaterialIcon icon="add" className="text-sm" />
+              Create Admin
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -295,6 +317,7 @@ export function DashboardAdminsListScreen({
             <>
               {pagedAdmins.map((admin) => {
                 const expired = admin.is_active && isExpired(admin.expires_at);
+                const isYou = currentUserId != null && admin.user_id === currentUserId;
                 const statusPill = !admin.is_active
                   ? { bg: "bg-slate-100", fg: "text-slate-600", dot: "bg-slate-400", label: "Inactive" }
                   : expired
@@ -304,17 +327,30 @@ export function DashboardAdminsListScreen({
                 return (
                   <tr
                     key={admin.id}
-                    className="group hover:bg-surface-container-highest transition-colors cursor-pointer"
+                    className={cx(
+                      "group hover:bg-surface-container-highest transition-colors cursor-pointer",
+                      isYou && "bg-dashboard-primary/[0.03]"
+                    )}
                     onClick={() => router.push(`/dashboard/admins/${admin.id}`)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-surface-container-low p-1 flex items-center justify-center text-on-surface text-xs font-bold">
+                        <div className={cx(
+                          "w-9 h-9 rounded-lg p-1 flex items-center justify-center text-xs font-bold",
+                          isYou
+                            ? "bg-dashboard-primary/15 text-dashboard-primary"
+                            : "bg-surface-container-low text-on-surface"
+                        )}>
                           {getAdminLabel(admin).trim().charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-on-surface">
+                          <p className="text-sm font-semibold text-on-surface flex items-center gap-2">
                             {getAdminLabel(admin)}
+                            {isYou && (
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-dashboard-primary bg-dashboard-primary/10 px-1.5 py-0.5 rounded">
+                                You
+                              </span>
+                            )}
                           </p>
                           <p className="text-xs text-on-surface-variant">{getAdminSubLabel(admin)}</p>
                         </div>
@@ -333,6 +369,15 @@ export function DashboardAdminsListScreen({
                 );
               })}
             </>
+          }
+          emptyState={
+            <DashboardEmptyState
+              icon="shield"
+              title="No admins found"
+              description="Invite your first admin to help manage the platform."
+              actionLabel="Create Admin"
+              onAction={() => setCreateOpen(true)}
+            />
           }
           page={page}
           totalPages={totalPages}

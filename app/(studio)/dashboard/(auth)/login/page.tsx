@@ -2,7 +2,7 @@ import { adminLogin } from "./actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock } from "lucide-react";
-import { getCurrentUserWithRole } from "../utils/admin-utils";
+import { getCurrentUserWithRole } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { redirect } from "next/navigation";
 
 type AdminLoginPageProps = {
@@ -17,7 +17,7 @@ export default async function AdminLoginPage({
 
   const { user, isAdmin } = await getCurrentUserWithRole();
   if (user && isAdmin) {
-    redirect("/dashboard/clients");
+    redirect("/dashboard");
   }
 
   return (
