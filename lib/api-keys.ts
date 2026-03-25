@@ -92,3 +92,72 @@ export function getApiKeyEnvVarName(orgType: string): string {
   
   return `FAL_API_KEY_${normalized}`
 }
+
+// ─── BFL (Black Forest Labs) API Key Management ───────────────────────────────
+//
+// Mirrors the FAL key pattern: per-org keys with a default fallback.
+// Variable format: BFL_API_KEY_{ORGANIZATION_UPPERCASE}
+// Examples:
+//   orgType="Tectonica"      → BFL_API_KEY_TECTONICA
+//   orgType="CommunityChange" → BFL_API_KEY_COMMUNITYCHANGE
+//   orgType="my-org"          → BFL_API_KEY_MY_ORG
+
+/**
+ * Retrieves the BFL API key for a specific organization.
+ *
+ * Lookup order:
+ * 1. BFL_API_KEY_{ORGTYPE} — organization-specific key
+ * 2. BFL_API_KEY           — default / fallback key
+ *
+ * @param orgType - Organization type (e.g. "Tectonica", "CommunityChange")
+ * @returns BFL API key string
+ * @throws Error if no key is configured
+ */
+export function getBflApiKey(orgType: string): string {
+  const normalized = orgType
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '_')
+
+  const envVarName = `BFL_API_KEY_${normalized}`
+  const clientKey = process.env[envVarName]
+
+  if (clientKey && clientKey.trim()) {
+    console.log(`[API Keys] Using org-specific BFL key: ${envVarName}`)
+    return clientKey.trim()
+  }
+
+  const defaultKey = process.env.BFL_API_KEY
+
+  if (defaultKey && defaultKey.trim()) {
+    console.log(`[API Keys] No specific BFL key for ${orgType}, using default BFL_API_KEY`)
+    return defaultKey.trim()
+  }
+
+  throw new Error(
+    `No BFL API key configured for organization: ${orgType}. ` +
+    `Please set ${envVarName} or BFL_API_KEY in environment variables.`
+  )
+}
+
+/**
+ * Returns true if a BFL API key is available for the given organization.
+ */
+export function hasBflApiKey(orgType: string): boolean {
+  try {
+    getBflApiKey(orgType)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Returns the env variable name for an organization's BFL key.
+ * (e.g., "BFL_API_KEY_TECTONICA")
+ */
+export function getBflApiKeyEnvVarName(orgType: string): string {
+  const normalized = orgType
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '_')
+  return `BFL_API_KEY_${normalized}`
+}
