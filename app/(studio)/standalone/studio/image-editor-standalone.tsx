@@ -78,6 +78,11 @@ export default function ImageEditorStandalone({
     !imageUrlFromParams
   );
 
+  // Preprocess input image URLs (remove disclaimer if present) so editing is clean.
+  const [preprocessedImageUrl, setPreprocessedImageUrl] = useState<string | null>(null);
+  const [isPreprocessingImage, setIsPreprocessingImage] = useState<boolean>(false);
+  const preprocessAbortRef = useRef<AbortController | null>(null);
+
   // Export states
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState<boolean>(false);
@@ -130,7 +135,69 @@ export default function ImageEditorStandalone({
   }, [guidePositions]);
 
   // Determine image URL
-  const imageUrl = imageUrlFromParams || uploadedImageUrl;
+  const rawImageUrl = imageUrlFromParams || uploadedImageUrl;
+  const requiresPreprocess =
+    !!rawImageUrl &&
+    /^https:\/\//i.test(rawImageUrl) &&
+    !rawImageUrl.startsWith("blob:") &&
+    !rawImageUrl.startsWith("data:");
+
+  // Important: while preprocessing, keep imageUrl null so the canvas doesn't
+  // briefly render the original (with disclaimer).
+  const imageUrl = requiresPreprocess
+    ? (isPreprocessingImage ? null : (preprocessedImageUrl ?? null))
+    : rawImageUrl;
+
+  const preprocessImageUrl = useCallback(async (url: string): Promise<string> => {
+    // Skip preprocessing for local object URLs and already-inlined data URLs.
+    if (url.startsWith("blob:") || url.startsWith("data:")) return url;
+    // Only preprocess absolute https URLs.
+    if (!/^https:\/\//i.test(url)) return url;
+
+    try {
+      const ctrl = new AbortController();
+      preprocessAbortRef.current?.abort();
+      preprocessAbortRef.current = ctrl;
+
+      const resp = await fetch(
+        `/api/studio/preprocess-image?force=1&imageUrl=${encodeURIComponent(url)}`,
+        { signal: ctrl.signal },
+      );
+      const json = await resp.json().catch(() => null);
+      if (!resp.ok || !json?.image_url) return url;
+      return String(json.image_url);
+    } catch (e: any) {
+      if (e?.name === "AbortError") return url;
+      return url;
+    }
+  }, []);
+
+  // Preprocess initial param/session background once per raw URL change.
+  useEffect(() => {
+    if (!rawImageUrl) {
+      setPreprocessedImageUrl(null);
+      setIsPreprocessingImage(false);
+      return;
+    }
+    if (!requiresPreprocess) {
+      preprocessAbortRef.current?.abort();
+      setPreprocessedImageUrl(null);
+      setIsPreprocessingImage(false);
+      return;
+    }
+    let cancelled = false;
+    setIsPreprocessingImage(true);
+    setPreprocessedImageUrl(null);
+    (async () => {
+      const cleaned = await preprocessImageUrl(rawImageUrl);
+      if (cancelled) return;
+      setPreprocessedImageUrl(cleaned);
+      setIsPreprocessingImage(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rawImageUrl, requiresPreprocess, preprocessImageUrl]);
 
   // Prevent context menu
   const preventContextMenu = useCallback((e: MouseEvent) => {
@@ -498,6 +565,8 @@ export default function ImageEditorStandalone({
     if (file && file.type.startsWith("image/")) {
       const url = URL.createObjectURL(file);
       setUploadedImageUrl(url);
+      setPreprocessedImageUrl(null);
+      setIsPreprocessingImage(false);
       setShowUploadPrompt(false);
     }
     event.target.value = "";
@@ -509,8 +578,10 @@ export default function ImageEditorStandalone({
       if (!canvasEditor.replaceBackgroundImage) return;
       setIsReplacingBackground(true);
       try {
-        originalImageUrlRefStable.current = newUrl;
-        await canvasEditor.replaceBackgroundImage(newUrl);
+        const cleanedUrl = await preprocessImageUrl(newUrl);
+        originalImageUrlRefStable.current = cleanedUrl;
+        setPreprocessedImageUrl(cleanedUrl);
+        await canvasEditor.replaceBackgroundImage(cleanedUrl);
         history.saveState(true);
         toast({
           title: "Background updated",
@@ -527,7 +598,7 @@ export default function ImageEditorStandalone({
         setIsReplacingBackground(false);
       }
     },
-    [canvasEditor.replaceBackgroundImage, history.saveState, toast]
+    [canvasEditor.replaceBackgroundImage, history.saveState, toast, preprocessImageUrl]
   );
 
   const handleReplaceBackgroundFromFile = useCallback(
