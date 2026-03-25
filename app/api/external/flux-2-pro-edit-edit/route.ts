@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { addDisclaimerToImage, restoreDisclaimerZone } from "@/lib/image-disclaimer"
 import { getClientApiKey } from "@/lib/api-keys"
 import sharp from 'sharp'
 import fs from 'fs/promises'
@@ -140,6 +140,7 @@ export async function POST(request: NextRequest) {
     let imageUrls: string[] = []
     let base64Images: string[] = []
     let compositionRule: string | null = null
+    let removeInputDisclaimer: boolean = true
     
     if (isJSON) {
       // JSON payload
@@ -149,6 +150,7 @@ export async function POST(request: NextRequest) {
       
       prompt = jsonBody.prompt
       compositionRule = jsonBody.compositionRule || null
+      removeInputDisclaimer = jsonBody.removeInputDisclaimer !== false
       const rawOrgType = jsonBody.orgType
       orgType = rawOrgType || 'general'
       const clientInfo = jsonBody.clientInfo || {}
@@ -185,6 +187,8 @@ export async function POST(request: NextRequest) {
         // Extract parameters
         prompt = formData.get("prompt") as string
         compositionRule = (formData.get("compositionRule") as string) || null
+        const removeInputDisclaimerStr = formData.get("removeInputDisclaimer") as string | null
+        removeInputDisclaimer = removeInputDisclaimerStr !== 'false'
         console.log("[External Flux 2 Pro Edit] Prompt extracted:", prompt?.substring(0, 50))
         
         const rawOrgType = formData.get("orgType") as string
@@ -374,7 +378,7 @@ export async function POST(request: NextRequest) {
         
         try {
           const arrayBuffer = await file.arrayBuffer()
-          const imageBuffer = Buffer.from(arrayBuffer)
+          let imageBuffer = Buffer.from(arrayBuffer)
           
           console.log(`[External Flux 2 Pro Edit] Processing File image ${i + 1}/${imageFiles.length}, type: ${file.type}`)
           
@@ -387,7 +391,17 @@ export async function POST(request: NextRequest) {
             console.error(`[External Flux 2 Pro Edit] ❌ CORRUPTED FILE IMAGE:`, errorMsg)
             throw new Error(`File image ${i + 1} is corrupted or invalid`)
           }
-          
+
+          // Restore disclaimer zone if the input image already has it applied
+          if (removeInputDisclaimer) {
+            try {
+              imageBuffer = Buffer.from(await restoreDisclaimerZone(imageBuffer))
+              console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer zone restored (file image ${i + 1})`)
+            } catch (restoreError) {
+              console.warn(`[External Flux 2 Pro Edit] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
+            }
+          }
+
           // Resize to respect fal.ai megapixel limits
           let finalBuffer: Buffer
           let finalMimeType = 'image/jpeg'
@@ -493,7 +507,17 @@ export async function POST(request: NextRequest) {
             console.error(`[External Flux 2 Pro Edit] ❌ CORRUPTED BASE64 IMAGE:`, errorMsg)
             throw new Error(`Base64 image ${i + 1} is corrupted or incomplete`)
           }
-          
+
+          // Restore disclaimer zone if the input image already has it applied
+          if (removeInputDisclaimer) {
+            try {
+              imageBuffer = Buffer.from(await restoreDisclaimerZone(imageBuffer))
+              console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer zone restored (base64 image ${i + 1})`)
+            } catch (restoreError) {
+              console.warn(`[External Flux 2 Pro Edit] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
+            }
+          }
+
           // Resize to respect fal.ai megapixel limits
           let finalBuffer: Buffer
           let finalMimeType = 'image/jpeg'
@@ -573,7 +597,38 @@ export async function POST(request: NextRequest) {
         // Basic URL validation
         try {
           new URL(url)
-          allImageUrls.push(url)
+
+          if (removeInputDisclaimer) {
+            console.log(`[External Flux 2 Pro Edit] removeInputDisclaimer=true, downloading and restoring disclaimer zone from URL...`)
+            try {
+              const dlResponse = await fetch(url)
+              if (!dlResponse.ok) throw new Error(`Failed to download: ${dlResponse.statusText}`)
+              let urlImageBuffer = Buffer.from(await dlResponse.arrayBuffer())
+              urlImageBuffer = Buffer.from(await restoreDisclaimerZone(urlImageBuffer))
+
+              const initiateRes = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+                method: 'POST',
+                headers: { 'Authorization': `Key ${falApiKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content_type: 'image/jpeg', file_name: 'flux2pro-edit-user-restored.jpg' })
+              })
+              if (!initiateRes.ok) throw new Error(`Initiate upload failed: ${initiateRes.status}`)
+              const { upload_url, file_url: restoredFileUrl } = await initiateRes.json()
+              const putRes = await fetch(upload_url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'image/jpeg', 'Content-Length': urlImageBuffer.length.toString() },
+                body: new Uint8Array(urlImageBuffer)
+              })
+              if (!putRes.ok) throw new Error(`PUT failed: ${putRes.status}`)
+
+              console.log(`[External Flux 2 Pro Edit] ✅ Restored image uploaded: ${restoredFileUrl}`)
+              allImageUrls.push(restoredFileUrl)
+            } catch (restoreError) {
+              console.warn(`[External Flux 2 Pro Edit] ⚠️ URL restore failed, using original URL:`, restoreError)
+              allImageUrls.push(url)
+            }
+          } else {
+            allImageUrls.push(url)
+          }
         } catch (urlError) {
           return NextResponse.json({
             error: "Invalid image URL format",
@@ -653,40 +708,54 @@ export async function POST(request: NextRequest) {
 
       console.log("[External Flux 2 Pro Edit] Generated", result.data.images.length, "images")
 
-      // DISCLAIMER LOGIC - Currently disabled, using original URLs
-      // To enable: uncomment the disclaimer code block and change url: originalImageUrl to url: imageUrl
+      // Process generated images: add disclaimer overlay and upload to FAL storage
       const processedImages = []
-      
+
       for (const img of result.data.images) {
-        // let imageUrl = img.url
         const originalImageUrl = img.url
-        
-        /* DISCLAIMER PROCESSING - Commented out for now
-        if (imageUrl) {
-          try {
-            console.log("[External Flux 2 Pro Edit] Adding disclaimer to result image...")
-            const imageWithDisclaimer = await addDisclaimerToImage(
-              imageUrl,
-              undefined,
-              {
-                removeExisting: false,
-                preserveMethod: 'resize',
-              }
-            )
-            
-            console.log("[External Flux 2 Pro Edit] Disclaimer added successfully")
-            imageUrl = imageWithDisclaimer
-            
-          } catch (disclaimerError) {
-            console.error("[External Flux 2 Pro Edit] Error adding disclaimer:", disclaimerError)
-            console.log("[External Flux 2 Pro Edit] Returning original image without disclaimer")
-            // Continue with original if disclaimer fails
-          }
+        let finalUrl = originalImageUrl
+
+        try {
+          console.log(`[External Flux 2 Pro Edit] Adding disclaimer to image...`)
+
+          const base64DataUrl = await addDisclaimerToImage(originalImageUrl)
+
+          const matches = base64DataUrl.match(/^data:([^;]+);base64,(.+)$/)
+          if (!matches) throw new Error('Invalid base64 data URL from addDisclaimerToImage')
+          const disclaimerBuffer = Buffer.from(matches[2], 'base64')
+
+          const timestamp = Date.now()
+          const hash = Math.random().toString(36).substring(2, 12).padEnd(10, '0')
+          const fileName = `flux2pro-edit-result-${timestamp}-${hash}.jpg`
+
+          console.log(`[External Flux 2 Pro Edit] Uploading disclaimer image: ${fileName} (${(disclaimerBuffer.length / 1024).toFixed(1)} KB)`)
+
+          const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+            method: 'POST',
+            headers: { 'Authorization': `Key ${falApiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content_type: 'image/jpeg', file_name: fileName })
+          })
+          if (!initiateResponse.ok) throw new Error(`Failed to initiate upload: ${initiateResponse.status}`)
+
+          const { upload_url, file_url } = await initiateResponse.json()
+
+          const putResponse = await fetch(upload_url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'image/jpeg', 'Content-Length': disclaimerBuffer.length.toString() },
+            body: new Uint8Array(disclaimerBuffer)
+          })
+          if (!putResponse.ok) throw new Error(`Failed to PUT disclaimer image: ${putResponse.status}`)
+
+          finalUrl = file_url
+          console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer image uploaded: ${file_url}`)
+
+        } catch (disclaimerError) {
+          console.warn(`[External Flux 2 Pro Edit] ⚠️ Disclaimer step failed, using original URL:`, disclaimerError)
+          finalUrl = originalImageUrl
         }
-        */
-        
+
         processedImages.push({
-          url: originalImageUrl, // Using original fal.ai URL (to enable disclaimer: change to imageUrl and uncomment above)
+          url: finalUrl,
           width: img.width || 1024,
           height: img.height || 1024
         })

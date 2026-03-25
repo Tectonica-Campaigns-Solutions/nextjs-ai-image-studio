@@ -1,5 +1,66 @@
 import sharp from 'sharp'
 
+// Disclaimer rect geometry — must stay in sync with addDisclaimerToImage's SVG
+const DISCLAIMER_RECT = {
+  offsetFromRight: 4,   // px gap between rect right edge and image right edge
+  width: 216,
+  height: 32,
+  offsetFromBottom: 4,  // px gap between rect bottom edge and image bottom edge
+  alpha: 0.55,          // rgba(0,0,0,0.55) overlay alpha
+} as const
+
+/**
+ * Restores the pixels underneath the disclaimer overlay by inverting the
+ * alpha-composite operation. Because the overlay is a solid black rect with
+ * alpha=0.55, the original pixel value can be recovered as:
+ *
+ *   C_original = C_out / (1 - alpha)
+ *
+ * Only call this when you know the input image already has the disclaimer
+ * applied (e.g. the caller passes removeInputDisclaimer=true explicitly).
+ * Applying it to a clean image will produce an over-brightened rectangle.
+ */
+export async function restoreDisclaimerZone(imageBuffer: Buffer): Promise<Buffer> {
+  const { offsetFromRight, width, height, offsetFromBottom, alpha } = DISCLAIMER_RECT
+  const factor = 1 / (1 - alpha) // ≈ 2.222
+
+  const { data, info } = await sharp(imageBuffer)
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+
+  const imgW = info.width
+  const imgH = info.height
+  const ch = info.channels
+
+  const x = imgW - offsetFromRight - width
+  const y = imgH - offsetFromBottom - height
+
+  // Clamp rect to actual image bounds
+  const x0 = Math.max(0, x)
+  const y0 = Math.max(0, y)
+  const x1 = Math.min(imgW, x + width)
+  const y1 = Math.min(imgH, y + height)
+
+  console.log(`[Disclaimer] restoreDisclaimerZone: rect (${x0},${y0})→(${x1},${y1}), factor=${factor.toFixed(4)}`)
+
+  for (let row = y0; row < y1; row++) {
+    for (let col = x0; col < x1; col++) {
+      const idx = (row * imgW + col) * ch
+      // Restore R, G, B — leave alpha channel (idx+3) untouched if present
+      for (let c = 0; c < Math.min(3, ch); c++) {
+        data[idx + c] = Math.min(255, Math.round(data[idx + c] * factor))
+      }
+    }
+  }
+
+  const restored = await sharp(Buffer.from(data), {
+    raw: { width: imgW, height: imgH, channels: ch }
+  }).jpeg({ quality: 95 }).toBuffer()
+
+  console.log(`[Disclaimer] restoreDisclaimerZone: done, ${(restored.length / 1024).toFixed(1)} KB`)
+  return restored
+}
+
 /**
  * Removes the disclaimer area from an image by cropping the bottom portion
  * 
@@ -137,6 +198,8 @@ export async function removeDisclaimerWithResize(
   }
 }
 
+
+
 /**
  * Adds a disclaimer text to the bottom-right corner of an image
  * 
@@ -203,58 +266,35 @@ export async function addDisclaimerToImage(
     const imageHeight = metadata.height || 1024
     
     console.log('[Disclaimer] Image dimensions:', imageWidth, 'x', imageHeight)
-    
-    // Calculate text position (bottom-right with padding)
-    // Using text-anchor="end" to align text to the right
-    const textX = imageWidth - padding // Right edge minus padding
-    const lineHeight = fontSize * 1.2 // Line spacing
-    const textY1 = imageHeight - padding - lineHeight // First line
-    const textY2 = imageHeight - padding // Second line
-    
-    // Default disclaimer text (2 lines)
-    const line1 = "Created by supporters with ethical AI."
-    const line2 = "More at: tectonica.ai"
-    
-    console.log('[Disclaimer] Text position (right-aligned):', { textX, textY1, textY2 })
-    
-    // Create SVG with text and shadow effect
-    // Using filter for text shadow (better than multiple text elements)
-    // Font stack: Liberation Sans (metrics-compatible with Arial), DejaVu Sans, system fallbacks
+
+    // Fit the longest line within the rect (216px wide, 4px padding each side = 208px usable).
+    // Arial bold uppercase character width ≈ fontSize × 0.62.
+    const rectAvailableWidth = 208
+    const longestLine = 'CREATED BY SUPPORTERS WITH ETHICAL AI'
+    const charWidthRatio = 0.62
+    const disclaimerFontSize = Math.floor(rectAvailableWidth / (longestLine.length * charWidthRatio))
+
     const svg = `
-      <svg width="${imageWidth}" height="${imageHeight}">
-        <defs>
-          <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="${shadowBlur}"/>
-            <feOffset dx="1" dy="1" result="offsetblur"/>
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.8"/>
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        <text
-          x="${textX}"
-          y="${textY1}"
-          font-family="Liberation Sans, DejaVu Sans, Arial, Helvetica, sans-serif"
-          font-size="${fontSize}px"
-          fill="${textColor}"
-          text-anchor="end"
-          filter="url(#textShadow)"
-        >${line1}</text>
-        <text
-          x="${textX}"
-          y="${textY2}"
-          font-family="Liberation Sans, DejaVu Sans, Arial, Helvetica, sans-serif"
-          font-size="${fontSize}px"
-          fill="${textColor}"
-          text-anchor="end"
-          filter="url(#textShadow)"
-        >${line2}</text>
-      </svg>
-    `
+    <svg width="${imageWidth}" height="${imageHeight}">
+      <rect 
+        x="${imageWidth - 220}" 
+        y="${imageHeight - 36}" 
+        width="216" height="32" 
+        fill="rgba(0,0,0,0.55)" 
+        rx="2"
+      />
+      <text 
+        x="${imageWidth - 216}" y="${imageHeight - 24}" 
+        font-family="Arial, sans-serif" font-size="${disclaimerFontSize}" 
+        fill="white" text-anchor="start" font-weight="bold"
+      >CREATED BY SUPPORTERS WITH ETHICAL AI</text>
+      <text 
+        x="${imageWidth - 216}" y="${imageHeight - 12}" 
+        font-family="Arial, sans-serif" font-size="${disclaimerFontSize}" 
+        fill="white" text-anchor="start"
+      >MORE AT: TECTONICA.AI</text>
+    </svg>
+  `
     
     console.log('[Disclaimer] SVG overlay created')
     

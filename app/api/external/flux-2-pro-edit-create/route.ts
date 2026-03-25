@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { addDisclaimerToImage, restoreDisclaimerZone } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
@@ -241,7 +241,8 @@ export async function POST(request: NextRequest) {
       orgType: rawOrgType,
       clientInfo = {},
       compositionRule = null,
-      withBranding = true
+      withBranding = true,
+      removeInputDisclaimer = false
     } = body
     
     const useBranding = withBranding !== false
@@ -525,7 +526,18 @@ export async function POST(request: NextRequest) {
           console.error(`[Flux 2 Pro Edit Create] ❌ CORRUPTED BASE64 IMAGE:`, errorMsg)
           throw new Error(`Base64 image is corrupted or incomplete`)
         }
-        
+
+        // Restore disclaimer zone if the input image already has it applied
+        if (removeInputDisclaimer) {
+          console.log(`[Flux 2 Pro Edit Create] removeInputDisclaimer=true, restoring disclaimer zone...`)
+          try {
+            imageBuffer = await restoreDisclaimerZone(imageBuffer)
+            console.log(`[Flux 2 Pro Edit Create] ✅ Disclaimer zone restored`)
+          } catch (restoreError) {
+            console.warn(`[Flux 2 Pro Edit Create] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
+          }
+        }
+
         // Resize to respect fal.ai megapixel limits
         // User image will be at index 8, so it's NOT the first image
         let finalBuffer: Buffer
@@ -603,9 +615,45 @@ export async function POST(request: NextRequest) {
       // Basic URL validation
       try {
         new URL(imageUrl)
-        allImageUrls.unshift(imageUrl)  // User image FIRST → @image1
-        userImageCount = 1
-        console.log(`[Flux 2 Pro Edit Create] ✅ Added user image URL as @image1: ${imageUrl}`)
+
+        // Restore disclaimer zone if the input image already has it applied
+        if (removeInputDisclaimer) {
+          console.log(`[Flux 2 Pro Edit Create] removeInputDisclaimer=true, downloading and restoring disclaimer zone from URL...`)
+          try {
+            const dlResponse = await fetch(imageUrl)
+            if (!dlResponse.ok) throw new Error(`Failed to download: ${dlResponse.statusText}`)
+            let urlImageBuffer = Buffer.from(await dlResponse.arrayBuffer())
+            urlImageBuffer = Buffer.from(await restoreDisclaimerZone(urlImageBuffer))
+
+            // Re-upload the restored image so FAL receives a clean buffer
+            const initiateRes = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+              method: 'POST',
+              headers: { 'Authorization': `Key ${falApiKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content_type: 'image/jpeg', file_name: 'flux2pro-create-user-restored.jpg' })
+            })
+            if (!initiateRes.ok) throw new Error(`Initiate upload failed: ${initiateRes.status}`)
+            const { upload_url, file_url: restoredFileUrl } = await initiateRes.json()
+            const putRes = await fetch(upload_url, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'image/jpeg', 'Content-Length': urlImageBuffer.length.toString() },
+              body: new Uint8Array(urlImageBuffer)
+            })
+            if (!putRes.ok) throw new Error(`PUT failed: ${putRes.status}`)
+
+            console.log(`[Flux 2 Pro Edit Create] ✅ Restored image uploaded: ${restoredFileUrl}`)
+            allImageUrls.unshift(restoredFileUrl)  // User image FIRST → @image1
+            userImageCount = 1
+          } catch (restoreError) {
+            console.warn(`[Flux 2 Pro Edit Create] ⚠️ URL restore failed, using original URL:`, restoreError)
+            allImageUrls.unshift(imageUrl)
+            userImageCount = 1
+          }
+        } else {
+          allImageUrls.unshift(imageUrl)  // User image FIRST → @image1
+          userImageCount = 1
+        }
+
+        console.log(`[Flux 2 Pro Edit Create] ✅ Added user image as @image1`)
       } catch (urlError) {
         return NextResponse.json({
           error: "Invalid image URL format",
@@ -715,14 +763,76 @@ export async function POST(request: NextRequest) {
 
       console.log("[Flux 2 Pro Edit Create] Generated", result.data.images.length, "images")
 
-      // Process generated images (no disclaimer for now)
+      // Process generated images: add disclaimer overlay and upload to FAL storage
       const processedImages = []
       
       for (const img of result.data.images) {
         const originalImageUrl = img.url
+        let finalUrl = originalImageUrl
+        
+        try {
+          console.log(`[Flux 2 Pro Edit Create] Adding disclaimer to image...`)
+          
+          // Add disclaimer overlay → returns base64 data URL
+          const base64DataUrl = await addDisclaimerToImage(originalImageUrl)
+          
+          // Parse base64 to buffer
+          const matches = base64DataUrl.match(/^data:([^;]+);base64,(.+)$/)
+          if (!matches) {
+            throw new Error('Invalid base64 data URL from addDisclaimerToImage')
+          }
+          const disclaimerBuffer = Buffer.from(matches[2], 'base64')
+          
+          // Generate unique filename: timestamp + 10-char alphanumeric hash
+          const timestamp = Date.now()
+          const hash = Math.random().toString(36).substring(2, 12).padEnd(10, '0')
+          const fileName = `flux2pro-create-result-${timestamp}-${hash}.jpg`
+          
+          console.log(`[Flux 2 Pro Edit Create] Uploading disclaimer image: ${fileName} (${(disclaimerBuffer.length / 1024).toFixed(1)} KB)`)
+          
+          // Upload to FAL storage (2-step process)
+          const initiateResponse = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Key ${falApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              content_type: 'image/jpeg',
+              file_name: fileName
+            })
+          })
+          
+          if (!initiateResponse.ok) {
+            throw new Error(`Failed to initiate upload: ${initiateResponse.status}`)
+          }
+          
+          const { upload_url, file_url } = await initiateResponse.json()
+          
+          const uint8Array = new Uint8Array(disclaimerBuffer)
+          const putResponse = await fetch(upload_url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'image/jpeg',
+              'Content-Length': disclaimerBuffer.length.toString()
+            },
+            body: uint8Array
+          })
+          
+          if (!putResponse.ok) {
+            throw new Error(`Failed to PUT disclaimer image: ${putResponse.status}`)
+          }
+          
+          finalUrl = file_url
+          console.log(`[Flux 2 Pro Edit Create] ✅ Disclaimer image uploaded: ${file_url}`)
+          
+        } catch (disclaimerError) {
+          console.warn(`[Flux 2 Pro Edit Create] ⚠️ Disclaimer step failed, using original URL:`, disclaimerError)
+          finalUrl = originalImageUrl
+        }
         
         processedImages.push({
-          url: originalImageUrl,
+          url: finalUrl,
           width: img.width || 1024,
           height: img.height || 1024
         })
