@@ -13,6 +13,7 @@ import {
 } from "@/lib/bfl-client"
 import { getBflApiKey } from "@/lib/api-keys"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { restoreDisclaimerZone, addDisclaimerToBuffer } from "@/lib/image-disclaimer"
 import sharp from "sharp"
 import fs from "fs/promises"
 import path from "path"
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest) {
     let base64Images: string[] = []
     let compositionRule: string | null = null
     let hasUrlImages = false // track if any images came as URLs
+    let removeInputDisclaimer = true
 
     // ── Parse request ─────────────────────────────────────────────────────────
 
@@ -145,6 +147,7 @@ export async function POST(request: NextRequest) {
       if (orgType.toLowerCase() === "general") orgType = "Tectonica"
 
       settings = jsonBody.settings || {}
+      if (jsonBody.removeInputDisclaimer === false) removeInputDisclaimer = false
 
       if (Array.isArray(jsonBody.imageUrls)) {
         imageUrls = jsonBody.imageUrls.filter((u: string) => u && u.trim())
@@ -181,6 +184,7 @@ export async function POST(request: NextRequest) {
             console.warn(`${LOG_PREFIX} Failed to parse settings JSON`)
           }
         }
+        if (formData.get("removeInputDisclaimer") === "false") removeInputDisclaimer = false
 
         // Collect 2 images (slot 0 and slot 1)
         for (let i = 0; i < 2; i++) {
@@ -310,7 +314,20 @@ export async function POST(request: NextRequest) {
       const label = `@image${allImageUrls.length + 1}`
       console.log(`${LOG_PREFIX} Uploading file ${label} (${file.name}, ${file.size}B)…`)
       try {
-        const { url: fileUrl, path: filePath } = await prepareFileForBfl(file, imageIndex)
+        let fileUrl: string
+        let filePath: string
+        if (removeInputDisclaimer) {
+          const arrayBuffer = await file.arrayBuffer()
+          const rawBuffer = Buffer.from(arrayBuffer)
+          const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+          const resizedBuffer = await resizeImageForBfl(restoredBuffer)
+          filePath = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img${imageIndex}.jpeg`
+          fileUrl = await uploadImageToSupabase(resizedBuffer, filePath, "image/jpeg")
+        } else {
+          const result = await prepareFileForBfl(file, imageIndex)
+          fileUrl = result.url
+          filePath = result.path
+        }
         allImageUrls.push(fileUrl)
         tempPaths.push(filePath)
         imageIndex++
@@ -329,7 +346,14 @@ export async function POST(request: NextRequest) {
       const label = `@image${allImageUrls.length + 1}`
       console.log(`${LOG_PREFIX} Uploading Base64 ${label} (len: ${base64Images[i].length})…`)
       try {
-        const { url: b64Url, path: b64Path } = await prepareBase64ForBfl(base64Images[i], imageIndex)
+        let uploadBase64 = base64Images[i]
+        if (removeInputDisclaimer) {
+          const base64Data = base64Images[i].replace(/^data:image\/\w+;base64,/, "")
+          const rawBuffer = Buffer.from(base64Data, "base64")
+          const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+          uploadBase64 = `data:image/jpeg;base64,${restoredBuffer.toString("base64")}`
+        }
+        const { url: b64Url, path: b64Path } = await prepareBase64ForBfl(uploadBase64, imageIndex)
         allImageUrls.push(b64Url)
         tempPaths.push(b64Path)
         imageIndex++
@@ -351,9 +375,31 @@ export async function POST(request: NextRequest) {
       } catch {
         return NextResponse.json({ error: "Invalid image URL format", details: url }, { status: 400 })
       }
-      allImageUrls.push(url)
-      imageIndex++
-      console.log(`${LOG_PREFIX} ✅ URL ${label} added directly: ${url}`)
+      if (removeInputDisclaimer) {
+        try {
+          const res = await fetch(url)
+          const arrayBuffer = await res.arrayBuffer()
+          const rawBuffer = Buffer.from(arrayBuffer)
+          const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+          const resizedBuffer = await resizeImageForBfl(restoredBuffer)
+          const fileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img${imageIndex}-restored.jpeg`
+          const uploadedUrl = await uploadImageToSupabase(resizedBuffer, fileName, "image/jpeg")
+          allImageUrls.push(uploadedUrl)
+          tempPaths.push(fileName)
+          imageIndex++
+          console.log(`${LOG_PREFIX} ✅ URL ${label} restored and uploaded: ${uploadedUrl}`)
+        } catch (urlError) {
+          console.error(`${LOG_PREFIX} URL image restore failed for ${label}:`, urlError)
+          return NextResponse.json({
+            error: "URL image processing failed",
+            details: urlError instanceof Error ? urlError.message : "Unknown error",
+          }, { status: 400 })
+        }
+      } else {
+        allImageUrls.push(url)
+        imageIndex++
+        console.log(`${LOG_PREFIX} ✅ URL ${label} added directly: ${url}`)
+      }
     }
 
     console.log(`${LOG_PREFIX} Total images ready: ${allImageUrls.length}`)
@@ -434,11 +480,12 @@ export async function POST(request: NextRequest) {
 
     try {
       const resultBuffer = await downloadBflImage(bflResult.imageUrl)
-      const metadata = await sharp(resultBuffer).metadata()
+      const finalBuffer = await addDisclaimerToBuffer(resultBuffer)
+      const metadata = await sharp(finalBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      const outputFileName = `bfl-output/${Date.now()}-${Math.random().toString(36).slice(2)}.${outputFormat}`
-      resultUrl = await uploadImageToSupabase(resultBuffer, outputFileName, `image/${outputFormat}`)
+      const outputFileName = `bfl-output/${Date.now()}-${Math.random().toString(36).slice(2)}.jpeg`
+      resultUrl = await uploadImageToSupabase(finalBuffer, outputFileName, "image/jpeg")
       console.log(`${LOG_PREFIX} ✅ Result uploaded to Supabase: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)
