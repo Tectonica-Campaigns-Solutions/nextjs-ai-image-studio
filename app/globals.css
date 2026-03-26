@@ -335,8 +335,89 @@ button[data-variant="secondary"],
   color: hsl(var(--secondary-foreground)) !important;
 }
 
-/* NOTE:
- * Se desactivaron reglas globales de "forzar contraste" que interferían con el
- * diseño exportado de Dashboard (clases con opacidad tipo `/20`, degradados y colores
- * específicos de tokens).
- */
+/* FORZAR CONTRASTE MÁXIMO - ESTILOS DIRECTOS */
+body:not(:has(.studio-root)) * {
+  --tw-bg-opacity: 1 !important;
+}
+
+/* Forzar contraste en todo el texto */
+html:not(:has(.studio-root)),
+body:not(:has(.studio-root)) {
+  color: #121212 !important;
+  background-color: #ffffff !important;
+}
+
+/* Forzar estilos de botones primarios */
+body:not(:has(.studio-root)) button,
+body:not(:has(.studio-root)) .btn,
+body:not(:has(.studio-root)) [role="button"] {
+  font-weight: 500 !important;
+}
+
+body:not(:has(.studio-root)) button.bg-primary,
+body:not(:has(.studio-root)) button[class*="bg-primary"],
+body:not(:has(.studio-root)) .bg-primary {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+}
+
+/* Forzar estilos de tabs */
+body:not(:has(.studio-root)) [role="tablist"] button,
+body:not(:has(.studio-root)) [data-slot="tabs-trigger"] {
+  background-color: #f1f1f1 !important;
+  color: #2a2a2a !important;
+  border: 1px solid #d1d1d1 !important;
+}
+
+body:not(:has(.studio-root)) [role="tablist"] button[data-state="active"],
+body:not(:has(.studio-root)) [data-slot="tabs-trigger"][data-state="active"] {
+  background-color: #ffffff !important;
+  color: #121212 !important;
+  border: 1px solid #1a1a1a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Forzar estilos de inputs */
+body:not(:has(.studio-root)) input,
+body:not(:has(.studio-root)) textarea,
+body:not(:has(.studio-root)) [data-slot="input"] {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d1d1 !important;
+  color: #121212 !important;
+}
+
+body:not(:has(.studio-root)) input:focus,
+body:not(:has(.studio-root)) textarea:focus,
+body:not(:has(.studio-root)) [data-slot="input"]:focus {
+  border-color: #666666 !important;
+  box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2) !important;
+}
+
+/* Forzar contraste en cards y contenedores */
+body:not(:has(.studio-root)) .card,
+body:not(:has(.studio-root)) [data-slot="card"] {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+  color: #121212 !important;
+}
+
+/* Asegurar que los dropdowns sean visibles */
+body:not(:has(.studio-root)) [role="menu"],
+body:not(:has(.studio-root)) [role="listbox"],
+body:not(:has(.studio-root)) .dropdown-content {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d1d1 !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+body:not(:has(.studio-root)) #sidebar [data-slot="card"] {
+  border: none !important;
+}
+
+body:not(:has(.studio-root)) #sidebar [data-slot="input"] {
+  border-radius: 10px;
+  border: 1px solid rgba(74, 74, 74, 0.50) !important;
+  background: #0D0D0D !important;
+  color: #FFF !important;
+}
