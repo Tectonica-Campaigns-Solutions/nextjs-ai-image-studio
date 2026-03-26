@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { addDisclaimerToBuffer, restoreDisclaimerZone } from "@/lib/image-disclaimer"
 import {
   generateWithBfl,
   downloadBflImage,
@@ -18,7 +18,11 @@ import fs from "fs/promises"
 import path from "path"
 
 const LOG_PREFIX = "[BFL Flux2Pro Edit Create]"
-
+// ── TEMPORARY FLAG ────────────────────────────────────────────────────────────
+// Set to true to disable reference image upload even when withBranding=true.
+// Prompts remain unchanged; only the image upload is skipped.
+const DISABLE_REFERENCE_IMAGES = true
+// ────────────────────────────────────────────────────────────────────────────
 // ─── Fallback reference images ────────────────────────────────────────────────
 
 const FALLBACK_REFERENCE_IMAGES = [
@@ -39,12 +43,15 @@ interface RefImagesResult {
   filenames: string[]
   folderName: string
   userImagePrompt: string
+  userImageWithBrandingPrompt: string
   styleReinforcement: string
   elementIsolation: string
 }
 
 const DEFAULT_USER_IMAGE_PROMPT =
   "IMPORTANT: @image1 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+
+const DEFAULT_USER_IMAGE_WITH_BRANDING_PROMPT = DEFAULT_USER_IMAGE_PROMPT
 
 const DEFAULT_STYLE_REINFORCEMENT =
   "STYLE REFERENCE DIRECTIVE: The reference images define the color palette, tonal values, lighting setup, and atmospheric mood that MUST be applied to the result. Honor the rendering style direction specified in the prompt (e.g., photorealistic, illustrative, painterly), but extract the color grading, tonal range, lighting character, and overall visual aesthetic exclusively from the reference images. Do not use a generic or default color treatment — the aesthetic must feel visually consistent with the reference images."
@@ -62,6 +69,10 @@ async function getClientReferenceImages(orgType: string): Promise<RefImagesResul
 
     if (config.create && Array.isArray(config.create) && config.create.length > 0) {
       const userImagePrompt = config.prompts?.createWithUserImage || DEFAULT_USER_IMAGE_PROMPT
+      const userImageWithBrandingPrompt: string =
+        typeof config.prompts?.createWithUserImageAndBranding === "string"
+          ? config.prompts.createWithUserImageAndBranding
+          : userImagePrompt
       const styleReinforcement: string =
         typeof config.prompts?.createStyleReinforcement === "string"
           ? config.prompts.createStyleReinforcement
@@ -72,7 +83,7 @@ async function getClientReferenceImages(orgType: string): Promise<RefImagesResul
           : ""
 
       console.log(`${LOG_PREFIX} Using config.json: ${config.create.length} create images from ${folderName}`)
-      return { filenames: config.create, folderName, userImagePrompt, styleReinforcement, elementIsolation }
+      return { filenames: config.create, folderName, userImagePrompt, userImageWithBrandingPrompt, styleReinforcement, elementIsolation }
     }
   } catch {
     console.log(`${LOG_PREFIX} No config.json or "create" array for ${orgType}, falling back to Tectonica`)
@@ -82,6 +93,7 @@ async function getClientReferenceImages(orgType: string): Promise<RefImagesResul
     filenames: FALLBACK_REFERENCE_IMAGES,
     folderName: "tectonica-reference-images",
     userImagePrompt: DEFAULT_USER_IMAGE_PROMPT,
+    userImageWithBrandingPrompt: DEFAULT_USER_IMAGE_WITH_BRANDING_PROMPT,
     styleReinforcement: DEFAULT_STYLE_REINFORCEMENT,
     elementIsolation: "",
   }
@@ -180,6 +192,7 @@ export async function POST(request: NextRequest) {
       clientInfo = {},
       compositionRule = null,
       withBranding = true,
+      removeInputDisclaimer = false,
     } = body
 
     const useBranding = withBranding !== false
@@ -280,6 +293,7 @@ export async function POST(request: NextRequest) {
     let referenceImageFilenames: string[] = []
     let folderName = ""
     let userImagePrompt = ""
+    let userImageWithBrandingPrompt = ""
     let styleReinforcement = ""
     let elementIsolation = ""
 
@@ -287,6 +301,7 @@ export async function POST(request: NextRequest) {
       const refResult = await getClientReferenceImages(orgType)
       folderName = refResult.folderName
       userImagePrompt = refResult.userImagePrompt
+      userImageWithBrandingPrompt = refResult.userImageWithBrandingPrompt
       styleReinforcement = refResult.styleReinforcement
       elementIsolation = refResult.elementIsolation
 
@@ -309,7 +324,9 @@ export async function POST(request: NextRequest) {
     const allImageUrls: string[] = []
     const tempPaths: string[] = []
 
-    if (useBranding && referenceImageFilenames.length > 0) {
+    if (useBranding && DISABLE_REFERENCE_IMAGES) {
+      console.log(`${LOG_PREFIX} ⚠️  Reference images DISABLED — skipping style reference upload`)
+    } else if (useBranding && referenceImageFilenames.length > 0) {
       console.log(`${LOG_PREFIX} Uploading ${referenceImageFilenames.length} reference images to Supabase...`)
 
       for (let i = 0; i < referenceImageFilenames.length; i++) {
@@ -341,8 +358,26 @@ export async function POST(request: NextRequest) {
     if (base64Image) {
       console.log(`${LOG_PREFIX} Uploading user Base64 image to Supabase...`)
       try {
+        // Restore disclaimer zone if input image was previously branded
+        let processedBase64 = base64Image
+        if (removeInputDisclaimer) {
+          try {
+            let b64Buf: Buffer
+            if (base64Image.startsWith('data:')) {
+              const m = base64Image.match(/^data:[^;]+;base64,(.+)$/)
+              b64Buf = Buffer.from(m ? m[1] : base64Image, 'base64')
+            } else {
+              b64Buf = Buffer.from(base64Image, 'base64')
+            }
+            const restored = await restoreDisclaimerZone(b64Buf)
+            processedBase64 = `data:image/jpeg;base64,${Buffer.from(restored).toString('base64')}`
+            console.log(`${LOG_PREFIX} ✅ Disclaimer zone restored from Base64 image`)
+          } catch (restoreError) {
+            console.warn(`${LOG_PREFIX} ⚠️  restoreDisclaimerZone failed, using original:`, restoreError)
+          }
+        }
         // Index 0 so the filename reflects "user image 1"
-        const { url: imgUrl, path: imgPath } = await prepareBase64ForBfl(base64Image, 0)
+        const { url: imgUrl, path: imgPath } = await prepareBase64ForBfl(processedBase64, 0)
         allImageUrls.unshift(imgUrl) // User image FIRST → @image1
         tempPaths.push(imgPath)
         userImageCount = 1
@@ -360,20 +395,57 @@ export async function POST(request: NextRequest) {
       } catch {
         return NextResponse.json({ error: "Invalid image URL format", details: imageUrl }, { status: 400 })
       }
-      allImageUrls.unshift(imageUrl) // User image FIRST → @image1
-      userImageCount = 1
-      console.log(`${LOG_PREFIX} ✅ User image URL added → @image1`)
+
+      if (removeInputDisclaimer) {
+        try {
+          const dlRes = await fetch(imageUrl)
+          if (!dlRes.ok) throw new Error(`HTTP ${dlRes.status}`)
+          const dlBuffer = Buffer.from(await dlRes.arrayBuffer())
+          const restoredBuffer = Buffer.from(await restoreDisclaimerZone(dlBuffer))
+          const restoredFileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-user-restored.jpeg`
+          const restoredUrl = await uploadImageToSupabase(restoredBuffer, restoredFileName, 'image/jpeg')
+          tempPaths.push(restoredFileName)
+          allImageUrls.unshift(restoredUrl) // User image FIRST → @image1
+          userImageCount = 1
+          console.log(`${LOG_PREFIX} ✅ Restored disclaimer zone and re-uploaded URL image → @image1: ${restoredUrl}`)
+        } catch (restoreError) {
+          console.warn(`${LOG_PREFIX} ⚠️  URL restore failed, using original URL:`, restoreError)
+          allImageUrls.unshift(imageUrl)
+          userImageCount = 1
+        }
+      } else {
+        allImageUrls.unshift(imageUrl) // User image FIRST → @image1
+        userImageCount = 1
+        console.log(`${LOG_PREFIX} ✅ User image URL added → @image1`)
+      }
     }
 
     console.log(`${LOG_PREFIX} Total images: ${allImageUrls.length} (${referenceImageFilenames.length} refs + ${userImageCount} user)`)
 
     // ── Build final prompt ────────────────────────────────────────────────────
+    // Rules:
+    //   withBranding + hasUserImage  → createWithUserImageAndBranding + user prompt
+    //   !withBranding + hasUserImage → createWithUserImage + user prompt
+    //   !withBranding + !hasUserImage → only user prompt
+    //   withBranding + !hasUserImage  → user prompt + createStyleReinforcement
 
     let finalPrompt = prompt
 
-    if (hasUserImage && useBranding) {
+    if (useBranding && hasUserImage) {
+      finalPrompt = `${userImageWithBrandingPrompt} ${finalPrompt}`
+      console.log(`${LOG_PREFIX} withBranding + userImage: using createWithUserImageAndBranding prompt`)
+    } else if (!useBranding && hasUserImage) {
       finalPrompt = `${userImagePrompt} ${finalPrompt}`
-      console.log(`${LOG_PREFIX} Prepended user image preservation instruction`)
+      console.log(`${LOG_PREFIX} noBranding + userImage: using createWithUserImage prompt`)
+    } else if (!useBranding && !hasUserImage) {
+      finalPrompt = prompt
+      console.log(`${LOG_PREFIX} noBranding + noUserImage: using only user prompt`)
+    } else {
+      // withBranding + !hasUserImage → user prompt + styleReinforcement
+      finalPrompt = styleReinforcement
+        ? `${prompt}\n${styleReinforcement}`
+        : prompt
+      console.log(`${LOG_PREFIX} withBranding + noUserImage: user prompt + createStyleReinforcement`)
     }
 
     const compositionRuleText = compositionRule
@@ -384,14 +456,12 @@ export async function POST(request: NextRequest) {
       console.log(`${LOG_PREFIX} Applied composition rule '${compositionRule}'`)
     }
 
-    if (useBranding && styleReinforcement && !hasUserImage) {
-      finalPrompt = `${finalPrompt}\n${styleReinforcement}`
-      console.log(`${LOG_PREFIX} Style reinforcement appended`)
-    }
-
-    if (useBranding && elementIsolation && !hasUserImage) {
+    // Apply element isolation only when reference images are active
+    if (useBranding && !DISABLE_REFERENCE_IMAGES && elementIsolation && !hasUserImage) {
       finalPrompt = `${finalPrompt}\n${elementIsolation}`
       console.log(`${LOG_PREFIX} Element isolation appended`)
+    } else if (DISABLE_REFERENCE_IMAGES) {
+      console.log(`${LOG_PREFIX} Element isolation skipped (DISABLE_REFERENCE_IMAGES=true)`)
     }
 
     // ── BFL input ─────────────────────────────────────────────────────────────
@@ -460,8 +530,18 @@ export async function POST(request: NextRequest) {
       const metadata = await sharp(resultBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      const outputFileName = `bfl-output/${Date.now()}-${Math.random().toString(36).slice(2)}.${outputFormat}`
-      resultUrl = await uploadImageToSupabase(resultBuffer, outputFileName, `image/${outputFormat}`)
+
+      // Apply disclaimer overlay directly to the buffer before uploading to Supabase
+      let finalBuffer = resultBuffer
+      try {
+        finalBuffer = await addDisclaimerToBuffer(resultBuffer)
+        console.log(`${LOG_PREFIX} ✅ Disclaimer overlay applied`)
+      } catch (disclaimerError) {
+        console.warn(`${LOG_PREFIX} ⚠️  Disclaimer failed, uploading original:`, disclaimerError)
+      }
+
+      const outputFileName = `bfl-output/${Date.now()}-${Math.random().toString(36).slice(2)}.jpeg`
+      resultUrl = await uploadImageToSupabase(finalBuffer, outputFileName, 'image/jpeg')
       console.log(`${LOG_PREFIX} ✅ Result uploaded to Supabase: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)

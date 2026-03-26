@@ -209,6 +209,12 @@ async function getElementIsolationText(orgType: string): Promise<string | null> 
 // Default scene type
 const DEFAULT_SCENE_TYPE: SceneType = 'people'
 
+// ── TEMPORARY FLAG ──────────────────────────────────────────────────────────
+// Set to true to disable reference image upload (passes only the user image).
+// When disabled, the scene base prompt is also skipped so @image2 refs are gone.
+const DISABLE_REFERENCE_IMAGES = true
+// ────────────────────────────────────────────────────────────────────────────
+
 /**
  * POST /api/external/flux-2-pro-edit-apply
  * 
@@ -327,7 +333,8 @@ export async function POST(request: NextRequest) {
     // Always apply createElementIsolation rule
     const elementIsolationText = await getElementIsolationText(orgType)
     if (elementIsolationText) {
-      finalPrompt = `${finalPrompt}\n${elementIsolationText}`
+      // finalPrompt = `${finalPrompt}\n${elementIsolationText}`
+      finalPrompt = `${finalPrompt}`
       console.log(`[Flux 2 Pro Edit Apply] Applied createElementIsolation rule`)
     }
 
@@ -583,6 +590,10 @@ export async function POST(request: NextRequest) {
     // SECOND: Upload style reference images (these will be @image2, @image3, ...)
     const referenceImageFilenames = sceneConfig.filenames
     const folderName = sceneConfig.folderName
+
+    if (DISABLE_REFERENCE_IMAGES) {
+      console.log(`[Flux 2 Pro Edit Apply] ⚠️  Reference images DISABLED — skipping style reference upload`)
+    } else {
     console.log(`[Flux 2 Pro Edit Apply] Uploading ${referenceImageFilenames.length} style reference image(s) for scene type '${sceneType}'...`)
 
     for (let refIndex = 0; refIndex < referenceImageFilenames.length; refIndex++) {
@@ -650,8 +661,9 @@ export async function POST(request: NextRequest) {
         }, { status: 500 })
       }
     }
+    } // end if (!DISABLE_REFERENCE_IMAGES)
 
-    console.log(`[Flux 2 Pro Edit Apply] Total images: ${allImageUrls.length} (1 user + ${referenceImageFilenames.length} style ref(s))`)
+    console.log(`[Flux 2 Pro Edit Apply] Total images: ${allImageUrls.length} (1 user + ${DISABLE_REFERENCE_IMAGES ? 0 : referenceImageFilenames.length} style ref(s))`)
 
     // Prepare input for fal.ai
     const input: any = {

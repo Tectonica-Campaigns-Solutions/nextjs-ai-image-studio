@@ -54,6 +54,12 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
     .toBuffer()
 }
 
+// ── TEMPORARY FLAG ────────────────────────────────────────────────────────
+// Set to true to disable reference image upload even when withBranding=true.
+// Prompts remain unchanged; only the image upload is skipped.
+const DISABLE_REFERENCE_IMAGES = true
+// ────────────────────────────────────────────────────────────────────────────
+
 // Fallback reference images (used if no config.json found)
 const FALLBACK_REFERENCE_IMAGES = [
   'TctAIGeneration01.jpg',
@@ -77,11 +83,15 @@ async function getClientReferenceImages(orgType: string): Promise<{
   filenames: string[]; 
   folderName: string;
   userImagePrompt: string;
+  userImageWithBrandingPrompt: string;
   styleReinforcement: string;
   elementIsolation: string;
 }> {
-  // Default prompt for user image preservation
-  const defaultUserImagePrompt = "IMPORTANT: @image5 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+  // Default prompt for user image preservation (no branding)
+  const defaultUserImagePrompt = "IMPORTANT: @image1 contains the main subject that must be present and recognizable in the final result. Integrate this element with the reference styles without significantly altering it."
+
+  // Default prompt for user image with branding
+  const defaultUserImageWithBrandingPrompt = defaultUserImagePrompt
 
   // Default style reinforcement directive
   const defaultStyleReinforcement = "STYLE REFERENCE DIRECTIVE: The reference images define the color palette, tonal values, lighting setup, and atmospheric mood that MUST be applied to the result. Honor the rendering style direction specified in the prompt (e.g., photorealistic, illustrative, painterly), but extract the color grading, tonal range, lighting character, and overall visual aesthetic exclusively from the reference images. Do not use a generic or default color treatment — the aesthetic must feel visually consistent with the reference images."
@@ -104,13 +114,22 @@ async function getClientReferenceImages(orgType: string): Promise<{
       console.log(`[Flux 2 Pro Edit Create] Prompts object:`, config.prompts)
       console.log(`[Flux 2 Pro Edit Create] createWithUserImage value:`, config.prompts?.createWithUserImage)
       
-      // Extract userImagePrompt if available, otherwise use default
+      // Extract userImagePrompt (no branding) if available, otherwise use default
       const userImagePrompt = config.prompts?.createWithUserImage || defaultUserImagePrompt
       
       if (config.prompts?.createWithUserImage) {
         console.log(`[Flux 2 Pro Edit Create] ✅ Using custom user image prompt from config.json:`, userImagePrompt)
       } else {
         console.log(`[Flux 2 Pro Edit Create] ⚠️ No custom user image prompt found, using default:`, defaultUserImagePrompt)
+      }
+
+      // Extract userImageWithBrandingPrompt if available, otherwise fall back to userImagePrompt
+      const userImageWithBrandingPrompt: string = typeof config.prompts?.createWithUserImageAndBranding === 'string'
+        ? config.prompts.createWithUserImageAndBranding
+        : userImagePrompt
+
+      if (config.prompts?.createWithUserImageAndBranding) {
+        console.log(`[Flux 2 Pro Edit Create] ✅ Using custom branding+user image prompt from config.json`)
       }
 
       // Extract style reinforcement if available, otherwise use default
@@ -127,6 +146,7 @@ async function getClientReferenceImages(orgType: string): Promise<{
         filenames: config.create, 
         folderName,
         userImagePrompt,
+        userImageWithBrandingPrompt,
         styleReinforcement,
         elementIsolation
       }
@@ -144,6 +164,7 @@ async function getClientReferenceImages(orgType: string): Promise<{
     filenames: FALLBACK_REFERENCE_IMAGES, 
     folderName: 'tectonica-reference-images',
     userImagePrompt: defaultUserImagePrompt,
+    userImageWithBrandingPrompt: defaultUserImageWithBrandingPrompt,
     styleReinforcement: defaultStyleReinforcement,
     elementIsolation: ''
   }
@@ -379,6 +400,7 @@ export async function POST(request: NextRequest) {
     let allReferenceFilenames: string[] = []
     let folderName = ''
     let userImagePrompt = ''
+    let userImageWithBrandingPrompt = ''
     let styleReinforcement = ''
     let elementIsolation = ''
     let referenceImageFilenames: string[] = []
@@ -393,6 +415,7 @@ export async function POST(request: NextRequest) {
       allReferenceFilenames = refResult.filenames
       folderName = refResult.folderName
       userImagePrompt = refResult.userImagePrompt
+      userImageWithBrandingPrompt = refResult.userImageWithBrandingPrompt
       styleReinforcement = refResult.styleReinforcement
       elementIsolation = refResult.elementIsolation
 
@@ -416,7 +439,10 @@ export async function POST(request: NextRequest) {
     }
     
     // Read and upload each reference image
-    for (let i = 0; useBranding && i < referenceImageFilenames.length; i++) {
+    if (useBranding && DISABLE_REFERENCE_IMAGES) {
+      console.log(`[Flux 2 Pro Edit Create] ⚠️  Reference images DISABLED — skipping style reference upload`)
+    }
+    for (let i = 0; useBranding && !DISABLE_REFERENCE_IMAGES && i < referenceImageFilenames.length; i++) {
       const filename = referenceImageFilenames[i]
       const fullPath = path.join(process.cwd(), 'public', folderName, filename)
       
@@ -481,7 +507,7 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    if (useBranding) {
+    if (useBranding && !DISABLE_REFERENCE_IMAGES) {
       console.log(`[Flux 2 Pro Edit Create] ✅ All ${allImageUrls.length} reference images uploaded`)
       console.log(`[Flux 2 Pro Edit Create] Reference URLs:`, allImageUrls.map((url, i) => `${i + 1}: ${url.substring(0, 60)}...`))
     }
@@ -667,13 +693,28 @@ export async function POST(request: NextRequest) {
     console.log(`[Flux 2 Pro Edit Create] Total images: ${allImageUrls.length} (${referenceImageFilenames.length} references + ${userImageCount} user)`)
 
     // Prepare final prompt
+    // Rules:
+    //   withBranding + hasUserImage  → createWithUserImageAndBranding + user prompt
+    //   !withBranding + hasUserImage → createWithUserImage + user prompt
+    //   !withBranding + !hasUserImage → only user prompt
+    //   withBranding + !hasUserImage  → user prompt + createStyleReinforcement
     let finalPrompt = prompt
-    
-    // If user provided an image, prepend the user image instruction
-    if (hasUserImage) {
+
+    if (useBranding && hasUserImage) {
+      finalPrompt = `${userImageWithBrandingPrompt} ${prompt}`
+      console.log(`[Flux 2 Pro Edit Create] withBranding + userImage: using createWithUserImageAndBranding prompt`)
+    } else if (!useBranding && hasUserImage) {
       finalPrompt = `${userImagePrompt} ${prompt}`
-      console.log(`[Flux 2 Pro Edit Create] User image detected, prepending preservation instruction`)
-      console.log(`[Flux 2 Pro Edit Create] Preservation instruction: ${userImagePrompt}`)
+      console.log(`[Flux 2 Pro Edit Create] noBranding + userImage: using createWithUserImage prompt`)
+    } else if (!useBranding && !hasUserImage) {
+      finalPrompt = prompt
+      console.log(`[Flux 2 Pro Edit Create] noBranding + noUserImage: using only user prompt`)
+    } else {
+      // withBranding + !hasUserImage → user prompt + styleReinforcement
+      finalPrompt = styleReinforcement
+        ? `${prompt}\n${styleReinforcement}`
+        : prompt
+      console.log(`[Flux 2 Pro Edit Create] withBranding + noUserImage: user prompt + createStyleReinforcement`)
     }
 
     // Apply composition rule if provided
@@ -683,19 +724,13 @@ export async function POST(request: NextRequest) {
       console.log(`[Flux 2 Pro Edit Create] Applied composition rule '${compositionRule}'`)
     }
 
-    // Apply style reinforcement whenever branding (reference images) is active
-    // and the user has NOT provided their own image. When a user image is present,
-    // the createWithUserImage prompt already covers the style reference directive.
-    if (useBranding && styleReinforcement && !hasUserImage) {
-      finalPrompt = `${finalPrompt}\n${styleReinforcement}`
-      console.log(`[Flux 2 Pro Edit Create] Style reinforcement directive appended`)
-    }
-
-    // Apply element isolation directive for pure generation (no user image) only.
-    // Controlled via config.json "createElementIsolation" — empty string disables it.
-    if (useBranding && elementIsolation && !hasUserImage) {
+    // Apply element isolation directive only when reference images are active
+    // (disabled when DISABLE_REFERENCE_IMAGES=true or when no branding or user image present)
+    if (useBranding && !DISABLE_REFERENCE_IMAGES && elementIsolation && !hasUserImage) {
       finalPrompt = `${finalPrompt}\n${elementIsolation}`
       console.log(`[Flux 2 Pro Edit Create] Element isolation directive appended`)
+    } else if (DISABLE_REFERENCE_IMAGES) {
+      console.log(`[Flux 2 Pro Edit Create] Element isolation skipped (DISABLE_REFERENCE_IMAGES=true)`)
     }
 
     // Prepare input for fal.ai

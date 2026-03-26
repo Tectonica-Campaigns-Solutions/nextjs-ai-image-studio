@@ -50,7 +50,11 @@ const TECTONICA_REFERENCE_IMAGES: Record<SceneType, string> = {
 
 const DEFAULT_SCENE_TYPE: SceneType = "people"
 
-// ─── Config helpers (identical logic to FAL version) ─────────────────────────
+// ── TEMPORARY FLAG ────────────────────────────────────────────────────────────
+// Set to true to disable reference image upload (passes only the user image).
+// Prompts remain unchanged; only the image upload is skipped.
+const DISABLE_REFERENCE_IMAGES = true
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function getClientSceneConfig(
   orgType: string,
@@ -298,10 +302,12 @@ export async function POST(request: NextRequest) {
       console.log(`${LOG_PREFIX} Applied composition rule '${compositionRule}'`)
     }
 
-    const elementIsolationText = await getElementIsolationText(orgType)
+    const elementIsolationText = DISABLE_REFERENCE_IMAGES ? null : await getElementIsolationText(orgType)
     if (elementIsolationText) {
       finalPrompt = `${finalPrompt}\n${elementIsolationText}`
       console.log(`${LOG_PREFIX} Applied createElementIsolation`)
+    } else if (DISABLE_REFERENCE_IMAGES) {
+      console.log(`${LOG_PREFIX} Element isolation skipped (DISABLE_REFERENCE_IMAGES=true)`)
     }
 
     // ── Upload images → Supabase ──────────────────────────────────────────────
@@ -363,6 +369,10 @@ export async function POST(request: NextRequest) {
 
     // Style reference images (@image2, …)
     const { filenames: refFilenames, folderName: refFolderName } = sceneConfig
+
+    if (DISABLE_REFERENCE_IMAGES) {
+      console.log(`${LOG_PREFIX} ⚠️  Reference images DISABLED — skipping style reference upload`)
+    } else {
     console.log(`${LOG_PREFIX} Uploading ${refFilenames.length} style reference(s) for scene '${sceneType}'...`)
 
     for (let i = 0; i < refFilenames.length; i++) {
@@ -384,9 +394,9 @@ export async function POST(request: NextRequest) {
         }, { status: 500 })
       }
     }
+    } // end if (!DISABLE_REFERENCE_IMAGES)
 
-    console.log(`${LOG_PREFIX} Total images: ${allImageUrls.length} (1 user + ${refFilenames.length} style ref(s))`)
-
+    console.log(`${LOG_PREFIX} Total images: ${allImageUrls.length} (1 user + ${DISABLE_REFERENCE_IMAGES ? 0 : refFilenames.length} style ref(s))`)
     // ── BFL input ─────────────────────────────────────────────────────────────
 
     const bflInput: BflInput = {
