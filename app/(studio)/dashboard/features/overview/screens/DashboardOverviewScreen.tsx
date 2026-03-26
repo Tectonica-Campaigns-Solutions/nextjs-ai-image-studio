@@ -7,6 +7,7 @@ import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/Dashb
 import type { DashboardOverviewData } from "../data/overview";
 import { CreateClientModal } from "@/app/(studio)/dashboard/components/create-client-modal";
 import { formatRelativeTime } from "@/app/(studio)/dashboard/utils/date-formatters";
+import { DashboardPageHeader } from "@/app/(studio)/dashboard/components/dashboard-page-header";
 
 type DateRange = 7 | 14 | 30;
 
@@ -63,27 +64,33 @@ export function DashboardOverviewScreen({ data }: DashboardOverviewScreenProps) 
 
   return (
     <div className="pt-24 px-10 pb-12">
-      <div className="mb-10 flex justify-between items-end">
-        <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-2">
-            Workspace Overview
-          </h2>
-          <p className="text-on-surface-variant max-w-md">
-            You have {stats.activeClients} active clients and {stats.inactiveClients} inactive clients.
-            Your workspace currently holds {stats.totalAssets.toLocaleString()} assets and {stats.totalFonts.toLocaleString()} fonts.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary font-bold text-sm shadow-lg shadow-dashboard-primary/20 active:scale-[0.98] transition-transform border-none"
-            onClick={() => setCreateClientOpen(true)}
-            aria-haspopup="dialog"
-          >
-            <DashboardMaterialIcon icon="add_circle" className="text-[20px]" filled />
-            Create Client
-          </button>
-        </div>
+      <div className="mb-10">
+        <DashboardPageHeader
+          segments={[{ label: "Overview" }]}
+          titleClassName="text-3xl font-extrabold tracking-tight text-on-surface mb-2"
+          containerClassName="flex justify-between items-end gap-6"
+          descriptionClassName="text-on-surface-variant max-w-md"
+          title="Workspace Overview"
+          description={
+            <>
+              You have {stats.activeClients} active clients and {stats.inactiveClients} inactive clients.
+              Your workspace currently holds {stats.totalAssets.toLocaleString()} assets and {stats.totalFonts.toLocaleString()} fonts.
+            </>
+          }
+          actions={
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="bg-gradient-to-br from-dashboard-primary to-dashboard-primary-dim text-dashboard-on-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-dashboard-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+                onClick={() => setCreateClientOpen(true)}
+                aria-haspopup="dialog"
+              >
+                <DashboardMaterialIcon icon="add" className="text-sm" />
+                Create Client
+              </button>
+            </div>
+          }
+        />
       </div>
 
       <CreateClientModal open={createClientOpen} onOpenChange={setCreateClientOpen} />

@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DashboardDialogContent } from "@/app/(studio)/dashboard/components/dashboard-dialog-content";
 import { ClientForm } from "./client-form";
 import { createClientAction } from "@/app/(studio)/dashboard/features/clients/actions/clients";
 import { toast } from "sonner";
@@ -44,22 +44,17 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 max-h-[90dvh] overflow-hidden"
-        showCloseButton
-      >
-        <div className="subtle-scrollbar max-h-[calc(90dvh-2rem)] overflow-y-auto pr-1">
-          <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
-            <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
-              New Client
-            </DialogTitle>
-            <DialogDescription className="text-on-surface-variant">
-              Create a new client and associate its assets.
-            </DialogDescription>
-          </DialogHeader>
-          <ClientForm onSave={handleSave} onCancel={() => onOpenChange(false)} />
-        </div>
-      </DialogContent>
+      <DashboardDialogContent>
+        <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+          <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+            New Client
+          </DialogTitle>
+          <DialogDescription className="text-on-surface-variant">
+            Create a new client and associate its assets.
+          </DialogDescription>
+        </DialogHeader>
+        <ClientForm onSave={handleSave} onCancel={() => onOpenChange(false)} />
+      </DashboardDialogContent>
     </Dialog>
   );
 }

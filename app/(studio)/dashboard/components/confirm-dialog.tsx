@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,8 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   /** Button variant. Defaults to "destructive". */
   variant?: "destructive" | "primary";
+  /** Allow dismiss by clicking outside the dialog. Defaults to false. */
+  dismissOnOutsidePointerDown?: boolean;
 }
 
 /**
@@ -41,15 +44,42 @@ export function ConfirmDialog({
   busy = false,
   onConfirm,
   variant = "destructive",
+  dismissOnOutsidePointerDown = false,
 }: ConfirmDialogProps) {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
   const actionClassName =
     variant === "primary"
-      ? "bg-dashboard-primary text-dashboard-on-primary hover:opacity-95 disabled:opacity-70 shadow-sm shadow-dashboard-primary/20"
+      ? "bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:bg-dashboard-primary/90 hover:text-dashboard-on-primary shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
       : "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-70";
+
+  useEffect(() => {
+    if (!open) return;
+    if (!dismissOnOutsidePointerDown) return;
+
+    const handlePointerDownCapture = (event: MouseEvent | TouchEvent) => {
+      if (busy) return;
+      const target = event.target as Node | null;
+      if (!target) return;
+
+      const clickedInside = contentRef.current?.contains(target) ?? false;
+      if (!clickedInside) onOpenChange(false);
+    };
+
+    document.addEventListener("mousedown", handlePointerDownCapture, true);
+    document.addEventListener("touchstart", handlePointerDownCapture, true);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDownCapture, true);
+      document.removeEventListener("touchstart", handlePointerDownCapture, true);
+    };
+  }, [busy, dismissOnOutsidePointerDown, onOpenChange, open]);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5">
+      <AlertDialogContent
+        className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5"
+        ref={contentRef}
+      >
         <AlertDialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
           <AlertDialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
             {title}

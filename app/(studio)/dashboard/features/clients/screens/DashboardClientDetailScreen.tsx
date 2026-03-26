@@ -356,14 +356,15 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           title={toggleTargetIsActive ? "Activate client" : "Deactivate client"}
           description={
             toggleTargetIsActive
-              ? `Activate "${client.name}"?`
-              : `Deactivate "${client.name}"? The client won't be available in the studio.`
+              ? `Activate "${client.name}"? This will make the client available again in the studio so their assets, fonts and sessions can be used. You can deactivate the client later at any time.`
+              : `Deactivate "${client.name}"? This will remove the client from the studio so their assets, fonts and sessions can’t be used. You can reactivate the client later at any time.`
           }
           actionLabel={toggleTargetIsActive ? "Activate" : "Deactivate"}
           busyLabel={toggleTargetIsActive ? "Activating..." : "Deactivating..."}
           busy={toggleAction.busyId !== null}
           onConfirm={handleConfirmToggleActive}
           variant="primary"
+          dismissOnOutsidePointerDown
         />
 
         <ConfirmDialog

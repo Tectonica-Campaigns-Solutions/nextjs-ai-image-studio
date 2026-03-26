@@ -10,7 +10,7 @@
 const DASHBOARD_FEATURE_DEFAULTS = {
   commandPalette: true,
   darkThemeToggle: false,
-  notifications: true,
+  notifications: false,
 } as const;
 
 const DASHBOARD_FEATURE_ENV_KEYS = {

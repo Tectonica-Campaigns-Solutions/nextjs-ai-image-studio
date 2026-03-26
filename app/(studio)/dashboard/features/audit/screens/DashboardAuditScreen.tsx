@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
-import { DashboardBreadcrumb } from "@/app/(studio)/dashboard/components/dashboard-breadcrumb";
 import { DashboardEmptyState } from "@/app/(studio)/dashboard/components/dashboard-empty-state";
+import { DashboardPageHeader } from "@/app/(studio)/dashboard/components/dashboard-page-header";
 import { formatRelativeTime } from "@/app/(studio)/dashboard/utils/date-formatters";
 import { downloadCSV } from "@/app/(studio)/dashboard/utils/export-utils";
 import type { AuditEntry } from "../data/audit";
@@ -78,11 +78,11 @@ export function DashboardAuditScreen({ entries }: DashboardAuditScreenProps) {
   return (
     <div className="pt-16 px-10 min-h-screen bg-surface">
       <div className="w-full py-10 space-y-8">
-        <div>
-          <DashboardBreadcrumb segments={[{ label: "Audit Log" }]} />
-          <h2 className="text-4xl font-extrabold tracking-tight text-on-surface">Audit Log</h2>
-          <p className="text-on-surface-variant mt-2">Recent activity across all entities.</p>
-        </div>
+        <DashboardPageHeader
+          segments={[{ label: "Audit Log" }]}
+          title="Audit Log"
+          description="Recent activity across all entities."
+        />
 
         <div className="rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">

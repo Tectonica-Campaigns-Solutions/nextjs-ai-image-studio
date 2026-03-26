@@ -11,6 +11,7 @@ import { updateAdminAction, deleteAdminAction } from "../actions/admins";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
 import { useServerAction } from "@/app/(studio)/dashboard/hooks/use-server-action";
+import { DashboardStatusPill } from "@/app/(studio)/dashboard/components/dashboard-status-pill";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,12 +29,12 @@ function isExpired(expiresAt: string | null) {
 function statusMeta(admin: Admin) {
   const expired = admin.is_active && isExpired(admin.expires_at);
   if (!admin.is_active) {
-    return { label: "Inactive", pill: "bg-slate-100 text-slate-600", dot: "bg-slate-400" };
+    return { label: "Inactive", tone: "muted" as const };
   }
   if (expired) {
-    return { label: "Expired", pill: "bg-amber-100 text-amber-700", dot: "bg-amber-500" };
+    return { label: "Expired", tone: "warning" as const };
   }
-  return { label: "Active", pill: "bg-green-100 text-green-700", dot: "bg-green-500" };
+  return { label: "Active", tone: "success" as const };
 }
 
 function displayName(admin: Admin) {
@@ -153,12 +154,7 @@ export function DashboardAdminDetailScreen({
                     {admin.email}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${meta.pill}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-                  {meta.label}
-                </span>
+                <DashboardStatusPill tone={meta.tone} label={meta.label} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
