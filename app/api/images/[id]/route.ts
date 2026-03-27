@@ -45,7 +45,12 @@ export async function GET(
     .eq("id", id)
     .single()
 
-  if (dbError || !record) {
+  if (dbError) {
+    console.error(`[Image Proxy] DB error for id="${id}":`, dbError.message, dbError.code)
+    return NextResponse.json({ error: "Image not found", detail: dbError.message }, { status: 404 })
+  }
+  if (!record) {
+    console.error(`[Image Proxy] No record found for id="${id}"`)
     return NextResponse.json({ error: "Image not found" }, { status: 404 })
   }
 

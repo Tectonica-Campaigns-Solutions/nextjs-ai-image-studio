@@ -201,6 +201,53 @@ export async function removeDisclaimerWithResize(
 
 
 /**
+ * Applies the standard disclaimer SVG overlay directly to an image Buffer.
+ * Identical composite logic to addDisclaimerToImage but avoids the URL fetch
+ * and base64 round-trip — ideal when the caller already holds the raw buffer
+ * (e.g. BFL routes that download the result before uploading to Supabase).
+ *
+ * @param imageBuffer - Raw image buffer (JPEG or PNG)
+ * @returns Buffer with disclaimer overlay at JPEG q95
+ */
+export async function addDisclaimerToBuffer(imageBuffer: Buffer): Promise<Buffer> {
+  const metadata = await sharp(imageBuffer).metadata()
+  const imageWidth = metadata.width || 1024
+  const imageHeight = metadata.height || 1024
+
+  const rectAvailableWidth = 208
+  const longestLine = 'CREATED BY SUPPORTERS WITH ETHICAL AI'
+  const charWidthRatio = 0.62
+  const disclaimerFontSize = Math.floor(rectAvailableWidth / (longestLine.length * charWidthRatio))
+
+  const svg = `
+    <svg width="${imageWidth}" height="${imageHeight}">
+      <rect 
+        x="${imageWidth - 220}" 
+        y="${imageHeight - 36}" 
+        width="216" height="32" 
+        fill="rgba(0,0,0,0.55)" 
+        rx="2"
+      />
+      <text 
+        x="${imageWidth - 216}" y="${imageHeight - 24}" 
+        font-family="Arial, sans-serif" font-size="${disclaimerFontSize}" 
+        fill="white" text-anchor="start" font-weight="bold"
+      >CREATED BY SUPPORTERS WITH ETHICAL AI</text>
+      <text 
+        x="${imageWidth - 216}" y="${imageHeight - 12}" 
+        font-family="Arial, sans-serif" font-size="${disclaimerFontSize}" 
+        fill="white" text-anchor="start"
+      >MORE AT: TECTONICA.AI</text>
+    </svg>
+  `
+
+  return sharp(imageBuffer)
+    .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+    .jpeg({ quality: 95 })
+    .toBuffer()
+}
+
+/**
  * Adds a disclaimer text to the bottom-right corner of an image
  * 
  * @param imageUrl - URL of the source image
