@@ -56,8 +56,11 @@ const MAX_POLL_DELAY_MS = 3_000
  */
 const DEFAULT_TIMEOUT_MS = 300_000
 
-/** Supabase bucket that holds uploaded input images */
-const SUPABASE_BUCKET = "User images"
+/** Supabase bucket for temporary BFL input images (public — BFL must be able to fetch these) */
+const SUPABASE_STAGING_BUCKET = "bfl-staging"
+
+/** Supabase bucket for generated output images (private — accessed only via proxy) */
+const SUPABASE_OUTPUT_BUCKET = "User images"
 
 // ─── FAL → BFL Image Size Mapping ────────────────────────────────────────────
 //
@@ -409,18 +412,20 @@ export async function resizeImageForBfl(
 //   - "User images" bucket must be publicly readable
 
 /**
- * Uploads a resized image buffer to the "User images" Supabase bucket.
- * Returns the public URL that BFL will use to fetch the image.
+ * Uploads an image buffer to a Supabase bucket and returns the public URL.
+ * Defaults to the staging bucket (public, used for BFL input images).
+ * Do NOT use this for output images — use storeOutputImage() instead.
  */
 export async function uploadImageToSupabase(
   buffer: Buffer,
   fileName: string,
-  mimeType = "image/jpeg"
+  mimeType = "image/jpeg",
+  bucket = SUPABASE_STAGING_BUCKET
 ): Promise<string> {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase.storage
-    .from(SUPABASE_BUCKET)
+    .from(bucket)
     .upload(fileName, buffer, {
       contentType: mimeType,
       upsert: true,
@@ -432,7 +437,7 @@ export async function uploadImageToSupabase(
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(data.path)
+  } = supabase.storage.from(bucket).getPublicUrl(data.path)
 
   return publicUrl
 }
@@ -494,19 +499,121 @@ export async function prepareBase64ForBfl(
 }
 
 /**
- * Deletes temporary input/reference images from Supabase Storage.
+ * Deletes temporary input/reference images from the staging Supabase bucket.
  * Best-effort — errors are logged but never re-thrown.
  * Call fire-and-forget (no await) to avoid delaying the API response.
  */
 export async function deleteSupabaseImages(paths: string[]): Promise<void> {
   if (paths.length === 0) return
   const supabase = createAdminClient()
-  const { error } = await supabase.storage.from(SUPABASE_BUCKET).remove(paths)
+  const { error } = await supabase.storage.from(SUPABASE_STAGING_BUCKET).remove(paths)
   if (error) {
     console.warn(`[BFL Client] Cleanup: failed to delete ${paths.length} file(s): ${error.message}`)
   } else {
     console.log(`[BFL Client] Cleanup: ✅ deleted ${paths.length} temporary file(s)`)
   }
+}
+
+/**
+ * Stores a generated output image in the private "User images" bucket and
+ * records it in the generated_images table for multi-tenant access control.
+ *
+ * Returns a proxy URL of the form `${APP_URL}/api/images/{uuid}` that
+ * the client uses to retrieve the image. The proxy generates a short-lived
+ * signed URL on demand so the private bucket is never exposed directly.
+ *
+ * @param buffer  — image data (already processed, e.g. with disclaimer overlay)
+ * @param orgType — organization identifier (maps to clients.ca_user_id)
+ * @param format  — output format, defaults to "jpeg"
+ */
+export async function storeOutputImage(
+  buffer: Buffer,
+  orgType: string,
+  format: "jpeg" | "png" = "jpeg"
+): Promise<{ proxyUrl: string; path: string }> {
+  const supabase = createAdminClient()
+  const random = Math.random().toString(36).slice(2)
+  const storagePath = `${orgType.toLowerCase()}/bfl-output/${Date.now()}-${random}.${format}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(SUPABASE_OUTPUT_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: `image/${format}`,
+      upsert: false,
+    })
+
+  if (uploadError) {
+    throw new Error(`Output upload failed for "${storagePath}": ${uploadError.message}`)
+  }
+
+  const { data: record, error: dbError } = await supabase
+    .from("generated_images")
+    .insert({ client_id: orgType, supabase_path: storagePath })
+    .select("id")
+    .single()
+
+  if (dbError || !record) {
+    throw new Error(`DB insert failed for "${storagePath}": ${dbError?.message}`)
+  }
+
+  const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "")
+  return { proxyUrl: `${appUrl}/api/images/${record.id}`, path: storagePath }
+}
+
+/**
+ * Converts a URL that references our private "User images" bucket or a proxy
+ * URL into a short-lived signed URL that BFL can fetch during inference.
+ *
+ * Handles:
+ *  1. Old Supabase public-format URLs for the "User images" bucket
+ *     (no longer accessible now that the bucket is private)
+ *  2. Proxy URLs: `${APP_URL}/api/images/{uuid}` — looks up the DB record
+ *     and generates a signed URL for the underlying Supabase path
+ * Everything else is returned unchanged.
+ */
+export async function generateSignedUrlForBfl(url: string): Promise<string> {
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "")
+  const appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "")
+  const SIGNED_URL_TTL_SECONDS = 900 // 15 minutes — covers BFL inference window
+
+  // Case 1: Old Supabase public URL for the private output bucket
+  const publicPrefix = `${supabaseUrl}/storage/v1/object/public/User%20images/`
+  const publicPrefixDecoded = `${supabaseUrl}/storage/v1/object/public/User images/`
+  if (url.startsWith(publicPrefix) || url.startsWith(publicPrefixDecoded)) {
+    const storagePath = decodeURIComponent(
+      url.startsWith(publicPrefix)
+        ? url.slice(publicPrefix.length)
+        : url.slice(publicPrefixDecoded.length)
+    )
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.storage
+      .from(SUPABASE_OUTPUT_BUCKET)
+      .createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS)
+    if (error || !data) {
+      console.warn(`[BFL Client] generateSignedUrlForBfl: signed URL failed for "${storagePath}": ${error?.message}`)
+      return url // fall back to original (will likely 403 at BFL, but avoids throwing)
+    }
+    return data.signedUrl
+  }
+
+  // Case 2: Proxy URL — look up generated_images table
+  if (appUrl && url.startsWith(`${appUrl}/api/images/`)) {
+    const id = url.slice(`${appUrl}/api/images/`.length)
+    const supabase = createAdminClient()
+    const { data: record } = await supabase
+      .from("generated_images")
+      .select("supabase_path")
+      .eq("id", id)
+      .single()
+    if (record?.supabase_path) {
+      const { data, error } = await supabase.storage
+        .from(SUPABASE_OUTPUT_BUCKET)
+        .createSignedUrl(record.supabase_path, SIGNED_URL_TTL_SECONDS)
+      if (!error && data) return data.signedUrl
+    }
+  }
+
+  return url // external URL — pass through unchanged
 }
 
 // ─── Main Generation Flow ─────────────────────────────────────────────────────

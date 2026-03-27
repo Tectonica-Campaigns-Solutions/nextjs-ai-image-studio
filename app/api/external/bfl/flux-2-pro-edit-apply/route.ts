@@ -6,6 +6,8 @@ import {
   prepareBase64ForBfl,
   deleteSupabaseImages,
   resizeImageForBfl,
+  storeOutputImage,
+  generateSignedUrlForBfl,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
   type BflInput,
@@ -362,7 +364,7 @@ export async function POST(request: NextRequest) {
           }, { status: 400 })
         }
       } else {
-        allImageUrls.push(imageUrl)
+        allImageUrls.push(await generateSignedUrlForBfl(imageUrl))
         console.log(`${LOG_PREFIX} ✅ User image URL added (@image1): ${imageUrl}`)
       }
     }
@@ -454,9 +456,8 @@ export async function POST(request: NextRequest) {
       const metadata = await sharp(finalBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      const outputFileName = `bfl-output/${Date.now()}-${Math.random().toString(36).slice(2)}.jpeg`
-      resultUrl = await uploadImageToSupabase(finalBuffer, outputFileName, "image/jpeg")
-      console.log(`${LOG_PREFIX} ✅ Result uploaded to Supabase: ${resultWidth}x${resultHeight} → ${resultUrl}`)
+      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg")).proxyUrl
+      console.log(`${LOG_PREFIX} ✅ Result stored privately: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)
       return NextResponse.json({
