@@ -84,7 +84,7 @@ export default async function AdminLoginPage({
 
           <Button
             formAction={adminLogin}
-            className="w-full h-11 rounded-xl bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 font-semibold hover:opacity-90 shadow-sm shadow-dashboard-primary/20"
+            className="w-full h-11 rounded-xl bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 font-semibold hover:opacity-90 shadow-sm shadow-dashboard-primary/20 hover:bg-dashboard-primary/90 hover:text-dashboard-on-primary"
           >
             <Lock className="size-4 mr-2" />
             Sign in

@@ -72,7 +72,7 @@ export async function DashboardDashboardShell({
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Tectonica.ai
+              Tectonica
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">
               Visual Studio

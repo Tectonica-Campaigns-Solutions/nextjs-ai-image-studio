@@ -118,11 +118,13 @@ export function DashboardAdminDetailScreen({
       <div className="px-10 py-10 space-y-8">
         <ConfirmDialog
           open={deactivateConfirmOpen}
-          onOpenChange={(open) => { if (!deactivateAction.busyId) setDeactivateConfirmOpen(open); }}
-          title="Deactivate admin"
-          description={`Deactivate "${displayName(admin)}"? This can be reversed by editing the admin.`}
-          actionLabel="Deactivate"
-          busyLabel="Deactivating..."
+          onOpenChange={(open) => {
+            if (!deactivateAction.busyId) setDeactivateConfirmOpen(open);
+          }}
+          title="Delete admin"
+          description={`Delete "${displayName(admin)}"? This will remove their admin access to the dashboard.`}
+          actionLabel="Delete"
+          busyLabel="Deleting..."
           busy={deactivateAction.busyId !== null}
           onConfirm={handleDeactivate}
         />
@@ -229,7 +231,7 @@ export function DashboardAdminDetailScreen({
                   disabled={saving || deactivateAction.busyId !== null || isSelf}
                   onClick={() => setDeactivateConfirmOpen(true)}
                 >
-                  Deactivate
+                  Delete
                 </button>
 
                 <div className="flex items-center gap-3">
@@ -275,7 +277,7 @@ export function DashboardAdminDetailScreen({
                   onClick={() => setDeactivateConfirmOpen(true)}
                   disabled={isSelf || saving || deactivateAction.busyId !== null}
                 >
-                  {deactivateAction.busyId ? "Deactivating..." : "Deactivate admin"}
+                  {deactivateAction.busyId ? "Deleting..." : "Delete admin"}
                 </button>
               </div>
 

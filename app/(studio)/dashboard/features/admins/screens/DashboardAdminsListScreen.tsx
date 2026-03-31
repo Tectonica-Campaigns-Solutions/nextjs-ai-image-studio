@@ -59,12 +59,15 @@ export function DashboardAdminsListScreen({
   const filteredSorted = useMemo(() => {
     const q = search.trim().toLowerCase();
 
+    // By default, hide inactive (soft-deleted) admins from the list.
+    // They are only shown when the explicit "Inactive" filter is selected.
     let list = admins;
-    if (status !== "all") {
-      list = list.filter((a) => {
-        if (!a.is_active) return status === "inactive";
-        return status === "active";
-      });
+    if (status === "all") {
+      list = list.filter((a) => a.is_active);
+    } else if (status === "active") {
+      list = list.filter((a) => a.is_active);
+    } else if (status === "inactive") {
+      list = list.filter((a) => !a.is_active);
     }
 
     if (q) {

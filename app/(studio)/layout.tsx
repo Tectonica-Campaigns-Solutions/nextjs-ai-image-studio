@@ -5,7 +5,7 @@ import { IBM_Plex_Sans, Manrope } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Tectonica.ai - Studio Admin",
+  title: "Tectonica - Studio Admin",
 };
 
 const manrope = Manrope({
