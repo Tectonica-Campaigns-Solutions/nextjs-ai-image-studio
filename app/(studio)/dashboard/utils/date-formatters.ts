@@ -14,8 +14,17 @@ export function formatDateLong(iso?: string | null): string {
 export function formatRelativeTime(isoDate?: string | null): string {
   if (!isoDate) return "—";
   const diffMs = Date.now() - new Date(isoDate).getTime();
-  const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
-  if (diffHours < 24) return `${diffHours} hours ago`;
+  const diffMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) {
+    return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+  }
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays === 1) return "Yesterday";
   return `${diffDays} days ago`;
