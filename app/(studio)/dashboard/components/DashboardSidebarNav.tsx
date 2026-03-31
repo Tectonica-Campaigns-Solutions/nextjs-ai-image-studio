@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { DashboardMaterialIcon } from "./DashboardMaterialIcon";
+import { isDashboardFeatureEnabled } from "../config/feature-flags";
 
 type NavItem = {
   key: string;
@@ -21,6 +22,12 @@ const NAV_ITEMS: NavItem[] = [
   { key: "fonts", label: "Fonts", icon: "font_download", href: "/dashboard/frames-fonts?tab=fonts" },
   { key: "canvas-sessions", label: "Canvas Sessions", icon: "draw", href: "/dashboard/canvas-sessions" },
   { key: "audit", label: "Audit Log", icon: "history", href: "/dashboard/audit" },
+  {
+    key: "visual-studio-access",
+    label: "Visual Studio Logs",
+    icon: "draw",
+    href: "/dashboard/visual-studio-access",
+  },
 ];
 
 function navItemClass(isActive: boolean) {
@@ -66,6 +73,8 @@ function NavLinks() {
         return pathname.startsWith("/dashboard/canvas-sessions");
       case "audit":
         return pathname.startsWith("/dashboard/audit");
+      case "visual-studio-access":
+        return pathname.startsWith("/dashboard/visual-studio-access");
       default:
         return false;
     }
@@ -74,6 +83,12 @@ function NavLinks() {
   return (
     <nav className="flex-1 space-y-1">
       {NAV_ITEMS.map((item) => {
+        if (
+          item.key === "visual-studio-access" &&
+          !isDashboardFeatureEnabled("visualStudioAccessLogs")
+        ) {
+          return null;
+        }
         const active = isActive(item.key);
         return (
           <Link key={item.key} className={navItemClass(active)} href={item.href}>

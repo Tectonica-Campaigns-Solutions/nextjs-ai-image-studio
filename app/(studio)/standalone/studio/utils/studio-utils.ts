@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { DASHBOARD_FEATURE_FLAGS } from "@/app/(studio)/dashboard/config/feature-flags";
 
 // Brand utils
 export const GOOGLE_FONTS = [
@@ -50,7 +51,7 @@ export function getPrimaryFontFamily(fontFamily: string): string {
  */
 export function getFontFamilyWithFallback(
   fontFamily: string,
-  fallback: string = "Manrope"
+  fallback: string = "Manrope",
 ): string {
   if (!fontFamily?.trim()) return `"${fallback}", sans-serif`;
   const primary = fontFamily.trim().replace(/^["']|["']$/g, "");
@@ -66,7 +67,7 @@ export function getFontFamilyWithFallback(
 export function getCanvasFontFamily(
   fontFamily: string,
   fallback: string,
-  bundledFontCssVars: Record<string, string>
+  bundledFontCssVars: Record<string, string>,
 ): string {
   if (typeof document === "undefined") {
     return getFontFamilyWithFallback(fontFamily, fallback);
@@ -101,7 +102,7 @@ export function validateFontFamily(fontFamily: string): boolean {
 }
 
 export function getGoogleFontsUrl(
-  fonts: { family: string; weights: string[] }[]
+  fonts: { family: string; weights: string[] }[],
 ): string {
   if (!fonts || fonts.length === 0) {
     return "";
@@ -125,7 +126,7 @@ export function generateFontFaceCSS(
   fontFamily: string,
   fileUrl: string,
   fontWeight: string = "400",
-  fontStyle: string = "normal"
+  fontStyle: string = "normal",
 ): string {
   // Determinar el formato basado en la extensión de la URL
   let format = "woff2";
@@ -161,9 +162,7 @@ export function validateFontFile(file: File): {
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: `File type not allowed. Allowed types: ${allowedTypes.join(
-        ", "
-      )}`,
+      error: `File type not allowed. Allowed types: ${allowedTypes.join(", ")}`,
     };
   }
 
@@ -173,7 +172,7 @@ export function validateFontFile(file: File): {
     return {
       valid: false,
       error: `File extension not allowed. Allowed extensions: ${allowedExtensions.join(
-        ", "
+        ", ",
       )}`,
     };
   }
@@ -182,9 +181,7 @@ export function validateFontFile(file: File): {
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: `File too large. Maximum size: ${
-        MAX_FILE_SIZE / 1024 / 1024
-      }MB`,
+      error: `File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
     };
   }
 
@@ -194,7 +191,7 @@ export function validateFontFile(file: File): {
 // QR Generation
 export const generateQR = async (
   url: string,
-  color?: { dark?: string | undefined; light?: string | undefined }
+  color?: { dark?: string | undefined; light?: string | undefined },
 ) => {
   try {
     return await QRCode.toDataURL(url, {
@@ -210,10 +207,39 @@ export const generateQR = async (
 export const log = (
   level: "info" | "warn" | "error",
   context: string,
-  data?: any
+  data?: any,
 ) => {
   const timestamp = new Date().toISOString();
   const message = `[${timestamp}] [${level.toUpperCase()}] [${context}]`;
   if (data) console.log(message, JSON.stringify(data, null, 2));
   else console.log(message);
 };
+
+const VISUAL_STUDIO_ACCESS_LOGS_ENABLED: boolean =
+  DASHBOARD_FEATURE_FLAGS.visualStudioAccessLogs;
+
+export async function logVisualStudioAccess(params: {
+  caUserId: string;
+  sessionId: string | null;
+}) {
+  if (!VISUAL_STUDIO_ACCESS_LOGS_ENABLED) return;
+  if (process.env.NODE_ENV !== "production") return;
+  if (typeof window === "undefined") return;
+
+  const controller = new AbortController();
+
+  try {
+    await fetch("/api/studio/access-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        caUserId: params.caUserId,
+        sessionId: params.sessionId,
+        path: window.location.pathname + window.location.search,
+      }),
+      signal: controller.signal,
+    });
+  } catch {
+    // Silent: does not interrupt the user if logging fails.
+  }
+}

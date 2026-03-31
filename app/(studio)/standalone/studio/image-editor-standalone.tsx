@@ -56,6 +56,7 @@ import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
+import { logVisualStudioAccess } from "./utils/studio-utils";
 
 export default function ImageEditorStandalone({
   params,
@@ -68,6 +69,19 @@ export default function ImageEditorStandalone({
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
 
   const { toast } = useToast();
+
+  // Track each access to the Visual Studio for audit/logs in the dashboard.
+  const hasLoggedAccessRef = useRef(false);
+  useEffect(() => {
+    if (!params.user_id) return;
+    if (hasLoggedAccessRef.current) return;
+    hasLoggedAccessRef.current = true;
+
+    void logVisualStudioAccess({
+      caUserId: params.user_id,
+      sessionId: sessionData?.id ?? null,
+    });
+  }, [params.user_id, sessionData?.id]);
 
   // Header ref
   const headerRef = useRef<HTMLDivElement>(null);
