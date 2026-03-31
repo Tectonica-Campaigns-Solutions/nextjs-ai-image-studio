@@ -337,6 +337,7 @@ export function DashboardAdminsListScreen({
             </>
           }
           showingLabel={`Showing ${showingCount} of ${filteredSorted.length} results`}
+          isEmpty={filteredSorted.length === 0}
           selectedIds={selectedIds}
           bulkActions={[
             {
@@ -383,7 +384,8 @@ export function DashboardAdminsListScreen({
               {pagedAdmins.map((admin) => {
                 const expired = admin.is_active && isExpired(admin.expires_at);
                 const isYou = currentUserId != null && admin.user_id === currentUserId;
-                const statusTone = (!admin.is_active ? "muted" : expired ? "warning" : "success") as const;
+                const statusTone: "muted" | "warning" | "success" =
+                  !admin.is_active ? "muted" : expired ? "warning" : "success";
                 const statusLabel = !admin.is_active ? "Inactive" : expired ? "Expired" : "Active";
 
                 return (
@@ -437,13 +439,11 @@ export function DashboardAdminsListScreen({
             </>
           }
           emptyState={
-            <DashboardEmptyState
-              icon="shield"
-              title="No admins found"
-              description="Invite your first admin to help manage the platform."
-              actionLabel="Create Admin"
-              onAction={() => setCreateOpen(true)}
-            />
+            <div className="py-0 px-4 text-sm text-on-surface-variant text-center">
+              {status === "inactive"
+                ? "There are no inactive admins right now."
+                : "There are no admins matching the current filters."}
+            </div>
           }
           page={page}
           totalPages={totalPages}

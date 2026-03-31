@@ -290,6 +290,7 @@ export function DashboardClientsAdminScreen({
               </>
             }
             showingLabel={`Showing ${clients.length} of ${totalClients} results`}
+            isEmpty={clients.length === 0}
             selectedIds={selectedIds}
             bulkActions={[
               {
@@ -300,11 +301,11 @@ export function DashboardClientsAdminScreen({
                   downloadCSV(
                     "clients-export.csv",
                     ["Name", "Email", "Status", "Created"],
-                    selected.map((c) => [
-                      c.name,
-                      c.email ?? c.ca_user_id,
+                    selected.map((c): string[] => [
+                      c.name ?? "",
+                      c.email ?? c.ca_user_id ?? "",
                       c.is_active ? "Active" : "Inactive",
-                      c.created_at,
+                      c.created_at ?? "",
                     ]),
                   );
                 },
@@ -395,13 +396,11 @@ export function DashboardClientsAdminScreen({
               </>
             }
             emptyState={
-              <DashboardEmptyState
-                icon="group"
-                title="No clients found"
-                description={currentSearch ? "Try a different search term." : "Create your first client to get started."}
-                actionLabel={!currentSearch ? "Create Client" : undefined}
-                onAction={!currentSearch ? () => setCreateOpen(true) : undefined}
-              />
+              <div className="py-0 px-4 text-sm text-on-surface-variant text-center">
+                {currentSearch
+                  ? "No clients match the current search."
+                  : "There are no clients matching the current filters."}
+              </div>
             }
             page={currentPage}
             totalPages={totalPages}

@@ -17,6 +17,8 @@ type DashboardEntityTableProps = Readonly<{
   header: ReactNode;
   body: ReactNode;
   emptyState?: ReactNode;
+  /** Explicit empty flag (e.g. after filters); when true, shows emptyState row instead of body. */
+  isEmpty?: boolean;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -45,6 +47,7 @@ export function DashboardEntityTable({
   header,
   body,
   emptyState,
+  isEmpty,
   page,
   totalPages,
   onPageChange,
@@ -88,14 +91,20 @@ export function DashboardEntityTable({
       </div>
 
       <div className="overflow-x-auto">
-        {totalPages === 0 && emptyState ? (
-          emptyState
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>{header}</thead>
-            <tbody className="divide-y divide-surface-container">{body}</tbody>
-          </table>
-        )}
+        <table className="w-full text-left border-collapse">
+          <thead>{header}</thead>
+          <tbody className="divide-y divide-surface-container">
+            {isEmpty && emptyState ? (
+              <tr>
+                <td colSpan={100} className="px-6 py-10">
+                  {emptyState}
+                </td>
+              </tr>
+            ) : (
+              body
+            )}
+          </tbody>
+        </table>
       </div>
 
       <div className="px-6 py-4 bg-white border-t border-surface-container flex items-center justify-between">
