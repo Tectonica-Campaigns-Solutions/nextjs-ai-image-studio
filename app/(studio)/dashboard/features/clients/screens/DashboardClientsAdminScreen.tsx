@@ -57,6 +57,11 @@ export function DashboardClientsAdminScreen({
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  const inactiveClients = Math.max(
+    0,
+    stats.totalClients - stats.activeClients,
+  );
+
   const totalPages = Math.max(1, Math.ceil(totalClients / pageSize));
 
   const toggleSelect = useCallback((id: string) => {
@@ -89,7 +94,13 @@ export function DashboardClientsAdminScreen({
     (updates: Record<string, string | undefined>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === undefined || value === "" || (key === "page" && value === "1") || (key === "status" && value === "all") || (key === "sort" && value === "created")) {
+        if (
+          value === undefined ||
+          value === "" ||
+          (key === "page" && value === "1") ||
+          (key === "status" && value === "active") ||
+          (key === "sort" && value === "created")
+        ) {
           params.delete(key);
         } else {
           params.set(key, value);
@@ -136,10 +147,39 @@ export function DashboardClientsAdminScreen({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-6 mb-10">
-            <StatCard label="Total Clients" value={stats.totalClients} meta="+12%" metaClassName="text-green-600" />
-            <StatCard label="Active Now" value={stats.activeClients} meta="Stable" metaClassName="text-blue-600" />
-            <StatCard label="Assets Stored" value={stats.totalAssets} meta="+4%" metaClassName="text-green-600" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <StatCard
+              label="Total Clients"
+              value={stats.totalClients}
+              meta="+12%"
+              metaClassName="text-green-600"
+            />
+            <StatCard
+              label="Active Now"
+              value={stats.activeClients}
+              meta="Stable"
+              metaClassName="text-blue-600"
+            />
+            {inactiveClients > 0 && (
+              <button
+                type="button"
+                className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-primary/60 rounded-xl"
+                onClick={() => updateParams({ status: "inactive", page: "1" })}
+              >
+                <StatCard
+                  label="Inactive"
+                  value={inactiveClients}
+                  meta="View list"
+                  metaClassName="text-orange-500"
+                />
+              </button>
+            )}
+            <StatCard
+              label="Assets Stored"
+              value={stats.totalAssets}
+              meta="+4%"
+              metaClassName="text-green-600"
+            />
           </div>
 
           <DashboardEntityTable
@@ -179,7 +219,6 @@ export function DashboardClientsAdminScreen({
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       {([
-                        { key: "all", label: "All" },
                         { key: "active", label: "Active" },
                         { key: "inactive", label: "Inactive" },
                       ] as Array<{ key: ClientStatusFilter; label: string }>).map((opt) => {

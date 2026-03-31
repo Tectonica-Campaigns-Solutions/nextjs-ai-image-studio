@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { paginateItems } from "@/app/(studio)/dashboard/utils/data-utils";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Admin } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { CreateAdminModal } from "@/app/(studio)/dashboard/components/create-admin-modal";
@@ -16,8 +16,8 @@ import { DashboardToolbarMenu } from "@/app/(studio)/dashboard/components/dashbo
 import { DashboardPageHeader } from "@/app/(studio)/dashboard/components/dashboard-page-header";
 import { DashboardStatusPill } from "@/app/(studio)/dashboard/components/dashboard-status-pill";
 
-type AdminSortKey = "granted_at" | "name";
-type AdminStatusFilter = "all" | "active" | "inactive";
+export type AdminSortKey = "granted_at" | "name";
+export type AdminStatusFilter = "all" | "active" | "inactive";
 
 function isExpired(expiresAt: string | null) {
   if (!expiresAt) return false;
@@ -38,26 +38,78 @@ function getAdminSubLabel(admin: Admin) {
 export type DashboardAdminsListScreenProps = Readonly<{
   admins: Admin[];
   currentUserId: string | null;
+  currentStatus: AdminStatusFilter;
+  currentSort: AdminSortKey;
+  currentSearch: string;
+  currentPage: number;
 }>;
 
 export function DashboardAdminsListScreen({
   admins,
   currentUserId,
+  currentStatus,
+  currentSort,
+  currentSearch,
+  currentPage,
 }: DashboardAdminsListScreenProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<AdminStatusFilter>("all");
-  const [sortKey, setSortKey] = useState<AdminSortKey>("granted_at");
-  const [page, setPage] = useState(1);
+  const [localSearch, setLocalSearch] = useState(currentSearch);
+  const [status, setStatus] = useState<AdminStatusFilter>(currentStatus);
+  const [sortKey, setSortKey] = useState<AdminSortKey>(currentSort);
+  const [page, setPage] = useState(currentPage);
   const pageSize = 25;
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (
+          value === undefined ||
+          value === "" ||
+          (key === "page" && value === "1") ||
+          (key === "status" && value === "active") ||
+          (key === "sort" && value === "granted_at")
+        ) {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      }
+      const qs = params.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
+
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setLocalSearch(value);
+      setPage(1);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        updateParams({ search: value.trim() || undefined, page: "1" });
+      }, 350);
+    },
+    [updateParams],
+  );
+
   const filteredSorted = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = localSearch.trim().toLowerCase();
 
     // By default, hide inactive (soft-deleted) admins from the list.
     // They are only shown when the explicit "Inactive" filter is selected.
@@ -87,7 +139,7 @@ export function DashboardAdminsListScreen({
     });
 
     return sorted;
-  }, [admins, search, status, sortKey]);
+  }, [admins, localSearch, status, sortKey]);
 
   const { paged: pagedAdmins, totalPages } = useMemo(
     () => paginateItems(filteredSorted, page, pageSize),
@@ -133,11 +185,43 @@ export function DashboardAdminsListScreen({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-6 mb-10">
-          <StatCard label="Total Admins" value={stats.total} meta="+0%" metaClassName="text-green-600" />
-          <StatCard label="Active Now" value={stats.active} meta="Live" metaClassName="text-blue-600" />
-          <StatCard label="Inactive" value={stats.inactive} meta="—" metaClassName="text-orange-500" />
-          <StatCard label="Expired" value={stats.expired} meta="Soon" metaClassName="text-rose-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <StatCard
+            label="Total Admins"
+            value={stats.total}
+            meta="+0%"
+            metaClassName="text-green-600"
+          />
+          <StatCard
+            label="Active Now"
+            value={stats.active}
+            meta="Live"
+            metaClassName="text-blue-600"
+          />
+          {stats.inactive > 0 && (
+            <button
+              type="button"
+              className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-primary/60 rounded-xl"
+              onClick={() => {
+                setStatus("inactive");
+                setPage(1);
+                updateParams({ status: "inactive", page: "1" });
+              }}
+            >
+              <StatCard
+                label="Inactive"
+                value={stats.inactive}
+                meta="View list"
+                metaClassName="text-orange-500"
+              />
+            </button>
+          )}
+          <StatCard
+            label="Expired"
+            value={stats.expired}
+            meta="Soon"
+            metaClassName="text-rose-600"
+          />
         </div>
 
         <DashboardEntityTable
@@ -145,7 +229,11 @@ export function DashboardAdminsListScreen({
             <>
               <DashboardToolbarMenu
                 icon="filter_list"
-                label="Filter"
+                label={
+                  <>
+                    Filter{status !== "all" ? ` (${status})` : ""}
+                  </>
+                }
                 open={filterOpen}
                 onOpenChange={(next) => {
                   setFilterOpen(next);
@@ -161,10 +249,9 @@ export function DashboardAdminsListScreen({
                     search
                   </span>
                   <input
-                    value={search}
+                    value={localSearch}
                     onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(1);
+                      handleSearchChange(e.target.value);
                     }}
                     className="w-full bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-dashboard-primary/20 placeholder:text-on-surface-variant/50"
                     placeholder="Search admins..."
@@ -176,7 +263,6 @@ export function DashboardAdminsListScreen({
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     {([
-                      { key: "all", label: "All" },
                       { key: "active", label: "Active" },
                       { key: "inactive", label: "Inactive" },
                     ] as Array<{ key: AdminStatusFilter; label: string }>).map((opt) => {
@@ -194,6 +280,7 @@ export function DashboardAdminsListScreen({
                           onClick={() => {
                             setStatus(opt.key);
                             setPage(1);
+                            updateParams({ status: opt.key, page: "1" });
                             setFilterOpen(false);
                           }}
                         >
@@ -238,6 +325,7 @@ export function DashboardAdminsListScreen({
                           setSortKey(opt.key);
                           setPage(1);
                           setSortOpen(false);
+                          updateParams({ sort: opt.key, page: "1" });
                         }}
                       >
                         {opt.label}
@@ -359,7 +447,10 @@ export function DashboardAdminsListScreen({
           }
           page={page}
           totalPages={totalPages}
-          onPageChange={setPage}
+          onPageChange={(p) => {
+            setPage(p);
+            updateParams({ page: String(p) });
+          }}
         />
 
         <CreateAdminModal open={createOpen} onOpenChange={setCreateOpen} />

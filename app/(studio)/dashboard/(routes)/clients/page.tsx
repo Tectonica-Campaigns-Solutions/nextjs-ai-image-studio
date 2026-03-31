@@ -27,7 +27,7 @@ type ClientsPageProps = {
 export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
-  const status = (params.status ?? "all") as ClientStatusFilter;
+  const status = (params.status ?? "active") as ClientStatusFilter;
   const sort = (params.sort ?? "created") as ClientSortKey;
   const search = params.search || undefined;
 
