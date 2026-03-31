@@ -258,31 +258,44 @@ export function FontUpload({
               Font Weights *
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {FONT_WEIGHTS.map((weight) => (
-                <button
-                  key={weight.value}
-                  type="button"
-                  onClick={() => handleWeightToggle(weight.value)}
-                  disabled={uploading}
-                  aria-pressed={selectedWeights.includes(weight.value)}
-                  className={
-                    selectedWeights.includes(weight.value)
-                      ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors"
-                      : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors"
-                  }
-                >
-                  <Checkbox
-                    id={`weight-${weight.value}`}
-                    checked={selectedWeights.includes(weight.value)}
-                    onCheckedChange={() => handleWeightToggle(weight.value)}
-                    disabled={uploading}
-                    className="pointer-events-none"
-                  />
-                  <span className="text-xs font-semibold">
-                    {weight.label} ({weight.value})
-                  </span>
-                </button>
-              ))}
+              {FONT_WEIGHTS.map((weight) => {
+                const isSelected = selectedWeights.includes(weight.value);
+                return (
+                  <div
+                    key={weight.value}
+                    role="button"
+                    tabIndex={uploading ? -1 : 0}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      if (uploading) return;
+                      handleWeightToggle(weight.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (uploading) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleWeightToggle(weight.value);
+                      }
+                    }}
+                    className={
+                      isSelected
+                        ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors cursor-pointer"
+                        : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
+                    }
+                  >
+                    <Checkbox
+                      id={`weight-${weight.value}`}
+                      checked={isSelected}
+                      onCheckedChange={() => handleWeightToggle(weight.value)}
+                      disabled={uploading}
+                      className="pointer-events-none"
+                    />
+                    <span className="text-xs font-semibold">
+                      {weight.label} ({weight.value})
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
@@ -337,31 +350,44 @@ export function FontUpload({
               Select the available weights for this font
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {FONT_WEIGHTS.map((weight) => (
-                <button
-                  key={weight.value}
-                  type="button"
-                  onClick={() => handleWeightToggle(weight.value)}
-                  disabled={uploading}
-                  aria-pressed={selectedWeights.includes(weight.value)}
-                  className={
-                    selectedWeights.includes(weight.value)
-                      ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors"
-                      : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors"
-                  }
-                >
-                  <Checkbox
-                    id={`custom-weight-${weight.value}`}
-                    checked={selectedWeights.includes(weight.value)}
-                    onCheckedChange={() => handleWeightToggle(weight.value)}
-                    disabled={uploading}
-                    className="pointer-events-none"
-                  />
-                  <span className="text-xs font-semibold">
-                    {weight.label} ({weight.value})
-                  </span>
-                </button>
-              ))}
+              {FONT_WEIGHTS.map((weight) => {
+                const isSelected = selectedWeights.includes(weight.value);
+                return (
+                  <div
+                    key={weight.value}
+                    role="button"
+                    tabIndex={uploading ? -1 : 0}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      if (uploading) return;
+                      handleWeightToggle(weight.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (uploading) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleWeightToggle(weight.value);
+                      }
+                    }}
+                    className={
+                      isSelected
+                        ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors cursor-pointer"
+                        : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
+                    }
+                  >
+                    <Checkbox
+                      id={`custom-weight-${weight.value}`}
+                      checked={isSelected}
+                      onCheckedChange={() => handleWeightToggle(weight.value)}
+                      disabled={uploading}
+                      className="pointer-events-none"
+                    />
+                    <span className="text-xs font-semibold">
+                      {weight.label} ({weight.value})
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>

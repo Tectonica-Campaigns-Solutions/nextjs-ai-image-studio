@@ -43,6 +43,8 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { sensors, handleDragEnd, items: sortedFrames } = useGallerySort(frames, clientId, onRefresh);
 
@@ -54,13 +56,16 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
     const result = await deleteAssetAction(clientId, deleteTarget);
     if (result.error) {
-      toast.error(result.error);
-      setDeleteTarget(null);
+      setDeleteError(result.error);
+      setDeleteBusy(false);
       return;
     }
     toast.success("Frame deleted");
+    setDeleteBusy(false);
     setDeleteTarget(null);
     onRefresh();
   };
@@ -223,10 +228,19 @@ export function FrameGallery({ clientId, frames, onRefresh }: FrameGalleryProps)
 
       <ConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteBusy(false);
+            setDeleteError(null);
+          }
+        }}
         title="Delete frame"
         description="Are you sure you want to delete this frame? This action cannot be undone."
         actionLabel="Delete"
+        busy={deleteBusy}
+        busyLabel="Deleting..."
+        errorMessage={deleteError}
         onConfirm={handleConfirmDelete}
       />
 

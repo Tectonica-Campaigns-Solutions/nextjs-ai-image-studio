@@ -11,16 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { FontUpload } from "./font-upload";
 import { FontCard } from "./font-card";
 import type { ClientFont, FontWeight } from "@/app/(studio)/dashboard/utils/types";
@@ -34,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FONT_WEIGHTS } from "@/app/(studio)/standalone/studio/utils/studio-utils";
+import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
 
 interface FontGalleryProps {
   clientId: string;
@@ -48,6 +39,8 @@ export function FontGallery({
 }: FontGalleryProps) {
   const [showUpload, setShowUpload] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [editTargetId, setEditTargetId] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editFamily, setEditFamily] = useState("");
@@ -84,13 +77,16 @@ export function FontGallery({
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
     const result = await deleteFontAction(clientId, deleteTarget);
     if (result.error) {
-      toast.error(result.error);
-      setDeleteTarget(null);
+      setDeleteError(result.error);
+      setDeleteBusy(false);
       return;
     }
     toast.success("Font deleted");
+    setDeleteBusy(false);
     setDeleteTarget(null);
     onRefresh();
   };
@@ -266,30 +262,23 @@ export function FontGallery({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
+      <ConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent className="bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5">
-          <AlertDialogHeader className="mb-2">
-            <AlertDialogTitle className="text-on-surface font-bold text-lg">
-              Delete font
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-on-surface-variant">
-              Are you sure you want to delete this font? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteBusy(false);
+            setDeleteError(null);
+          }
+        }}
+        title="Delete font"
+        description="Are you sure you want to delete this font? This action cannot be undone."
+        actionLabel="Delete"
+        busy={deleteBusy}
+        busyLabel="Deleting..."
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+      />
 
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

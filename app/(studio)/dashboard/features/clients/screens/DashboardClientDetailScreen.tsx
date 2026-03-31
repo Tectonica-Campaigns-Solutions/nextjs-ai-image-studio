@@ -48,6 +48,8 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const toggleAction = useServerAction();
   const [deleteAssetId, setDeleteAssetId] = useState<string | null>(null);
   const assetAction = useServerAction();
+  const [deleteAssetBusy, setDeleteAssetBusy] = useState(false);
+  const [deleteAssetError, setDeleteAssetError] = useState<string | null>(null);
   const [editFrame, setEditFrame] = useState<ClientAsset | null>(null);
   const [editVariantAll, setEditVariantAll] = useState(false);
   const [editVariantRatios, setEditVariantRatios] = useState<string[]>([]);
@@ -56,6 +58,8 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const [showUploadAsset, setShowUploadAsset] = useState(false);
   const [showUploadFrame, setShowUploadFrame] = useState(false);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
+  const [deleteSessionBusy, setDeleteSessionBusy] = useState(false);
+  const [deleteSessionError, setDeleteSessionError] = useState<string | null>(null);
   const sessionAction = useServerAction();
 
   const logoAsset = useMemo(() => {
@@ -184,15 +188,20 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     }
   };
 
-  const handleDeleteAsset = () => {
+  const handleDeleteAsset = async () => {
     if (!client || !deleteAssetId) return;
-    void assetAction.execute(
-      deleteAssetId,
-      deleteAssetAction,
-      [client.id, deleteAssetId],
-      "Asset deleted",
-      () => { setDeleteAssetId(null); router.refresh(); },
-    );
+    setDeleteAssetBusy(true);
+    setDeleteAssetError(null);
+    const result = await deleteAssetAction(client.id, deleteAssetId);
+    if (result.error) {
+      setDeleteAssetError(result.error);
+      setDeleteAssetBusy(false);
+      return;
+    }
+    toast.success("Asset deleted");
+    setDeleteAssetBusy(false);
+    setDeleteAssetId(null);
+    router.refresh();
   };
 
   const handleSetPrimaryFrame = (frameId: string) => {
@@ -206,15 +215,20 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     );
   };
 
-  const handleDeleteSession = () => {
+  const handleDeleteSession = async () => {
     if (!client || !deleteSessionId) return;
-    void sessionAction.execute(
-      deleteSessionId,
-      deleteCanvasSessionAction,
-      [client.id, deleteSessionId],
-      "Session deleted",
-      () => { setDeleteSessionId(null); router.refresh(); },
-    );
+    setDeleteSessionBusy(true);
+    setDeleteSessionError(null);
+    const result = await deleteCanvasSessionAction(client.id, deleteSessionId);
+    if (result.error) {
+      setDeleteSessionError(result.error);
+      setDeleteSessionBusy(false);
+      return;
+    }
+    toast.success("Session deleted");
+    setDeleteSessionBusy(false);
+    setDeleteSessionId(null);
+    router.refresh();
   };
 
   const tabLabel = (() => {
@@ -369,23 +383,37 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
 
         <ConfirmDialog
           open={!!deleteSessionId}
-          onOpenChange={(open) => { if (!open) setDeleteSessionId(null); }}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteSessionId(null);
+              setDeleteSessionBusy(false);
+              setDeleteSessionError(null);
+            }
+          }}
           title="Delete canvas session"
           description="Are you sure you want to delete this canvas session? This action cannot be undone."
           actionLabel="Delete"
           busyLabel="Deleting..."
-          busy={sessionAction.busyId !== null}
+          busy={deleteSessionBusy}
+          errorMessage={deleteSessionError}
           onConfirm={handleDeleteSession}
         />
 
         <ConfirmDialog
           open={!!deleteAssetId}
-          onOpenChange={(open) => { if (!open) setDeleteAssetId(null); }}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeleteAssetId(null);
+              setDeleteAssetBusy(false);
+              setDeleteAssetError(null);
+            }
+          }}
           title="Delete asset"
           description="Are you sure you want to delete this asset? This action cannot be undone."
           actionLabel="Delete"
           busyLabel="Deleting..."
-          busy={assetAction.busyId !== null}
+          busy={deleteAssetBusy}
+          errorMessage={deleteAssetError}
           onConfirm={handleDeleteAsset}
         />
 
