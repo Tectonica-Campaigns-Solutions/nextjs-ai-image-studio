@@ -789,6 +789,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-sm">
+                  <span className="text-on-surface-variant/70">CA User ID</span>
+                  <span className="font-semibold break-all">{client.ca_user_id ?? "—"}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-on-surface-variant/70">Point of Contact</span>
                   <span className="font-semibold">{client.email ?? "—"}</span>
                 </div>

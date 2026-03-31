@@ -26,6 +26,8 @@ type FileQueueItem = {
   preview: string | null;
   status: "pending" | "uploading" | "done" | "error";
   error?: string;
+  name: string;
+  displayName: string;
 };
 
 const ALLOWED_TYPES = [
@@ -72,6 +74,7 @@ export function AssetUpload({
         }
 
         let preview: string | null = null;
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
         try {
           preview = await new Promise<string>((resolve) => {
             const reader = new FileReader();
@@ -87,6 +90,8 @@ export function AssetUpload({
           file,
           preview,
           status: "pending",
+          name: baseName,
+          displayName: baseName,
         });
       }
 
@@ -100,7 +105,7 @@ export function AssetUpload({
   );
 
   const removeFromQueue = useCallback((id: string) => {
-    setQueue((prev) => prev.filter((item) => item.id !== id));
+      setQueue((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
   const handleUpload = async () => {
@@ -139,8 +144,13 @@ export function AssetUpload({
         const formData = new FormData();
         formData.append("file", item.file);
         const baseName = item.file.name.replace(/\.[^/.]+$/, "");
-        formData.append("name", baseName);
-        formData.append("display_name", baseName);
+        const effectiveName = item.name.trim() || baseName;
+        const effectiveDisplayName =
+          assetType === "frame"
+            ? (item.displayName?.trim() || effectiveName)
+            : effectiveName;
+        formData.append("name", effectiveName);
+        formData.append("display_name", effectiveDisplayName);
         formData.append("asset_type", assetType);
         formData.append(
           "is_primary",
@@ -173,11 +183,11 @@ export function AssetUpload({
           prev.map((q) =>
             q.id === item.id
               ? {
-                  ...q,
-                  status: "error" as const,
-                  error:
-                    err instanceof Error ? err.message : "Upload failed",
-                }
+                ...q,
+                status: "error" as const,
+                error:
+                  err instanceof Error ? err.message : "Upload failed",
+              }
               : q
           )
         );
@@ -236,7 +246,7 @@ export function AssetUpload({
           <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
             {queue.length} file{queue.length !== 1 ? "s" : ""} selected
           </Label>
-          <div className="rounded-xl border border-outline-variant/10 bg-surface-container-low p-2 max-h-48 overflow-y-auto">
+          <div className="rounded-xl border border-outline-variant/10 bg-surface-container-low p-2 max-h-72 overflow-y-auto">
             {queue.map((item) => (
               <div
                 key={item.id}
@@ -253,7 +263,41 @@ export function AssetUpload({
                     />
                   </div>
                 )}
-                <span className="flex-1 truncate">{item.file.name}</span>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <p className="truncate text-xs text-on-surface-variant/80">
+                    {item.file.name}
+                  </p>
+                  <Input
+                    value={item.name}
+                    onChange={(e) =>
+                      setQueue((prev) =>
+                        prev.map((q) =>
+                          q.id === item.id ? { ...q, name: e.target.value } : q
+                        )
+                      )
+                    }
+                    disabled={uploading || item.status !== "pending"}
+                    placeholder="Name"
+                    className="h-8 text-xs px-2 py-1 bg-surface-container-lowest border-outline-variant/30"
+                  />
+                  {assetType === "frame" && (
+                    <Input
+                      value={item.displayName}
+                      onChange={(e) =>
+                        setQueue((prev) =>
+                          prev.map((q) =>
+                            q.id === item.id
+                              ? { ...q, displayName: e.target.value }
+                              : q
+                          )
+                        )
+                      }
+                      disabled={uploading || item.status !== "pending"}
+                      placeholder="Display name"
+                      className="h-8 text-xs px-2 py-1 bg-surface-container-lowest border-outline-variant/30"
+                    />
+                  )}
+                </div>
                 {item.status === "pending" && (
                   <button
                     type="button"
@@ -404,7 +448,7 @@ export function AssetUpload({
               frameVariantRatios.length === 0) ||
             uploading
           }
-          className="bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
+          className="bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70 hover:bg-dashboard-primary/90 hover:text-dashboard-on-primary"
         >
           {uploading ? (
             <>
