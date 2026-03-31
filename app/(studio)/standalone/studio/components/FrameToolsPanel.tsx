@@ -66,9 +66,13 @@ export const FrameToolsPanel = React.memo(function FrameToolsPanel({
           <SelectTrigger className="w-full border-[#2D2D2D] bg-[#0D0D0D] text-[#F4F4F4] font-(family-name:--font-manrope)">
             <SelectValue placeholder="Select size" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
             {FRAME_SHOW_BY_SIZE_OPTIONS.map(({ value, label }) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem
+                key={value}
+                value={value}
+                className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+              >
                 {label}
               </SelectItem>
             ))}

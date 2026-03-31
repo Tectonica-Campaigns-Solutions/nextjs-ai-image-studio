@@ -109,21 +109,32 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
             <SelectTrigger className="w-full bg-[#0D0D0D] py-[10px] px-[16px] border-[#2D2D2D] text-[13px] font-medium leading-[135%] text-white font-(family-name:--font-manrope) h-[44px]! rounded-[10px] transition-all hover:border-[#444] focus:ring-2 focus:ring-[#5C38F3]/20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
               {fontAssets.length > 0 ? (
                 fontAssets.map((font) => (
                   <SelectItem
                     key={font.font_family}
                     value={font.font_family}
                     style={{ fontFamily: font.font_family }}
+                    className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
                   >
                     {font.font_family}
                   </SelectItem>
                 ))
               ) : (
                 <>
-                  <SelectItem value="Manrope" className="font-(family-name:--font-manrope)">Manrope</SelectItem>
-                  <SelectItem value="IBM Plex Sans" className="font-(family-name:--font-ibm-plex-sans)">IBM Plex Sans</SelectItem>
+                  <SelectItem
+                    value="Manrope"
+                    className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+                  >
+                    Manrope
+                  </SelectItem>
+                  <SelectItem
+                    value="IBM Plex Sans"
+                    className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-ibm-plex-sans) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+                  >
+                    IBM Plex Sans
+                  </SelectItem>
                 </>
               )}
             </SelectContent>
