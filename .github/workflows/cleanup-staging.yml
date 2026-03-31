@@ -1,0 +1,21 @@
+name: Cleanup BFL Staging Bucket
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cleanup endpoint
+        run: |
+          STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://qwen-image-editor-production-49d4.up.railway.app/api/cron/cleanup-staging)
+          cat /tmp/response.json
+          if [ "$STATUS" != "200" ]; then
+            echo "Cleanup failed with HTTP $STATUS"
+            exit 1
+          fi

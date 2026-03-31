@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: "AI Image generation",
   description: "Created with v0",
   generator: "v0.app",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({
