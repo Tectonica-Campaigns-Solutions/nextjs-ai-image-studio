@@ -180,11 +180,11 @@ export function DashboardVisualStudioAccessLogScreen({
                   <p className="text-xs text-on-surface-variant mt-0.5">
                     {entry.path ?? "—"}
                   </p>
-                  {entry.ipAddress ? (
+                  {/* {entry.ipAddress ? (
                     <p className="text-[11px] text-on-surface-variant mt-0.5">
                       IP: {entry.ipAddress}
                     </p>
-                  ) : null}
+                  ) : null} */}
                 </div>
                 <span className="text-[11px] text-on-surface-variant">
                   {formatRelativeTime(entry.createdAt)}

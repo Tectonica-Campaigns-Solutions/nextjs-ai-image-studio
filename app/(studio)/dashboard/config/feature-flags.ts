@@ -11,7 +11,7 @@ const DASHBOARD_FEATURE_DEFAULTS = {
   commandPalette: true,
   darkThemeToggle: false,
   notifications: false,
-  visualStudioAccessLogs: true,
+  visualStudioAccessLogs: false,
 } as const;
 
 const DASHBOARD_FEATURE_ENV_KEYS = {
