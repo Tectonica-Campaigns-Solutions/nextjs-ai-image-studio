@@ -220,6 +220,31 @@
   .themed-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #3d3d3d;
   }
+
+  /* Subtle scrollbar for modal panels */
+  .subtle-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, currentColor 20%, transparent) transparent;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, currentColor 18%, transparent);
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+
+  .subtle-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, currentColor 28%, transparent);
+  }
 }
 
 .markdown-content p {
@@ -292,7 +317,7 @@
 }
 
 /* Mejorar contraste en inputs */
-[data-slot="input"] {
+[data-slot="input"]:not(.dashboard-input) {
   background-color: hsl(var(--input)) !important;
   border-color: hsl(var(--border)) !important;
 }
@@ -311,42 +336,42 @@ button[data-variant="secondary"],
 }
 
 /* FORZAR CONTRASTE MÁXIMO - ESTILOS DIRECTOS */
-* {
+body:not(:has(.studio-root)) * {
   --tw-bg-opacity: 1 !important;
 }
 
 /* Forzar contraste en todo el texto */
-body,
-html {
+html:not(:has(.studio-root)),
+body:not(:has(.studio-root)) {
   color: #121212 !important;
   background-color: #ffffff !important;
 }
 
 /* Forzar estilos de botones primarios */
-button,
-.btn,
-[role="button"] {
+body:not(:has(.studio-root)) button,
+body:not(:has(.studio-root)) .btn,
+body:not(:has(.studio-root)) [role="button"] {
   font-weight: 500 !important;
 }
 
-button.bg-primary,
-button[class*="bg-primary"],
-.bg-primary {
+body:not(:has(.studio-root)) button.bg-primary,
+body:not(:has(.studio-root)) button[class*="bg-primary"],
+body:not(:has(.studio-root)) .bg-primary {
   background-color: #1a1a1a !important;
   color: #ffffff !important;
   border: 1px solid #333333 !important;
 }
 
 /* Forzar estilos de tabs */
-[role="tablist"] button,
-[data-slot="tabs-trigger"] {
+body:not(:has(.studio-root)) [role="tablist"] button,
+body:not(:has(.studio-root)) [data-slot="tabs-trigger"] {
   background-color: #f1f1f1 !important;
   color: #2a2a2a !important;
   border: 1px solid #d1d1d1 !important;
 }
 
-[role="tablist"] button[data-state="active"],
-[data-slot="tabs-trigger"][data-state="active"] {
+body:not(:has(.studio-root)) [role="tablist"] button[data-state="active"],
+body:not(:has(.studio-root)) [data-slot="tabs-trigger"][data-state="active"] {
   background-color: #ffffff !important;
   color: #121212 !important;
   border: 1px solid #1a1a1a !important;
@@ -354,43 +379,43 @@ button[class*="bg-primary"],
 }
 
 /* Forzar estilos de inputs */
-input,
-textarea,
-[data-slot="input"] {
+body:not(:has(.studio-root)) input,
+body:not(:has(.studio-root)) textarea,
+body:not(:has(.studio-root)) [data-slot="input"] {
   background-color: #ffffff !important;
   border: 1px solid #d1d1d1 !important;
   color: #121212 !important;
 }
 
-input:focus,
-textarea:focus,
-[data-slot="input"]:focus {
+body:not(:has(.studio-root)) input:focus,
+body:not(:has(.studio-root)) textarea:focus,
+body:not(:has(.studio-root)) [data-slot="input"]:focus {
   border-color: #666666 !important;
   box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.2) !important;
 }
 
 /* Forzar contraste en cards y contenedores */
-.card,
-[data-slot="card"] {
+body:not(:has(.studio-root)) .card,
+body:not(:has(.studio-root)) [data-slot="card"] {
   background-color: #ffffff !important;
   border: 1px solid #e5e5e5 !important;
   color: #121212 !important;
 }
 
 /* Asegurar que los dropdowns sean visibles */
-[role="menu"],
-[role="listbox"],
-.dropdown-content {
+body:not(:has(.studio-root)) [role="menu"],
+body:not(:has(.studio-root)) [role="listbox"],
+body:not(:has(.studio-root)) .dropdown-content {
   background-color: #ffffff !important;
   border: 1px solid #d1d1d1 !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
-#sidebar [data-slot="card"] {
+body:not(:has(.studio-root)) #sidebar [data-slot="card"] {
   border: none !important;
 }
 
-#sidebar [data-slot="input"] {
+body:not(:has(.studio-root)) #sidebar [data-slot="input"] {
   border-radius: 10px;
   border: 1px solid rgba(74, 74, 74, 0.50) !important;
   background: #0D0D0D !important;

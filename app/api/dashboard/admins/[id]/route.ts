@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
-import { updateAdminSchema } from "@/app/(studio)/dashboard/schemas/admins";
+import { updateAdminSchema } from "@/app/(studio)/dashboard/features/admins/schemas/admins";
 import {
   errorResponse,
   validateIdParam,

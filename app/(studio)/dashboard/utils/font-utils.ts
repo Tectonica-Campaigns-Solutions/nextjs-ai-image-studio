@@ -3,14 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 const BUCKET_NAME = "client-assets"; // Reuse the assets bucket
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = [
+  // Modern standard MIME types (RFC 8081)
   "font/ttf",
   "font/woff",
   "font/woff2",
   "font/otf",
+  // Legacy MIME types kept for browser/OS compatibility
   "application/font-woff",
   "application/font-woff2",
   "application/x-font-ttf",
-  "application/x-font-opentype",
+  // "application/x-font-opentype" was removed — not a valid MIME type; font/otf covers OTF
 ];
 
 export interface UploadFontResult {

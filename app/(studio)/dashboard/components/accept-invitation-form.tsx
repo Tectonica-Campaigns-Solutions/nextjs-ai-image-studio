@@ -4,9 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Loader2 } from "lucide-react";
-import { setupPasswordAction } from "@/app/(studio)/dashboard/actions/auth";
+import { Shield, Loader2, Lock } from "lucide-react";
+import { setupPasswordAction } from "@/app/(studio)/dashboard/features/auth/actions/auth";
 
 interface AcceptInvitationFormProps {
   userEmail: string | null;
@@ -18,30 +17,23 @@ export function AcceptInvitationForm({ userEmail }: AcceptInvitationFormProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log("[AcceptInvitationForm] Render", { userEmail: userEmail ?? "(null)" });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[AcceptInvitationForm] handleSubmit");
     setError(null);
     if (!password.trim()) {
-      console.log("[AcceptInvitationForm] Validation: password required");
       setError("Password is required");
       return;
     }
     if (password !== confirmPassword) {
-      console.log("[AcceptInvitationForm] Validation: passwords do not match");
       setError("Passwords do not match");
       return;
     }
     setSaving(true);
-    console.log("[AcceptInvitationForm] Calling setupPasswordAction");
     const result = await setupPasswordAction({
       password,
       confirmPassword,
     });
     setSaving(false);
-    console.log("[AcceptInvitationForm] setupPasswordAction result:", result?.error ? { error: result.error } : "ok");
     if (result?.error) {
       setError(result.error);
       return;
@@ -49,86 +41,83 @@ export function AcceptInvitationForm({ userEmail }: AcceptInvitationFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f1f2] flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <Card className="bg-white rounded-3xl border-0 shadow-drop-shadow">
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center mb-8">
-              <div className="w-16 h-16 bg-[#5661f6] rounded-full flex items-center justify-center mb-6">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="[font-family:'Manrope',Helvetica] font-extrabold text-[#3b4451] text-[28px] tracking-[0] leading-[34px] text-center mb-2">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 p-8">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 rounded-xl bg-dashboard-primary text-dashboard-on-primary flex items-center justify-center mb-5 shadow-sm shadow-dashboard-primary/25">
+            <Shield className="w-7 h-7" />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-on-surface text-center mb-2">
+            Set Password
+          </h1>
+          <p className="text-on-surface-variant text-sm text-center">
+            {userEmail
+              ? `Welcome ${userEmail}. Set your password to complete your registration.`
+              : "Set your password to complete your registration as an admin."}
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
+            <p className="text-destructive text-sm text-center">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+              htmlFor="password"
+            >
+              Password
+            </Label>
+            <Input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="dashboard-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+              required
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+              htmlFor="confirmPassword"
+            >
+              Confirm Password
+            </Label>
+            <Input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="dashboard-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+              required
+              autoComplete="new-password"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={saving}
+            className="w-full h-11 rounded-xl bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 font-semibold hover:opacity-90 shadow-sm shadow-dashboard-primary/20"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Setting password...
+              </>
+            ) : (
+              <>
+                <Lock className="size-4 mr-2" />
                 Set Password
-              </h1>
-              <p className="[font-family:'Manrope',Helvetica] text-[#929292] text-sm text-center">
-                {userEmail
-                  ? `Welcome ${userEmail}. Set your password to complete your registration.`
-                  : "Set your password to complete your registration as an admin."}
-              </p>
-            </div>
-
-            {error && (
-              <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-destructive text-sm text-center [font-family:'Manrope',Helvetica]">
-                  {error}
-                </p>
-              </div>
+              </>
             )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label
-                  className="[font-family:'Manrope',Helvetica] font-semibold text-[#3b4451] text-sm tracking-[-0.08px] leading-5"
-                  htmlFor="password"
-                >
-                  Password
-                </Label>
-                <Input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-[50px] rounded-full border-slate-300 [font-family:'Manrope',Helvetica] font-medium text-gray-60 text-base tracking-[-0.11px] px-4 focus-visible:ring-2 focus-visible:ring-[#5661f6] focus-visible:ring-offset-0 focus-visible:border-[#5661f6]"
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label
-                  className="[font-family:'Manrope',Helvetica] font-semibold text-[#3b4451] text-sm tracking-[-0.08px] leading-5"
-                  htmlFor="confirmPassword"
-                >
-                  Confirm Password
-                </Label>
-                <Input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-[50px] rounded-full border-slate-300 [font-family:'Manrope',Helvetica] font-medium text-gray-60 text-base tracking-[-0.11px] px-4 focus-visible:ring-2 focus-visible:ring-[#5661f6] focus-visible:ring-offset-0 focus-visible:border-[#5661f6]"
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-[#5661f6] hover:bg-[#5661f6]/90 rounded-full h-[50px] [font-family:'Manrope',Helvetica] font-semibold text-white text-base tracking-[0] leading-[22px] transition-all duration-200 hover:shadow-lg cursor-pointer"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Setting password...
-                  </>
-                ) : (
-                  "Set Password"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          </Button>
+        </form>
       </div>
     </div>
   );

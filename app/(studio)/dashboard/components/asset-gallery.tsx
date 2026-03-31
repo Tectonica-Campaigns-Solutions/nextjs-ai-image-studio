@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import Image from "next/image";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+} from "@dnd-kit/core";
+import { useGallerySort } from "@/app/(studio)/dashboard/hooks/use-gallery-sort";
+import {
+  SortableContext,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Star, Expand } from "lucide-react";
+import { Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +20,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { GalleryLightbox } from "./gallery-lightbox";
+import { ConfirmDialog } from "./confirm-dialog";
 import { AssetUpload } from "./asset-upload";
-import type { ClientAsset } from "@/app/(studio)/dashboard/types";
-import { deleteAssetAction, setPrimaryAssetAction } from "@/app/(studio)/dashboard/actions/assets";
+import { AssetCard } from "./asset-card";
+import type { ClientAsset } from "@/app/(studio)/dashboard/utils/types";
+import {
+  deleteAssetAction,
+  setPrimaryAssetAction,
+} from "@/app/(studio)/dashboard/features/assets/actions/assets";
 
 interface AssetGalleryProps {
   clientId: string;
@@ -30,38 +45,48 @@ export function AssetGallery({
 }: AssetGalleryProps) {
   const [showUpload, setShowUpload] = useState(false);
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const openLightbox = useCallback((asset: ClientAsset) => {
-    setLightboxAsset(asset);
-  }, []);
+  // items is the optimistically-updated order (updates instantly on drag).
+  const { sensors, handleDragEnd, items } = useGallerySort(assets, clientId, onRefresh);
 
-  const closeLightbox = useCallback(() => {
-    setLightboxAsset(null);
-  }, []);
-
-  const handleLightboxKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-    },
-    [closeLightbox]
+  // Group assets by variant. Memoized so it only recomputes when items change.
+  const groupedAssets = useMemo(
+    () =>
+      items.reduce((acc, asset) => {
+        const key = asset.variant || "No variant";
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(asset);
+        return acc;
+      }, {} as Record<string, ClientAsset[]>),
+    [items]
   );
 
-  const handleDelete = async (assetId: string) => {
-    if (!confirm("Are you sure you want to delete this asset?")) return;
-    const result = await deleteAssetAction(clientId, assetId);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    const result = await deleteAssetAction(clientId, deleteTarget);
     if (result.error) {
-      alert(result.error);
+      setDeleteError(result.error);
+      setDeleteBusy(false);
       return;
     }
+    toast.success("Asset deleted");
+    setDeleteBusy(false);
+    setDeleteTarget(null);
     onRefresh();
   };
 
   const handleSetPrimary = async (assetId: string) => {
     const result = await setPrimaryAssetAction(clientId, assetId);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Primary asset updated");
     onRefresh();
   };
 
@@ -86,6 +111,31 @@ export function AssetGallery({
           />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteBusy(false);
+            setDeleteError(null);
+          }
+        }}
+        title="Delete asset"
+        description="Are you sure you want to delete this asset? This action cannot be undone."
+        actionLabel="Delete"
+        busy={deleteBusy}
+        busyLabel="Deleting..."
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <GalleryLightbox
+        asset={lightboxAsset}
+        onClose={() => setLightboxAsset(null)}
+        description="Full-size image preview"
+      />
+
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -99,9 +149,10 @@ export function AssetGallery({
           </Button>
         </div>
 
-        {assets.length === 0 ? (
+        {items.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground mb-4">
+            <Upload className="size-8 text-muted-foreground mx-auto mb-3" aria-hidden />
+            <p className="text-sm text-muted-foreground mb-4 text-pretty">
               No assets found. Upload the first one to start.
             </p>
             <Button onClick={() => setShowUpload(true)} variant="outline" aria-label="Upload first asset">
@@ -110,19 +161,13 @@ export function AssetGallery({
             </Button>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Group assets by variant */}
-            {(() => {
-              const groupedAssets = assets.reduce((acc, asset) => {
-                const variantKey = asset.variant || "No variant";
-                if (!acc[variantKey]) {
-                  acc[variantKey] = [];
-                }
-                acc[variantKey].push(asset);
-                return acc;
-              }, {} as Record<string, typeof assets>);
-
-              return Object.entries(groupedAssets).map(([variant, variantAssets]) => (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="space-y-6">
+              {Object.entries(groupedAssets).map(([variant, variantAssets]) => (
                 <div key={variant} className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-xs font-medium">
@@ -132,132 +177,27 @@ export function AssetGallery({
                       ({variantAssets.length} asset{variantAssets.length !== 1 ? "s" : ""})
                     </span>
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {variantAssets.map((asset) => (
-                      <div
-                        key={asset.id}
-                        className="relative group border rounded-lg overflow-hidden bg-card"
-                      >
-                        {/* Image Preview - click to open lightbox */}
-                        <button
-                          type="button"
-                          onClick={() => openLightbox(asset)}
-                          className="relative aspect-square bg-muted flex items-center justify-center w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#5661f6] focus:ring-inset"
-                          title="View full size"
-                        >
-                          <Image
-                            src={asset.file_url}
-                            alt={asset.display_name || asset.name}
-                            fill
-                            className="object-contain"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                          />
-                        </button>
-
-                        {/* Overlay with actions */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-                          <div className="pointer-events-auto flex items-center gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => openLightbox(asset)}
-                              title="View full size"
-                            >
-                              <Expand className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleSetPrimary(asset.id)}
-                              disabled={asset.is_primary}
-                              title={asset.is_primary ? "Already primary" : "Mark as Primary"}
-                            >
-                              <Star
-                                className={`h-4 w-4 ${asset.is_primary ? "fill-yellow-400 text-yellow-400" : "fill-gray-400 text-gray-400"
-                                  }`}
-                              />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(asset.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Primary badge */}
-                        {asset.is_primary && (
-                          <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-current" />
-                            Primary Asset
-                          </div>
-                        )}
-
-                        {/* Variant badge (if not grouped) */}
-                        {asset.variant && (
-                          <div className="absolute top-2 left-2 bg-blue-500/90 text-white px-2 py-1 rounded text-xs font-medium">
-                            {asset.variant}
-                          </div>
-                        )}
-
-                        {/* Asset info */}
-                        <div className="p-2 border-t">
-                          <p className="text-sm font-medium truncate">
-                            {asset.display_name || asset.name}
-                          </p>
-                          {asset.width && asset.height && (
-                            <p className="text-xs text-muted-foreground">
-                              {asset.width} × {asset.height}px
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <SortableContext
+                    items={variantAssets.map((a) => a.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {variantAssets.map((asset) => (
+                        <AssetCard
+                          key={asset.id}
+                          asset={asset}
+                          badges={[asset.variant || variant]}
+                          onView={() => setLightboxAsset(asset)}
+                          onSetPrimary={() => void handleSetPrimary(asset.id)}
+                          onDelete={() => setDeleteTarget(asset.id)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
                 </div>
-              ));
-            })()}
-          </div>
-        )}
-
-        {/* Lightbox */}
-        {lightboxAsset && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-            onClick={closeLightbox}
-            onKeyDown={handleLightboxKeyDown}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Image preview"
-            tabIndex={0}
-          >
-            <button
-              type="button"
-              onClick={closeLightbox}
-              className="absolute top-4 right-4 z-10 rounded-full p-2 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <div
-              className="relative w-full max-w-5xl h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={lightboxAsset.file_url}
-                alt={lightboxAsset.display_name || lightboxAsset.name}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
+              ))}
             </div>
-            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80 truncate max-w-full px-4">
-              {lightboxAsset.display_name || lightboxAsset.name}
-            </p>
-          </div>
+          </DndContext>
         )}
       </div>
     </>

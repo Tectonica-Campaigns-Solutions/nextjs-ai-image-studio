@@ -1,20 +1,13 @@
 import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function AdminLoading() {
   return (
     <div
-      className={cn(
-        "min-h-dvh bg-background flex items-center justify-center",
-        "pb-[env(safe-area-inset-bottom)]"
-      )}
+      className="min-h-[100vh] flex items-center justify-center"
       aria-busy="true"
-      aria-label="Loading"
+      aria-label="Loading dashboard"
     >
-      <Loader2
-        className="size-10 animate-spin text-muted-foreground"
-        aria-hidden
-      />
+      <Loader2 className="size-6 animate-spin text-on-surface-variant" aria-hidden />
     </div>
   );
 }

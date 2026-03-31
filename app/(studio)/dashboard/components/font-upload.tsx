@@ -159,48 +159,90 @@ export function FontUpload({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Font Source Selection */}
-      <div className="space-y-2">
-        <Label>Font Type</Label>
-        <Select
-          value={fontSource}
-          onValueChange={(value) => {
-            setFontSource(value as "google" | "custom");
-            setError(null);
-            setFile(null);
-            setFontFamily("");
-            setSelectedGoogleFont("");
-            if (fileInputRef.current) {
-              fileInputRef.current.value = "";
-            }
-          }}
-          disabled={uploading}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="google">Google Fonts</SelectItem>
-            <SelectItem value="custom">Custom Font</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+            Font Type
+          </Label>
+          <Select
+            value={fontSource}
+            onValueChange={(value) => {
+              setFontSource(value as "google" | "custom");
+              setError(null);
+              setFile(null);
+              setFontFamily("");
+              setSelectedGoogleFont("");
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+              }
+            }}
+            disabled={uploading}
+          >
+            <SelectTrigger
+              className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-sm p-1">
+              <SelectItem value="google">Google Fonts</SelectItem>
+              <SelectItem value="custom">Custom Font</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label
+            htmlFor="font-category"
+            className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+          >
+            Category
+          </Label>
+          <Select
+            value={fontCategory}
+            onValueChange={setFontCategory}
+            disabled={uploading}
+          >
+            <SelectTrigger
+              id="font-category"
+              className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+            >
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-sm p-1">
+              <SelectItem value="sans-serif">Sans-serif</SelectItem>
+              <SelectItem value="serif">Serif</SelectItem>
+              <SelectItem value="display">Display</SelectItem>
+              <SelectItem value="handwriting">Handwriting</SelectItem>
+              <SelectItem value="monospace">Monospace</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {fontSource === "google" ? (
         <>
           {/* Google Fonts Selector */}
           <div className="space-y-2">
-            <Label htmlFor="google-font">Google Fonts Font *</Label>
+            <Label
+              htmlFor="google-font"
+              className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+            >
+              Google Fonts Font *
+            </Label>
             <Select
               value={selectedGoogleFont}
               onValueChange={handleGoogleFontChange}
               disabled={uploading}
             >
-              <SelectTrigger id="google-font">
+              <SelectTrigger
+                id="google-font"
+                className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl !px-4 !py-2 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+              >
                 <SelectValue placeholder="Select a font" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-sm p-1 max-h-48 overflow-y-auto overflow-x-hidden">
                 {GOOGLE_FONTS.map((font) => (
                   <SelectItem key={font.family} value={font.family}>
                     {font.family}
@@ -212,122 +254,144 @@ export function FontUpload({
 
           {/* Font Weights for Google Fonts */}
           <div className="space-y-2">
-            <Label>Font Weights *</Label>
-            <div className="flex flex-wrap gap-2">
-              {FONT_WEIGHTS.map((weight) => (
-                <div key={weight.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`weight-${weight.value}`}
-                    checked={selectedWeights.includes(weight.value)}
-                    onCheckedChange={() => handleWeightToggle(weight.value)}
-                    disabled={uploading}
-                  />
-                  <Label
-                    htmlFor={`weight-${weight.value}`}
-                    className="text-sm font-normal cursor-pointer"
+            <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+              Font Weights *
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {FONT_WEIGHTS.map((weight) => {
+                const isSelected = selectedWeights.includes(weight.value);
+                return (
+                  <div
+                    key={weight.value}
+                    role="button"
+                    tabIndex={uploading ? -1 : 0}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      if (uploading) return;
+                      handleWeightToggle(weight.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (uploading) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleWeightToggle(weight.value);
+                      }
+                    }}
+                    className={
+                      isSelected
+                        ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors cursor-pointer"
+                        : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
+                    }
                   >
-                    {weight.label} ({weight.value})
-                  </Label>
-                </div>
-              ))}
+                    <Checkbox
+                      id={`weight-${weight.value}`}
+                      checked={isSelected}
+                      onCheckedChange={() => handleWeightToggle(weight.value)}
+                      disabled={uploading}
+                      className="pointer-events-none"
+                    />
+                    <span className="text-xs font-semibold">
+                      {weight.label} ({weight.value})
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
       ) : (
         <>
-          {/* Custom Font File Upload */}
-          <div className="space-y-2">
-            <Label>Font File *</Label>
-            <div className="flex items-center gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Custom Font File Upload */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                Font File *
+              </Label>
               <Input
                 ref={fileInputRef}
                 type="file"
                 accept=".ttf,.woff,.woff2,.otf,font/ttf,font/woff,font/woff2,font/otf"
                 onChange={handleFileSelect}
                 disabled={uploading}
-                className="cursor-pointer"
+                className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary cursor-pointer"
+              />
+              {file && (
+                <p className="text-sm text-muted-foreground">
+                  Selected file: {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                </p>
+              )}
+            </div>
+
+            {/* Custom Font Family Name */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="custom-font-family"
+                className="text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+              >
+                Font Name *
+              </Label>
+              <Input
+                id="custom-font-family"
+                value={fontFamily}
+                onChange={(e) => setFontFamily(e.target.value)}
+                placeholder="e.g. My Custom Font"
+                disabled={uploading}
+                className="dashboard-input w-full !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
               />
             </div>
-            {file && (
-              <p className="text-sm text-muted-foreground">
-                Selected file: {file.name} ({(file.size / 1024).toFixed(2)} KB)
-              </p>
-            )}
-          </div>
-
-          {/* Custom Font Family Name */}
-          <div className="space-y-2">
-            <Label htmlFor="custom-font-family">Font Name *</Label>
-            <Input
-              id="custom-font-family"
-              value={fontFamily}
-              onChange={(e) => setFontFamily(e.target.value)}
-              placeholder="e.g. My Custom Font"
-              disabled={uploading}
-            />
           </div>
 
           {/* Font Weights for Custom Fonts */}
           <div className="space-y-2">
-            <Label>Font Weights (optional)</Label>
+            <Label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+              Font Weights (optional)
+            </Label>
             <p className="text-xs text-muted-foreground">
               Select the available weights for this font
             </p>
-            <div className="flex flex-wrap gap-2">
-              {FONT_WEIGHTS.map((weight) => (
-                <div key={weight.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`custom-weight-${weight.value}`}
-                    checked={selectedWeights.includes(weight.value)}
-                    onCheckedChange={() => handleWeightToggle(weight.value)}
-                    disabled={uploading}
-                  />
-                  <Label
-                    htmlFor={`custom-weight-${weight.value}`}
-                    className="text-sm font-normal cursor-pointer"
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {FONT_WEIGHTS.map((weight) => {
+                const isSelected = selectedWeights.includes(weight.value);
+                return (
+                  <div
+                    key={weight.value}
+                    role="button"
+                    tabIndex={uploading ? -1 : 0}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      if (uploading) return;
+                      handleWeightToggle(weight.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (uploading) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleWeightToggle(weight.value);
+                      }
+                    }}
+                    className={
+                      isSelected
+                        ? "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashboard-primary/30 bg-dashboard-primary/10 text-dashboard-primary hover:bg-dashboard-primary/15 transition-colors cursor-pointer"
+                        : "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
+                    }
                   >
-                    {weight.label} ({weight.value})
-                  </Label>
-                </div>
-              ))}
+                    <Checkbox
+                      id={`custom-weight-${weight.value}`}
+                      checked={isSelected}
+                      onCheckedChange={() => handleWeightToggle(weight.value)}
+                      disabled={uploading}
+                      className="pointer-events-none"
+                    />
+                    <span className="text-xs font-semibold">
+                      {weight.label} ({weight.value})
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
       )}
-
-      {/* Font Category (optional) */}
-      <div className="space-y-2">
-        <Label htmlFor="font-category">Category (optional)</Label>
-        <Select
-          value={fontCategory}
-          onValueChange={setFontCategory}
-          disabled={uploading}
-        >
-          <SelectTrigger id="font-category">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="sans-serif">Sans-serif</SelectItem>
-            <SelectItem value="serif">Serif</SelectItem>
-            <SelectItem value="display">Display</SelectItem>
-            <SelectItem value="handwriting">Handwriting</SelectItem>
-            <SelectItem value="monospace">Monospace</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Is Primary */}
-      <div className="flex items-center justify-between">
-        <Label htmlFor="font-primary">Mark as Primary</Label>
-        <input
-          id="font-primary"
-          type="checkbox"
-          checked={isPrimary}
-          onChange={(e) => setIsPrimary(e.target.checked)}
-          disabled={uploading}
-          className="h-4 w-4"
-        />
-      </div>
 
       {/* Error Message */}
       {error && (
@@ -336,12 +400,37 @@ export function FontUpload({
         </div>
       )}
 
+      <div className="flex items-center justify-between w-full rounded-xl bg-surface-container-low border border-outline-variant/10 p-4">
+        {/* Is Primary */}
+          <div>
+            <Label
+              htmlFor="font-primary"
+              className="cursor-pointer text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+            >
+              Mark as Primary
+            </Label>
+          </div>
+          <Checkbox
+            id="font-primary"
+            checked={isPrimary}
+            onCheckedChange={(checked) => setIsPrimary(Boolean(checked))}
+            disabled={uploading}
+          />
+      </div>
+
       {/* Actions */}
-      <div className="flex items-center justify-end gap-2 pt-4 border-t">
-        <Button variant="outline" onClick={handleCancel} disabled={uploading}>
+      <div className="flex items-center justify-end gap-3 pt-6 border-t border-outline-variant/10">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={uploading}
+          className="bg-surface-container-lowest border-outline-variant/10 hover:bg-surface-container-high hover:text-on-surface disabled:opacity-50"
+        >
           Cancel
         </Button>
         <Button
+          type="button"
           onClick={handleUpload}
           disabled={
             uploading ||
@@ -352,12 +441,12 @@ export function FontUpload({
         >
           {uploading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
               Uploading...
             </>
           ) : (
             <>
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="size-4" />
               Add Font
             </>
           )}

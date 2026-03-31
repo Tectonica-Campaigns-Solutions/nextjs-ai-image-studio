@@ -116,8 +116,12 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
               }
             />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none" disabled>
+          <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
+            <SelectItem
+              value="none"
+              disabled
+              className="text-[13px] leading-[135%] text-[#777777] font-(family-name:--font-manrope)"
+            >
               Select Logo
             </SelectItem>
             {filteredLogoAssets.length > 0 &&
@@ -125,12 +129,18 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
                 <SelectItem
                   key={`${asset.url}-${asset.display_name}`}
                   value={`asset:${encodeURIComponent(asset.url)}`}
+                  className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
                 >
                   {asset.display_name}
                 </SelectItem>
               ))}
             {allowCustomLogo !== false && (
-              <SelectItem value="custom">Upload Custom Logo</SelectItem>
+              <SelectItem
+                value="custom"
+                className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+              >
+                Upload Custom Logo
+              </SelectItem>
             )}
           </SelectContent>
         </Select>

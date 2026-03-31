@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { IBM_Plex_Sans, Manrope } from "next/font/google";
-
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Tectonica.ai - Studio Admin",
+  title: "Tectonica - Studio Admin",
 };
 
 const manrope = Manrope({
@@ -25,10 +25,12 @@ export default function StudioLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
-      className={`font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable}`}
-    >
-      {children}
-    </div>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <div
+        className={`studio-root font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable}`}
+      >
+        {children}
+      </div>
+    </ThemeProvider>
   );
 }

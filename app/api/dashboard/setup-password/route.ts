@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { setupPasswordSchema } from "@/app/(studio)/dashboard/schemas/auth";
+import { setupPasswordSchema } from "@/app/(studio)/dashboard/features/auth/schemas/auth";
 import { errorResponse } from "@/app/api/dashboard/_lib/api-response";
 
 /**

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { AdminShell } from "./components/admin-shell";
 
 export const metadata: Metadata = {
-  title: "Admin | Tectonica.ai",
+  title: {
+    template: "%s | Tectonica",
+    default: "Dashboard | Tectonica",
+  },
 };
 
 export default function AdminLayout({
@@ -10,5 +12,5 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AdminShell>{children}</AdminShell>;
+  return <>{children}</>;
 }

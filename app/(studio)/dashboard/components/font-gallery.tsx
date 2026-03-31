@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { X, Star } from "lucide-react";
+import { Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +12,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FontUpload } from "./font-upload";
-import type { ClientFont } from "@/app/(studio)/dashboard/types";
-import { deleteFontAction, setPrimaryFontAction } from "@/app/(studio)/dashboard/actions/fonts";
+import { FontCard } from "./font-card";
+import type { ClientFont, FontWeight } from "@/app/(studio)/dashboard/utils/types";
+import { useFontLoader } from "@/app/(studio)/dashboard/hooks/use-font-loader";
+import {
+  deleteFontAction,
+  setPrimaryFontAction,
+  updateFontAction,
+} from "@/app/(studio)/dashboard/features/frames-fonts/actions/fonts";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FONT_WEIGHTS } from "@/app/(studio)/standalone/studio/utils/studio-utils";
+import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
+import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 
 interface FontGalleryProps {
   clientId: string;
@@ -26,33 +39,81 @@ export function FontGallery({
   onRefresh,
 }: FontGalleryProps) {
   const [showUpload, setShowUpload] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editFamily, setEditFamily] = useState("");
+  const [editCategory, setEditCategory] = useState<string>("");
+  const [editWeights, setEditWeights] = useState<FontWeight[]>([]);
+  const [editError, setEditError] = useState<string | null>(null);
 
-  const handleDelete = async (fontId: string) => {
-    if (!confirm("Are you sure you want to delete this font?")) return;
-    const result = await deleteFontAction(clientId, fontId);
+  useFontLoader(fonts);
+
+  const editTarget = useMemo(
+    () => fonts.find((f) => f.id === editTargetId) ?? null,
+    [fonts, editTargetId]
+  );
+
+  const closeEdit = () => {
+    setEditTargetId(null);
+    setEditSaving(false);
+    setEditError(null);
+    setEditFamily("");
+    setEditCategory("");
+    setEditWeights([]);
+  };
+
+  const openEdit = (fontId: string) => {
+    const f = fonts.find((x) => x.id === fontId);
+    if (!f) return;
+    setEditTargetId(fontId);
+    setEditSaving(false);
+    setEditError(null);
+    setEditFamily(f.font_family);
+    setEditCategory(f.font_category ?? "");
+    setEditWeights(f.font_weights ?? []);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    const result = await deleteFontAction(clientId, deleteTarget);
     if (result.error) {
-      alert(result.error);
+      setDeleteError(result.error);
+      setDeleteBusy(false);
       return;
     }
+    toast.success("Font deleted");
+    setDeleteBusy(false);
+    setDeleteTarget(null);
     onRefresh();
   };
 
   const handleSetPrimary = async (fontId: string) => {
     const result = await setPrimaryFontAction(clientId, fontId);
     if (result.error) {
-      alert(result.error);
+      toast.error(result.error);
       return;
     }
+    toast.success("Primary font updated");
     onRefresh();
   };
 
   return (
     <>
       <Dialog open={showUpload} onOpenChange={setShowUpload}>
-        <DialogContent className="sm:max-w-lg max-h-[90dvh] overflow-y-auto" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Add font</DialogTitle>
-            <DialogDescription>
+        <DialogContent
+          className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 max-h-[90dvh] overflow-y-auto"
+          showCloseButton
+        >
+          <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+            <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+              Add font
+            </DialogTitle>
+            <DialogDescription className="text-on-surface-variant">
               Add a font from Google Fonts or upload a custom font file (TTF, WOFF, WOFF2, OTF).
             </DialogDescription>
           </DialogHeader>
@@ -66,105 +127,184 @@ export function FontGallery({
           />
         </DialogContent>
       </Dialog>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {fonts.length} font{fonts.length !== 1 ? "s" : ""} registered
-            </p>
-          </div>
-          <Button onClick={() => setShowUpload(true)} size="sm" aria-label="Add new font">
-            Add font
-          </Button>
-        </div>
 
-        {fonts.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground mb-4">
-              No fonts found. Add the first one to start.
-            </p>
-            <Button onClick={() => setShowUpload(true)} variant="outline" aria-label="Add first font">
-              Add font
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {fonts.map((font) => (
-              <div
-                key={font.id}
-                className="relative group border rounded-lg overflow-hidden bg-card p-4"
-              >
-                {/* Font Preview */}
-                <div className="mb-3">
-                  <div
-                    className="text-2xl font-semibold mb-2"
-                    style={{
-                      fontFamily: font.font_family,
-                    }}
-                  >
-                    {font.font_family}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="px-2 py-1 bg-muted rounded">
-                      {font.font_source === "google" ? "Google Fonts" : "Custom"}
-                    </span>
-                    {font.font_category && (
-                      <span className="px-2 py-1 bg-muted rounded">
-                        {font.font_category}
-                      </span>
-                    )}
-                  </div>
+      <Dialog
+        open={!!editTargetId}
+        onOpenChange={(open) => {
+          if (!open) closeEdit();
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 max-h-[90dvh] overflow-y-auto"
+          showCloseButton
+        >
+          <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+            <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+              Edit font
+            </DialogTitle>
+            <DialogDescription className="text-on-surface-variant">
+              Update font family, category and available weights.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editTarget ? (
+            <div className="space-y-5">
+              {editError && (
+                <div className="rounded-xl border border-error/20 bg-error/10 p-3 text-sm text-error" role="alert">
+                  {editError}
                 </div>
+              )}
 
-                {/* Font Weights */}
-                <div className="mb-3">
-                  <p className="text-xs text-muted-foreground mb-1">Weights:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {font.font_weights.map((weight) => (
-                      <span
-                        key={weight}
-                        className="text-xs px-2 py-1 bg-muted rounded"
-                      >
-                        {weight}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Overlay with actions */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleSetPrimary(font.id)}
-                    disabled={font.is_primary}
-                    title={font.is_primary ? "Already primary" : "Mark as Primary"}
-                  >
-                    <Star
-                      className={`h-4 w-4 ${font.is_primary ? "fill-yellow-400 text-yellow-400" : "fill-gray-400 text-gray-400"
-                        }`}
-                    />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(font.id)}
-                  >
-                    <X className="size-4" aria-hidden />
-                  </Button>
-                </div>
-
-                {/* Primary badge */}
-                {font.is_primary && (
-                  <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-current" />
-                    Primary
-                  </div>
-                )}
+              <div className="space-y-2">
+                <Label htmlFor="edit-font-family">
+                  Font family <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="edit-font-family"
+                  value={editFamily}
+                  onChange={(e) => setEditFamily(e.target.value)}
+                  disabled={editSaving}
+                  className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+                />
               </div>
-            ))}
-          </div>
-        )}
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-font-category">Category (optional)</Label>
+                <Input
+                  id="edit-font-category"
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  disabled={editSaving}
+                  placeholder="e.g. sans-serif"
+                  className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Weights</Label>
+                <div className="flex flex-wrap gap-2">
+                  {FONT_WEIGHTS.map((w) => (
+                    <div key={w.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`edit-weight-${w.value}`}
+                        checked={editWeights.includes(w.value as FontWeight)}
+                        onCheckedChange={(checked) => {
+                          const isChecked = Boolean(checked);
+                          setEditWeights((prev) => {
+                            if (isChecked) return Array.from(new Set([...prev, w.value as FontWeight]));
+                            return prev.filter((x) => x !== w.value);
+                          });
+                        }}
+                        disabled={editSaving}
+                      />
+                      <Label
+                        htmlFor={`edit-weight-${w.value}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {w.label} ({w.value})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t pt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeEdit}
+                  disabled={editSaving}
+                  className="bg-surface-container-lowest border-outline-variant/10 hover:bg-surface-container-high"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    if (!editTarget) return;
+                    setEditSaving(true);
+                    setEditError(null);
+                    try {
+                      const result = await updateFontAction(clientId, editTarget.id, {
+                        font_family: editFamily,
+                        font_category: editCategory.trim() ? editCategory : null,
+                        font_weights: editWeights,
+                      });
+                      if (result.error) {
+                        setEditError(result.error);
+                        return;
+                      }
+                      toast.success("Font updated");
+                      closeEdit();
+                      onRefresh();
+                    } finally {
+                      setEditSaving(false);
+                    }
+                  }}
+                  disabled={
+                    editSaving ||
+                    editFamily.trim().length === 0 ||
+                    editWeights.length === 0
+                  }
+                  className="min-w-[140px] gap-2 bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:opacity-90 shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
+                >
+                  {editSaving ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <Save className="size-4" />
+                      Save
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteBusy(false);
+            setDeleteError(null);
+          }
+        }}
+        title="Delete font"
+        description="Are you sure you want to delete this font? This action cannot be undone."
+        actionLabel="Delete"
+        busy={deleteBusy}
+        busyLabel="Deleting..."
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {fonts.map((font) => (
+            <FontCard
+              key={font.id}
+              font={font}
+              onEdit={() => openEdit(font.id)}
+              onSetPrimary={() => void handleSetPrimary(font.id)}
+              onDelete={() => setDeleteTarget(font.id)}
+            />
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setShowUpload(true)}
+            className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
+            aria-label="Add new font"
+          >
+            <DashboardMaterialIcon icon="add_circle" className="text-dashboard-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+              Upload Font
+            </span>
+          </button>
+        </div>
       </div>
     </>
   );

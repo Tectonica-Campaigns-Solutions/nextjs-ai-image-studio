@@ -278,10 +278,22 @@ export function useImageEditorCanvas(
     window.addEventListener("resize", debouncedResize);
     window.addEventListener("orientationchange", debouncedResize);
 
+    // Also observe real layout changes (e.g. sidebar collapse/expand transitions)
+    // so the canvas resizes even when there is no window resize event.
+    const canvasAreaEl = document.getElementById("canvas-area");
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" && canvasAreaEl
+        ? new ResizeObserver(() => debouncedResize())
+        : null;
+    if (resizeObserver && canvasAreaEl) {
+      resizeObserver.observe(canvasAreaEl);
+    }
+
     return () => {
       clearTimeout(resizeTimeout);
       window.removeEventListener("resize", debouncedResize);
       window.removeEventListener("orientationchange", debouncedResize);
+      resizeObserver?.disconnect();
     };
   }, [canvas, originalImageDimensions]);
 
@@ -304,11 +316,13 @@ export function useImageEditorCanvas(
       let availableHeight = containerRect.height;
 
       if (availableWidth <= 0 || availableHeight <= 0) {
-        const isMobile = window.innerWidth < 767;
-        const padding = isMobile ? 20 : 60;
+        const viewportWidth = window.innerWidth;
+        const isMobile = viewportWidth < 767;
+        const isTabletOrCompactLaptop = viewportWidth >= 767 && viewportWidth < 1200;
+        const padding = isMobile ? 20 : isTabletOrCompactLaptop ? 32 : 60;
         availableWidth = window.innerWidth - padding;
         const headerHeight = opts.headerRef.current?.offsetHeight || 0;
-        const verticalPadding = isMobile ? 36 : 40;
+        const verticalPadding = isMobile ? 36 : isTabletOrCompactLaptop ? 32 : 40;
         const headerMarginBottom = isMobile ? 18 : 25;
         const headerTotalHeight = headerHeight + headerMarginBottom;
         const safetyMargin = 10;

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -13,7 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { createAdminAction } from "@/app/(studio)/dashboard/actions/admins";
+import { createAdminAction } from "@/app/(studio)/dashboard/features/admins/actions/admins";
+import { DashboardDialogContent } from "@/app/(studio)/dashboard/components/dashboard-dialog-content";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  createAdminSchema,
+  type CreateAdminInput,
+} from "@/app/(studio)/dashboard/features/admins/schemas/admins";
 
 interface CreateAdminModalProps {
   open: boolean;
@@ -22,51 +28,39 @@ interface CreateAdminModalProps {
 
 export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateAdminInput>({
+    resolver: zodResolver(createAdminSchema),
+    defaultValues: { email: "", expires_at: "" },
+  });
+
+  const onSubmit = async (data: CreateAdminInput) => {
     setError(null);
-
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      setError("Email is not valid");
-      return;
-    }
-
-    if (expiresAt) {
-      const expiresDate = new Date(expiresAt);
-      if (isNaN(expiresDate.getTime())) {
-        setError("Expiration date is not valid");
-        return;
-      }
-      if (expiresDate <= new Date()) {
-        setError("Expiration date must be in the future");
-        return;
-      }
-    }
 
     try {
       setSaving(true);
+      const parsed = createAdminSchema.safeParse(data);
+      if (!parsed.success) {
+        setError(parsed.error.issues[0]?.message ?? "Invalid input");
+        return;
+      }
       const result = await createAdminAction({
-        email: email.trim(),
-        expires_at: expiresAt || null,
+        email: parsed.data.email,
+        expires_at: parsed.data.expires_at,
       });
       if (result.error) {
         setError(result.error);
         return;
       }
       onOpenChange(false);
-      setEmail("");
-      setExpiresAt("");
+      reset({ email: "", expires_at: "" });
       router.refresh();
     } catch (err) {
       setError(
@@ -80,26 +74,27 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
       setError(null);
-      setEmail("");
-      setExpiresAt("");
+      reset({ email: "", expires_at: "" });
     }
     onOpenChange(next);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg" showCloseButton>
-        <DialogHeader>
-          <DialogTitle>New admin</DialogTitle>
-          <DialogDescription>
+      <DashboardDialogContent className="max-h-[90dvh]">
+        <DialogHeader className="mb-4 pb-4 border-b border-outline-variant/10">
+          <DialogTitle className="text-2xl font-extrabold tracking-tight text-on-surface">
+            New Admin
+          </DialogTitle>
+          <DialogDescription className="text-on-surface-variant">
             Invite a new admin. An email invitation will be sent for them to set their password.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
           {error && (
             <div
               id="create-admin-error"
-              className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+              className="rounded-xl border border-error/20 bg-error/10 p-3 text-sm text-error"
               role="alert"
             >
               {error}
@@ -112,13 +107,17 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
             <Input
               id="create-admin-email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register("email")}
               placeholder="admin@example.com"
               required
-              aria-invalid={!!error}
+              aria-invalid={!!errors.email || !!error}
               aria-describedby={error ? "create-admin-error" : undefined}
+              className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
+              disabled={saving}
             />
+            {errors.email?.message ? (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            ) : null}
             <p className="text-muted-foreground text-xs">
               An email invitation will be sent to this address.
             </p>
@@ -130,10 +129,14 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
             <Input
               id="create-admin-expires_at"
               type="datetime-local"
-              value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
+              {...register("expires_at")}
               min={new Date().toISOString().slice(0, 16)}
+              disabled={saving}
+              className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
             />
+            {errors.expires_at?.message ? (
+              <p className="text-sm text-destructive">{errors.expires_at.message}</p>
+            ) : null}
             <p className="text-muted-foreground text-xs">
               Leave empty for permanent access.
             </p>
@@ -143,10 +146,16 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
+              disabled={saving}
+              className="bg-surface-container-lowest border-outline-variant/10 hover:bg-surface-container-high hover:text-on-surface disabled:opacity-50"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving} className="gap-2">
+            <Button
+              type="submit"
+              disabled={saving}
+              className="gap-2 bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 hover:bg-dashboard-primary/90 hover:text-dashboard-on-primary shadow-sm shadow-dashboard-primary/20 disabled:opacity-70"
+            >
               {saving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -158,7 +167,7 @@ export function CreateAdminModal({ open, onOpenChange }: CreateAdminModalProps) 
             </Button>
           </div>
         </form>
-      </DialogContent>
+      </DashboardDialogContent>
     </Dialog>
   );
 }
