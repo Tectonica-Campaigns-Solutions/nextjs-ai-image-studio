@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Type, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FONT_WEIGHTS } from "@/app/(studio)/standalone/studio/utils/studio-utils";
 import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
+import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 
 interface FontGalleryProps {
   clientId: string;
@@ -295,15 +296,13 @@ export function FontGallery({
           <button
             type="button"
             onClick={() => setShowUpload(true)}
-            className="group relative rounded-xl bg-surface-container-low border-2 border-dashed border-outline-variant/30 min-h-[220px] p-6 flex flex-col items-center justify-center gap-3 hover:bg-surface-container-high transition-colors"
+            className="group relative aspect-square rounded-xl bg-surface-container-low overflow-hidden cursor-pointer border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
             aria-label="Add new font"
           >
-            <div className="w-12 h-12 rounded-full bg-dashboard-primary/10 text-dashboard-primary flex items-center justify-center">
-              <Type className="size-6" aria-hidden />
-            </div>
-            <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-              Add Font
-            </p>
+            <DashboardMaterialIcon icon="add_circle" className="text-dashboard-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+              Upload Font
+            </span>
           </button>
         </div>
       </div>
