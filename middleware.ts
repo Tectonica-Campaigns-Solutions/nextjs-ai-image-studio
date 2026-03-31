@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+const PLAYGROUND_COOKIE = "playground_token";
+
+async function computePlaygroundHmac(secret: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode("playground-access"));
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 async function checkAdminRole(
   userId: string,
   request: NextRequest
@@ -47,6 +73,29 @@ async function checkAdminRole(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ── Protección del playground ──────────────────────────────────────────────
+  // Aplica a todas las rutas que NO son dashboard, standalone, api,
+  // playground-login ni assets estáticos (el matcher ya excluye _next y assets).
+  const isPlaygroundRoute =
+    !pathname.startsWith("/dashboard") &&
+    !pathname.startsWith("/standalone") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/playground-login");
+
+  if (isPlaygroundRoute) {
+    const hmacSecret = process.env.PLAYGROUND_HMAC_SECRET;
+    if (hmacSecret) {
+      const token = request.cookies.get(PLAYGROUND_COOKIE)?.value ?? "";
+      const expected = await computePlaygroundHmac(hmacSecret);
+      if (!timingSafeEqual(token, expected)) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/playground-login";
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Solo proteger rutas de páginas /dashboard/* (no APIs, no login, no accept-invitation, no auth callbacks)
   if (
