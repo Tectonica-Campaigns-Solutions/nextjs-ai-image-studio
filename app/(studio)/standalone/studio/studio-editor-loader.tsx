@@ -26,23 +26,22 @@ export default async function StudioEditorLoader({
 }: StudioEditorLoaderProps) {
   const params = await searchParams;
 
-  const clientStatus = await getClientStatusByUserId(params.user_id);
-
-  if (!clientStatus.isActive) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[#050505] px-4">
-        <div className="max-w-md rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-xl">
-          <h1 className="text-lg font-semibold text-white mb-2">
-            Account deactivated
-          </h1>
-          <p className="text-sm text-white/70">
-            Your account is deactivated. Please contact an administrator to gain
-            access to the Studio.
-          </p>
-        </div>
-      </main>
-    );
-  }
+  // const clientStatus = await getClientStatusByUserId(params.user_id);
+  // if (!clientStatus.isActive) {
+  //   return (
+  //     <main className="min-h-screen flex items-center justify-center bg-[#050505] px-4">
+  //       <div className="max-w-md rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-xl">
+  //         <h1 className="text-lg font-semibold text-white mb-2">
+  //           Account deactivated
+  //         </h1>
+  //         <p className="text-sm text-white/70">
+  //           Your account is deactivated. Please contact an administrator to gain
+  //           access to the Studio.
+  //         </p>
+  //       </div>
+  //     </main>
+  //   );
+  // }
 
   const [{ logoAssets, fontAssets, frameAssets, allowCustomLogo }, sessionData] =
     await Promise.all([
