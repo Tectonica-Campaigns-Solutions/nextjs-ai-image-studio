@@ -546,7 +546,7 @@ export async function POST(request: NextRequest) {
         console.warn(`${LOG_PREFIX} ⚠️  Disclaimer failed, uploading original:`, disclaimerError)
       }
 
-      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg")).proxyUrl
+      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost)).proxyUrl
       console.log(`${LOG_PREFIX} ✅ Result stored privately: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)
