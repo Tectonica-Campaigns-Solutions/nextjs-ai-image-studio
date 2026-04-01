@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { getClientApiKey } from "@/lib/api-keys"
+import { requireExternalAuth } from '@/lib/api-auth'
 
 /**
  * POST /api/external/invisible-watermark
@@ -33,6 +34,9 @@ import { getClientApiKey } from "@/lib/api-keys"
  */
 
 export async function POST(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     console.log("[External Invisible Watermark] Processing request...")
     

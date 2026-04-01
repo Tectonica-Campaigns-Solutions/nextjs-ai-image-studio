@@ -4,6 +4,7 @@ import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
 import { getClientApiKey } from '@/lib/api-keys'
+import { requireExternalAuth } from '@/lib/api-auth'
 import { addDisclaimerToImage, restoreDisclaimerZone } from '@/lib/image-disclaimer'
 import crypto from 'crypto'
 
@@ -265,6 +266,9 @@ const DISABLE_REFERENCE_IMAGES = true
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     console.log("[Flux 2 Pro Edit Apply] Request received")
     

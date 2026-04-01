@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { getClientApiKey } from "@/lib/api-keys"
+import { requireExternalAuth } from '@/lib/api-auth'
 import {
   addDisclaimerToImage,
   preprocessImageForCombine,
@@ -81,6 +82,9 @@ import {
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     console.log("[External Seedream Combine] Request received")
     

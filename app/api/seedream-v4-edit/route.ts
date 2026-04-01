@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import sharp from 'sharp'
+import { requirePlaygroundCookie } from "@/lib/api-auth"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 
 /**
@@ -27,6 +28,9 @@ import { addDisclaimerToImage } from "@/lib/image-disclaimer"
  */
 
 export async function POST(request: NextRequest) {
+  const authError = await requirePlaygroundCookie(request)
+  if (authError) return authError
+
   try {
     console.log("[SeDream v4 Edit] Processing request...")
     

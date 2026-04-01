@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 /**
  * GET /api/external/config
@@ -11,6 +12,9 @@ import { NextRequest, NextResponse } from 'next/server'
  * configuration state before making text-to-image or edit-image requests.
  */
 export async function GET(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     const config = {
       // Expose available chat models / LLMs for external clients

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { getClientApiKey } from '@/lib/api-keys'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 // Configure Fal client
 fal.config({
@@ -12,6 +13,9 @@ export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes for large file uploads
 
 export async function POST(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     console.log("[EXTERNAL-UPLOAD-IMAGE] Upload request received")
 

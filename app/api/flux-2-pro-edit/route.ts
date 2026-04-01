@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
+import { requirePlaygroundCookie } from "@/lib/api-auth"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import sharp from 'sharp'
 
@@ -95,6 +96,9 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = await requirePlaygroundCookie(request)
+  if (authError) return authError
+
   try {
     console.log("[Flux 2 Pro Edit] Request received")
     

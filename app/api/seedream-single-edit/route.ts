@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
+import { requirePlaygroundCookie } from "@/lib/api-auth"
 
 /**
  * POST /api/seedream-single-edit
@@ -65,6 +66,9 @@ import { addDisclaimerToImage } from "@/lib/image-disclaimer"
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = await requirePlaygroundCookie(request)
+  if (authError) return authError
+
   try {
     console.log("[SEEDREAM-SINGLE-EDIT] Request received")
     

@@ -4,6 +4,7 @@ import { ContentModerationService } from "@/lib/content-moderation"
 import sharp from 'sharp'
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import { getClientApiKey } from '@/lib/api-keys'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 /**
  * POST /api/external/seedream-v4-edit
@@ -41,6 +42,9 @@ import { getClientApiKey } from '@/lib/api-keys'
  */
 
 export async function POST(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     console.log("[External SeDream v4] Processing request...")
     

@@ -7,6 +7,7 @@ import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs/promises'
 import { getClientApiKey } from '@/lib/api-keys'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 // Configuration: TectonicaAI style preset (text-based, no reference image)
 // COMMENTED: Text-based style description approach (backup)
@@ -174,6 +175,9 @@ async function resizeImageForFalAI(buffer: Buffer, isFirstImage: boolean): Promi
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = await requireExternalAuth(request)
+  if (authError) return authError
+
   try {
     console.log("[External Flux 2 Pro Combine] Request received")
     
