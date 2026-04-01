@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { requireBearerToken } from '@/lib/api-auth'
+import { requireExternalAuth } from '@/lib/api-auth'
 import {
   generateWithBfl,
   downloadBflImage,
@@ -191,7 +191,7 @@ async function getElementIsolationText(orgType: string): Promise<string | null> 
  * }
  */
 export async function POST(request: NextRequest) {
-  const authError = requireBearerToken(request)
+  const authError = await requireExternalAuth(request)
   if (authError) return authError
 
   try {

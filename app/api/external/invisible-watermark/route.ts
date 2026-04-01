@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { getClientApiKey } from "@/lib/api-keys"
-import { requireBearerToken } from '@/lib/api-auth'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 /**
  * POST /api/external/invisible-watermark
@@ -34,7 +34,7 @@ import { requireBearerToken } from '@/lib/api-auth'
  */
 
 export async function POST(request: NextRequest) {
-  const authError = requireBearerToken(request)
+  const authError = await requireExternalAuth(request)
   if (authError) return authError
 
   try {

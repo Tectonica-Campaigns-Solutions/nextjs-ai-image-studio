@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { requireBearerToken } from '@/lib/api-auth'
+import { requireExternalAuth } from '@/lib/api-auth'
 import {
   generateWithBfl,
   downloadBflImage,
@@ -86,7 +86,7 @@ async function getCompositionRuleText(orgType: string, compositionRule: string):
  * }
  */
 export async function POST(request: NextRequest) {
-  const authError = requireBearerToken(request)
+  const authError = await requireExternalAuth(request)
   if (authError) return authError
 
   try {

@@ -3,7 +3,7 @@ import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToImage, restoreDisclaimerZone } from "@/lib/image-disclaimer"
 import { getClientApiKey } from "@/lib/api-keys"
-import { requireBearerToken } from '@/lib/api-auth'
+import { requireExternalAuth } from '@/lib/api-auth'
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
@@ -125,7 +125,7 @@ async function getCompositionRuleText(orgType: string, compositionRule: string):
  * }
  */
 export async function POST(request: NextRequest) {
-  const authError = requireBearerToken(request)
+  const authError = await requireExternalAuth(request)
   if (authError) return authError
 
   try {

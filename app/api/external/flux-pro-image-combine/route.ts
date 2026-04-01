@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { getClientApiKey } from '@/lib/api-keys'
-import { requireBearerToken } from '@/lib/api-auth'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 // Route segment config for App Router
 export const maxDuration = 300 // 5 minutes for long-running AI operations
@@ -93,7 +93,7 @@ export const dynamic = 'force-dynamic'
  * }
  */
 export async function POST(request: NextRequest) {
-  const authError = requireBearerToken(request)
+  const authError = await requireExternalAuth(request)
   if (authError) return authError
 
   const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`

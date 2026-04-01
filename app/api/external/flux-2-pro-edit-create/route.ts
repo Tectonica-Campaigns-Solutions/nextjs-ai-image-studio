@@ -6,7 +6,7 @@ import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
 import { getClientApiKey } from '@/lib/api-keys'
-import { requireBearerToken } from '@/lib/api-auth'
+import { requireExternalAuth } from '@/lib/api-auth'
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
@@ -247,7 +247,7 @@ async function getCompositionRuleText(orgType: string, compositionRule: string):
 }
 
 export async function POST(request: NextRequest) {
-  const authError = requireBearerToken(request)
+  const authError = await requireExternalAuth(request)
   if (authError) return authError
 
   try {

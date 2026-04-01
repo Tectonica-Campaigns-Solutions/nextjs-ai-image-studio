@@ -52,22 +52,33 @@ export async function requirePlaygroundCookie(
 }
 
 // ── External / ChangeAgent endpoints ─────────────────────────────────────────
-// Validates Authorization: Bearer <EXTERNAL_API_KEY>.
-// Returns a 401 NextResponse if invalid, or null if valid.
+// Accepts either:
+//   - Authorization: Bearer <EXTERNAL_API_KEY>  (ChangeAgent / Open WebUI tools)
+//   - playground_token cookie                   (browser playground, same-origin)
+// Returns a 401 NextResponse if neither is valid, or null if valid.
 
-export function requireBearerToken(request: NextRequest): NextResponse | null {
+export async function requireExternalAuth(
+  request: NextRequest
+): Promise<NextResponse | null> {
+  // 1. Try Bearer token first (ChangeAgent / server-to-server)
   const apiKey = process.env.EXTERNAL_API_KEY
-  if (!apiKey) {
-    console.error("[api-auth] EXTERNAL_API_KEY env var not set")
-    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 })
+  if (apiKey) {
+    const authHeader = request.headers.get("authorization") ?? ""
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ""
+    if (token && timingSafeEqual(token, apiKey)) {
+      return null
+    }
   }
 
-  const authHeader = request.headers.get("authorization") ?? ""
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ""
-
-  if (!timingSafeEqual(token, apiKey)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  // 2. Fall back to playground cookie (browser, same-origin)
+  const hmacSecret = process.env.PLAYGROUND_HMAC_SECRET
+  if (hmacSecret) {
+    const cookieToken = request.cookies.get(PLAYGROUND_COOKIE)?.value ?? ""
+    const expected = await computeHmac(hmacSecret)
+    if (cookieToken && timingSafeEqual(cookieToken, expected)) {
+      return null
+    }
   }
 
-  return null
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 }
