@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireBearerToken } from '@/lib/api-auth'
 import {
   generateWithBfl,
   downloadBflImage,
@@ -114,6 +115,9 @@ async function getCompositionRuleText(orgType: string, compositionRule: string):
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = requireBearerToken(request)
+  if (authError) return authError
+
   try {
     console.log(`${LOG_PREFIX} Request received`)
 

@@ -3,6 +3,7 @@ import { fal } from "@fal-ai/client"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToImage } from "@/lib/image-disclaimer"
 import { getClientApiKey } from "@/lib/api-keys"
+import { requireBearerToken } from '@/lib/api-auth'
 import sharp from 'sharp'
 
 /**
@@ -42,6 +43,9 @@ import sharp from 'sharp'
  */
 
 export async function POST(request: NextRequest) {
+  const authError = requireBearerToken(request)
+  if (authError) return authError
+
   try {
     console.log("[External SeDream Edit] Processing request...")
     

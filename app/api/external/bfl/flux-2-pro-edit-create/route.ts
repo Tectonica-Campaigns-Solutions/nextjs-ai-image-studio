@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToBuffer, restoreDisclaimerZone } from "@/lib/image-disclaimer"
+import { requireBearerToken } from '@/lib/api-auth'
 import {
   generateWithBfl,
   downloadBflImage,
@@ -180,6 +181,9 @@ async function uploadReferenceImage(
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = requireBearerToken(request)
+  if (authError) return authError
+
   try {
     console.log(`${LOG_PREFIX} Request received`)
 

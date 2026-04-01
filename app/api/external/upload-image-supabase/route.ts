@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { uploadImageToSupabase } from "@/lib/bfl-client"
+import { requireBearerToken } from '@/lib/api-auth'
 
 export const runtime = "nodejs"
 export const maxDuration = 300
@@ -24,6 +25,9 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
  *   { success: true, url: string, filename: string, size: number }
  */
 export async function POST(request: NextRequest) {
+  const authError = requireBearerToken(request)
+  if (authError) return authError
+
   try {
     console.log(`${LOG_PREFIX} Upload request received`)
 

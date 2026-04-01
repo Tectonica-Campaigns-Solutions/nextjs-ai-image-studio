@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { createArkClient, ArkApiClient } from "@/lib/ark-client"
+import { requirePlaygroundCookie } from "@/lib/api-auth"
 
 /**
  * POST /api/seedream-combine
@@ -37,6 +38,9 @@ import { createArkClient, ArkApiClient } from "@/lib/ark-client"
  * }
  */
 export async function POST(request: NextRequest) {
+  const authError = await requirePlaygroundCookie(request)
+  if (authError) return authError
+
   try {
     const formData = await request.formData()
     const prompt = formData.get("prompt") as string

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fal } from "@fal-ai/client"
 import { getClientApiKey } from "@/lib/api-keys"
+import { requireBearerToken } from '@/lib/api-auth'
 import sharp from 'sharp'
 
 // Configure runtime and timeout
@@ -270,6 +271,9 @@ function numberToBinary(num: number, bits: number): string {
  */
 
 export async function POST(request: NextRequest) {
+  const authError = requireBearerToken(request)
+  if (authError) return authError
+
   try {
     console.log("[External Watermark Anything] Processing request...")
     
