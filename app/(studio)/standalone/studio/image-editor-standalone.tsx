@@ -57,6 +57,7 @@ import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { logVisualStudioAccess } from "./utils/studio-utils";
+import { useEmbedSource } from "./hooks/use-embed-source";
 
 export default function ImageEditorStandalone({
   params,
@@ -67,6 +68,11 @@ export default function ImageEditorStandalone({
   allowCustomLogo = true,
 }: ImageEditorStandaloneProps) {
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
+
+  // Detect parent URL when this editor is embedded in an iframe.
+  // Currently only used for logging (see use-embed-source implementation).
+  const embedSource = useEmbedSource();
+  console.log("embedSource: ", embedSource);
 
   const { toast } = useToast();
 
