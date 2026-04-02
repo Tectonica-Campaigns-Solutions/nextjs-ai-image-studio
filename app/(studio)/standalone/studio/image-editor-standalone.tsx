@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Text, Group, Shadow, Rect, ActiveSelection } from "fabric";
 import { TectonicaLogo } from "./components/editor-icons";
 import {
@@ -58,8 +59,55 @@ import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureT
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { logVisualStudioAccess } from "./utils/studio-utils";
 import { useEmbedSource } from "./hooks/use-embed-source";
+import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
+
+function AccessDenied() {
+  return (
+    <main
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
+    >
+      <div className="max-w-md rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-xl">
+        <h1 className="text-lg font-semibold text-white mb-2">Access denied</h1>
+        <p className="text-sm text-white/70">
+          This Studio can only be accessed from an approved host.
+        </p>
+      </div>
+    </main>
+  );
+}
 
 export default function ImageEditorStandalone({
+  ...props
+}: ImageEditorStandaloneProps) {
+  const searchParams = useSearchParams();
+  const debugParam = searchParams?.get("debug")?.toLowerCase() ?? null;
+  const debugEnabled = debugParam === "true" || debugParam === "1";
+  const isDev = process.env.NODE_ENV === "development";
+
+  const embedSource = useEmbedSource();
+
+  // If we are NOT inside an iframe, do not gate access.
+  const isNotIframe = embedSource.isIframe === false;
+
+  const allowedByEmbedOrigin =
+    !!embedSource.url && isAllowedEmbedOrigin(embedSource.origin);
+
+  const allowed = isDev || debugEnabled || isNotIframe || allowedByEmbedOrigin;
+
+  // Avoid flicker while the client-only embed detection initializes.
+  if (!allowed && embedSource.isIframe === null && !isDev && !debugEnabled) {
+    return <StudioLoading />;
+  }
+
+  if (!allowed) {
+    return <AccessDenied />;
+  }
+
+  return <ImageEditorStandaloneInner {...props} />;
+}
+
+function ImageEditorStandaloneInner({
   params,
   logoAssets,
   frameAssets = [],
@@ -68,11 +116,6 @@ export default function ImageEditorStandalone({
   allowCustomLogo = true,
 }: ImageEditorStandaloneProps) {
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
-
-  // Detect parent URL when this editor is embedded in an iframe.
-  // Currently only used for logging (see use-embed-source implementation).
-  const embedSource = useEmbedSource();
-  console.log("embedSource: ", embedSource);
 
   const { toast } = useToast();
 
