@@ -87,13 +87,14 @@ export default function ImageEditorStandalone({
 
   const embedSource = useEmbedSource();
 
-  // If we are NOT inside an iframe, do not gate access.
-  const isNotIframe = embedSource.isIframe === false;
-
   const allowedByEmbedOrigin =
     !!embedSource.url && isAllowedEmbedOrigin(embedSource.origin);
 
-  const allowed = isDev || debugEnabled || isNotIframe || allowedByEmbedOrigin;
+  // This route is intended to run embedded in an iframe. If it's not in an iframe,
+  // deny by default (unless dev/debug).
+  const isInIframe = embedSource.isIframe === true;
+
+  const allowed = isDev || debugEnabled || (isInIframe && allowedByEmbedOrigin);
 
   // Avoid flicker while the client-only embed detection initializes.
   if (!allowed && embedSource.isIframe === null && !isDev && !debugEnabled) {
