@@ -1,4 +1,4 @@
-const EDIT_IMAGE_API_URL = "/api/external/flux-2-pro-edit-edit";
+const EDIT_IMAGE_API_URL = "/api/studio/edit-with-ia";
 
 export interface EditImageClientInfo {
   client_id?: string;
