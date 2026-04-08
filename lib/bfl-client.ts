@@ -526,12 +526,14 @@ export async function deleteSupabaseImages(paths: string[]): Promise<void> {
  * @param orgType — organization identifier (maps to clients.ca_user_id)
  * @param format  — output format, defaults to "jpeg"
  * @param cost    — BFL credits consumed for this generation (optional)
+ * @param prompt  — Final prompt used for this generation (optional)
  */
 export async function storeOutputImage(
   buffer: Buffer,
   orgType: string,
   format: "jpeg" | "png" = "jpeg",
-  cost?: number
+  cost?: number,
+  prompt?: string
 ): Promise<{ proxyUrl: string; path: string }> {
   const supabase = createAdminClient()
   const random = Math.random().toString(36).slice(2)
@@ -550,6 +552,7 @@ export async function storeOutputImage(
 
   const record_data: Record<string, unknown> = { client_id: orgType, supabase_path: storagePath }
   if (cost !== undefined) record_data.cost = cost
+  if (prompt !== undefined) record_data.prompt = prompt
 
   const { data: record, error: dbError } = await supabase
     .from("generated_images")
