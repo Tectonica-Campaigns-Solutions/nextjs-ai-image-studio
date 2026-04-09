@@ -24,7 +24,7 @@ export function CanvasSessionCard({
 }: CanvasSessionCardProps) {
   const openHref = `/standalone/studio?session_id=${encodeURIComponent(
     session.id,
-  )}&user_id=${encodeURIComponent(session.ca_user_id)}`;
+  )}&user_id=${encodeURIComponent(session.ca_user_id)}&debug=true`;
 
   const effectivePreviewUrl = previewUrl ?? session.thumbnail_url;
 
