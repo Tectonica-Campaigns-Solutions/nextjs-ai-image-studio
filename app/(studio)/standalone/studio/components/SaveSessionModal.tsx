@@ -39,7 +39,7 @@ export function SaveSessionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#191919] border-[#2D2D2D] text-white sm:max-w-md">
+      <DialogContent className="bg-[#191919] border-[#2D2D2D] text-white sm:max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-white font-(family-name:--font-manrope) text-[18px] font-semibold">
             Save session
@@ -48,7 +48,7 @@ export function SaveSessionModal({
             Enter a name for this version. You can load it later from Saved versions.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 flex-1 overflow-y-auto pr-1">
           <Input
             type="text"
             value={name}
@@ -59,7 +59,7 @@ export function SaveSessionModal({
             onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
           />
         </div>
-        <DialogFooter className="flex-row gap-2 sm:justify-end">
+        <DialogFooter className="flex-row gap-2 sm:justify-end border-t border-[#2D2D2D] pt-4 bg-[#191919]">
           <Button
             type="button"
             variant="outline"
