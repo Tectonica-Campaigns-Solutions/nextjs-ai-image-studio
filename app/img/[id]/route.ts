@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+// NextResponse used only for 404 response below
 
 const IMAGES: Record<string, string> = {
   s1: "abstract.jpg",
@@ -24,8 +25,8 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const base = process.env.RAILWAY_PUBLIC_DOMAIN
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : request.nextUrl.origin;
-  return NextResponse.redirect(`${base}/style-gallery/${filename}`, 301);
+  return new Response(null, {
+    status: 301,
+    headers: { Location: `/style-gallery/${filename}` },
+  });
 }
