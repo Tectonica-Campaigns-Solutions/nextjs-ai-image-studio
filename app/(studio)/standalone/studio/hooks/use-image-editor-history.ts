@@ -206,7 +206,13 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       });
       await tempCanvas.loadFromJSON(overlayJSON);
       const overlayObjects = tempCanvas.getObjects();
-      overlayObjects.forEach((obj) => {
+      overlayObjects.forEach((obj: any) => {
+        // Normalize legacy textboxes to wrap by words (not graphemes/characters).
+        if (obj?.type === "textbox") {
+          obj.set({ splitByGrapheme: false });
+          obj.initDimensions?.();
+          obj.setCoords?.();
+        }
         mainCanvas.add(obj);
       });
       tempCanvas.dispose();

@@ -73,7 +73,7 @@ export function useTextTools(options: UseTextToolsOptions) {
       textAlign,
       editable: true,
       selectable: true,
-      splitByGrapheme: true,
+      splitByGrapheme: false,
     });
     (text as any).isEditable = true;
     canvas.add(text);

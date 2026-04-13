@@ -86,6 +86,10 @@ export function useImageEditorSelection(
     if (!canvas || !selectedObject || selectedObject.type !== "textbox") return;
 
     const textObj = selectedObject as Textbox;
+    // Ensure word-wrapping behavior even for legacy/saved textboxes.
+    (textObj as any).set?.({ splitByGrapheme: false });
+    (textObj as any).initDimensions?.();
+    (textObj as any).setCoords?.();
     setFontSize(textObj.fontSize || 24);
     setFontFamily(
       getPrimaryFontFamily(String(textObj.fontFamily || "")) || "Arial"
