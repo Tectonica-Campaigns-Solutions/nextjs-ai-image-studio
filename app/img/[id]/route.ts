@@ -24,6 +24,11 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const base = request.nextUrl.origin;
-  return NextResponse.redirect(`${base}/style-gallery/${filename}`, 301);
+  const host =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    request.nextUrl.host;
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0] ?? request.nextUrl.protocol.replace(":", "");
+  return NextResponse.redirect(`${proto}://${host}/style-gallery/${filename}`, 301);
 }
