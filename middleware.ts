@@ -81,7 +81,8 @@ export async function middleware(request: NextRequest) {
     !pathname.startsWith("/dashboard") &&
     !pathname.startsWith("/standalone") &&
     !pathname.startsWith("/api") &&
-    !pathname.startsWith("/playground-login");
+    !pathname.startsWith("/playground-login") &&
+    !pathname.startsWith("/img");
 
   if (isPlaygroundRoute) {
     const hmacSecret = process.env.PLAYGROUND_HMAC_SECRET;
