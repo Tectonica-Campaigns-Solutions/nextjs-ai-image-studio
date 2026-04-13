@@ -29,8 +29,11 @@ import { cx } from "@/app/(studio)/dashboard/utils/cx";
 import { formatRelativeFromNow } from "@/app/(studio)/dashboard/utils/date-formatters";
 import { FrameCard } from "@/app/(studio)/dashboard/components/frame-card";
 import { CanvasSessionCard } from "@/app/(studio)/dashboard/components/canvas-session-card";
+import { GeneratedImagesGrid } from "@/app/(studio)/dashboard/features/generated-images/components/GeneratedImagesGrid";
+import { GalleryLightbox } from "@/app/(studio)/dashboard/components/gallery-lightbox";
+import type { GeneratedImageCardItem } from "@/app/(studio)/dashboard/features/generated-images/components/GeneratedImageCard";
 
-type TabKey = "assets" | "frames" | "fonts" | "canvas-sessions";
+type TabKey = "assets" | "frames" | "fonts" | "canvas-sessions" | "generated-images";
 
 type DashboardClientDetailScreenProps = Readonly<{
   data: ClientDetailPageData;
@@ -43,6 +46,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const [activeTab, setActiveTab] = useState<TabKey>("assets");
   const [editOpen, setEditOpen] = useState(false);
   const [lightboxAsset, setLightboxAsset] = useState<ClientAsset | null>(null);
+  const [generatedLightbox, setGeneratedLightbox] = useState<{
+    file_url: string;
+    name: string;
+    display_name: string | null;
+  } | null>(null);
   const [toggleConfirmOpen, setToggleConfirmOpen] = useState(false);
   const [toggleTargetIsActive, setToggleTargetIsActive] = useState(false);
   const toggleAction = useServerAction();
@@ -61,6 +69,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const [deleteSessionBusy, setDeleteSessionBusy] = useState(false);
   const [deleteSessionError, setDeleteSessionError] = useState<string | null>(null);
   const sessionAction = useServerAction();
+  const [generatedPage, setGeneratedPage] = useState(1);
 
   const logoAsset = useMemo(() => {
     return (data.assets ?? []).find((a) => a.is_primary) ?? (data.assets ?? [])[0] ?? null;
@@ -87,6 +96,84 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const visibleSessions = useMemo(() => {
     return (data.canvasSessions ?? []).slice(0, 6);
   }, [data.canvasSessions]);
+
+  const generatedItems = useMemo(() => {
+    const clientId = client?.ca_user_id ?? client?.id ?? "client";
+    return (data.generatedImages ?? []).map(
+      (img): GeneratedImageCardItem => ({
+        id: img.id,
+        client_id: img.client_id,
+        client_name: client?.name ?? undefined,
+        cost: img.cost,
+        prompt: img.prompt,
+        created_at: img.created_at,
+        image_url: `/api/images/${img.id}`,
+      })
+    );
+  }, [data.generatedImages, client?.ca_user_id, client?.id, client?.name]);
+
+  useEffect(() => {
+    if (activeTab === "generated-images") {
+      setGeneratedPage(1);
+    }
+  }, [activeTab]);
+
+  const generatedPageSize = 9;
+  const generatedTotalPages = useMemo(() => {
+    return Math.max(1, Math.ceil((generatedItems?.length ?? 0) / generatedPageSize));
+  }, [generatedItems?.length]);
+
+  const generatedVisibleItems = useMemo(() => {
+    const page = Math.min(generatedTotalPages, Math.max(1, generatedPage));
+    const start = (page - 1) * generatedPageSize;
+    return generatedItems.slice(start, start + generatedPageSize);
+  }, [generatedItems, generatedPage, generatedTotalPages]);
+
+  const generatedPaginationButtons = useMemo(() => {
+    const totalPages = generatedTotalPages;
+    const currentPage = Math.min(totalPages, Math.max(1, generatedPage));
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+    const pages: (number | "ellipsis")[] = [1];
+    const left = Math.max(2, currentPage - 1);
+    const right = Math.min(totalPages - 1, currentPage + 1);
+
+    if (left > 2) pages.push("ellipsis");
+    for (let i = left; i <= right; i++) pages.push(i);
+    if (right < totalPages - 1) pages.push("ellipsis");
+    pages.push(totalPages);
+    return pages;
+  }, [generatedTotalPages, generatedPage]);
+
+  const handleDownloadGenerated = async (item: GeneratedImageCardItem) => {
+    try {
+      const res = await fetch(item.image_url);
+      if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try {
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = `bfl-${item.client_id}-${item.id}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+      toast.success("Download started");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to download");
+    }
+  };
+
+  const handleViewGenerated = (item: GeneratedImageCardItem) => {
+    setGeneratedLightbox({
+      file_url: item.image_url,
+      name: item.id,
+      display_name: item.client_name ?? item.client_id,
+    });
+  };
 
   const handleEditSave = async (form: {
     ca_user_id: string;
@@ -241,6 +328,8 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
         return "Fonts";
       case "canvas-sessions":
         return "Canvas Sessions";
+      case "generated-images":
+        return "Generated Images";
       default:
         return "Assets";
     }
@@ -263,6 +352,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   return (
     <div className="pt-16 min-h-screen bg-surface">
       <div className="p-8 w-full space-y-8">
+        <GalleryLightbox
+          asset={generatedLightbox}
+          onClose={() => setGeneratedLightbox(null)}
+          description="Generated image preview"
+        />
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent
             className="sm:max-w-lg bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant/10 rounded-2xl shadow-sm shadow-on-surface/5 max-h-[90dvh] overflow-y-auto"
@@ -653,6 +747,17 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           >
             Canvas Sessions
           </button>
+          <button
+            onClick={() => setActiveTab("generated-images")}
+            className={cx(
+              "pb-4 text-sm relative",
+              activeTab === "generated-images"
+                ? "text-blue-700 font-bold border-b-2 border-blue-600"
+                : "text-on-surface-variant font-medium hover:text-on-surface transition-colors"
+            )}
+          >
+            Generated Images
+          </button>
         </div>
 
         {/* Tab Content (Assets Preview in Dashboard export) */}
@@ -802,6 +907,75 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                 {visibleSessions.length === 0 ? (
                   <div className="text-sm text-on-surface-variant/70">
                     No canvas sessions saved for this client yet.
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {activeTab === "generated-images" ? (
+              <div className="space-y-10">
+                <GeneratedImagesGrid
+                  items={generatedVisibleItems}
+                  onView={handleViewGenerated}
+                  onDownload={(item) => void handleDownloadGenerated(item)}
+                  emptyTitle="No generated images"
+                  emptyDescription="This client has no generated images yet."
+                  className="xl:grid-cols-3"
+                />
+
+                {generatedTotalPages > 1 ? (
+                  <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
+                    <div className="px-6 py-4 bg-white border-t-0 border-surface-container flex items-center justify-between">
+                      <button
+                        type="button"
+                        disabled={generatedPage <= 1}
+                        onClick={() => setGeneratedPage((p) => Math.max(1, p - 1))}
+                        className="px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <DashboardMaterialIcon icon="chevron_left" className="text-sm" />
+                        Previous
+                      </button>
+
+                      <div className="flex items-center gap-1">
+                        {generatedPaginationButtons.map((p, idx) => {
+                          if (p === "ellipsis") {
+                            return (
+                              <span key={`e-${idx}`} className="px-2 text-on-surface-variant">
+                                ...
+                              </span>
+                            );
+                          }
+
+                          const num = p as number;
+                          const isCurrent = num === generatedPage;
+                          return (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => setGeneratedPage(num)}
+                              className={cx(
+                                "w-8 h-8 flex items-center justify-center text-xs rounded-lg transition-colors",
+                                isCurrent
+                                  ? "font-bold bg-dashboard-primary text-dashboard-on-primary shadow-md shadow-dashboard-primary/20"
+                                  : "font-medium hover:bg-surface-container-low"
+                              )}
+                            >
+                              {num}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={generatedPage >= generatedTotalPages}
+                        onClick={() => setGeneratedPage((p) => Math.min(generatedTotalPages, p + 1))}
+                        className="px-3 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all flex items-center gap-1 disabled:opacity-50"
+                      >
+                        Next
+                        <DashboardMaterialIcon icon="chevron_right" className="text-sm" />
+                      </button>
+                    </div>
                   </div>
                 ) : null}
               </div>

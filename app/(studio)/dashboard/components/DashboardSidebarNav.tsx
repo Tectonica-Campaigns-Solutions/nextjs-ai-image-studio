@@ -16,6 +16,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { key: "overview", label: "Overview", icon: "dashboard", href: "/dashboard" },
   { key: "clients", label: "Clients", icon: "group", href: "/dashboard/clients" },
+  { key: "generated-images", label: "Generated Images", icon: "image", href: "/dashboard/generated-images" },
   { key: "admins", label: "Admins", icon: "shield", href: "/dashboard/admins" },
   { key: "assets", label: "Assets", icon: "folder_open", href: "/dashboard/assets" },
   { key: "frames", label: "Frames", icon: "frame_person", href: "/dashboard/frames-fonts?tab=frames" },
@@ -65,6 +66,8 @@ function NavLinks() {
         return pathname.startsWith("/dashboard/admins");
       case "assets":
         return pathname === "/dashboard/assets";
+      case "generated-images":
+        return pathname.startsWith("/dashboard/generated-images");
       case "frames":
         return pathname === "/dashboard/frames-fonts" && searchParams.get("tab") !== "fonts";
       case "fonts":

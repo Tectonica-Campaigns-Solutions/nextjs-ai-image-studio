@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import type {
   Client,
@@ -152,6 +152,13 @@ export interface ClientDetailPageData {
   fonts: ClientFont[];
   variants: string[];
   canvasSessions: CanvasSessionSummary[];
+  generatedImages: Array<{
+    id: string;
+    client_id: string;
+    cost: number | null;
+    prompt: string | null;
+    created_at: string;
+  }>;
 }
 
 /**
@@ -162,57 +169,80 @@ export async function getClientDetailPageData(
   clientId: string,
 ): Promise<ClientDetailPageData> {
   const supabase = await createClient();
+  const supabaseAdmin = createAdminClient();
 
-  const [clientRes, assetsRes, framesRes, fontsRes, variantsRes, sessionsRes] =
-    await Promise.all([
-      supabase
-        .from("clients")
-        .select("*")
-        .eq("id", clientId)
-        .is("deleted_at", null)
-        .single(),
-      supabase
-        .from("client_assets")
-        .select("*")
-        .eq("client_id", clientId)
-        .eq("asset_type", "logo")
-        .is("deleted_at", null)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("client_assets")
-        .select("*")
-        .eq("client_id", clientId)
-        .eq("asset_type", "frame")
-        .is("deleted_at", null)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("client_fonts")
-        .select("*")
-        .eq("client_id", clientId)
-        .is("deleted_at", null)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("client_assets")
-        .select("variant")
-        .eq("client_id", clientId)
-        .eq("asset_type", "logo")
-        .not("variant", "is", null)
-        .is("deleted_at", null),
-      supabase
-        .from("client_canvas_sessions")
-        .select(
-          "id, client_id, ca_user_id, name, thumbnail_url, background_url, created_at, updated_at",
-        )
-        .eq("client_id", clientId)
-        .is("deleted_at", null)
-        .order("updated_at", { ascending: false }),
-    ]);
+  const clientRes = await supabase
+    .from("clients")
+    .select("*")
+    .eq("id", clientId)
+    .is("deleted_at", null)
+    .single();
+
+  const client =
+    clientRes.error || !clientRes.data ? null : (clientRes.data as Client);
+  const caUserId = client?.ca_user_id ?? null;
+
+  const [
+    assetsRes,
+    framesRes,
+    fontsRes,
+    variantsRes,
+    sessionsRes,
+    generatedRes,
+  ] = await Promise.all([
+    supabase
+      .from("client_assets")
+      .select("*")
+      .eq("client_id", clientId)
+      .eq("asset_type", "logo")
+      .is("deleted_at", null)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("client_assets")
+      .select("*")
+      .eq("client_id", clientId)
+      .eq("asset_type", "frame")
+      .is("deleted_at", null)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("client_fonts")
+      .select("*")
+      .eq("client_id", clientId)
+      .is("deleted_at", null)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("client_assets")
+      .select("variant")
+      .eq("client_id", clientId)
+      .eq("asset_type", "logo")
+      .not("variant", "is", null)
+      .is("deleted_at", null),
+    supabase
+      .from("client_canvas_sessions")
+      .select(
+        "id, client_id, ca_user_id, name, thumbnail_url, background_url, created_at, updated_at",
+      )
+      .eq("client_id", clientId)
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false }),
+    caUserId
+      ? supabaseAdmin
+          .from("generated_images")
+          .select("id, client_id, cost, prompt, created_at")
+          .eq("client_id", caUserId)
+          .order("created_at", { ascending: false })
+          .limit(200)
+      : Promise.resolve({ data: [], error: null } as unknown as {
+          data: unknown[];
+          error: null;
+        }),
+  ]);
 
   const variants = Array.from(
     new Set(
@@ -223,12 +253,18 @@ export async function getClientDetailPageData(
   ).sort();
 
   return {
-    client:
-      clientRes.error || !clientRes.data ? null : (clientRes.data as Client),
+    client,
     assets: (assetsRes.data ?? []) as ClientAsset[],
     frames: (framesRes.data ?? []) as ClientAsset[],
     fonts: (fontsRes.data ?? []) as ClientFont[],
     variants,
     canvasSessions: (sessionsRes.data ?? []) as CanvasSessionSummary[],
+    generatedImages: (generatedRes.data ?? []) as Array<{
+      id: string;
+      client_id: string;
+      cost: number | null;
+      prompt: string | null;
+      created_at: string;
+    }>,
   };
 }
