@@ -1,32 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-// NextResponse used only for 404 response below
 
-const IMAGES: Record<string, string> = {
-  s1: "abstract.jpg",
-  s2: "cartoon.jpg",
-  s3: "collage-mixed.jpg",
-  s4: "flat-illus.jpg",
-  s5: "hand-illus.jpg",
-  s6: "mini.jpg",
-  s7: "mural.jpg",
-  s8: "photo.jpg",
-  s9: "political.jpg",
-  s10: "retro.jpg",
-};
+// Only allow alphanumeric and hyphens to prevent path traversal
+const SAFE_ID = /^[a-z0-9-]+$/i;
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const filename = IMAGES[id];
 
-  if (!filename) {
+  if (!SAFE_ID.test(id)) {
     return new NextResponse("Not found", { status: 404 });
   }
 
   return new Response(null, {
     status: 301,
-    headers: { Location: `/style-gallery/${filename}` },
+    headers: { Location: `/style-gallery/${id}.jpg` },
   });
 }
