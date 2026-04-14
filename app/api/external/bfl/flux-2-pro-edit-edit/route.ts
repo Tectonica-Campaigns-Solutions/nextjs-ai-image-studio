@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
     let base64Images: string[] = []
     let compositionRule: string | null = null
     let removeInputDisclaimer = true
+    let applyDisclaimer = true
 
     if (isJSON) {
       console.log(`${LOG_PREFIX} Processing JSON payload`)
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
 
       settings = body.settings || {}
       if (body.removeInputDisclaimer === false) removeInputDisclaimer = false
+      if (body.disclaimer === false) applyDisclaimer = false
 
       if (Array.isArray(body.imageUrls)) {
         imageUrls = body.imageUrls.filter((u: string) => u?.trim())
@@ -169,6 +171,7 @@ export async function POST(request: NextRequest) {
           }
         }
         if (formData.get("removeInputDisclaimer") === "false") removeInputDisclaimer = false
+        if (formData.get("disclaimer") === "false") applyDisclaimer = false
 
         // Single image: image0, imageUrl0, or imageBase640
         const file = formData.get("image0") as File | null
@@ -429,7 +432,9 @@ export async function POST(request: NextRequest) {
 
     try {
       const resultBuffer = await downloadBflImage(bflResult.imageUrl)
-      const finalBuffer = await addDisclaimerToBuffer(resultBuffer)
+      const finalBuffer = applyDisclaimer
+        ? await addDisclaimerToBuffer(resultBuffer)
+        : resultBuffer
       const metadata = await sharp(finalBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
