@@ -399,14 +399,12 @@ export async function POST(request: NextRequest) {
             throw new Error(`File image ${i + 1} is corrupted or invalid`)
           }
 
-          // Restore disclaimer zone if the input image already has it applied
-          if (removeInputDisclaimer) {
-            try {
-              imageBuffer = Buffer.from(await restoreDisclaimerZone(imageBuffer))
-              console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer zone restored (file image ${i + 1})`)
-            } catch (restoreError) {
-              console.warn(`[External Flux 2 Pro Edit] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
-            }
+          // Restore disclaimer zone
+          try {
+            imageBuffer = Buffer.from(await restoreDisclaimerZone(imageBuffer))
+            console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer zone restored (file image ${i + 1})`)
+          } catch (restoreError) {
+            console.warn(`[External Flux 2 Pro Edit] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
           }
 
           // Resize to respect fal.ai megapixel limits
@@ -515,14 +513,12 @@ export async function POST(request: NextRequest) {
             throw new Error(`Base64 image ${i + 1} is corrupted or incomplete`)
           }
 
-          // Restore disclaimer zone if the input image already has it applied
-          if (removeInputDisclaimer) {
-            try {
-              imageBuffer = Buffer.from(await restoreDisclaimerZone(imageBuffer))
-              console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer zone restored (base64 image ${i + 1})`)
-            } catch (restoreError) {
-              console.warn(`[External Flux 2 Pro Edit] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
-            }
+          // Restore disclaimer zone
+          try {
+            imageBuffer = Buffer.from(await restoreDisclaimerZone(imageBuffer))
+            console.log(`[External Flux 2 Pro Edit] ✅ Disclaimer zone restored (base64 image ${i + 1})`)
+          } catch (restoreError) {
+            console.warn(`[External Flux 2 Pro Edit] ⚠️ restoreDisclaimerZone failed, proceeding with original:`, restoreError)
           }
 
           // Resize to respect fal.ai megapixel limits
@@ -605,8 +601,7 @@ export async function POST(request: NextRequest) {
         try {
           new URL(url)
 
-          if (removeInputDisclaimer) {
-            console.log(`[External Flux 2 Pro Edit] removeInputDisclaimer=true, downloading and restoring disclaimer zone from URL...`)
+          console.log(`[External Flux 2 Pro Edit] Downloading and restoring disclaimer zone from URL...`)
             try {
               const dlResponse = await fetch(url)
               if (!dlResponse.ok) throw new Error(`Failed to download: ${dlResponse.statusText}`)
@@ -633,9 +628,6 @@ export async function POST(request: NextRequest) {
               console.warn(`[External Flux 2 Pro Edit] ⚠️ URL restore failed, using original URL:`, restoreError)
               allImageUrls.push(url)
             }
-          } else {
-            allImageUrls.push(url)
-          }
         } catch (urlError) {
           return NextResponse.json({
             error: "Invalid image URL format",

@@ -327,12 +327,10 @@ export async function POST(request: NextRequest) {
     if (base64Image) {
       try {
         let uploadBase64 = base64Image
-        if (removeInputDisclaimer) {
-          const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "")
-          const rawBuffer = Buffer.from(base64Data, "base64")
-          const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
-          uploadBase64 = `data:image/jpeg;base64,${restoredBuffer.toString("base64")}`
-        }
+        const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "")
+        const rawBuffer = Buffer.from(base64Data, "base64")
+        const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+        uploadBase64 = `data:image/jpeg;base64,${restoredBuffer.toString("base64")}`
         const { url: imgUrl, path: imgPath } = await prepareBase64ForBfl(uploadBase64, 0)
         allImageUrls.push(imgUrl)
         tempPaths.push(imgPath)
@@ -348,28 +346,23 @@ export async function POST(request: NextRequest) {
       try { new URL(imageUrl) } catch {
         return NextResponse.json({ error: "Invalid image URL format", details: imageUrl }, { status: 400 })
       }
-      if (removeInputDisclaimer) {
-        try {
-          const res = await fetch(imageUrl)
-          const arrayBuffer = await res.arrayBuffer()
-          const rawBuffer = Buffer.from(arrayBuffer)
-          const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
-          const resizedBuffer = await resizeImageForBfl(restoredBuffer)
-          const fileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img0-restored.jpeg`
-          const uploadedUrl = await uploadImageToSupabase(resizedBuffer, fileName, "image/jpeg")
-          allImageUrls.push(uploadedUrl)
-          tempPaths.push(fileName)
-          console.log(`${LOG_PREFIX} ✅ User image URL restored and uploaded (@image1): ${uploadedUrl}`)
-        } catch (urlError) {
-          console.error(`${LOG_PREFIX} URL image restore failed:`, urlError)
-          return NextResponse.json({
-            error: "URL image processing failed",
-            details: urlError instanceof Error ? urlError.message : "Unknown error",
-          }, { status: 400 })
-        }
-      } else {
-        allImageUrls.push(await generateSignedUrlForBfl(imageUrl))
-        console.log(`${LOG_PREFIX} ✅ User image URL added (@image1): ${imageUrl}`)
+      try {
+        const res = await fetch(imageUrl)
+        const arrayBuffer = await res.arrayBuffer()
+        const rawBuffer = Buffer.from(arrayBuffer)
+        const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+        const resizedBuffer = await resizeImageForBfl(restoredBuffer)
+        const fileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img0-restored.jpeg`
+        const uploadedUrl = await uploadImageToSupabase(resizedBuffer, fileName, "image/jpeg")
+        allImageUrls.push(uploadedUrl)
+        tempPaths.push(fileName)
+        console.log(`${LOG_PREFIX} ✅ User image URL restored and uploaded (@image1): ${uploadedUrl}`)
+      } catch (urlError) {
+        console.error(`${LOG_PREFIX} URL image restore failed:`, urlError)
+        return NextResponse.json({
+          error: "URL image processing failed",
+          details: urlError instanceof Error ? urlError.message : "Unknown error",
+        }, { status: 400 })
       }
     }
 
