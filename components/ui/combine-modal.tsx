@@ -108,7 +108,7 @@ export default function CombineModal({
       const url =
         process.env.NODE_ENV === "development"
           ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/external/flux-pro-image-combine`
-          : `https://qwen-image-editor-production-49d4.up.railway.app/api/external/flux-pro-image-combine`;
+          : `https://tectonica.up.railway.app/api/external/flux-pro-image-combine`;
 
       // Prepare payload with Base64 images
       const payload: any = {
