@@ -13,9 +13,20 @@ function getInternalBaseUrl(request: NextRequest): string {
     return `http://127.0.0.1:${port}`;
   }
 
-  const appUrl = process.env.APP_URL
-    ? normalizeBaseUrl(process.env.APP_URL)
-    : "";
+  console.log(
+    "process.env.RAILWAY_PUBLIC_DOMAIN",
+    process.env.RAILWAY_PUBLIC_DOMAIN,
+  );
+  console.log("process.env.APP_URL", process.env.APP_URL);
+  console.log("process.env.NODE_ENV", process.env.NODE_ENV);
+  console.log("process.env.PORT", process.env.PORT);
+  console.log("request.nextUrl.origin", request.nextUrl.origin);
+
+  const appUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? normalizeBaseUrl(process.env.RAILWAY_PUBLIC_DOMAIN)
+    : process.env.APP_URL
+      ? normalizeBaseUrl(process.env.APP_URL)
+      : "";
   return appUrl || request.nextUrl.origin;
 }
 
