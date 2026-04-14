@@ -46,6 +46,7 @@ export async function editImage(
 
   const body = {
     prompt: prompt.trim(),
+    disclaimer: false,
     orgType,
     clientInfo: {
       client_id: clientInfo.client_id ?? "Tectonica",
