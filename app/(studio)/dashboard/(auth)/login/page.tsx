@@ -1,9 +1,10 @@
 import { adminLogin } from "./actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Shield, Lock } from "lucide-react";
+import { Shield } from "lucide-react";
 import { getCurrentUserWithRole } from "@/app/(studio)/dashboard/utils/admin-utils";
 import { redirect } from "next/navigation";
+import { LoginSubmitButton } from "./LoginSubmitButton";
+import { PasswordField } from "./PasswordField";
 
 type AdminLoginPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -72,23 +73,10 @@ export default async function AdminLoginPage({
             >
               Password
             </label>
-            <Input
-              type="password"
-              id="password"
-              name="password"
-              className="dashboard-input h-11 rounded-xl !bg-surface-container-low !border-outline-variant/10 px-4 shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
-              placeholder="Enter your password"
-              required
-            />
+            <PasswordField />
           </div>
 
-          <Button
-            formAction={adminLogin}
-            className="w-full h-11 rounded-xl bg-dashboard-primary text-dashboard-on-primary border border-dashboard-primary/10 font-semibold hover:opacity-90 shadow-sm shadow-dashboard-primary/20 hover:bg-dashboard-primary/90 hover:text-dashboard-on-primary"
-          >
-            <Lock className="size-4 mr-2" />
-            Sign in
-          </Button>
+          <LoginSubmitButton action={adminLogin} />
         </form>
       </div>
     </div>

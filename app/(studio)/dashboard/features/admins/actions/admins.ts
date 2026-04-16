@@ -267,3 +267,72 @@ export async function setAdminPasswordAction(
   revalidatePath(`/dashboard/admins/${role.id}`);
   return {};
 }
+
+export type ChangeMyPasswordResult = { error?: string };
+
+export async function changeMyPasswordAction(raw: {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<ChangeMyPasswordResult> {
+  const check = await requireAdmin();
+  if (!check.success) {
+    redirect("/dashboard/login?error=admin_required");
+  }
+
+  const currentPassword = String(raw.currentPassword ?? "");
+  const newPassword = String(raw.newPassword ?? "");
+  const confirmPassword = String(raw.confirmPassword ?? "");
+
+  if (!currentPassword.trim()) {
+    return { error: "Current password is required" };
+  }
+
+  const parsed = setupPasswordSchema.safeParse({ password: newPassword });
+  if (!parsed.success) {
+    const msg =
+      parsed.error.flatten().fieldErrors.password?.[0] ?? "Invalid password";
+    return { error: String(msg) };
+  }
+  if (newPassword !== confirmPassword) {
+    return { error: "Passwords do not match" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email) {
+    return { error: "Unauthorized" };
+  }
+
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (reauthError) {
+    return { error: "Current password is incorrect" };
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+  if (updateError) {
+    console.error(
+      "[changeMyPasswordAction] updateUser error:",
+      updateError.message,
+    );
+    return { error: "Failed to update password" };
+  }
+
+  // Best-effort: sign out other sessions/devices.
+  try {
+    await supabase.auth.signOut({ scope: "others" });
+  } catch {
+    // ignore
+  }
+
+  return {};
+}

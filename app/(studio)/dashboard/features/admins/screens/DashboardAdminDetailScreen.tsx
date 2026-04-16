@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
+import { toast as uiToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 import type { Admin } from "@/app/(studio)/dashboard/utils/types";
-import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { DashboardBreadcrumb } from "@/app/(studio)/dashboard/components/dashboard-breadcrumb";
-import { updateAdminAction, deleteAdminAction } from "../actions/admins";
+import {
+  changeMyPasswordAction,
+  deleteAdminAction,
+  updateAdminAction,
+} from "../actions/admins";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/app/(studio)/dashboard/components/confirm-dialog";
 import { useServerAction } from "@/app/(studio)/dashboard/hooks/use-server-action";
 import { DashboardStatusPill } from "@/app/(studio)/dashboard/components/dashboard-status-pill";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export type DashboardAdminDetailScreenProps = Readonly<{
@@ -60,6 +63,16 @@ export function DashboardAdminDetailScreen({
     admin.expires_at ? admin.expires_at.slice(0, 16) : ""
   );
 
+  const [pwBusy, setPwBusy] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSuccess, setPwSuccess] = useState<string | null>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const isSelf = useMemo(() => {
     return currentUserId ? admin.user_id === currentUserId : false;
   }, [currentUserId, admin.user_id]);
@@ -90,10 +103,10 @@ export function DashboardAdminDetailScreen({
 
       const result = await updateAdminAction(admin.id, payload);
       if (result.error) {
-        toast.error(result.error);
+        sonnerToast.error(result.error);
         return;
       }
-      toast.success("Admin updated");
+      sonnerToast.success("Admin updated");
       router.refresh();
     } finally {
       setSaving(false);
@@ -111,6 +124,39 @@ export function DashboardAdminDetailScreen({
         router.push("/dashboard/admins");
       },
     );
+  };
+
+  const handleChangePassword = async () => {
+    if (!isSelf || pwBusy) return;
+    try {
+      setPwBusy(true);
+      setPwError(null);
+      setPwSuccess(null);
+      const result = await changeMyPasswordAction({
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      if (result.error) {
+        sonnerToast.error(result.error);
+        setPwError(result.error);
+        return;
+      }
+      uiToast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+      setPwSuccess("Password updated successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      router.refresh();
+    } finally {
+      setPwBusy(false);
+    }
   };
 
   return (
@@ -141,9 +187,9 @@ export function DashboardAdminDetailScreen({
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-12 lg:col-span-7 space-y-6">
-            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6">
+        <div className="grid grid-cols-12 items-stretch gap-8">
+          <div className="col-span-12 lg:col-span-7 flex flex-col">
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex-1 h-full">
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
                   <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">
@@ -224,73 +270,221 @@ export function DashboardAdminDetailScreen({
                 ) : null}
               </div>
 
-              <div className="mt-6 flex items-center justify-between border-t border-outline-variant/10 pt-6">
+              <div className="mt-6 flex items-center justify-end border-t border-outline-variant/10 pt-6">
                 <button
                   type="button"
-                  className="text-error font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50"
-                  disabled={saving || deactivateAction.busyId !== null || isSelf}
-                  onClick={() => setDeactivateConfirmOpen(true)}
+                  className="bg-dashboard-primary text-dashboard-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm shadow-dashboard-primary/20 hover:opacity-90 transition-all disabled:opacity-70"
+                  onClick={handleSave}
+                  disabled={saving}
                 >
-                  Delete
+                  {saving ? "Saving..." : "Save"}
                 </button>
+              </div>
+            </div>
 
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled
-                    className="hidden"
-                  >
-                    Cancel
-                  </Button>
+          </div>
+
+          <div className="col-span-12 lg:col-span-5 flex flex-col">
+            {isSelf ? (
+              <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 flex-1 h-full flex flex-col">
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">
+                      Security
+                    </p>
+                    <h3 className="text-2xl font-bold text-on-surface leading-tight">
+                      Change password
+                    </h3>
+                    <p className="text-sm text-on-surface-variant mt-1">
+                      Use your current password to confirm this change.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label
+                      className="text-xs font-bold text-on-surface-variant uppercase tracking-widest"
+                      htmlFor="admin-current-password"
+                    >
+                      Current password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        id="admin-current-password"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => {
+                          setCurrentPassword(e.target.value);
+                          if (pwError) setPwError(null);
+                          if (pwSuccess) setPwSuccess(null);
+                        }}
+                        disabled={pwBusy}
+                        className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 pr-12 shadow-none"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        aria-label={
+                          showCurrentPassword
+                            ? "Hide current password"
+                            : "Show current password"
+                        }
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-on-surface-variant hover:text-on-surface disabled:opacity-50"
+                        onClick={() => setShowCurrentPassword((v) => !v)}
+                        disabled={pwBusy}
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      className="text-xs font-bold text-on-surface-variant uppercase tracking-widest"
+                      htmlFor="admin-new-password"
+                    >
+                      New password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        id="admin-new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          if (pwError) setPwError(null);
+                          if (pwSuccess) setPwSuccess(null);
+                        }}
+                        disabled={pwBusy}
+                        className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 pr-12 shadow-none"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        aria-label={
+                          showNewPassword ? "Hide new password" : "Show new password"
+                        }
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-on-surface-variant hover:text-on-surface disabled:opacity-50"
+                        onClick={() => setShowNewPassword((v) => !v)}
+                        disabled={pwBusy}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      className="text-xs font-bold text-on-surface-variant uppercase tracking-widest"
+                      htmlFor="admin-confirm-password"
+                    >
+                      Confirm new password
+                    </label>
+                    <div className="relative">
+                      <Input
+                        id="admin-confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          if (pwError) setPwError(null);
+                          if (pwSuccess) setPwSuccess(null);
+                        }}
+                        disabled={pwBusy}
+                        className="dashboard-input !bg-surface-container-low !border-outline-variant/10 rounded-xl px-4 pr-12 shadow-none"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-on-surface-variant hover:text-on-surface disabled:opacity-50"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        disabled={pwBusy}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {pwError ? (
+                  <p className="mt-4 text-sm font-semibold text-error">{pwError}</p>
+                ) : null}
+                {pwSuccess ? (
+                  <p className="mt-4 text-sm font-semibold text-green-600">
+                    {pwSuccess}
+                  </p>
+                ) : null}
+
+                <div className="mt-auto flex items-center justify-end border-t border-outline-variant/10 pt-6">
                   <button
                     type="button"
                     className="bg-dashboard-primary text-dashboard-on-primary px-6 py-2 rounded-lg text-sm font-bold shadow-sm shadow-dashboard-primary/20 hover:opacity-90 transition-all disabled:opacity-70"
-                    onClick={handleSave}
-                    disabled={saving}
+                    onClick={handleChangePassword}
+                    disabled={pwBusy}
                   >
-                    {saving ? "Saving..." : "Save"}
+                    {pwBusy ? "Updating..." : "Update password"}
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
+            ) : null}
 
-          <div className="col-span-12 lg:col-span-5 space-y-6">
-            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
-                Admin actions
-              </p>
+            {!isSelf ? (
+              <div className="bg-surface-container-lowest rounded-xl border border-error/20 p-6 flex-1 h-full flex flex-col">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">
+                      Danger zone
+                    </p>
+                    <h3 className="text-2xl font-bold text-on-surface leading-tight">
+                      Remove admin access
+                    </h3>
+                    <p className="text-sm text-on-surface-variant mt-1">
+                      This will deactivate the admin role and remove dashboard access.
+                    </p>
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  className="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50"
-                  onClick={() => router.push(`/dashboard/admins/${admin.id}`)}
-                  disabled
-                >
-                  Edit details
-                </button>
-                <button
-                  type="button"
-                  className="w-full bg-error/10 border border-error/20 rounded-xl py-2.5 text-sm font-bold text-error hover:bg-error/20 transition-colors disabled:opacity-50"
-                  onClick={() => setDeactivateConfirmOpen(true)}
-                  disabled={isSelf || saving || deactivateAction.busyId !== null}
-                >
-                  {deactivateAction.busyId ? "Deleting..." : "Delete admin"}
-                </button>
+                <div className="mt-4 text-xs text-on-surface-variant leading-relaxed">
+                  {admin.granted_by_email ? (
+                    <p>
+                      Granted by{" "}
+                      <span className="font-semibold">{admin.granted_by_email}</span>
+                    </p>
+                  ) : (
+                    <p>No grant information</p>
+                  )}
+                </div>
+
+                <div className="mt-auto flex items-center justify-end border-t border-error/20 pt-6">
+                  <button
+                    type="button"
+                    className="bg-error/10 border border-error/20 rounded-xl px-5 py-2.5 text-sm font-bold text-error hover:bg-error/20 transition-colors disabled:opacity-50"
+                    onClick={() => setDeactivateConfirmOpen(true)}
+                    disabled={saving || deactivateAction.busyId !== null}
+                  >
+                    {deactivateAction.busyId ? "Deleting..." : "Delete admin"}
+                  </button>
+                </div>
               </div>
-
-              <div className="mt-4 text-xs text-on-surface-variant leading-relaxed">
-                {admin.granted_by_email ? (
-                  <p>
-                    Granted by <span className="font-semibold">{admin.granted_by_email}</span>
-                  </p>
-                ) : (
-                  <p>No grant information</p>
-                )}
-              </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
