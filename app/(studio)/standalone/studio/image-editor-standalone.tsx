@@ -706,6 +706,7 @@ function ImageEditorStandaloneInner({
       setIsReturningToConversation(true);
 
       const caUserId = params.user_id?.trim();
+      const chatId = new URL(window.location.href).searchParams.get("chat_id")?.trim() ?? "";
 
       const currentWidth = canvasEditor.canvas.width;
       const multiplier =
@@ -719,10 +720,12 @@ function ImageEditorStandaloneInner({
         multiplier,
       } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
 
-      if (!dataURL || !caUserId) {
+      if (!dataURL || !caUserId || !chatId) {
         toast({
           title: "Could not export image",
-          description: "Try again before returning it to the conversation.",
+          description: !chatId
+            ? "Missing chat_id. Reopen Studio from the chat and try again."
+            : "Try again before returning it to the conversation.",
           variant: "destructive",
         });
         return;
@@ -734,12 +737,14 @@ function ImageEditorStandaloneInner({
         body: JSON.stringify({
           image_base64: dataURL,
           ca_user_id: caUserId,
+          chat_id: chatId,
+          prompt: "Here is the edited image from the Studio",
         }),
       });
 
       const uploadJson = await uploadResponse.json().catch(() => null);
 
-      if (!uploadResponse.ok || !uploadJson?.image_url) {
+      if (!uploadJson?.image_url) {
         console.error("Failed to upload image for conversation return:", uploadJson);
         toast({
           title: "Could not upload image",
@@ -749,15 +754,23 @@ function ImageEditorStandaloneInner({
         return;
       }
 
-      const imageUrl = uploadJson.image_url as string;
+      if (!uploadResponse.ok) {
+        console.error("Partial failure returning to conversation:", uploadJson);
+        toast({
+          title: "Image uploaded, but not sent to chat",
+          description:
+            uploadJson?.change_agent?.error ??
+            uploadJson?.error ??
+            "The image was uploaded, but we couldn't send it back to the conversation. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      window.parent.postMessage(
-        {
-          type: STUDIO_IFRAME_MESSAGE.EDITING_DONE_TYPE,
-          imageUrl,
-        },
-        "*"
-      );
+      toast({
+        title: "Image sent to conversation",
+        description: "Sent back to the conversation successfully.",
+      });
     } catch (error) {
       console.error("Failed to return image to parent conversation:", error);
       toast({
