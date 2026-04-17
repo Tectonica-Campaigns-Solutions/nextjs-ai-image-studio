@@ -16,6 +16,7 @@ export type GeneratedImageListItem = GeneratedImageRow & {
 
 export type GeneratedImagesPageData = {
   images: GeneratedImageListItem[];
+  clients: Array<{ id: string; name: string; ca_user_id: string }>;
   total: number;
   page: number;
   pageSize: number;
@@ -85,6 +86,14 @@ export async function getGeneratedImagesPageData(
 
   if (imagesRes.error) return null;
 
+  const clients = ((clientsRes.data ?? []) as Array<{
+    id: string;
+    name: string;
+    ca_user_id: string;
+  }>)
+    .filter((c) => Boolean(c.ca_user_id && c.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   const clientNamesById = createNameMap(clientsRes.data ?? []);
   const clientNameByCaUserId = new Map<string, string>();
   for (const row of (clientsRes.data ?? []) as Array<{
@@ -107,6 +116,7 @@ export async function getGeneratedImagesPageData(
 
   return {
     images,
+    clients,
     total: imagesRes.count ?? 0,
     page,
     pageSize,

@@ -10,17 +10,17 @@ export const metadata: Metadata = {
 type GeneratedImagesPageProps = Readonly<{
   searchParams: Promise<{
     page?: string;
-    search?: string;
+    client?: string;
   }>;
 }>;
 
 export default async function GeneratedImagesPage({ searchParams }: GeneratedImagesPageProps) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
-  const search = params.search?.trim() || undefined;
+  const client = params.client?.trim() || undefined;
 
   const pageSize = 20;
-  const data = await getGeneratedImagesPageData({ page, pageSize, search });
+  const data = await getGeneratedImagesPageData({ page, pageSize, clientCaUserId: client });
   if (!data) {
     redirect("/dashboard/login?error=admin_required");
   }
@@ -28,10 +28,11 @@ export default async function GeneratedImagesPage({ searchParams }: GeneratedIma
   return (
     <DashboardGeneratedImagesScreen
       items={data.images}
+      clients={data.clients}
       page={data.page}
       pageSize={data.pageSize}
       total={data.total}
-      search={search}
+      client={client}
     />
   );
 }

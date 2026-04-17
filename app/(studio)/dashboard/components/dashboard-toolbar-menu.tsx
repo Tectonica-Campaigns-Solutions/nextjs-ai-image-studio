@@ -10,6 +10,7 @@ export type DashboardToolbarMenuProps = Readonly<{
   label: React.ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  align?: "left" | "right";
   buttonClassName?: string;
   panelClassName?: string;
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export function DashboardToolbarMenu({
   label,
   open,
   onOpenChange,
+  align = "left",
   buttonClassName,
   panelClassName,
   children,
@@ -62,7 +64,8 @@ export function DashboardToolbarMenu({
           id={id}
           role="menu"
           className={cx(
-            "absolute left-0 top-full mt-2 bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-lg z-40",
+            "absolute top-full mt-2 bg-surface-container-lowest border border-outline-variant/10 rounded-xl shadow-lg z-40",
+            align === "right" ? "right-0" : "left-0",
             panelClassName,
           )}
         >

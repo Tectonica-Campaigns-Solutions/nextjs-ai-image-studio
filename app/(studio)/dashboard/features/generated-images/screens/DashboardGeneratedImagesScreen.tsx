@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DashboardPageHeader } from "@/app/(studio)/dashboard/components/dashboard-page-header";
 import { GeneratedImagesGrid } from "../components/GeneratedImagesGrid";
@@ -9,15 +10,17 @@ import type { GeneratedImageCardItem } from "../components/GeneratedImageCard";
 import { GalleryLightbox } from "@/app/(studio)/dashboard/components/gallery-lightbox";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { cx } from "@/app/(studio)/dashboard/utils/cx";
+import { DashboardToolbarMenu } from "@/app/(studio)/dashboard/components/dashboard-toolbar-menu";
 
 export type DashboardGeneratedImagesScreenProps = Readonly<{
   title?: string;
   description?: React.ReactNode;
   items: GeneratedImageCardItem[];
+  clients: Array<{ id: string; name: string; ca_user_id: string }>;
   page: number;
   pageSize: number;
   total: number;
-  search?: string;
+  client?: string;
 }>;
 
 function getPaginationButtons(totalPages: number, currentPage: number) {
@@ -62,17 +65,41 @@ export function DashboardGeneratedImagesScreen({
   title = "Generated Images",
   description = "All images generated via Black Forest Labs.",
   items,
+  clients,
   page,
   pageSize,
   total,
-  search,
+  client,
 }: DashboardGeneratedImagesScreenProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [busyId, setBusyId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{
     file_url: string;
     name: string;
     display_name: string | null;
   } | null>(null);
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [clientCaUserId, setClientCaUserId] = useState<string>(client ?? "");
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined || value === "" || (key === "page" && value === "1")) {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      }
+      const qs = params.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [router, pathname, searchParams],
+  );
 
   const stableItems = useMemo(() => items ?? [], [items]);
   const totalPages = Math.max(1, Math.ceil(Math.max(0, total) / Math.max(1, pageSize)));
@@ -81,12 +108,12 @@ export function DashboardGeneratedImagesScreen({
   const buildHref = useMemo(() => {
     return (targetPage: number) => {
       const params = new URLSearchParams();
-      if (search) params.set("search", search);
+      if (client) params.set("client", client);
       if (targetPage > 1) params.set("page", String(targetPage));
       const qs = params.toString();
       return `/dashboard/generated-images${qs ? `?${qs}` : ""}`;
     };
-  }, [search]);
+  }, [client]);
 
   const handleDownload = async (item: GeneratedImageCardItem) => {
     if (busyId) return;
@@ -124,6 +151,83 @@ export function DashboardGeneratedImagesScreen({
           containerClassName="flex justify-between items-end gap-6"
           actions={
             <div className="flex items-center gap-3">
+              <DashboardToolbarMenu
+                icon="filter_list"
+                label={
+                  <>
+                    Filter
+                    {client ? (
+                      <>
+                        {" "}
+                        (<span className="font-bold">{clients.find((c) => c.ca_user_id === client)?.name ?? "Client"}</span>)
+                      </>
+                    ) : null}
+                  </>
+                }
+                open={filterOpen}
+                onOpenChange={setFilterOpen}
+                align="right"
+                panelClassName="w-[360px] p-4"
+              >
+                <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+                  Filters
+                </div>
+
+                <div className="space-y-3">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                    Client
+                  </div>
+
+                  <div className="flex flex-col gap-1 max-h-[280px] overflow-auto pr-1">
+                    <button
+                      type="button"
+                      className={cx(
+                        "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
+                        clientCaUserId === ""
+                          ? "bg-dashboard-primary text-dashboard-on-primary"
+                          : "hover:bg-surface-container-high text-on-surface-variant",
+                      )}
+                      onClick={() => {
+                        setClientCaUserId("");
+                        updateParams({ client: undefined, page: "1" });
+                        setFilterOpen(false);
+                      }}
+                    >
+                      All clients
+                    </button>
+
+                    {clients.map((c) => {
+                      const active = clientCaUserId === c.ca_user_id;
+                      return (
+                        <button
+                          key={c.ca_user_id}
+                          type="button"
+                          className={cx(
+                            "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
+                            active
+                              ? "bg-dashboard-primary text-dashboard-on-primary"
+                              : "hover:bg-surface-container-high text-on-surface-variant",
+                          )}
+                          onClick={() => {
+                            setClientCaUserId(c.ca_user_id);
+                            updateParams({ client: c.ca_user_id, page: "1" });
+                            setFilterOpen(false);
+                          }}
+                          title={c.ca_user_id}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="truncate">{c.name}</span>
+                            <span className="text-[10px] font-bold text-on-surface-variant/70 truncate max-w-[120px]">
+                              {c.ca_user_id}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </DashboardToolbarMenu>
+
               <div className="text-sm text-on-surface-variant">{total.toLocaleString()} total</div>
               {busyId ? (
                 <div className="text-sm text-on-surface-variant">Downloading…</div>
