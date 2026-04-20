@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -9,12 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   createClientSchema,
   type CreateClientInput,
 } from "@/app/(studio)/dashboard/features/clients/schemas/clients";
+
+type PlanOption = {
+  id: string;
+  code: string;
+  name: string;
+  images_limit: number;
+};
 
 interface ClientFormProps {
   clientId?: string;
@@ -23,6 +37,7 @@ interface ClientFormProps {
     name?: string;
     email?: string;
     description?: string;
+    plan_id?: string | null;
     is_active?: boolean;
     allow_custom_logo?: boolean;
   };
@@ -31,6 +46,7 @@ interface ClientFormProps {
     name: string;
     email: string;
     description?: string;
+    plan_id?: string | null;
     is_active: boolean;
     allow_custom_logo: boolean;
   }) => Promise<void>;
@@ -44,6 +60,8 @@ export function ClientForm({
   onCancel,
 }: ClientFormProps) {
   const [saving, setSaving] = useState(false);
+  const [plans, setPlans] = useState<PlanOption[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
 
   const {
     register,
@@ -58,6 +76,7 @@ export function ClientForm({
       name: initialData?.name ?? "",
       email: initialData?.email ?? "",
       description: initialData?.description ?? "",
+      plan_id: initialData?.plan_id ?? null,
       is_active: initialData?.is_active ?? true,
       allow_custom_logo: initialData?.allow_custom_logo ?? true,
     },
@@ -65,6 +84,45 @@ export function ClientForm({
 
   const isActive = watch("is_active");
   const allowCustomLogo = watch("allow_custom_logo");
+  const planId = watch("plan_id");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setPlansLoading(true);
+        const res = await fetch("/api/dashboard/plans", { method: "GET" });
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(json?.error ?? "Failed to fetch plans");
+        }
+        const rows = (json?.plans ?? []) as PlanOption[];
+        if (!cancelled) setPlans(rows);
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(
+            err instanceof Error ? err.message : "Failed to load plans"
+          );
+          setPlans([]);
+        }
+      } finally {
+        if (!cancelled) setPlansLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const planSelectItems = useMemo(() => {
+    return plans.map((p) => {
+      const limitLabel = p.images_limit === 0 ? "Unlimited" : `${p.images_limit}`;
+      return {
+        value: p.id,
+        label: `${p.name} (${limitLabel})`,
+      };
+    });
+  }, [plans]);
 
   const onSubmit = async (data: CreateClientInput) => {
     try {
@@ -74,6 +132,7 @@ export function ClientForm({
         name: data.name,
         email: data.email,
         description: data.description ?? undefined,
+        plan_id: data.plan_id ?? null,
         is_active: data.is_active ?? true,
         allow_custom_logo: data.allow_custom_logo ?? true,
       });
@@ -167,6 +226,63 @@ export function ClientForm({
             disabled={saving}
             className="resize-none bg-surface-container-low border-outline-variant/10 rounded-xl shadow-none focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="plan_id">Plan</Label>
+          <Select
+            value={planId ?? ""}
+            onValueChange={(value) =>
+              setValue(
+                "plan_id",
+                value && value !== "__no_plans__" ? value : null,
+                { shouldValidate: true }
+              )
+            }
+            disabled={saving || plansLoading}
+          >
+            <SelectTrigger
+              id="plan_id"
+              className={cn(
+                "dashboard-input rounded-xl px-4 shadow-none w-full bg-surface-container-low",
+                " !border-outline-variant/10",
+                "focus-visible:ring-dashboard-primary/20 focus-visible:border-dashboard-primary",
+              )}
+            >
+              <SelectValue
+                placeholder={plansLoading ? "Loading plans…" : "Select a plan"}
+              />
+            </SelectTrigger>
+            <SelectContent className="bg-surface-container-lowest border-outline-variant/10">
+              {planSelectItems.length > 0 ? (
+                planSelectItems.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="__no_plans__" disabled>
+                  No plans available
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          {errors.plan_id && (
+            <p className="text-sm text-destructive">
+              {errors.plan_id.message as string}
+            </p>
+          )}
+          <p className="text-muted-foreground mt-1 text-xs">
+            Trial plans can be capped; Full can be unlimited (0). Manage plans in
+            {" "}
+            <a
+              href="/dashboard/plans"
+              className="underline underline-offset-2 hover:text-on-surface"
+            >
+              Plans
+            </a>
+            .
+          </p>
         </div>
 
         <div className="flex items-center justify-between rounded-xl bg-surface-container-low border border-outline-variant/10 p-4">

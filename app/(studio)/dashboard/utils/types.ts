@@ -21,11 +21,20 @@ export interface Client {
   email: string;
   slug: string | null;
   description: string | null;
+  plan_id?: string | null;
+  plan?: Plan | null;
   is_active: boolean;
   allow_custom_logo: boolean;
   metadata: Record<string, unknown> | null;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Plan {
+  id: string;
+  code: string;
+  name: string;
+  images_limit: number;
 }
 
 export interface ClientAsset {

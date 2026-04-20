@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota";
 
 const EXTERNAL_EDIT_ENDPOINT = "/api/external/bfl/flux-2-pro-edit-edit";
 
@@ -58,6 +59,24 @@ export async function POST(request: NextRequest) {
   }
 
   const url = new URL(EXTERNAL_EDIT_ENDPOINT, getInternalBaseUrl(request));
+
+  // ── Quota enforcement (lifetime) ───────────────────────────────────────────
+  const caUserId =
+    typeof (body as any)?.clientInfo?.user_id === "string"
+      ? String((body as any).clientInfo.user_id)
+      : "";
+  const quota = await getClientQuotaStatusByCaUserId(caUserId);
+  if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Quota exceeded",
+        details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+        code: "quota_exceeded",
+      },
+      { status: 402 },
+    );
+  }
 
   const upstreamRes = await fetch(url.toString(), {
     method: "POST",
