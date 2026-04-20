@@ -25,6 +25,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
     name: string;
     email: string;
     description?: string;
+    plan_id?: string | null;
     is_active: boolean;
     allow_custom_logo: boolean;
   }) => {
@@ -33,6 +34,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
       name: data.name,
       email: data.email,
       description: data.description?.trim() || null,
+      plan_id: data.plan_id ?? null,
       is_active: data.is_active,
       allow_custom_logo: data.allow_custom_logo,
     });

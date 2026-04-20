@@ -1276,9 +1276,9 @@ function ImageEditorStandaloneInner({
         const result = await editImage({
           prompt,
           ...payload,
-          orgType: "Tectonica",
+          orgType: params.user_id ?? "",
           clientInfo: {
-            client_id: params.client_id ?? "Tectonica",
+            client_id: params.user_id ?? "",
             user_id: params.user_id ?? "",
             user_email: params.user_email ?? "",
           },

@@ -16,7 +16,7 @@ import { softDeletePayload } from "@/app/(studio)/dashboard/utils/action-utils";
 export type ClientActionResult = { error?: string; clientId?: string };
 
 export async function createClientAction(
-  raw: CreateClientInput
+  raw: CreateClientInput,
 ): Promise<ClientActionResult> {
   const check = await requireAdmin();
   if (!check.success) redirect("/dashboard/login?error=admin_required");
@@ -63,6 +63,7 @@ export async function createClientAction(
       email: data.email,
       slug: finalSlug || null,
       description: data.description ?? null,
+      plan_id: data.plan_id ?? null,
       is_active: data.is_active,
       allow_custom_logo: data.allow_custom_logo ?? true,
       metadata: data.metadata ?? null,
@@ -83,9 +84,10 @@ export async function updateClientAction(
     name?: string;
     email?: string;
     description?: string | null;
+    plan_id?: string | null;
     is_active?: boolean;
     allow_custom_logo?: boolean;
-  }
+  },
 ): Promise<ClientActionResult> {
   const check = await requireAdmin();
   if (!check.success) redirect("/dashboard/login?error=admin_required");
@@ -121,7 +123,7 @@ export async function updateClientAction(
 }
 
 export async function deleteClientAction(
-  clientId: string
+  clientId: string,
 ): Promise<ClientActionResult> {
   const check = await requireAdmin();
   if (!check.success) redirect("/dashboard/login?error=admin_required");

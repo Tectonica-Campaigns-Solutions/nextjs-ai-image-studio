@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
-import { DashboardEmptyState } from "@/app/(studio)/dashboard/components/dashboard-empty-state";
 import type { Client } from "@/app/(studio)/dashboard/utils/types";
 import { CreateClientModal } from "@/app/(studio)/dashboard/components/create-client-modal";
 import type {
@@ -331,6 +329,9 @@ export function DashboardClientsAdminScreen({
                   Assets Count
                 </th>
                 <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+                  Plan
+                </th>
+                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                   Status
                 </th>
               </tr>
@@ -343,6 +344,7 @@ export function DashboardClientsAdminScreen({
                   const avatarUrl = logoByClientId[client.id];
                   const avatarAlt = `${client.name} logo`;
                   const initials = client.name.trim().charAt(0).toUpperCase();
+                  const planName = client.plan?.name ?? (client.plan_id ? "Unknown" : "—");
 
                   return (
                     <tr
@@ -383,6 +385,9 @@ export function DashboardClientsAdminScreen({
                       <td className="px-6 py-4 text-sm text-on-surface-variant">{formatDateLong(client.created_at)}</td>
                       <td className="px-6 py-4 text-sm font-medium text-on-surface text-right">
                         {assetsCount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-on-surface-variant">
+                        {planName}
                       </td>
                       <td className="px-6 py-4">
                         <DashboardStatusPill

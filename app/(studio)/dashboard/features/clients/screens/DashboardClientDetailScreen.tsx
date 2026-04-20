@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
@@ -42,6 +41,8 @@ type DashboardClientDetailScreenProps = Readonly<{
 export function DashboardClientDetailScreen({ data }: DashboardClientDetailScreenProps) {
   const router = useRouter();
   const client = data.client;
+  const plan = data.plan;
+  const quota = data.quota;
 
   const [activeTab, setActiveTab] = useState<TabKey>("assets");
   const [editOpen, setEditOpen] = useState(false);
@@ -180,6 +181,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     name: string;
     email: string;
     description?: string;
+    plan_id?: string | null;
     is_active: boolean;
     allow_custom_logo: boolean;
   }) => {
@@ -188,6 +190,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
       name: form.name,
       email: form.email,
       description: form.description?.trim() || null,
+      plan_id: form.plan_id ?? null,
       is_active: form.is_active,
       allow_custom_logo: form.allow_custom_logo,
     });
@@ -377,6 +380,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                 name: client.name,
                 email: client.email ?? "",
                 description: client.description ?? undefined,
+                plan_id: client.plan_id ?? null,
                 is_active: client.is_active,
                 allow_custom_logo: client.allow_custom_logo,
               }}
@@ -1011,6 +1015,24 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                     {client.allow_custom_logo ? "Enabled" : "Disabled"}
                   </span>
                 </div>
+
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-on-surface-variant/70">Plan</span>
+                  <span className="font-semibold">
+                    {plan?.name ?? "—"}
+                  </span>
+                </div>
+
+                {quota ? (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-on-surface-variant/70">Images</span>
+                    <span className="font-semibold">
+                      {quota.imagesLimit === 0
+                        ? "Unlimited"
+                        : `${quota.imagesUsed} / ${quota.imagesLimit}`}
+                    </span>
+                  </div>
+                ) : null}
 
                 <div className="space-y-2 text-sm">
                   <span className="text-on-surface-variant/70">Description</span>

@@ -1,10 +1,10 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/app/(studio)/dashboard/utils/admin-utils";
 import type {
   Client,
   ClientAsset,
   ClientFont,
   CanvasSessionSummary,
+  Plan,
 } from "@/app/(studio)/dashboard/utils/types";
 
 export interface PaginatedClients {
@@ -14,7 +14,7 @@ export interface PaginatedClients {
 
 /** Columns needed for the client list card view. */
 const CLIENTS_LIST_SELECT =
-  "id, name, ca_user_id, description, is_active, created_at, updated_at";
+  "id, name, ca_user_id, description, is_active, created_at, updated_at, plan_id";
 
 /**
  * Escapes special characters for PostgreSQL ilike pattern (%, _, ').
@@ -93,7 +93,37 @@ export async function getClientsListData(
   const { data, error, count } = await query;
   if (error) return null;
 
-  return { clients: (data ?? []) as Client[], total: count ?? 0 };
+  const clients = (data ?? []) as Client[];
+
+  const planIds = Array.from(
+    new Set(
+      clients
+        .map((c) => c.plan_id)
+        .filter((id): id is string => typeof id === "string" && !!id.trim()),
+    ),
+  );
+
+  if (planIds.length > 0) {
+    const supabaseAdmin = createAdminClient();
+    const { data: plansRows } = await supabaseAdmin
+      .from("plans")
+      .select("id, code, name, images_limit")
+      .in("id", planIds)
+      .is("deleted_at", null);
+
+    const plansById = new Map<string, Plan>();
+    for (const p of (plansRows ?? []) as Plan[]) {
+      plansById.set(p.id, p);
+    }
+
+    for (const c of clients) {
+      c.plan = c.plan_id ? (plansById.get(c.plan_id) ?? null) : null;
+    }
+  } else {
+    for (const c of clients) c.plan = null;
+  }
+
+  return { clients, total: count ?? 0 };
 }
 
 export interface ClientsLogosAndAssetCounts {
@@ -147,6 +177,11 @@ export async function getClientsLogosAndAssetCounts(
 
 export interface ClientDetailPageData {
   client: Client | null;
+  plan: Plan | null;
+  quota: {
+    imagesLimit: number;
+    imagesUsed: number;
+  } | null;
   assets: ClientAsset[];
   frames: ClientAsset[];
   fonts: ClientFont[];
@@ -181,6 +216,7 @@ export async function getClientDetailPageData(
   const client =
     clientRes.error || !clientRes.data ? null : (clientRes.data as Client);
   const caUserId = client?.ca_user_id ?? null;
+  const planId = client?.plan_id ?? null;
 
   const [
     assetsRes,
@@ -189,6 +225,8 @@ export async function getClientDetailPageData(
     variantsRes,
     sessionsRes,
     generatedRes,
+    planRes,
+    usageCountRes,
   ] = await Promise.all([
     supabase
       .from("client_assets")
@@ -242,6 +280,23 @@ export async function getClientDetailPageData(
           data: unknown[];
           error: null;
         }),
+    planId
+      ? supabaseAdmin
+          .from("plans")
+          .select("id, code, name, images_limit")
+          .eq("id", planId)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null } as unknown as {
+          data: null;
+          error: null;
+        }),
+    caUserId
+      ? supabaseAdmin
+          .from("generated_images")
+          .select("id", { count: "exact", head: true })
+          .eq("client_id", caUserId)
+      : Promise.resolve({ count: 0 } as unknown as { count: number }),
   ]);
 
   const variants = Array.from(
@@ -254,6 +309,14 @@ export async function getClientDetailPageData(
 
   return {
     client,
+    plan: (planRes as any)?.data ? ((planRes as any).data as Plan) : null,
+    quota:
+      caUserId && (planRes as any)?.data
+        ? {
+            imagesLimit: ((planRes as any).data as Plan).images_limit,
+            imagesUsed: (usageCountRes as any)?.count ?? 0,
+          }
+        : null,
     assets: (assetsRes.data ?? []) as ClientAsset[],
     frames: (framesRes.data ?? []) as ClientAsset[],
     fonts: (fontsRes.data ?? []) as ClientFont[],

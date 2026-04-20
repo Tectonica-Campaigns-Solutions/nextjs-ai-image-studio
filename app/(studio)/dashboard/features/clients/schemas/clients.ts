@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const optionalUuid = z
+  .string()
+  .uuid("plan_id must be a valid UUID")
+  .optional()
+  .nullable()
+  .transform((s) => (s?.trim() ? s.trim() : null));
+
 export const createClientSchema = z.object({
   ca_user_id: z
     .string()
@@ -23,6 +30,7 @@ export const createClientSchema = z.object({
     .optional()
     .nullable()
     .transform((s) => (s?.trim() ? s.trim() : null)),
+  plan_id: optionalUuid,
   is_active: z.boolean().optional().default(true),
   allow_custom_logo: z.boolean().optional().default(true),
   metadata: z.record(z.unknown()).optional().nullable(),
@@ -50,6 +58,7 @@ export const updateClientSchema = z.object({
     .optional()
     .nullable()
     .transform((s) => (s?.trim() ? s.trim() : null)),
+  plan_id: optionalUuid,
   is_active: z.boolean().optional(),
   allow_custom_logo: z.boolean().optional(),
   metadata: z.record(z.unknown()).optional().nullable(),

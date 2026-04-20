@@ -36,20 +36,14 @@ export type EditImageResponse = EditImageSuccess | EditImageError;
 export async function editImage(
   options: EditImageOptions,
 ): Promise<EditImageResponse> {
-  const {
-    prompt,
-    imageUrls,
-    base64Images,
-    orgType = "Tectonica",
-    clientInfo = {},
-  } = options;
+  const { prompt, imageUrls, base64Images, orgType, clientInfo = {} } = options;
 
   const body = {
     prompt: prompt.trim(),
     disclaimer: false,
     orgType,
     clientInfo: {
-      client_id: clientInfo.client_id ?? "Tectonica",
+      client_id: clientInfo.user_id ?? "",
       user_email: clientInfo.user_email ?? "",
       user_id: clientInfo.user_id ?? "",
     },
