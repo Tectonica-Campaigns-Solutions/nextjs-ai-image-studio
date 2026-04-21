@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Check } from "lucide-react";
+import { Download, Loader2, Check, Send } from "lucide-react";
 import type { HistoryState } from "../types/image-editor-types";
 import { FeedbackButtonInline } from "./FeedbackButton";
 
@@ -28,10 +28,14 @@ export interface EditorToolbarProps {
   onSaveClick?: () => void;
   /** Optional callback to return the edited image to the parent conversation (when embedded as iframe). */
   onReturnToConversation?: () => void;
+  /** Optional callback to upload and send URL-only message back to chat (when embedded as iframe). */
+  onSendUrlToChat?: () => void;
   /** When true, toolbar is being used inside an iframe-embedded studio. Controls visibility of "Done" button. */
   isEmbedded?: boolean;
   /** Loading state for the "Done" (return to conversation) action. */
   isReturning?: boolean;
+  /** Loading state for the "Send URL to chat" action. */
+  isSendingUrl?: boolean;
 }
 
 const UndoIcon = () => (
@@ -78,8 +82,10 @@ export function EditorToolbar({
   alignmentSlot,
   onSaveClick,
   onReturnToConversation,
+  onSendUrlToChat,
   isEmbedded = false,
   isReturning = false,
+  isSendingUrl = false,
 }: EditorToolbarProps) {
   const undoDisabled = historyState.currentIndex <= 0;
   const redoDisabled =
@@ -146,6 +152,23 @@ export function EditorToolbar({
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Check className="w-4 h-4" />
+            )}
+          </Button>
+        )}
+        {isEmbedded && onSendUrlToChat && (
+          <Button
+            onClick={onSendUrlToChat}
+            disabled={isSendingUrl}
+            className="bg-sky-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] flex items-center justify-center gap-[5px] basis-full md:basis-auto transition-all hover:bg-sky-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-sky-500 disabled:hover:scale-100"
+            aria-label="Send URL — post image URL to conversation"
+          >
+            {isSendingUrl ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                <span>Send URL</span>
+              </>
             )}
           </Button>
         )}
@@ -221,6 +244,21 @@ export function EditorToolbar({
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Check className="w-4 h-4" />
+          )}
+        </Button>
+      )}
+      {isEmbedded && onSendUrlToChat && (
+        <Button
+          onClick={onSendUrlToChat}
+          disabled={isSendingUrl}
+          className="bg-sky-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] transition-all hover:bg-sky-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-sky-500 disabled:hover:scale-100"
+          aria-label="Send URL — post image URL to conversation"
+          title="Send URL to chat"
+        >
+          {isSendingUrl ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
           )}
         </Button>
       )}

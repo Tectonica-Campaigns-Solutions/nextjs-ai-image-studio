@@ -57,7 +57,7 @@ import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
-import { logVisualStudioAccess } from "./utils/studio-utils";
+import { logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
 
@@ -154,6 +154,7 @@ function ImageEditorStandaloneInner({
 
   // Iframe return-to-conversation state
   const [isReturningToConversation, setIsReturningToConversation] = useState<boolean>(false);
+  const [isSendingUrlToChat, setIsSendingUrlToChat] = useState<boolean>(false);
 
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -780,6 +781,77 @@ function ImageEditorStandaloneInner({
       });
     } finally {
       setIsReturningToConversation(false);
+    }
+  };
+
+  // Export current canvas, upload it, send only URL to chat, then signal parent to close Studio.
+  const handleSendUrlToChatAndClose = async () => {
+    if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+
+    try {
+      setIsSendingUrlToChat(true);
+
+      const caUserId = params.user_id?.trim();
+
+      const currentWidth = canvasEditor.canvas.width;
+      const multiplier =
+        currentWidth > 0
+          ? canvasEditor.originalImageDimensions.width / currentWidth
+          : 1;
+
+      const dataURL = canvasEditor.canvas.toDataURL({
+        format: "jpeg",
+        quality: 1,
+        multiplier,
+      } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
+
+      if (!dataURL || !caUserId) {
+        toast({
+          title: "Could not export image",
+          description: "Try again before sending it to the conversation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const uploadResponse = await fetch("/api/studio/upload-edited-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_base64: dataURL,
+          ca_user_id: caUserId,
+        }),
+      });
+
+      const uploadJson = await uploadResponse.json().catch(() => null);
+      const imageUrl = uploadJson?.image_url ? String(uploadJson.image_url) : "";
+
+      if (!uploadResponse.ok || !imageUrl) {
+        console.error("Failed to upload edited image for URL send:", uploadJson);
+        toast({
+          title: "Could not upload image",
+          description: uploadJson?.error ?? "Try again before sending it to the conversation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      sendToChat(imageUrl);
+      console.log("Sent to chat:", imageUrl);
+
+      toast({
+        title: "Sent to conversation",
+        description: "Posted the image URL to the conversation.",
+      });
+    } catch (error) {
+      console.error("Failed to send image URL to chat:", error);
+      toast({
+        title: "Error sending to chat",
+        description: "Something went wrong sending the URL back to the conversation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingUrlToChat(false);
     }
   };
 
@@ -1756,8 +1828,10 @@ function ImageEditorStandaloneInner({
                     alignmentSlot={alignmentSlot}
                     onSaveClick={() => setShowSaveModal(true)}
                     onReturnToConversation={handleReturnToConversation}
+                    onSendUrlToChat={handleSendUrlToChatAndClose}
                     isEmbedded={isEmbedded}
                     isReturning={isReturningToConversation}
+                    isSendingUrl={isSendingUrlToChat}
                   />
                 )}
               </div>
@@ -1777,8 +1851,10 @@ function ImageEditorStandaloneInner({
                 alignmentSlot={alignmentSlot}
                 onSaveClick={() => setShowSaveModal(true)}
                 onReturnToConversation={handleReturnToConversation}
+                onSendUrlToChat={handleSendUrlToChatAndClose}
                 isEmbedded={isEmbedded}
                 isReturning={isReturningToConversation}
+                isSendingUrl={isSendingUrlToChat}
               />
             </div>
           </div>

@@ -243,3 +243,16 @@ export async function logVisualStudioAccess(params: {
     // Silent: does not interrupt the user if logging fails.
   }
 }
+
+// Iframe connection
+const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
+
+export function sendToChat(message: string) {
+  window.parent.postMessage(
+    {
+      type: INPUT_PROMPT_SUBMIT_TYPE,
+      text: message,
+    },
+    "*",
+  );
+}
