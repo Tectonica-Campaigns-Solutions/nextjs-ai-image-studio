@@ -248,7 +248,7 @@ export async function logVisualStudioAccess(params: {
 const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
 
 export function sendToChat(message: string) {
-  window.parent.postMessage(
+  window.parent.parent.postMessage(
     {
       type: INPUT_PROMPT_SUBMIT_TYPE,
       text: message,
