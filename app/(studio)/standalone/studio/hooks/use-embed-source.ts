@@ -6,7 +6,7 @@ type EmbedSource = {
   url: string | null;
   origin: string | null;
   isIframe: boolean | null;
-  method: "referrer" | null;
+  method: "referrer" | "ancestorOrigins" | null;
 };
 
 type DebugSnapshot = Record<string, unknown>;
@@ -17,6 +17,28 @@ function safe<T>(fn: () => T): T | null {
   } catch {
     return null;
   }
+}
+
+function getBestAncestorOrigin(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const origins = safe(() => {
+    const ao = (window.location as unknown as { ancestorOrigins?: string[] })
+      .ancestorOrigins;
+    if (!ao) return null;
+    return Array.from(ao);
+  });
+  if (!origins || origins.length === 0) return null;
+
+  // Chrome can include "null" (e.g. about:blank/opaque origins) as a string entry.
+  // We take the most-specific (last) non-null origin.
+  for (let i = origins.length - 1; i >= 0; i -= 1) {
+    const o = origins[i];
+    if (!o || o === "null") continue;
+    return o;
+  }
+
+  return null;
 }
 
 function buildEmbedDebugSnapshot(isIframe: boolean): DebugSnapshot {
@@ -166,6 +188,19 @@ export function useEmbedSource(): EmbedSource {
         };
       } catch {
         // Ignore malformed referrer values that cannot be parsed as URL.
+      }
+    }
+
+    // If referrer is stripped, fall back to ancestorOrigins when available.
+    if (!next.origin) {
+      const ao = getBestAncestorOrigin();
+      if (ao) {
+        next = {
+          url: null,
+          origin: ao,
+          isIframe,
+          method: "ancestorOrigins",
+        };
       }
     }
 

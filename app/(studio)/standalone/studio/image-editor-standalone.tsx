@@ -88,7 +88,7 @@ export default function ImageEditorStandalone({
   const embedSource = useEmbedSource();
 
   const allowedByEmbedOrigin =
-    !!embedSource.url && isAllowedEmbedOrigin(embedSource.origin);
+    isAllowedEmbedOrigin(embedSource.origin);
 
   // This route is intended to run embedded in an iframe. If it's not in an iframe,
   // deny by default (unless dev/debug).
