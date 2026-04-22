@@ -1356,10 +1356,16 @@ function ImageEditorStandaloneInner({
           },
         });
         if (!result.success || !result.images?.length) {
-          const errMsg =
-            !result.success && "error" in result
-              ? result.error ?? result.details
-              : "No image returned.";
+          const errMsg = !result.success
+            ? [
+              result.error,
+              typeof result.details === "string"
+                ? result.details.replace(/^BFL:\s*/i, "")
+                : result.details,
+            ]
+              .filter(Boolean)
+              .join(" — ")
+            : "No image returned.";
           toast({
             title: "Edit failed",
             description: errMsg ?? "No image returned.",

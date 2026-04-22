@@ -33,6 +33,33 @@ export interface EditImageError {
 
 export type EditImageResponse = EditImageSuccess | EditImageError;
 
+function normalizeEditImageError(data: any): {
+  error?: string;
+  details?: string;
+} {
+  // API can return either:
+  // - { error: "msg", details?: "..." }
+  // - { error: { error: "msg", details?: "..." }, details?: "..." }
+  const rawError = data?.error;
+  const rawDetails = data?.details;
+
+  const error =
+    typeof rawError === "string"
+      ? rawError
+      : typeof rawError?.error === "string"
+        ? rawError.error
+        : undefined;
+
+  const details =
+    typeof rawDetails === "string"
+      ? rawDetails
+      : typeof rawError?.details === "string"
+        ? rawError.details
+        : undefined;
+
+  return { error, details };
+}
+
 export async function editImage(
   options: EditImageOptions,
 ): Promise<EditImageResponse> {
@@ -60,18 +87,20 @@ export async function editImage(
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    const { error, details } = normalizeEditImageError(data);
     return {
       success: false,
-      error: data.error ?? "Request failed",
-      details: data.details,
+      error: error ?? "Request failed",
+      details,
     };
   }
 
   if (data.error) {
+    const { error, details } = normalizeEditImageError(data);
     return {
       success: false,
-      error: data.error,
-      details: data.details,
+      error: error ?? "Request failed",
+      details,
     };
   }
 
