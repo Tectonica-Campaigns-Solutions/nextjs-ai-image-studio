@@ -280,23 +280,48 @@ export function sendToChat(message: string) {
 
     const parentWin =
       window.parent && window.parent !== window ? window.parent : null;
+    const grandParentWin =
+      window.parent?.parent &&
+      window.parent.parent !== window.parent &&
+      window.parent.parent !== window
+        ? window.parent.parent
+        : null;
     const topWin = window.top && window.top !== window ? window.top : null;
 
-    if (!parentWin && !topWin) {
-      console.warn("[sendToChat] No parent/top window available.");
+    if (!parentWin && !grandParentWin && !topWin) {
+      console.warn("[sendToChat] No parent/grandparent/top window available.");
       return;
     }
 
-    // Broadcast to both: some hosts listen on parent, others on top.
-    if (parentWin) parentWin.postMessage(payload, targetOrigin);
-    if (topWin && topWin !== parentWin)
-      topWin.postMessage(payload, targetOrigin);
+    // Broadcast: ChangeAgent sometimes embeds an artifact iframe (srcdoc) which embeds our iframe.
+    // In that case, ChangeAgent listens on the artifact's parent, so we need to reach grandparent.
+    const targets: Array<{
+      label: "parent" | "grandparent" | "top";
+      win: Window;
+    }> = [];
+    if (parentWin) targets.push({ label: "parent", win: parentWin });
+    if (grandParentWin)
+      targets.push({ label: "grandparent", win: grandParentWin });
+    if (topWin) targets.push({ label: "top", win: topWin });
+
+    // De-dupe targets by object identity.
+    const uniqueTargets = targets.filter(
+      (t, idx, arr) => arr.findIndex((x) => x.win === t.win) === idx,
+    );
+
+    const sentTo: Record<string, boolean> = {};
+    for (const t of uniqueTargets) {
+      try {
+        t.win.postMessage(payload, targetOrigin);
+        sentTo[t.label] = true;
+      } catch (e) {
+        sentTo[t.label] = false;
+        console.warn(`[sendToChat] postMessage failed for ${t.label}`, e);
+      }
+    }
 
     console.log("[sendToChat] postMessage sent successfully.", {
-      sentTo: {
-        parent: !!parentWin,
-        top: !!topWin && topWin !== parentWin,
-      },
+      sentTo,
       targetOrigin,
       hintedBaseUrl,
     });
