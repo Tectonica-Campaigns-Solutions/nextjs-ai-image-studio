@@ -699,6 +699,38 @@ function ImageEditorStandaloneInner({
   // Detect if editor is running inside an iframe (embedded in ChangeAgent/Open WebUI)
   const isEmbedded = typeof window !== "undefined" && typeof window.self !== "undefined" && window.self !== window.top;
 
+  // Debug helper: enable with `?debugPostMessage=1`
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const debugPostMessage =
+      (sp.get("debugPostMessage") ?? "").toLowerCase() === "1" ||
+      (sp.get("debugPostMessage") ?? "").toLowerCase() === "true";
+    // if (!debugPostMessage) return;
+
+    const info = {
+      href: window.location.href,
+      isEmbedded: window.self !== window.top,
+      hasParent: !!window.parent,
+      hasTop: !!window.top,
+      referrer: document.referrer,
+      origin: window.location.origin,
+    };
+
+    console.log("[embed] postMessage debug enabled", info);
+
+    const onMessage = (event: MessageEvent) => {
+      // Keep this intentionally permissive for debugging; don't rely on it for security.
+      console.log("[embed] received message", {
+        origin: event.origin,
+        data: event.data,
+      });
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   // Export current canvas (without disclaimer), upload it to Supabase and send the public URL to parent via postMessage
   const handleReturnToConversation = async () => {
     if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;

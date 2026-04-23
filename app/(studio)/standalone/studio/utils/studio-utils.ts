@@ -248,27 +248,38 @@ export async function logVisualStudioAccess(params: {
 const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
 
 export function sendToChat(message: string) {
+  if (typeof window === "undefined") return;
+
+  const payload = {
+    type: INPUT_PROMPT_SUBMIT_TYPE,
+    text: message,
+  };
+
   console.log(
     "[sendToChat] Sending message to parent window:",
-    JSON.stringify(
-      {
-        type: INPUT_PROMPT_SUBMIT_TYPE,
-        text: message,
-      },
-      null,
-      2,
-    ),
+    JSON.stringify(payload, null, 2),
   );
 
   try {
-    window.top?.postMessage(
-      {
-        type: INPUT_PROMPT_SUBMIT_TYPE,
-        text: message,
-      },
-      "*",
-    );
-    console.log("[sendToChat] postMessage sent successfully.");
+    const targetOrigin = "*";
+
+    // ChangeAgent listens on the immediate parent in many sandboxed embeds.
+    // Fallback to `top` only if `parent` is unavailable.
+    const targetWindow =
+      window.parent && window.parent !== window ? window.parent : window.top;
+
+    if (!targetWindow) {
+      console.warn("[sendToChat] No parent/top window available.");
+      return;
+    }
+
+    console.log({ targetWindow });
+
+    targetWindow.postMessage(payload, targetOrigin);
+    console.log("[sendToChat] postMessage sent successfully.", {
+      target: targetWindow === window.parent ? "parent" : "top",
+      targetOrigin,
+    });
   } catch (err) {
     console.error("[sendToChat] Failed to send postMessage:", err);
   }
