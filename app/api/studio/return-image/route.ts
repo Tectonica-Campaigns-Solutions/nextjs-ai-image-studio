@@ -3,6 +3,16 @@ import { uploadConversationImageToStorage } from "../canvas-sessions/_lib/canvas
 
 export const runtime = "nodejs";
 
+function withCors(response: NextResponse) {
+  response.headers.set("Access-Control-Allow-Origin", "*");
+  response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization",
+  );
+  return response;
+}
+
 async function sendImageToChangeAgentChat(params: {
   chatId: string;
   imageData: string;
@@ -65,7 +75,9 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return withCors(
+      NextResponse.json({ error: "Invalid JSON body" }, { status: 400 }),
+    );
   }
 
   const { image_base64, ca_user_id, chat_id, prompt, model } = body as Record<
@@ -74,21 +86,21 @@ export async function POST(request: NextRequest) {
   >;
 
   if (!image_base64 || typeof image_base64 !== "string") {
-    return NextResponse.json(
-      { error: "image_base64 is required" },
-      { status: 400 },
+    return withCors(
+      NextResponse.json({ error: "image_base64 is required" }, { status: 400 }),
     );
   }
 
   if (!ca_user_id || typeof ca_user_id !== "string" || !ca_user_id.trim()) {
-    return NextResponse.json(
-      { error: "ca_user_id is required" },
-      { status: 400 },
+    return withCors(
+      NextResponse.json({ error: "ca_user_id is required" }, { status: 400 }),
     );
   }
 
   if (!chat_id || typeof chat_id !== "string" || !chat_id.trim()) {
-    return NextResponse.json({ error: "chat_id is required" }, { status: 400 });
+    return withCors(
+      NextResponse.json({ error: "chat_id is required" }, { status: 400 }),
+    );
   }
 
   const imageUrl = await uploadConversationImageToStorage(
@@ -97,9 +109,11 @@ export async function POST(request: NextRequest) {
   );
 
   if (!imageUrl) {
-    return NextResponse.json(
-      { error: "Failed to upload image to storage" },
-      { status: 500 },
+    return withCors(
+      NextResponse.json(
+        { error: "Failed to upload image to storage" },
+        { status: 500 },
+      ),
     );
   }
 
@@ -114,17 +128,25 @@ export async function POST(request: NextRequest) {
   });
 
   if (!sendResult.ok) {
-    return NextResponse.json(
-      {
-        image_url: imageUrl,
-        change_agent: sendResult,
-      },
-      { status: 502 },
+    return withCors(
+      NextResponse.json(
+        {
+          image_url: imageUrl,
+          change_agent: sendResult,
+        },
+        { status: 502 },
+      ),
     );
   }
 
-  return NextResponse.json({
-    image_url: imageUrl,
-    change_agent: { ok: true },
-  });
+  return withCors(
+    NextResponse.json({
+      image_url: imageUrl,
+      change_agent: { ok: true },
+    }),
+  );
+}
+
+export async function OPTIONS() {
+  return withCors(new NextResponse(null, { status: 200 }));
 }
