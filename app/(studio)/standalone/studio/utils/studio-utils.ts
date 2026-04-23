@@ -248,11 +248,28 @@ export async function logVisualStudioAccess(params: {
 const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
 
 export function sendToChat(message: string) {
-  window.parent.parent.postMessage(
-    {
-      type: INPUT_PROMPT_SUBMIT_TYPE,
-      text: message,
-    },
-    "*",
+  console.log(
+    "[sendToChat] Sending message to parent window:",
+    JSON.stringify(
+      {
+        type: INPUT_PROMPT_SUBMIT_TYPE,
+        text: message,
+      },
+      null,
+      2,
+    ),
   );
+
+  try {
+    window.top?.postMessage(
+      {
+        type: INPUT_PROMPT_SUBMIT_TYPE,
+        text: message,
+      },
+      "*",
+    );
+    console.log("[sendToChat] postMessage sent successfully.");
+  } catch (err) {
+    console.error("[sendToChat] Failed to send postMessage:", err);
+  }
 }
