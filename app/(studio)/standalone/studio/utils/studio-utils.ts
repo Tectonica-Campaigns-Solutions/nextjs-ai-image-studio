@@ -261,24 +261,44 @@ export function sendToChat(message: string) {
   );
 
   try {
-    const targetOrigin = "*";
+    const sp = new URLSearchParams(window.location.search);
+    const hintedBaseUrl =
+      sp.get("parentOrigin") || sp.get("owui_base_url") || sp.get("host");
 
-    // ChangeAgent listens on the immediate parent in many sandboxed embeds.
-    // Fallback to `top` only if `parent` is unavailable.
-    const targetWindow =
-      window.parent && window.parent !== window ? window.parent : window.top;
+    const hintedOrigin = (() => {
+      if (!hintedBaseUrl) return null;
+      try {
+        return new URL(hintedBaseUrl).origin;
+      } catch {
+        return null;
+      }
+    })();
 
-    if (!targetWindow) {
+    // Prefer a specific origin when we have a strong hint (e.g. `owui_base_url=https://tectonica.thechange.ai`)
+    // otherwise keep permissive behavior.
+    const targetOrigin = hintedOrigin ?? "*";
+
+    const parentWin =
+      window.parent && window.parent !== window ? window.parent : null;
+    const topWin = window.top && window.top !== window ? window.top : null;
+
+    if (!parentWin && !topWin) {
       console.warn("[sendToChat] No parent/top window available.");
       return;
     }
 
-    console.log({ targetWindow });
+    // Broadcast to both: some hosts listen on parent, others on top.
+    if (parentWin) parentWin.postMessage(payload, targetOrigin);
+    if (topWin && topWin !== parentWin)
+      topWin.postMessage(payload, targetOrigin);
 
-    targetWindow.postMessage(payload, targetOrigin);
     console.log("[sendToChat] postMessage sent successfully.", {
-      target: targetWindow === window.parent ? "parent" : "top",
+      sentTo: {
+        parent: !!parentWin,
+        top: !!topWin && topWin !== parentWin,
+      },
       targetOrigin,
+      hintedBaseUrl,
     });
   } catch (err) {
     console.error("[sendToChat] Failed to send postMessage:", err);
