@@ -7,6 +7,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { getClientApiKey } from '@/lib/api-keys'
 import { requireExternalAuth } from '@/lib/api-auth'
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
 
 /**
  * Helper: Resize image to respect fal.ai megapixel limits
@@ -298,6 +299,21 @@ export async function POST(request: NextRequest) {
     const user_id = clientInfo.user_id || ""
     
     console.log("[Flux 2 Pro Edit Create] Client info:", { orgType, client_id, user_email, user_id })
+
+    // ── Quota enforcement (lifetime) ─────────────────────────────────────────
+    const caUserId = client_id === "Tectonica" ? "" : client_id
+    const quota = await getClientQuotaStatusByCaUserId(caUserId)
+    if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quota exceeded",
+          details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 },
+      )
+    }
 
     console.log("[Flux 2 Pro Edit Create] Parameters:", {
       prompt: prompt?.substring(0, 100) + '...',

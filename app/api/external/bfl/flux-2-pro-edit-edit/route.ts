@@ -16,6 +16,7 @@ import {
   type BflInput,
 } from "@/lib/bfl-client"
 import { getBflApiKey } from "@/lib/api-keys"
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
 import { restoreDisclaimerZone, addDisclaimerToBuffer } from "@/lib/image-disclaimer"
 import sharp from "sharp"
 import fs from "fs/promises"
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
     let compositionRule: string | null = null
     let removeInputDisclaimer = true
     let applyDisclaimer = true
+    let clientId = "Tectonica"
 
     if (isJSON) {
       console.log(`${LOG_PREFIX} Processing JSON payload`)
@@ -124,6 +126,7 @@ export async function POST(request: NextRequest) {
         client_id: clientInfo.client_id || "Tectonica",
         user_email: clientInfo.user_email || "",
       })
+      clientId = (clientInfo.client_id || "").trim() || "Tectonica"
 
       settings = body.settings || {}
       if (body.removeInputDisclaimer === false) removeInputDisclaimer = false
@@ -157,6 +160,7 @@ export async function POST(request: NextRequest) {
               client_id: clientInfo.client_id || "Tectonica",
               user_email: clientInfo.user_email || "",
             })
+            clientId = (clientInfo.client_id || "").trim() || "Tectonica"
           } catch {
             console.warn(`${LOG_PREFIX} Failed to parse clientInfo JSON`)
           }
@@ -187,6 +191,21 @@ export async function POST(request: NextRequest) {
         console.error(`${LOG_PREFIX} Error processing FormData:`, formDataError)
         throw formDataError
       }
+    }
+
+    // ── Quota enforcement (lifetime) ─────────────────────────────────────────
+    const caUserId = clientId === "Tectonica" ? "" : clientId
+    const quota = await getClientQuotaStatusByCaUserId(caUserId)
+    if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quota exceeded",
+          details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 },
+      )
     }
 
     // ── Extract settings ──────────────────────────────────────────────────────

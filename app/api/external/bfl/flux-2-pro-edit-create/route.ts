@@ -16,6 +16,7 @@ import {
   type BflInput,
 } from "@/lib/bfl-client"
 import { getBflApiKey } from "@/lib/api-keys"
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
 import sharp from "sharp"
 import fs from "fs/promises"
 import path from "path"
@@ -223,6 +224,21 @@ export async function POST(request: NextRequest) {
     const user_email = clientInfo.user_email || ""
     const user_id = clientInfo.user_id || ""
     console.log(`${LOG_PREFIX} Client info:`, { orgType, client_id, user_email, user_id })
+
+    // ── Quota enforcement (lifetime) ─────────────────────────────────────────
+    const caUserId = client_id === "Tectonica" ? "" : client_id
+    const quota = await getClientQuotaStatusByCaUserId(caUserId)
+    if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quota exceeded",
+          details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 },
+      )
+    }
 
     // Extract settings
     const imageSize = settings.image_size || settings.imageSize || "auto"

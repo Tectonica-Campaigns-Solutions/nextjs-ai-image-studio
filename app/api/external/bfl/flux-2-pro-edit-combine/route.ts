@@ -15,6 +15,7 @@ import {
   type BflInput,
 } from "@/lib/bfl-client"
 import { getBflApiKey } from "@/lib/api-keys"
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
 import { ContentModerationService } from "@/lib/content-moderation"
 import { restoreDisclaimerZone, addDisclaimerToBuffer } from "@/lib/image-disclaimer"
 import sharp from "sharp"
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
     let compositionRule: string | null = null
     let hasUrlImages = false // track if any images came as URLs
     let removeInputDisclaimer = true
+    let clientId = "Tectonica"
 
     // ── Parse request ─────────────────────────────────────────────────────────
 
@@ -166,6 +168,9 @@ export async function POST(request: NextRequest) {
         console.log(`${LOG_PREFIX} Found ${base64Images.length} Base64 images in JSON`)
       }
 
+      const jsonClientInfo = jsonBody.clientInfo || {}
+      clientId = (jsonClientInfo.client_id || "").trim() || "Tectonica"
+
     } else {
       console.log(`${LOG_PREFIX} Processing FormData payload`)
 
@@ -181,7 +186,10 @@ export async function POST(request: NextRequest) {
 
         const clientInfoStr = formData.get("clientInfo") as string
         if (clientInfoStr) {
-          try { JSON.parse(clientInfoStr) } catch { /* ignore */ }
+          try {
+            const clientInfo = JSON.parse(clientInfoStr)
+            clientId = (clientInfo.client_id || "").trim() || "Tectonica"
+          } catch { /* ignore */ }
         }
 
         const settingsStr = formData.get("settings") as string
@@ -218,6 +226,21 @@ export async function POST(request: NextRequest) {
         console.error(`${LOG_PREFIX} FormData parse error:`, formErr)
         throw formErr
       }
+    }
+
+    // ── Quota enforcement (lifetime) ─────────────────────────────────────────
+    const caUserId = clientId === "Tectonica" ? "" : clientId
+    const quota = await getClientQuotaStatusByCaUserId(caUserId)
+    if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quota exceeded",
+          details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 },
+      )
     }
 
     // ── Validation ────────────────────────────────────────────────────────────

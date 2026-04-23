@@ -8,6 +8,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import { getClientApiKey } from '@/lib/api-keys'
 import { requireExternalAuth } from '@/lib/api-auth'
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
 
 // Configuration: TectonicaAI style preset (text-based, no reference image)
 // COMMENTED: Text-based style description approach (backup)
@@ -195,6 +196,7 @@ export async function POST(request: NextRequest) {
     let base64Images: string[] = []
     let compositionRule: string | null = null
     let removeInputDisclaimer = true
+    let clientId = "Tectonica"
     
     if (isJSON) {
       // JSON payload
@@ -223,6 +225,9 @@ export async function POST(request: NextRequest) {
       }
 
       removeInputDisclaimer = jsonBody.removeInputDisclaimer !== false
+
+      const jsonClientInfo = jsonBody.clientInfo || {}
+      clientId = (jsonClientInfo.client_id || "").trim() || "Tectonica"
       
     } else {
       // FormData payload
@@ -256,6 +261,7 @@ export async function POST(request: NextRequest) {
         const user_id = clientInfo.user_id || ""
         
         console.log("[External Flux 2 Pro Combine] Client info:", { orgType, client_id, user_email, user_id })
+        clientId = client_id
         const removeInputDisclaimerStr = formData.get("removeInputDisclaimer") as string | null
         removeInputDisclaimer = removeInputDisclaimerStr !== 'false'
       
@@ -300,6 +306,21 @@ export async function POST(request: NextRequest) {
         console.error("[External Flux 2 Pro Combine] Error processing FormData:", formDataError)
         throw formDataError
       }
+    }
+
+    // ── Quota enforcement (lifetime) ─────────────────────────────────────────
+    const caUserId = clientId === "Tectonica" ? "" : clientId
+    const quota = await getClientQuotaStatusByCaUserId(caUserId)
+    if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quota exceeded",
+          details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 },
+      )
     }
 
     // Get client-specific API key (after orgType is determined)

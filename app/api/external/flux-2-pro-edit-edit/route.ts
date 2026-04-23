@@ -4,6 +4,7 @@ import { ContentModerationService } from "@/lib/content-moderation"
 import { addDisclaimerToImage, restoreDisclaimerZone } from "@/lib/image-disclaimer"
 import { getClientApiKey } from "@/lib/api-keys"
 import { requireExternalAuth } from '@/lib/api-auth'
+import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
     let compositionRule: string | null = null
     let removeInputDisclaimer: boolean = true
     let applyDisclaimer = true
+    let clientId = "Tectonica"
     
     if (isJSON) {
       // JSON payload
@@ -168,6 +170,7 @@ export async function POST(request: NextRequest) {
       const user_id = clientInfo.user_id || ""
       
       console.log("[External Flux 2 Pro Edit] Client info:", { orgType, client_id, user_email, user_id })
+      clientId = client_id
       
       settings = jsonBody.settings || {}
       
@@ -217,6 +220,7 @@ export async function POST(request: NextRequest) {
         const user_id = clientInfo.user_id || ""
         
         console.log("[External Flux 2 Pro Edit] Client info:", { orgType, client_id, user_email, user_id })
+        clientId = client_id
       
       // Parse settings
       const settingsStr = formData.get("settings") as string
@@ -257,6 +261,21 @@ export async function POST(request: NextRequest) {
         console.error("[External Flux 2 Pro Edit] Error processing FormData:", formDataError)
         throw formDataError
       }
+    }
+
+    // ── Quota enforcement (lifetime) ─────────────────────────────────────────
+    const caUserId = clientId === "Tectonica" ? "" : clientId
+    const quota = await getClientQuotaStatusByCaUserId(caUserId)
+    if (quota && !quota.ok && quota.reason === "quota_exceeded") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Quota exceeded",
+          details: `Plan "${quota.planName}" allows ${quota.imagesLimit} images. Used: ${quota.imagesUsed}.`,
+          code: "quota_exceeded",
+        },
+        { status: 402 },
+      )
     }
 
     console.log("[External Flux 2 Pro Edit] Parameters:", {
