@@ -124,12 +124,14 @@ async function fetchEditorAssetsForUser(caUserId: string | undefined): Promise<{
           font_family: string;
           font_weights: string[] | null;
           file_url: string | null;
+          is_brand?: boolean;
         }[]
       ).map((font) => ({
         font_source: font.font_source,
         font_family: font.font_family,
         font_weights: font.font_weights ?? ["400"],
         file_url: font.file_url ?? undefined,
+        is_brand: Boolean(font.is_brand),
       }));
     } else if (fontsRpcError) {
       console.warn(
@@ -152,19 +154,29 @@ async function fetchEditorAssetsForUser(caUserId: string | undefined): Promise<{
       if (fontClientId) {
         const { data: directFonts, error: fontsError } = await supabase
           .from("client_fonts")
-          .select("font_source, font_family, font_weights, file_url")
+          .select("font_source, font_family, font_weights, file_url, is_brand")
           .eq("client_id", fontClientId)
           .is("deleted_at", null)
+          .order("is_brand", { ascending: false })
           .order("is_primary", { ascending: false })
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: true });
 
         if (!fontsError && directFonts && directFonts.length > 0) {
-          fontAssets = directFonts.map((font) => ({
+          fontAssets = (
+            directFonts as Array<{
+              font_source: string;
+              font_family: string;
+              font_weights: string[] | null;
+              file_url: string | null;
+              is_brand?: boolean;
+            }>
+          ).map((font) => ({
             font_source: font.font_source as "google" | "custom",
             font_family: font.font_family,
             font_weights: font.font_weights ?? ["400"],
             file_url: font.file_url ?? undefined,
+            is_brand: Boolean(font.is_brand),
           }));
         } else if (fontsError) {
           console.error("Error fetching client fonts:", fontsError);
@@ -244,7 +256,12 @@ async function fetchEditorAssetsForUser(caUserId: string | undefined): Promise<{
       }
     }
 
-    return { logoAssets, fontAssets, frameAssets, allowCustomLogo };
+    return {
+      logoAssets,
+      fontAssets,
+      frameAssets,
+      allowCustomLogo,
+    };
   } catch (error) {
     console.error("Error in getEditorAssetsForUser:", error);
     return {

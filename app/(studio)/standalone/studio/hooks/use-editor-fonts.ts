@@ -12,12 +12,11 @@ export interface UseEditorFontsOptions {
 
 export function useEditorFonts(
   fontAssets: FontAsset[],
-  options?: UseEditorFontsOptions
+  options?: UseEditorFontsOptions,
 ) {
-  const [fontsReady, setFontsReady] = useState(
-    () => fontAssets.length === 0
-  );
   const onFontsLoaded = options?.onFontsLoaded;
+
+  const [fontsReady, setFontsReady] = useState(() => fontAssets.length === 0);
 
   useEffect(() => {
     if (fontAssets.length === 0) {
@@ -27,22 +26,23 @@ export function useEditorFonts(
 
     setFontsReady(false);
 
-    const googleFonts = fontAssets.filter((f) => f.font_source === "google");
     const customFonts = fontAssets.filter((f) => f.font_source === "custom");
+    const googleFonts = fontAssets
+      .filter((f) => f.font_source === "google")
+      .map((f) => ({
+        family: f.font_family,
+        weights: f.font_weights || ["400"],
+      }));
 
     // Remove any previous preload links we added
     document
       .querySelectorAll(
-        "link[data-google-fonts-preload], link[data-custom-font-preload]"
+        "link[data-google-fonts-preload], link[data-custom-font-preload]",
       )
       .forEach((el) => el.remove());
 
     if (googleFonts.length > 0) {
-      const googleFontsData = googleFonts.map((font) => ({
-        family: font.font_family,
-        weights: font.font_weights || ["400"],
-      }));
-      const googleFontsUrl = getGoogleFontsUrl(googleFontsData);
+      const googleFontsUrl = getGoogleFontsUrl(googleFonts);
 
       if (googleFontsUrl) {
         const preloadLink = document.createElement("link");
@@ -53,7 +53,7 @@ export function useEditorFonts(
         document.head.appendChild(preloadLink);
 
         let linkElement = document.querySelector(
-          `link[data-google-fonts]`
+          `link[data-google-fonts]`,
         ) as HTMLLinkElement;
         if (!linkElement) {
           linkElement = document.createElement("link");
@@ -78,7 +78,7 @@ export function useEditorFonts(
       }
 
       let styleElement = document.querySelector(
-        `style[data-custom-fonts]`
+        `style[data-custom-fonts]`,
       ) as HTMLStyleElement;
       if (!styleElement) {
         styleElement = document.createElement("style");
@@ -91,7 +91,7 @@ export function useEditorFonts(
           if (!font.file_url) return "";
           return font.font_weights
             .map((weight) =>
-              generateFontFaceCSS(font.font_family, font.file_url!, weight)
+              generateFontFaceCSS(font.font_family, font.file_url!, weight),
             )
             .join("\n");
         })
@@ -110,7 +110,7 @@ export function useEditorFonts(
     const descriptors = fontAssets.map((f) => `16px "${f.font_family}"`);
     const loadPromises = descriptors.map((d) => document.fonts.load(d));
     const timeoutPromise = new Promise<void>((resolve) =>
-      setTimeout(resolve, FONT_LOAD_TIMEOUT_MS)
+      setTimeout(resolve, FONT_LOAD_TIMEOUT_MS),
     );
 
     Promise.race([Promise.all(loadPromises), timeoutPromise])

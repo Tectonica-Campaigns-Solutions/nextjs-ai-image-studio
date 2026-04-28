@@ -53,6 +53,58 @@ export async function setPrimaryFontAction(
   );
   if (result.error) return { error: "Failed to set primary font" };
 
+  // Invariant: is_primary => is_brand. Force brand=true on the new primary.
+  const { error: brandError } = await auth.supabase
+    .from("client_fonts")
+    .update({ is_brand: true, updated_by: auth.userId })
+    .eq("id", fontId)
+    .eq("client_id", clientId);
+  if (brandError) return { error: "Failed to set primary font" };
+
+  revalidatePath(`/dashboard/clients/${clientId}`);
+  return {};
+}
+
+/**
+ * Marks/unmarks a font as part of the client's brand identity.
+ *
+ * Invariant: a primary font must always be a brand font. When unmarking the
+ * brand flag on a primary font, this also clears `is_primary` so the brand
+ * set never contains a "phantom primary".
+ */
+export async function setBrandFontAction(
+  clientId: string,
+  fontId: string,
+  isBrand: boolean,
+): Promise<FontActionResult> {
+  const auth = await authorizeAndValidate(clientId, fontId);
+  if (!auth.ok) return { error: auth.error };
+
+  const { data: existing, error: fetchError } = await fetchActiveItem(
+    auth.supabase,
+    "client_fonts",
+    fontId,
+    clientId,
+    "id, is_primary",
+  );
+  if (fetchError || !existing) return { error: "Font not found" };
+
+  const updatePayload: Record<string, unknown> = {
+    is_brand: isBrand,
+    updated_by: auth.userId,
+  };
+  if (!isBrand && (existing as { is_primary?: boolean }).is_primary) {
+    updatePayload.is_primary = false;
+  }
+
+  const { error } = await auth.supabase
+    .from("client_fonts")
+    .update(updatePayload)
+    .eq("id", fontId)
+    .eq("client_id", clientId)
+    .is("deleted_at", null);
+
+  if (error) return { error: "Failed to update brand flag" };
   revalidatePath(`/dashboard/clients/${clientId}`);
   return {};
 }
@@ -76,6 +128,7 @@ export async function updateFontAction(
     font_family?: string;
     font_category?: string | null;
     font_weights?: FontWeight[];
+    is_brand?: boolean;
   },
 ): Promise<FontActionResult> {
   const auth = await authorizeAndValidate(clientId, fontId);
@@ -110,6 +163,27 @@ export async function updateFontAction(
       };
     }
     updateData.font_weights = cleaned as FontWeight[];
+  }
+
+  if (raw.is_brand !== undefined) {
+    if (typeof raw.is_brand !== "boolean") {
+      return { error: "is_brand must be a boolean" };
+    }
+    updateData.is_brand = raw.is_brand;
+
+    // Invariant: is_primary => is_brand. If brand=false, also clear primary.
+    if (!raw.is_brand) {
+      const { data: existing } = await fetchActiveItem(
+        auth.supabase,
+        "client_fonts",
+        fontId,
+        clientId,
+        "id, is_primary",
+      );
+      if ((existing as { is_primary?: boolean } | null)?.is_primary) {
+        updateData.is_primary = false;
+      }
+    }
   }
 
   const { error } = await auth.supabase

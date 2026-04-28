@@ -62,6 +62,7 @@ export interface ClientFont {
   font_category: string | null;
   file_url: string | null;
   is_primary: boolean;
+  is_brand: boolean;
   sort_order: number;
   created_at: string;
 }

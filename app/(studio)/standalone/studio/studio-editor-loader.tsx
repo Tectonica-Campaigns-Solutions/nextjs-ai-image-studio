@@ -43,13 +43,15 @@ export default async function StudioEditorLoader({
   //   );
   // }
 
-  const [{ logoAssets, fontAssets, frameAssets, allowCustomLogo }, sessionData] =
-    await Promise.all([
-      getEditorAssetsForUser(params.user_id),
-      params.session_id
-        ? getCanvasSession(params.session_id)
-        : Promise.resolve(null),
-    ]);
+  const [
+    { logoAssets, fontAssets, frameAssets, allowCustomLogo },
+    sessionData,
+  ] = await Promise.all([
+    getEditorAssetsForUser(params.user_id),
+    params.session_id
+      ? getCanvasSession(params.session_id)
+      : Promise.resolve(null),
+  ]);
 
   return (
     <ImageEditorStandalone

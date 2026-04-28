@@ -7,7 +7,9 @@ import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -20,8 +22,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { rgbaToString } from "../utils/image-editor-utils";
-import type { RgbaColor } from "../types/image-editor-types";
-import type { FontAsset } from "../types/image-editor-types";
+import type { FontAsset, RgbaColor } from "../types/image-editor-types";
 import { TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextToolIcon } from "./editor-icons";
 
 export interface TextToolsPanelProps {
@@ -79,6 +80,12 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
 }: TextToolsPanelProps) {
   const isAddTextDisabled = fontAssets.length > 0 && !fontsReady;
 
+  const { brandFonts, otherFonts } = React.useMemo(() => {
+    const brandFonts = fontAssets.filter((f) => f.is_brand);
+    const otherFonts = fontAssets.filter((f) => !f.is_brand);
+    return { brandFonts, otherFonts };
+  }, [fontAssets]);
+
   return (
     <div className="space-y-5 w-full">
       <Button
@@ -111,16 +118,43 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
             </SelectTrigger>
             <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
               {fontAssets.length > 0 ? (
-                fontAssets.map((font) => (
-                  <SelectItem
-                    key={font.font_family}
-                    value={font.font_family}
-                    style={{ fontFamily: font.font_family }}
-                    className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-                  >
-                    {font.font_family}
-                  </SelectItem>
-                ))
+                <>
+                  {brandFonts.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-[11px] uppercase tracking-wider text-[#929292] font-(family-name:--font-manrope) px-2 pt-2 pb-1">
+                        Brand fonts
+                      </SelectLabel>
+                      {brandFonts.map((font) => (
+                        <SelectItem
+                          key={`brand-${font.font_family}`}
+                          value={font.font_family}
+                          style={{ fontFamily: font.font_family }}
+                          className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+                        >
+                          {font.font_family}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+
+                  {otherFonts.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="text-[11px] uppercase tracking-wider text-[#929292] font-(family-name:--font-manrope) px-2 pt-2 pb-1">
+                        Other fonts
+                      </SelectLabel>
+                      {otherFonts.map((font) => (
+                        <SelectItem
+                          key={`other-${font.font_family}`}
+                          value={font.font_family}
+                          style={{ fontFamily: font.font_family }}
+                          className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+                        >
+                          {font.font_family}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                </>
               ) : (
                 <>
                   <SelectItem

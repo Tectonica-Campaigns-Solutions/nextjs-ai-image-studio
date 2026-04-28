@@ -32,7 +32,12 @@ import { GeneratedImagesGrid } from "@/app/(studio)/dashboard/features/generated
 import { GalleryLightbox } from "@/app/(studio)/dashboard/components/gallery-lightbox";
 import type { GeneratedImageCardItem } from "@/app/(studio)/dashboard/features/generated-images/components/GeneratedImageCard";
 
-type TabKey = "assets" | "frames" | "fonts" | "canvas-sessions" | "generated-images";
+type TabKey =
+  | "assets"
+  | "frames"
+  | "fonts"
+  | "canvas-sessions"
+  | "generated-images";
 
 type DashboardClientDetailScreenProps = Readonly<{
   data: ClientDetailPageData;

@@ -17,6 +17,7 @@ import type { ClientFont, FontWeight } from "@/app/(studio)/dashboard/utils/type
 import { useFontLoader } from "@/app/(studio)/dashboard/hooks/use-font-loader";
 import {
   deleteFontAction,
+  setBrandFontAction,
   setPrimaryFontAction,
   updateFontAction,
 } from "@/app/(studio)/dashboard/features/frames-fonts/actions/fonts";
@@ -99,6 +100,17 @@ export function FontGallery({
       return;
     }
     toast.success("Primary font updated");
+    onRefresh();
+  };
+
+  const handleToggleBrand = async (font: ClientFont) => {
+    const next = !font.is_brand;
+    const result = await setBrandFontAction(clientId, font.id, next);
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(next ? "Marked as brand font" : "Removed from brand fonts");
     onRefresh();
   };
 
@@ -289,6 +301,7 @@ export function FontGallery({
               font={font}
               onEdit={() => openEdit(font.id)}
               onSetPrimary={() => void handleSetPrimary(font.id)}
+              onToggleBrand={() => void handleToggleBrand(font)}
               onDelete={() => setDeleteTarget(font.id)}
             />
           ))}

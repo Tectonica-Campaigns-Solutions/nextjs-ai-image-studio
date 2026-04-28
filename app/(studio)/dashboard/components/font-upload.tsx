@@ -33,6 +33,7 @@ export function FontUpload({
   const [selectedWeights, setSelectedWeights] = useState<string[]>(["400"]);
   const [fontCategory, setFontCategory] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
+  const [isBrand, setIsBrand] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +107,8 @@ export function FontUpload({
         formData.append("font_category", fontCategory);
       }
       formData.append("is_primary", isPrimary.toString());
+      // Primary fonts are always brand fonts (invariant: is_primary => is_brand).
+      formData.append("is_brand", (isPrimary || isBrand).toString());
 
       if (fontSource === "custom" && file) {
         formData.append("file", file);
@@ -129,6 +132,7 @@ export function FontUpload({
       setSelectedWeights(["400"]);
       setFontCategory("");
       setIsPrimary(false);
+      setIsBrand(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -151,6 +155,7 @@ export function FontUpload({
     setSelectedWeights(["400"]);
     setFontCategory("");
     setIsPrimary(false);
+    setIsBrand(false);
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -400,8 +405,9 @@ export function FontUpload({
         </div>
       )}
 
-      <div className="flex items-center justify-between w-full rounded-xl bg-surface-container-low border border-outline-variant/10 p-4">
+      <div className="space-y-3 w-full rounded-xl bg-surface-container-low border border-outline-variant/10 p-4">
         {/* Is Primary */}
+        <div className="flex items-center justify-between">
           <div>
             <Label
               htmlFor="font-primary"
@@ -409,13 +415,42 @@ export function FontUpload({
             >
               Mark as Primary
             </Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Default font for new text. Primary fonts are always brand fonts.
+            </p>
           </div>
           <Checkbox
             id="font-primary"
             checked={isPrimary}
-            onCheckedChange={(checked) => setIsPrimary(Boolean(checked))}
+            onCheckedChange={(checked) => {
+              const next = Boolean(checked);
+              setIsPrimary(next);
+              if (next) setIsBrand(true);
+            }}
             disabled={uploading}
           />
+        </div>
+
+        {/* Is Brand */}
+        <div className="flex items-center justify-between">
+          <div>
+            <Label
+              htmlFor="font-brand"
+              className="cursor-pointer text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+            >
+              Mark as Brand font
+            </Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Brand fonts appear at the top of the studio typography picker.
+            </p>
+          </div>
+          <Checkbox
+            id="font-brand"
+            checked={isPrimary || isBrand}
+            onCheckedChange={(checked) => setIsBrand(Boolean(checked))}
+            disabled={uploading || isPrimary}
+          />
+        </div>
       </div>
 
       {/* Actions */}

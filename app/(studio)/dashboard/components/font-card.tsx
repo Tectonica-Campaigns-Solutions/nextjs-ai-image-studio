@@ -11,6 +11,7 @@ interface FontCardProps {
   onEdit: () => void;
   editLabel?: string;
   onSetPrimary: () => void;
+  onToggleBrand?: () => void;
   onDelete: () => void;
   extraBadges?: string[];
 }
@@ -30,11 +31,13 @@ export function FontCard({
   onEdit,
   editLabel = "Edit",
   onSetPrimary,
+  onToggleBrand,
   onDelete,
   extraBadges = [],
 }: FontCardProps) {
   const badges = [
     ...extraBadges,
+    ...(font.is_brand ? ["Brand"] : []),
     ...(font.font_category ? [font.font_category] : []),
     font.font_source === "google" ? "Google" : "Custom",
   ];
@@ -47,8 +50,19 @@ export function FontCard({
       variant: "primary",
       disabled: font.is_primary,
     },
-    { label: "Delete", onClick: onDelete, variant: "destructive" },
   ];
+
+  if (onToggleBrand) {
+    actions.push({
+      label: font.is_brand ? "Remove Brand" : "Mark Brand",
+      onClick: onToggleBrand,
+      variant: "neutral",
+      // Primary fonts must remain brand fonts (invariant: is_primary => is_brand).
+      disabled: font.is_primary && font.is_brand,
+    });
+  }
+
+  actions.push({ label: "Delete", onClick: onDelete, variant: "destructive" });
 
   return (
     <div className="group relative">

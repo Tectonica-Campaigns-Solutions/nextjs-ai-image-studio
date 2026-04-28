@@ -19,7 +19,7 @@ const VALID_WEIGHTS = [
 ];
 
 async function getParams(
-  params: Promise<{ id: string; fontId: string }>
+  params: Promise<{ id: string; fontId: string }>,
 ): Promise<
   | { id: string; fontId: string; error: null }
   | { id: null; fontId: null; error: NextResponse }
@@ -37,7 +37,7 @@ async function getParams(
  */
 export async function GET(
   _request: NextRequest,
-  context: { params: Promise<{ id: string; fontId: string }> }
+  context: { params: Promise<{ id: string; fontId: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -81,7 +81,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  context: { params: Promise<{ id: string; fontId: string }> }
+  context: { params: Promise<{ id: string; fontId: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -93,8 +93,14 @@ export async function PATCH(
   try {
     const supabase = await createClient();
     const body = await request.json();
-    const { font_family, font_weights, font_category, is_primary, sort_order } =
-      body;
+    const {
+      font_family,
+      font_weights,
+      font_category,
+      is_primary,
+      is_brand,
+      sort_order,
+    } = body;
 
     const { data: client, error: clientError } = await supabase
       .from("clients")
@@ -131,7 +137,7 @@ export async function PATCH(
       if (!font_weights.every((w) => VALID_WEIGHTS.includes(String(w)))) {
         return errorResponse(
           `font_weights must be one of: ${VALID_WEIGHTS.join(", ")}`,
-          400
+          400,
         );
       }
       updateData.font_weights = font_weights;
@@ -156,6 +162,19 @@ export async function PATCH(
           .is("deleted_at", null);
       }
       updateData.is_primary = newIsPrimary;
+      // Invariant: is_primary => is_brand. Force brand when becoming primary.
+      if (newIsPrimary) updateData.is_brand = true;
+    }
+    if (is_brand !== undefined) {
+      if (typeof is_brand !== "boolean") {
+        return errorResponse("is_brand must be a boolean", 400);
+      }
+      updateData.is_brand = is_brand;
+      // If we are clearing brand on what would still be primary, clear primary.
+      const becomingPrimary = updateData.is_primary === true;
+      if (!is_brand && (becomingPrimary || existingFont.is_primary)) {
+        updateData.is_primary = false;
+      }
     }
 
     const { data: font, error } = await supabase
@@ -177,7 +196,7 @@ export async function PATCH(
  */
 export async function DELETE(
   _request: NextRequest,
-  context: { params: Promise<{ id: string; fontId: string }> }
+  context: { params: Promise<{ id: string; fontId: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;

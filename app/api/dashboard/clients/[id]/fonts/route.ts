@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GOOGLE_FONTS } from "@/app/(studio)/standalone/studio/utils/studio-utils";
 
 async function getParams(
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>,
 ): Promise<{ id: string; error: null } | { id: null; error: NextResponse }> {
   const { id } = await params;
   const invalid = validateIdParam(id);
@@ -34,7 +34,7 @@ const VALID_WEIGHTS = [
  */
 export async function GET(
   _request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -59,6 +59,7 @@ export async function GET(
       .select("*")
       .eq("client_id", id)
       .is("deleted_at", null)
+      .order("is_brand", { ascending: false })
       .order("is_primary", { ascending: false })
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
@@ -75,7 +76,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const adminCheck = await requireAdmin();
   if (!adminCheck.success) return adminCheck.response;
@@ -101,6 +102,8 @@ export async function POST(
     const fontWeightsStr = formData.get("font_weights") as string;
     const fontCategory = formData.get("font_category") as string | null;
     const isPrimary = formData.get("is_primary") === "true";
+    // Invariant: a primary font must always be a brand font.
+    const isBrand = isPrimary || formData.get("is_brand") === "true";
 
     if (!fontSource || !["google", "custom"].includes(fontSource)) {
       return errorResponse("font_source must be 'google' or 'custom'", 400);
@@ -112,7 +115,7 @@ export async function POST(
     ) {
       return errorResponse(
         "font_family is required and must be a non-empty string",
-        400
+        400,
       );
     }
 
@@ -124,7 +127,7 @@ export async function POST(
         if (!fontWeights.every((w) => VALID_WEIGHTS.includes(String(w)))) {
           return errorResponse(
             `font_weights must be one of: ${VALID_WEIGHTS.join(", ")}`,
-            400
+            400,
           );
         }
       } catch {
@@ -139,12 +142,12 @@ export async function POST(
 
     if (fontSource === "google") {
       const isValidGoogleFont = GOOGLE_FONTS.some(
-        (f) => f.family === fontFamily
+        (f) => f.family === fontFamily,
       );
       if (!isValidGoogleFont) {
         return errorResponse(
           `Font family '${fontFamily}' is not a valid Google Font`,
-          400
+          400,
         );
       }
     } else if (fontSource === "custom") {
@@ -154,7 +157,7 @@ export async function POST(
       if (!uploadResult.success || !uploadResult.url || !uploadResult.path) {
         return errorResponse(
           uploadResult.error || "Failed to upload font file",
-          500
+          500,
         );
       }
       fileUrl = uploadResult.url;
@@ -189,6 +192,7 @@ export async function POST(
       font_weights: fontWeights,
       font_category: fontCategory?.trim() || null,
       is_primary: isPrimary,
+      is_brand: isBrand,
       sort_order: nextSortOrder,
       created_by: adminCheck.user.id,
       updated_by: adminCheck.user.id,

@@ -60,6 +60,7 @@ export interface FontAsset {
   font_family: string;
   font_weights: string[];
   file_url?: string;
+  is_brand?: boolean;
 }
 
 export interface ImageEditorStandaloneProps {

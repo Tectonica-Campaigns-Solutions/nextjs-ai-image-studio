@@ -31,10 +31,12 @@ export async function getFramesFontsPageData(
     supabase
       .from("client_fonts")
       .select(
-        "id, client_id, font_source, font_family, font_weights, font_category, file_url, created_at",
+        "id, client_id, font_source, font_family, font_weights, font_category, file_url, is_primary, is_brand, sort_order, created_at",
         { count: "exact" },
       )
       .is("deleted_at", null)
+      .order("is_brand", { ascending: false })
+      .order("is_primary", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(fontsLimit),
     supabase.from("clients").select("id, name").is("deleted_at", null),

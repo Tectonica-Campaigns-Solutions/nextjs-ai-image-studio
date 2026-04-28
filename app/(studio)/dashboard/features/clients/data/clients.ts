@@ -251,6 +251,7 @@ export async function getClientDetailPageData(
       .select("*")
       .eq("client_id", clientId)
       .is("deleted_at", null)
+      .order("is_brand", { ascending: false })
       .order("is_primary", { ascending: false })
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),

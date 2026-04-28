@@ -283,7 +283,6 @@ function ImageEditorStandaloneInner({
   // overwriting the newly-selected shape with stale panel values.
   const shapeSyncingRef = useRef(false);
 
-  // Initialize tools hooks first so their setters can be passed to the selection hook
   const textTools = useTextTools({
     canvasRef: canvasRefStable,
     saveStateRef,
@@ -426,7 +425,6 @@ function ImageEditorStandaloneInner({
     remeasureTextboxes(canvasRefStable.current);
   }, []);
 
-  // Editor fonts hook
   const { fontsReady } = useEditorFonts(fontAssets, { onFontsLoaded });
 
   // Re-measure textboxes whenever *any* font finishes loading (covers bundled

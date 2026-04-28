@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import type { ClientAsset, ClientFont } from "@/app/(studio)/dashboard/utils/types";
 import { DashboardMaterialIcon } from "@/app/(studio)/dashboard/components/DashboardMaterialIcon";
 import { deleteAssetAction, setPrimaryAssetAction } from "@/app/(studio)/dashboard/features/assets/actions/assets";
-import { deleteFontAction, setPrimaryFontAction } from "@/app/(studio)/dashboard/features/frames-fonts/actions/fonts";
+import {
+  deleteFontAction,
+  setBrandFontAction,
+  setPrimaryFontAction,
+} from "@/app/(studio)/dashboard/features/frames-fonts/actions/fonts";
 import { toast } from "sonner";
 import { useFontLoader } from "@/app/(studio)/dashboard/hooks/use-font-loader";
 import { GalleryLightbox } from "@/app/(studio)/dashboard/components/gallery-lightbox";
@@ -92,10 +96,39 @@ export function DashboardFramesFontsPageScreen({
     }
     setFonts((prev) =>
       prev.map((f) =>
-        f.client_id === font.client_id ? { ...f, is_primary: f.id === font.id } : f
+        f.client_id === font.client_id
+          ? {
+            ...f,
+            is_primary: f.id === font.id,
+            // Invariant: is_primary => is_brand. Force brand on the new primary.
+            is_brand: f.id === font.id ? true : f.is_brand,
+          }
+          : f
       )
     );
     toast.success("Primary font updated");
+  };
+
+  const handleToggleBrandFont = async (font: ClientFont) => {
+    const next = !font.is_brand;
+    const result = await setBrandFontAction(font.client_id, font.id, next);
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    setFonts((prev) =>
+      prev.map((f) =>
+        f.id === font.id
+          ? {
+            ...f,
+            is_brand: next,
+            // If clearing brand on a primary font, also drop primary.
+            is_primary: !next ? false : f.is_primary,
+          }
+          : f
+      )
+    );
+    toast.success(next ? "Marked as brand font" : "Removed from brand fonts");
   };
 
   const handleDeleteFont = async (font: ClientFont) => {
@@ -202,6 +235,7 @@ export function DashboardFramesFontsPageScreen({
                 extraBadges={[clientNames[font.client_id] ?? "Client"]}
                 onEdit={() => router.push(`/dashboard/clients/${font.client_id}`)}
                 onSetPrimary={() => void handleSetPrimaryFont(font)}
+                onToggleBrand={() => void handleToggleBrandFont(font)}
                 onDelete={() => void handleDeleteFont(font)}
               />
             ))}
