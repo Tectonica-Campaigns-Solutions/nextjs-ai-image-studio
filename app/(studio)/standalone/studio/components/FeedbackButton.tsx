@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { Loader2, RefreshCw, Sparkles, Wand2, X } from "lucide-react";
 
 interface FeedbackButtonProps {
   handleGetFeedback: () => void;
   isFetchingFeedback: boolean;
   feedbackText: string | null;
+  feedbackIssues?: Array<{ id: string; title: string; severity: string; suggestion: string }>;
+  feedbackEditPlan?: { prompt?: string } | null;
+  handleApplyCleanup?: () => void;
+  isApplyingCleanup?: boolean;
   /** "floating" = fixed bottom-right overlay (desktop). "inline" = normal flow (mobile toolbar). */
   variant?: "floating" | "inline";
 }
@@ -15,11 +19,19 @@ function FeedbackCore({
   handleGetFeedback,
   isFetchingFeedback,
   feedbackText,
+  feedbackIssues,
+  feedbackEditPlan,
+  handleApplyCleanup,
+  isApplyingCleanup,
   layout,
 }: {
   handleGetFeedback: () => void;
   isFetchingFeedback: boolean;
   feedbackText: string | null;
+  feedbackIssues?: Array<{ id: string; title: string; severity: string; suggestion: string }>;
+  feedbackEditPlan?: { prompt?: string } | null;
+  handleApplyCleanup?: () => void;
+  isApplyingCleanup?: boolean;
   /** "above" = bubble above button, right-aligned (desktop floating).
    *  "below" = bubble below button, full-width button (mobile inline). */
   layout: "above" | "below";
@@ -63,7 +75,7 @@ function FeedbackCore({
 
   const bubbleContent = (
     <div
-      className={`relative rounded-2xl p-4 text-sm text-white shadow-2xl ${layout === "below" ? "w-full" : "w-72"}`}
+      className={`relative rounded-2xl text-sm text-white shadow-2xl ${layout === "below" ? "w-full" : "w-72"} flex flex-col`}
       style={{
         background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)",
         border: "1px solid rgba(167,139,250,0.3)",
@@ -83,7 +95,7 @@ function FeedbackCore({
       )}
 
       {/* Header row */}
-      <div className="flex items-center gap-2 mb-2.5 pr-6">
+      <div className="flex items-center gap-2 px-4 pt-4 mb-2.5 pr-10">
         <Sparkles className="w-4 h-4 text-[#a78bfa] shrink-0" />
         <span className="font-semibold text-[#a78bfa] text-[13px] tracking-wide uppercase flex-1">
           AI Design Feedback
@@ -111,7 +123,7 @@ function FeedbackCore({
 
       {/* Body */}
       {isFetchingFeedback ? (
-        <div className="space-y-2 mt-1">
+        <div className="space-y-2 mt-1 px-4 pb-4">
           <div className="h-3 rounded-full bg-white/10 animate-pulse w-full" />
           <div className="h-3 rounded-full bg-white/10 animate-pulse w-5/6" />
           <div className="h-3 rounded-full bg-white/10 animate-pulse w-4/6" />
@@ -119,7 +131,77 @@ function FeedbackCore({
           <div className="h-3 rounded-full bg-white/10 animate-pulse w-3/4" />
         </div>
       ) : (
-        <p className="text-white/85 leading-[1.65]">{feedbackText}</p>
+        <div className="max-h-[60vh] flex flex-col">
+          <div className="px-4 pb-4 overflow-y-auto space-y-3 pr-3">
+            <p className="text-white/85 leading-[1.65]">{feedbackText}</p>
+
+            {Array.isArray(feedbackIssues) && feedbackIssues.length > 0 && (
+              <div className="pt-2 border-t border-white/10">
+                <div className="text-[12px] font-semibold tracking-wide uppercase text-white/60 mb-2">
+                  Top issues
+                </div>
+                <ul className="space-y-2">
+                  {feedbackIssues.slice(0, 4).map((issue) => (
+                    <li key={issue.id} className="text-white/80 leading-snug">
+                      <div className="flex items-start gap-2">
+                        <span
+                          className={`mt-[3px] inline-block size-2 rounded-full ${
+                            issue.severity === "high"
+                              ? "bg-red-400"
+                              : issue.severity === "medium"
+                              ? "bg-amber-400"
+                              : "bg-emerald-400"
+                          }`}
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-white/90">{issue.title}</div>
+                          <div className="text-white/70">{issue.suggestion}</div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {handleApplyCleanup && (
+            <div
+              className="px-4 py-3 border-t border-white/10"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(26,26,46,0.55) 0%, rgba(15,52,96,0.85) 100%)",
+              }}
+            >
+              <button
+                onClick={handleApplyCleanup}
+                disabled={isApplyingCleanup || isFetchingFeedback}
+                className="w-full flex items-center justify-center gap-2 h-[42px] rounded-[10px] font-semibold text-[14px] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #10b981 0%, #22c55e 45%, #34d399 100%)",
+                  boxShadow: "0 0 0 2px rgba(16,185,129,0.25), 0 6px 20px rgba(16,185,129,0.25)",
+                }}
+                aria-label="Apply AI cleanup"
+                title="Apply AI cleanup to the canvas (flattens result)"
+              >
+                {isApplyingCleanup ? (
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                ) : (
+                  <Wand2 className="w-4 h-4 shrink-0" />
+                )}
+                <span>
+                  {isApplyingCleanup
+                    ? "Applying cleanup..."
+                    : "Apply cleanup"}
+                </span>
+              </button>
+              <div className="mt-2 text-[12px] text-white/55 leading-snug">
+                Applies a minimal polish pass and updates the canvas with the improved image.
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Arrow pointing DOWN toward button (only for "above" layout) */}
@@ -203,6 +285,10 @@ export function FeedbackButton({
   handleGetFeedback,
   isFetchingFeedback,
   feedbackText,
+  feedbackIssues,
+  feedbackEditPlan,
+  handleApplyCleanup,
+  isApplyingCleanup,
 }: Omit<FeedbackButtonProps, "variant">) {
   return (
     <div className="fixed bottom-6 right-6 z-50 hidden md:block">
@@ -210,6 +296,10 @@ export function FeedbackButton({
         handleGetFeedback={handleGetFeedback}
         isFetchingFeedback={isFetchingFeedback}
         feedbackText={feedbackText}
+        feedbackIssues={feedbackIssues}
+        feedbackEditPlan={feedbackEditPlan}
+        handleApplyCleanup={handleApplyCleanup}
+        isApplyingCleanup={isApplyingCleanup}
         layout="above"
       />
     </div>
@@ -221,12 +311,20 @@ export function FeedbackButtonInline({
   handleGetFeedback,
   isFetchingFeedback,
   feedbackText,
+  feedbackIssues,
+  feedbackEditPlan,
+  handleApplyCleanup,
+  isApplyingCleanup,
 }: Omit<FeedbackButtonProps, "variant">) {
   return (
     <FeedbackCore
       handleGetFeedback={handleGetFeedback}
       isFetchingFeedback={isFetchingFeedback}
       feedbackText={feedbackText}
+      feedbackIssues={feedbackIssues}
+      feedbackEditPlan={feedbackEditPlan}
+      handleApplyCleanup={handleApplyCleanup}
+      isApplyingCleanup={isApplyingCleanup}
       layout="below"
     />
   );

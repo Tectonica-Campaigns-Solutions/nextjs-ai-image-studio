@@ -226,7 +226,7 @@ export const GUIDES = {
 
 // Feature flags — toggle UI without removing code
 export const FEATURE_FLAGS = {
-  showFeedbackButton: false,
+  showFeedbackButton: true,
   showSaveCanvas: true,
   showReplaceBackgroundTool: true,
   showTextTools: true,

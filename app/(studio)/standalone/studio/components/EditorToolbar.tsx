@@ -12,10 +12,14 @@ export interface EditorToolbarProps {
   handleExportClick: () => void;
   handleSave: () => void;
   handleGetFeedback?: () => void;
+  handleApplyCleanup?: () => void;
   isExporting: boolean;
   isSaving: boolean;
   isFetchingFeedback?: boolean;
+  isApplyingCleanup?: boolean;
   feedbackText?: string | null;
+  feedbackIssues?: Array<{ id: string; title: string; severity: string; suggestion: string }>;
+  feedbackEditPlan?: { tool?: string; prompt?: string } | null;
   historyState: HistoryState;
   selectedObject: any;
   /** When true, show mobile layout (inline buttons with labels); when false, desktop (icon-only column) */
@@ -71,10 +75,14 @@ export function EditorToolbar({
   handleExportClick,
   handleSave,
   handleGetFeedback,
+  handleApplyCleanup,
   isExporting,
   isSaving,
   isFetchingFeedback = false,
+  isApplyingCleanup = false,
   feedbackText = null,
+  feedbackIssues = [],
+  feedbackEditPlan = null,
   historyState,
   selectedObject,
   variant,
@@ -178,6 +186,10 @@ export function EditorToolbar({
               handleGetFeedback={handleGetFeedback}
               isFetchingFeedback={isFetchingFeedback}
               feedbackText={feedbackText}
+              feedbackIssues={feedbackIssues}
+              feedbackEditPlan={feedbackEditPlan}
+              handleApplyCleanup={handleApplyCleanup}
+              isApplyingCleanup={isApplyingCleanup}
             />
           </div>
         )}

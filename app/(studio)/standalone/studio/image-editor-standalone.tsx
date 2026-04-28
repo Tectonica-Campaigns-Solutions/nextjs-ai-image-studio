@@ -10,7 +10,6 @@ import {
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
-  FeedbackButton,
   AIEditPanel,
   AlignmentPopover,
   CanvasGuidesOverlay,
@@ -25,6 +24,7 @@ import {
   TextToolsPanel,
   UploadPromptCard,
 } from "./components";
+import { FeedbackButton } from "./components/FeedbackButton";
 import type { SessionSummary } from "./components/SessionsListPanel";
 import type {
   ExportConfig,
@@ -170,6 +170,11 @@ function ImageEditorStandaloneInner({
   // Feedback state
   const [isFetchingFeedback, setIsFetchingFeedback] = useState<boolean>(false);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  const [feedbackIssues, setFeedbackIssues] = useState<
+    Array<{ id: string; title: string; severity: string; suggestion: string }>
+  >([]);
+  const [feedbackEditPlan, setFeedbackEditPlan] = useState<{ prompt?: string } | null>(null);
+  const [isApplyingCleanup, setIsApplyingCleanup] = useState<boolean>(false);
 
   // AI image edit state
   const [isEditingWithAI, setIsEditingWithAI] = useState<boolean>(false);
@@ -1449,6 +1454,8 @@ function ImageEditorStandaloneInner({
     if (!canvasEditor.canvas) return;
     setIsFetchingFeedback(true);
     setFeedbackText(null);
+    setFeedbackIssues([]);
+    setFeedbackEditPlan(null);
 
     try {
       const imageBase64 = canvasEditor.canvas.toDataURL({
@@ -1474,7 +1481,10 @@ function ImageEditorStandaloneInner({
         return;
       }
 
-      setFeedbackText(data.feedback);
+      setFeedbackText(typeof data.feedback === "string" ? data.feedback : null);
+      setFeedbackIssues(Array.isArray(data.issues) ? data.issues : []);
+      // Do not surface model/tool identifiers in the UI.
+      setFeedbackEditPlan(data.edit_plan?.prompt ? { prompt: data.edit_plan.prompt } : null);
     } catch (err) {
       console.error("[handleGetFeedback] error:", err);
       toast({
@@ -1484,6 +1494,90 @@ function ImageEditorStandaloneInner({
       });
     } finally {
       setIsFetchingFeedback(false);
+    }
+  };
+
+  const handleApplyCleanup = async () => {
+    if (!canvasEditor.canvas) return;
+    if (!canvasEditor.replaceBackgroundImage) return;
+    if (isApplyingCleanup) return;
+
+    setIsApplyingCleanup(true);
+
+    try {
+      // Snapshot current state so user can Undo the cleanup.
+      history.saveState(true);
+
+      const imageBase64 = canvasEditor.canvas.toDataURL({
+        format: "jpeg",
+        quality: 0.9,
+        multiplier: 1,
+      });
+
+      const res = await fetch("/api/studio/review-and-cleanup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          // keep it simple: backend reviews + applies; we don't force goal here yet
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        toast({
+          title: "Cleanup failed",
+          description: data.details ?? data.error ?? "Could not apply cleanup.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const improved = data.image as string | null | undefined;
+      if (!improved || typeof improved !== "string") {
+        toast({
+          title: "Cleanup failed",
+          description: "No image returned from the cleanup endpoint.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Replace the background with the improved (flattened) image and remove overlays to avoid duplication.
+      const canvas = canvasEditor.canvas;
+      canvas.discardActiveObject();
+      // Keep the background object in place — replaceBackgroundImage expects it.
+      const objs = canvas.getObjects().slice();
+      for (const obj of objs) {
+        const isBg = Boolean((obj as any)?.isBackground);
+        if (!isBg) canvas.remove(obj);
+      }
+      selection.setSelectedObject(null);
+
+      await canvasEditor.replaceBackgroundImage(improved);
+      canvas.renderAll();
+      history.saveState(true);
+
+      // Update feedback panel with the applied plan, so the user sees what happened.
+      if (typeof data.feedback === "string") setFeedbackText(data.feedback);
+      if (Array.isArray(data.issues)) setFeedbackIssues(data.issues);
+      if (data.applied_plan?.prompt) setFeedbackEditPlan({ prompt: data.applied_plan.prompt });
+
+      toast({
+        title: "Cleanup applied",
+        description: "Canvas updated with the improved image.",
+        className: "bg-[#1a1a2e] border-[#2a2a55] text-white",
+      });
+    } catch (err) {
+      console.error("[handleApplyCleanup] error:", err);
+      toast({
+        title: "Cleanup failed",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplyingCleanup(false);
     }
   };
 
@@ -1849,13 +1943,25 @@ function ImageEditorStandaloneInner({
                     handleGetFeedback={
                       FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
                     }
+                    handleApplyCleanup={
+                      FEATURE_FLAGS.showFeedbackButton ? handleApplyCleanup : undefined
+                    }
                     isExporting={isExporting}
                     isSaving={isSaving}
                     isFetchingFeedback={
                       FEATURE_FLAGS.showFeedbackButton ? isFetchingFeedback : undefined
                     }
+                    isApplyingCleanup={
+                      FEATURE_FLAGS.showFeedbackButton ? isApplyingCleanup : undefined
+                    }
                     feedbackText={
                       FEATURE_FLAGS.showFeedbackButton ? feedbackText : undefined
+                    }
+                    feedbackIssues={
+                      FEATURE_FLAGS.showFeedbackButton ? feedbackIssues : undefined
+                    }
+                    feedbackEditPlan={
+                      FEATURE_FLAGS.showFeedbackButton ? feedbackEditPlan : undefined
                     }
                     historyState={history.historyState}
                     selectedObject={selection.selectedObject}
@@ -1900,6 +2006,10 @@ function ImageEditorStandaloneInner({
               handleGetFeedback={handleGetFeedback}
               isFetchingFeedback={isFetchingFeedback}
               feedbackText={feedbackText}
+              feedbackIssues={feedbackIssues}
+              feedbackEditPlan={feedbackEditPlan}
+              handleApplyCleanup={handleApplyCleanup}
+              isApplyingCleanup={isApplyingCleanup}
             />
           )}
 
