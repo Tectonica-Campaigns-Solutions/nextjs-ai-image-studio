@@ -33,10 +33,12 @@ import type {
 import type { DisclaimerPosition } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
 import {
+  BUNDLED_FONT_CSS_VARS,
   DEFAULT_FONTS,
   EXPORT,
   FEATURE_FLAGS,
   SELECTION_MENU,
+  TEXT_DEFAULTS,
   UI_COLORS,
   STUDIO_IFRAME_MESSAGE,
 } from "./constants/editor-constants";
@@ -55,11 +57,12 @@ import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
-import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
+import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
-import { logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
+import { getCanvasFontFamily, logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
+import { DEFAULT_TEXT_BLOCK_DELIMITER, insertAutoTextBlocks, parseTextBlocks } from "./utils/text-blocks";
 
 function AccessDenied() {
   return (
@@ -117,6 +120,7 @@ function ImageEditorStandaloneInner({
   allowCustomLogo = true,
 }: ImageEditorStandaloneProps) {
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
+  const didAutoInsertTextRef = useRef(false);
 
   const { toast } = useToast();
 
@@ -513,6 +517,63 @@ function ImageEditorStandaloneInner({
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
+
+  // Auto-insert text blocks from query param when opening the editor.
+  // Per requirement: ignore `text` if a session is being loaded.
+  useEffect(() => {
+    if (didAutoInsertTextRef.current) return;
+    if (!params?.text?.trim()) return;
+    if (params.session_id || sessionData?.id) return;
+    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+
+    didAutoInsertTextRef.current = true;
+
+    const blocks = parseTextBlocks(params.text, params.text_delim ?? DEFAULT_TEXT_BLOCK_DELIMITER);
+    if (blocks.length === 0) return;
+
+    const canvas = canvasEditor.canvas;
+    const defaultFontFamily = fontAssets[0]?.font_family || DEFAULT_FONTS.PRIMARY;
+    const resolvedFontFamily = getCanvasFontFamily(
+      defaultFontFamily,
+      DEFAULT_FONTS.PRIMARY,
+      BUNDLED_FONT_CSS_VARS,
+    );
+
+    // Snapshot current state so user can Undo the insertion.
+    history.saveState(true);
+
+    const created = insertAutoTextBlocks(canvas, blocks, {
+      initialFontSize: TEXT_DEFAULTS.FONT_SIZE,
+      minFontSize: 12,
+      textAlign: "center",
+      textboxOptions: {
+        fontFamily: resolvedFontFamily,
+        fill: rgbaToString(TEXT_DEFAULTS.COLOR),
+        backgroundColor: rgbaToString(TEXT_DEFAULTS.BG_COLOR),
+        lineHeight: TEXT_DEFAULTS.LINE_HEIGHT,
+        charSpacing: TEXT_DEFAULTS.LETTER_SPACING,
+        editable: true,
+        selectable: true,
+      },
+    });
+
+    if (created.length > 0) {
+      canvas.setActiveObject(created[0]);
+      canvas.renderAll();
+      // Stabilize dimensions if fonts are still loading.
+      remeasureTextboxes(canvas);
+      history.saveState(true);
+    }
+  }, [
+    params.text,
+    params.text_delim,
+    params.session_id,
+    sessionData?.id,
+    canvasEditor.canvas,
+    canvasEditor.originalImageDimensions,
+    fontAssets,
+    history.saveState,
+  ]);
 
   // Recalculate canvas size when sidebar collapses/expands in tablet/laptop.
   // Dispatch once immediately and once after width transition completes.

@@ -24,6 +24,10 @@ export interface ImageEditorStandaloneParams {
   session_id?: string;
   client_id?: string;
   user_email?: string;
+  /** Optional initial text content to insert as editable blocks. */
+  text?: string;
+  /** Optional delimiter for splitting `text` into blocks (default: `||`). */
+  text_delim?: string;
 }
 
 export interface CanvasSessionData {
