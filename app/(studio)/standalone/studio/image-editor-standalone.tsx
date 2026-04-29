@@ -10,7 +10,6 @@ import {
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
-  FeedbackButton,
   AIEditPanel,
   AlignmentPopover,
   CanvasGuidesOverlay,
@@ -25,6 +24,7 @@ import {
   TextToolsPanel,
   UploadPromptCard,
 } from "./components";
+import { FeedbackButton } from "./components/FeedbackButton";
 import type { SessionSummary } from "./components/SessionsListPanel";
 import type {
   ExportConfig,
@@ -33,10 +33,12 @@ import type {
 import type { DisclaimerPosition } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
 import {
+  BUNDLED_FONT_CSS_VARS,
   DEFAULT_FONTS,
   EXPORT,
   FEATURE_FLAGS,
   SELECTION_MENU,
+  TEXT_DEFAULTS,
   UI_COLORS,
   STUDIO_IFRAME_MESSAGE,
 } from "./constants/editor-constants";
@@ -55,11 +57,12 @@ import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
-import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
+import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
-import { logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
+import { getCanvasFontFamily, logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
+import { DEFAULT_TEXT_BLOCK_DELIMITER, insertAutoTextBlocks, parseTextBlocks } from "./utils/text-blocks";
 
 function AccessDenied() {
   return (
@@ -117,6 +120,7 @@ function ImageEditorStandaloneInner({
   allowCustomLogo = true,
 }: ImageEditorStandaloneProps) {
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
+  const didAutoInsertTextRef = useRef(false);
 
   const { toast } = useToast();
 
@@ -170,6 +174,11 @@ function ImageEditorStandaloneInner({
   // Feedback state
   const [isFetchingFeedback, setIsFetchingFeedback] = useState<boolean>(false);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  const [feedbackIssues, setFeedbackIssues] = useState<
+    Array<{ id: string; title: string; severity: string; suggestion: string }>
+  >([]);
+  const [feedbackEditPlan, setFeedbackEditPlan] = useState<{ prompt?: string } | null>(null);
+  const [isApplyingCleanup, setIsApplyingCleanup] = useState<boolean>(false);
 
   // AI image edit state
   const [isEditingWithAI, setIsEditingWithAI] = useState<boolean>(false);
@@ -508,6 +517,63 @@ function ImageEditorStandaloneInner({
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
+
+  // Auto-insert text blocks from query param when opening the editor.
+  // Per requirement: ignore `text` if a session is being loaded.
+  useEffect(() => {
+    if (didAutoInsertTextRef.current) return;
+    if (!params?.text?.trim()) return;
+    if (params.session_id || sessionData?.id) return;
+    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+
+    didAutoInsertTextRef.current = true;
+
+    const blocks = parseTextBlocks(params.text, params.text_delim ?? DEFAULT_TEXT_BLOCK_DELIMITER);
+    if (blocks.length === 0) return;
+
+    const canvas = canvasEditor.canvas;
+    const defaultFontFamily = fontAssets[0]?.font_family || DEFAULT_FONTS.PRIMARY;
+    const resolvedFontFamily = getCanvasFontFamily(
+      defaultFontFamily,
+      DEFAULT_FONTS.PRIMARY,
+      BUNDLED_FONT_CSS_VARS,
+    );
+
+    // Snapshot current state so user can Undo the insertion.
+    history.saveState(true);
+
+    const created = insertAutoTextBlocks(canvas, blocks, {
+      initialFontSize: TEXT_DEFAULTS.FONT_SIZE,
+      minFontSize: 12,
+      textAlign: "center",
+      textboxOptions: {
+        fontFamily: resolvedFontFamily,
+        fill: rgbaToString(TEXT_DEFAULTS.COLOR),
+        backgroundColor: rgbaToString(TEXT_DEFAULTS.BG_COLOR),
+        lineHeight: TEXT_DEFAULTS.LINE_HEIGHT,
+        charSpacing: TEXT_DEFAULTS.LETTER_SPACING,
+        editable: true,
+        selectable: true,
+      },
+    });
+
+    if (created.length > 0) {
+      canvas.setActiveObject(created[0]);
+      canvas.renderAll();
+      // Stabilize dimensions if fonts are still loading.
+      remeasureTextboxes(canvas);
+      history.saveState(true);
+    }
+  }, [
+    params.text,
+    params.text_delim,
+    params.session_id,
+    sessionData?.id,
+    canvasEditor.canvas,
+    canvasEditor.originalImageDimensions,
+    fontAssets,
+    history.saveState,
+  ]);
 
   // Recalculate canvas size when sidebar collapses/expands in tablet/laptop.
   // Dispatch once immediately and once after width transition completes.
@@ -1449,6 +1515,8 @@ function ImageEditorStandaloneInner({
     if (!canvasEditor.canvas) return;
     setIsFetchingFeedback(true);
     setFeedbackText(null);
+    setFeedbackIssues([]);
+    setFeedbackEditPlan(null);
 
     try {
       const imageBase64 = canvasEditor.canvas.toDataURL({
@@ -1474,7 +1542,10 @@ function ImageEditorStandaloneInner({
         return;
       }
 
-      setFeedbackText(data.feedback);
+      setFeedbackText(typeof data.feedback === "string" ? data.feedback : null);
+      setFeedbackIssues(Array.isArray(data.issues) ? data.issues : []);
+      // Do not surface model/tool identifiers in the UI.
+      setFeedbackEditPlan(data.edit_plan?.prompt ? { prompt: data.edit_plan.prompt } : null);
     } catch (err) {
       console.error("[handleGetFeedback] error:", err);
       toast({
@@ -1484,6 +1555,90 @@ function ImageEditorStandaloneInner({
       });
     } finally {
       setIsFetchingFeedback(false);
+    }
+  };
+
+  const handleApplyCleanup = async () => {
+    if (!canvasEditor.canvas) return;
+    if (!canvasEditor.replaceBackgroundImage) return;
+    if (isApplyingCleanup) return;
+
+    setIsApplyingCleanup(true);
+
+    try {
+      // Snapshot current state so user can Undo the cleanup.
+      history.saveState(true);
+
+      const imageBase64 = canvasEditor.canvas.toDataURL({
+        format: "jpeg",
+        quality: 0.9,
+        multiplier: 1,
+      });
+
+      const res = await fetch("/api/studio/review-and-cleanup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          // keep it simple: backend reviews + applies; we don't force goal here yet
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        toast({
+          title: "Cleanup failed",
+          description: data.details ?? data.error ?? "Could not apply cleanup.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const improved = data.image as string | null | undefined;
+      if (!improved || typeof improved !== "string") {
+        toast({
+          title: "Cleanup failed",
+          description: "No image returned from the cleanup endpoint.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Replace the background with the improved (flattened) image and remove overlays to avoid duplication.
+      const canvas = canvasEditor.canvas;
+      canvas.discardActiveObject();
+      // Keep the background object in place — replaceBackgroundImage expects it.
+      const objs = canvas.getObjects().slice();
+      for (const obj of objs) {
+        const isBg = Boolean((obj as any)?.isBackground);
+        if (!isBg) canvas.remove(obj);
+      }
+      selection.setSelectedObject(null);
+
+      await canvasEditor.replaceBackgroundImage(improved);
+      canvas.renderAll();
+      history.saveState(true);
+
+      // Update feedback panel with the applied plan, so the user sees what happened.
+      if (typeof data.feedback === "string") setFeedbackText(data.feedback);
+      if (Array.isArray(data.issues)) setFeedbackIssues(data.issues);
+      if (data.applied_plan?.prompt) setFeedbackEditPlan({ prompt: data.applied_plan.prompt });
+
+      toast({
+        title: "Cleanup applied",
+        description: "Canvas updated with the improved image.",
+        className: "bg-[#1a1a2e] border-[#2a2a55] text-white",
+      });
+    } catch (err) {
+      console.error("[handleApplyCleanup] error:", err);
+      toast({
+        title: "Cleanup failed",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplyingCleanup(false);
     }
   };
 
@@ -1849,13 +2004,25 @@ function ImageEditorStandaloneInner({
                     handleGetFeedback={
                       FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
                     }
+                    handleApplyCleanup={
+                      FEATURE_FLAGS.showFeedbackButton ? handleApplyCleanup : undefined
+                    }
                     isExporting={isExporting}
                     isSaving={isSaving}
                     isFetchingFeedback={
                       FEATURE_FLAGS.showFeedbackButton ? isFetchingFeedback : undefined
                     }
+                    isApplyingCleanup={
+                      FEATURE_FLAGS.showFeedbackButton ? isApplyingCleanup : undefined
+                    }
                     feedbackText={
                       FEATURE_FLAGS.showFeedbackButton ? feedbackText : undefined
+                    }
+                    feedbackIssues={
+                      FEATURE_FLAGS.showFeedbackButton ? feedbackIssues : undefined
+                    }
+                    feedbackEditPlan={
+                      FEATURE_FLAGS.showFeedbackButton ? feedbackEditPlan : undefined
                     }
                     historyState={history.historyState}
                     selectedObject={selection.selectedObject}
@@ -1900,6 +2067,10 @@ function ImageEditorStandaloneInner({
               handleGetFeedback={handleGetFeedback}
               isFetchingFeedback={isFetchingFeedback}
               feedbackText={feedbackText}
+              feedbackIssues={feedbackIssues}
+              feedbackEditPlan={feedbackEditPlan}
+              handleApplyCleanup={handleApplyCleanup}
+              isApplyingCleanup={isApplyingCleanup}
             />
           )}
 

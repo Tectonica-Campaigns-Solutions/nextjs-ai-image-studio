@@ -131,6 +131,13 @@ type StudioPageProps = {
     imageUrl?: string;
     user_id?: string;
     session_id?: string;
+    /**
+     * Optional initial text to auto-insert as editable text blocks.
+     * Multiple blocks can be separated with `||` (or via `text_delim`).
+     */
+    text?: string;
+    /** Optional delimiter for splitting `text` (default: `||`). */
+    text_delim?: string;
   }>;
 };
 
@@ -150,6 +157,11 @@ export default function StudioPage({ searchParams }: StudioPageProps) {
   - Initial background image (`imageUrl` query param).
   - User identity (e.g. `user_id`, `user_email`, `client_id`).
   - An existing `session_id` (to restore a saved canvas session).
+  - Optional auto text insertion (`text` / `text_delim`) when opening a new session.
+
+Example:
+
+- `...?imageUrl=...&user_id=...&text=Titulo%20||%20Subtitulo%20||%20CTA`
 
 ---
 

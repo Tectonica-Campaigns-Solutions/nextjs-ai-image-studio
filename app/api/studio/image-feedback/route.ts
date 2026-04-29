@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { reviewImageWithOpenAI, type ReviewGoal } from "@/lib/image-reviewer";
 
 export const runtime = "nodejs";
 
-const FEEDBACK_PROMPT =
-  "You are a professional graphic design expert. Analyze this image and provide concise, actionable suggestions to improve its visual design, composition, typography, color usage, and overall effectiveness. Focus on the most impactful improvements.";
-
-const MOCK_FEEDBACK =
-  "[HARDCODED] Consider increasing the contrast between text and background for better readability. The composition could benefit from applying the rule of thirds. Try using a more limited color palette (2–3 accent colors) to create visual harmony.";
-
 export async function POST(request: NextRequest) {
+  const requestId = `imgfb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const startedAt = Date.now();
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -16,7 +14,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { image_base64 } = body as Record<string, unknown>;
+  const { image_base64, goal, constraints } = body as Record<string, unknown>;
 
   if (!image_base64 || typeof image_base64 !== "string") {
     return NextResponse.json(
@@ -25,28 +23,63 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const imageLen = image_base64.length;
+  console.log(`[image-feedback ${requestId}] start`, {
+    hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+    hasChatbotKey: !!process.env.OPENAI_API_KEY_CHATBOT,
+    goal: typeof goal === "string" ? goal : undefined,
+    constraintsCount: Array.isArray(constraints) ? constraints.length : 0,
+    imageChars: imageLen,
+    imageIsDataUrl: image_base64.trim().startsWith("data:image/"),
+  });
+
   try {
-    // TODO: Replace with real AI vision service URL when available
-    const response = await fetch("https://api.example.com/vision", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: FEEDBACK_PROMPT,
-        image: image_base64,
-      }),
+    const result = await reviewImageWithOpenAI({
+      image_base64,
+      goal: typeof goal === "string" ? (goal as ReviewGoal) : undefined,
+      constraints: Array.isArray(constraints)
+        ? (constraints.filter((c) => typeof c === "string") as string[])
+        : undefined,
     });
 
-    if (!response.ok) {
-      throw new Error(`External service responded with ${response.status}`);
-    }
+    console.log(`[image-feedback ${requestId}] success`, {
+      ms: Date.now() - startedAt,
+      issues: Array.isArray((result as any)?.issues)
+        ? (result as any).issues.length
+        : undefined,
+    });
 
-    const data = await response.json();
-    const feedback =
-      data.feedback ?? data.text ?? data.content ?? MOCK_FEEDBACK;
+    // Do not expose internal model/tool identifiers to clients.
+    return NextResponse.json({
+      feedback: result.feedback,
+      issues: result.issues,
+      edit_plan: {
+        prompt: result.edit_plan.prompt,
+        settings: result.edit_plan.settings,
+        constraints: result.edit_plan.constraints,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    const anyErr = err as any;
 
-    return NextResponse.json({ feedback });
-  } catch {
-    // External service is not yet available — return mock feedback
-    return NextResponse.json({ feedback: MOCK_FEEDBACK });
+    console.error(`[image-feedback ${requestId}] error`, {
+      ms: Date.now() - startedAt,
+      message,
+      name: anyErr?.name,
+      status: anyErr?.status ?? anyErr?.response?.status,
+      code: anyErr?.code,
+      type: anyErr?.type,
+      // OpenAI SDK often includes `error` / `body` / `response` details
+      error: anyErr?.error,
+      body: anyErr?.body,
+    });
+    if (stack) console.error(`[image-feedback ${requestId}] stack\n${stack}`);
+
+    return NextResponse.json(
+      { error: "Image review failed", details: message },
+      { status: 500 },
+    );
   }
 }
