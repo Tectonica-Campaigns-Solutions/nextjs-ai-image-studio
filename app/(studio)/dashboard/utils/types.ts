@@ -78,6 +78,25 @@ export interface CanvasSessionSummary {
   updated_at: string;
 }
 
+export interface ClientFundraisingData {
+  id: string;
+  client_id: string;
+  ca_user_id: string;
+  // Organization variables
+  org_name: string | null;
+  donation_page_url: string | null;
+  approval_required: boolean;
+  approval_turnaround: string | null;
+  // User context variables
+  user_role_description: string | null;
+  // Campaign variables
+  crm_access: boolean;
+  crm_tool_note: string | null;
+  // Audit
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Admin {
   id: string;
   user_id: string;
