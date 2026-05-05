@@ -37,7 +37,8 @@ type TabKey =
   | "frames"
   | "fonts"
   | "canvas-sessions"
-  | "generated-images";
+  | "generated-images"
+  | "fundraising";
 
 type DashboardClientDetailScreenProps = Readonly<{
   data: ClientDetailPageData;
@@ -76,6 +77,63 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const [deleteSessionError, setDeleteSessionError] = useState<string | null>(null);
   const sessionAction = useServerAction();
   const [generatedPage, setGeneratedPage] = useState(1);
+
+  // Fundraising form state
+  const initialFundraising = data.fundraisingData;
+  const [fundraisingForm, setFundraisingForm] = useState<{
+    org_name: string;
+    donation_page_url: string;
+    approval_required: boolean;
+    approval_turnaround: string;
+    user_role_description: string;
+    crm_access: boolean;
+    crm_tool_note: string;
+  }>({
+    org_name: initialFundraising?.org_name ?? "",
+    donation_page_url: initialFundraising?.donation_page_url ?? "",
+    approval_required: initialFundraising?.approval_required ?? false,
+    approval_turnaround: initialFundraising?.approval_turnaround ?? "",
+    user_role_description: initialFundraising?.user_role_description ?? "",
+    crm_access: initialFundraising?.crm_access ?? false,
+    crm_tool_note: initialFundraising?.crm_tool_note ?? "",
+  });
+  const [fundraisingSaving, setFundraisingSaving] = useState(false);
+  const [fundraisingError, setFundraisingError] = useState<string | null>(null);
+  const [fundraisingSuccess, setFundraisingSuccess] = useState(false);
+
+  const handleSaveFundraising = async () => {
+    if (!client) return;
+    setFundraisingSaving(true);
+    setFundraisingError(null);
+    setFundraisingSuccess(false);
+    const method = data.fundraisingData ? "PATCH" : "POST";
+    try {
+      const res = await fetch(`/api/dashboard/clients/${client.id}/fundraising`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          org_name: fundraisingForm.org_name.trim() || null,
+          donation_page_url: fundraisingForm.donation_page_url.trim() || null,
+          approval_required: fundraisingForm.approval_required,
+          approval_turnaround: fundraisingForm.approval_turnaround.trim() || null,
+          user_role_description: fundraisingForm.user_role_description.trim() || null,
+          crm_access: fundraisingForm.crm_access,
+          crm_tool_note: fundraisingForm.crm_tool_note.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        throw new Error(payload?.error || "Failed to save fundraising data");
+      }
+      setFundraisingSuccess(true);
+      toast.success("Fundraising data saved");
+      router.refresh();
+    } catch (err) {
+      setFundraisingError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setFundraisingSaving(false);
+    }
+  };
 
   const logoAsset = useMemo(() => {
     return (data.assets ?? []).find((a) => a.is_primary) ?? (data.assets ?? [])[0] ?? null;
@@ -338,6 +396,8 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
         return "Canvas Sessions";
       case "generated-images":
         return "Generated Images";
+      case "fundraising":
+        return "Fundraising";
       default:
         return "Assets";
     }
@@ -767,6 +827,17 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           >
             Generated Images
           </button>
+          <button
+            onClick={() => setActiveTab("fundraising")}
+            className={cx(
+              "pb-4 text-sm relative",
+              activeTab === "fundraising"
+                ? "text-blue-700 font-bold border-b-2 border-blue-600"
+                : "text-on-surface-variant font-medium hover:text-on-surface transition-colors"
+            )}
+          >
+            Fundraising
+          </button>
         </div>
 
         {/* Tab Content (Assets Preview in Dashboard export) */}
@@ -989,6 +1060,155 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                 ) : null}
               </div>
             ) : null}
+
+            {activeTab === "fundraising" ? (
+              <div className="space-y-8">
+                {/* Organization */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Organization</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-org-name">Organization Name</label>
+                      <input
+                        id="fr-org-name"
+                        type="text"
+                        value={fundraisingForm.org_name}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, org_name: e.target.value }))}
+                        disabled={fundraisingSaving}
+                        placeholder="e.g. ACLU"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-donation-url">Donation Page URL</label>
+                      <input
+                        id="fr-donation-url"
+                        type="url"
+                        value={fundraisingForm.donation_page_url}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, donation_page_url: e.target.value }))}
+                        disabled={fundraisingSaving}
+                        placeholder="https://"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={fundraisingForm.approval_required}
+                        onClick={() => setFundraisingForm((f) => ({ ...f, approval_required: !f.approval_required }))}
+                        disabled={fundraisingSaving}
+                        className={cx(
+                          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50",
+                          fundraisingForm.approval_required ? "bg-dashboard-primary" : "bg-outline-variant/40"
+                        )}
+                      >
+                        <span
+                          className={cx(
+                            "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
+                            fundraisingForm.approval_required ? "translate-x-4" : "translate-x-0"
+                          )}
+                        />
+                      </button>
+                      <span className="text-sm font-medium text-on-surface">Approval Required</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-approval-turnaround">Approval Turnaround</label>
+                      <input
+                        id="fr-approval-turnaround"
+                        type="text"
+                        value={fundraisingForm.approval_turnaround}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, approval_turnaround: e.target.value }))}
+                        disabled={fundraisingSaving || !fundraisingForm.approval_required}
+                        placeholder="e.g. 48 hours"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Context */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">User Context</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-user-role">User Role Description</label>
+                    <textarea
+                      id="fr-user-role"
+                      rows={3}
+                      value={fundraisingForm.user_role_description}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, user_role_description: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. A group leader who fundraises regularly for their organization"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Campaign */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Campaign</h4>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={fundraisingForm.crm_access}
+                      onClick={() => setFundraisingForm((f) => ({ ...f, crm_access: !f.crm_access }))}
+                      disabled={fundraisingSaving}
+                      className={cx(
+                        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50",
+                        fundraisingForm.crm_access ? "bg-dashboard-primary" : "bg-outline-variant/40"
+                      )}
+                    >
+                      <span
+                        className={cx(
+                          "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
+                          fundraisingForm.crm_access ? "translate-x-4" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                    <span className="text-sm font-medium text-on-surface">CRM Access</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-crm-note">CRM Tool Note</label>
+                    <input
+                      id="fr-crm-note"
+                      type="text"
+                      value={fundraisingForm.crm_tool_note}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, crm_tool_note: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. Action Network — manual export for now"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                {fundraisingSuccess ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                    Fundraising data saved successfully.
+                  </div>
+                ) : null}
+
+                {fundraisingError ? (
+                  <div className="rounded-xl border border-error/20 bg-error/10 p-3 text-sm text-error">
+                    {fundraisingError}
+                  </div>
+                ) : null}
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveFundraising()}
+                    disabled={fundraisingSaving}
+                    className="px-5 py-2 rounded-lg bg-dashboard-primary text-dashboard-on-primary text-sm font-semibold hover:opacity-90 disabled:opacity-70 shadow-sm shadow-dashboard-primary/20"
+                  >
+                    {fundraisingSaving ? "Saving..." : "Save Fundraising Data"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
           </div>
 
           {/* Details Sidebar */}

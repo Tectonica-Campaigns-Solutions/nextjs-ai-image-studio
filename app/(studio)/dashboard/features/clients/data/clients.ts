@@ -3,6 +3,7 @@ import type {
   Client,
   ClientAsset,
   ClientFont,
+  ClientFundraisingData,
   CanvasSessionSummary,
   Plan,
 } from "@/app/(studio)/dashboard/utils/types";
@@ -194,6 +195,7 @@ export interface ClientDetailPageData {
     prompt: string | null;
     created_at: string;
   }>;
+  fundraisingData: ClientFundraisingData | null;
 }
 
 /**
@@ -227,6 +229,7 @@ export async function getClientDetailPageData(
     generatedRes,
     planRes,
     usageCountRes,
+    fundraisingRes,
   ] = await Promise.all([
     supabase
       .from("client_assets")
@@ -298,6 +301,12 @@ export async function getClientDetailPageData(
           .select("id", { count: "exact", head: true })
           .eq("client_id", caUserId)
       : Promise.resolve({ count: 0 } as unknown as { count: number }),
+    supabaseAdmin
+      .from("client_fundraising_data")
+      .select("*")
+      .eq("client_id", clientId)
+      .is("deleted_at", null)
+      .maybeSingle(),
   ]);
 
   const variants = Array.from(
@@ -330,5 +339,6 @@ export async function getClientDetailPageData(
       prompt: string | null;
       created_at: string;
     }>,
+    fundraisingData: (fundraisingRes.data ?? null) as ClientFundraisingData | null,
   };
 }
