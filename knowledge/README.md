@@ -52,14 +52,14 @@ Markdown body…
 
 ### Recommended fields (used as facets / metadata pass-through)
 
-| Field          | Type                         | Example values                                  |
-| -------------- | ---------------------------- | ----------------------------------------------- |
-| `group-size`   | string or array              | `[5-30]`, `small`, `[50-200]`                   |
-| `archetype`    | string or array              | `first-timer`, `experienced-leader`             |
-| `difficulty`   | string                       | `beginner`, `intermediate`, `advanced`          |
-| `content-type` | string                       | `tactic`, `principle`, `script`, `story`        |
-| `source`       | string                       | Provenance, useful for auditing.                |
-| `last-updated` | ISO date (`YYYY-MM-DD`)      | Manual maintenance signal.                      |
+| Field          | Type                    | Example values                           |
+| -------------- | ----------------------- | ---------------------------------------- |
+| `group-size`   | string or array         | `[5-30]`, `small`, `[50-200]`            |
+| `archetype`    | string or array         | `first-timer`, `experienced-leader`      |
+| `difficulty`   | string                  | `beginner`, `intermediate`, `advanced`   |
+| `content-type` | string                  | `tactic`, `principle`, `script`, `story` |
+| `source`       | string                  | Provenance, useful for auditing.         |
+| `last-updated` | ISO date (`YYYY-MM-DD`) | Manual maintenance signal.               |
 
 Frontmatter parsing is tolerant: malformed YAML produces a warning in the server log
 and the file is indexed with body-only fallback. Unknown fields are preserved and

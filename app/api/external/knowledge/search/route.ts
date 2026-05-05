@@ -4,7 +4,7 @@ import { buildIndex, search } from "@/lib/knowledge/engine";
 import {
   botExists,
   listAvailableBots,
-  loadBotDocs,
+  loadBotChunks,
 } from "@/lib/knowledge/loader";
 import type { SearchErrorResponse, SearchRequest } from "@/lib/knowledge/types";
 import { asNumber, asStringArray } from "@/lib/utils";
@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const docs = await loadBotDocs(bot);
-    const index = buildIndex(docs);
+    const chunks = await loadBotChunks(bot);
+    const index = buildIndex(chunks);
     const response = search(index, searchRequest);
     return NextResponse.json(response);
   } catch (err) {

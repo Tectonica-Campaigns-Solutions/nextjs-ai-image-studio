@@ -1,7 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
 import matter from "gray-matter";
-import type { BotId, KnowledgeDoc, KnowledgeFrontmatter } from "./types";
+import type {
+  BotId,
+  KnowledgeChunk,
+  KnowledgeDoc,
+  KnowledgeFrontmatter,
+} from "./types";
 
 const LOG_PREFIX = "[knowledge/loader]";
 
@@ -88,6 +93,47 @@ function normalizeTags(value: unknown): string[] {
   return [];
 }
 
+function normalizeTagValue(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return normalizeTags(value);
+  if (typeof value === "string") return normalizeTags(value);
+  if (typeof value === "number") return [String(value)];
+  return [];
+}
+
+function collectFrontmatterTags(frontmatter: KnowledgeFrontmatter): string[] {
+  const tags = new Set<string>();
+
+  // Primary tags array.
+  for (const t of normalizeTags(frontmatter.tags)) tags.add(t);
+
+  // Common single-value fields that behave like facets.
+  const facetKeys = [
+    "tactic",
+    "content-type",
+    "context",
+    "viability",
+    "tier",
+    "group-mode",
+    "difficulty",
+    "source",
+  ];
+  for (const key of facetKeys) {
+    const v = (frontmatter as Record<string, unknown>)[key];
+    for (const t of normalizeTagValue(v)) tags.add(t);
+  }
+
+  // Multi-valued facets.
+  for (const t of normalizeTagValue(frontmatter["group-size"])) tags.add(t);
+  for (const t of normalizeTagValue(frontmatter.archetype)) tags.add(t);
+
+  // Often comma-separated.
+  for (const t of normalizeTagValue((frontmatter as Record<string, unknown>)["brief-section"]))
+    tags.add(t);
+
+  return Array.from(tags).filter(Boolean);
+}
+
 function deriveTitleFromFilename(filePath: string): string {
   const base = path.basename(filePath, path.extname(filePath));
   return base
@@ -138,7 +184,7 @@ async function parseDoc(
     .relative(botRoot, absolutePath)
     .split(path.sep)
     .join("/");
-  const tags = normalizeTags(frontmatter.tags);
+  const tags = collectFrontmatterTags(frontmatter);
   const title =
     typeof frontmatter.title === "string" && frontmatter.title.trim().length > 0
       ? frontmatter.title.trim()
@@ -158,6 +204,113 @@ async function parseDoc(
   };
 }
 
+function slugifyAnchor(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function chunkMarkdown(doc: KnowledgeDoc): KnowledgeChunk[] {
+  const lines = doc.body.split(/\r?\n/);
+
+  type Heading = { level: number; text: string; lineIndex: number };
+  const headings: Heading[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^(#{1,6})\s+(.+?)\s*$/.exec(lines[i] ?? "");
+    if (!m) continue;
+    const level = m[1].length;
+    const text = m[2].trim();
+    if (!text) continue;
+    headings.push({ level, text, lineIndex: i });
+  }
+
+  // If there are no headings, treat the whole doc as a single chunk.
+  if (headings.length === 0) {
+    return [
+      {
+        id: `${doc.id}::chunk:0`,
+        bot: doc.bot,
+        path: doc.path,
+        absolutePath: doc.absolutePath,
+        folder: doc.folder,
+        title: doc.title,
+        tags: doc.tags,
+        heading: null,
+        anchor: null,
+        body: doc.body.trim(),
+        frontmatter: doc.frontmatter,
+        mtimeMs: doc.mtimeMs,
+        ordinal: 0,
+      },
+    ];
+  }
+
+  const chunks: KnowledgeChunk[] = [];
+  let ordinal = 0;
+
+  for (let h = 0; h < headings.length; h++) {
+    const current = headings[h];
+    const next = headings[h + 1];
+
+    // Prefer chunks starting at level >=2; but if the doc only has level 1,
+    // we still chunk on it.
+    const start = current.lineIndex;
+    const end = next ? next.lineIndex : lines.length;
+
+    const headingLine = lines[start] ?? "";
+    const sectionBody = lines.slice(start + 1, end).join("\n").trim();
+
+    // Skip headings that have no content under them.
+    if (!sectionBody) continue;
+
+    const anchor = slugifyAnchor(current.text) || null;
+    chunks.push({
+      id: `${doc.id}::chunk:${ordinal}`,
+      bot: doc.bot,
+      path: doc.path,
+      absolutePath: doc.absolutePath,
+      folder: doc.folder,
+      title: doc.title,
+      tags: doc.tags,
+      heading: current.text,
+      anchor,
+      body: `${headingLine}\n\n${sectionBody}`.trim(),
+      frontmatter: doc.frontmatter,
+      mtimeMs: doc.mtimeMs,
+      ordinal,
+    });
+    ordinal++;
+  }
+
+  // If we skipped everything (e.g., headings but empty sections), fall back.
+  if (chunks.length === 0) {
+    return [
+      {
+        id: `${doc.id}::chunk:0`,
+        bot: doc.bot,
+        path: doc.path,
+        absolutePath: doc.absolutePath,
+        folder: doc.folder,
+        title: doc.title,
+        tags: doc.tags,
+        heading: null,
+        anchor: null,
+        body: doc.body.trim(),
+        frontmatter: doc.frontmatter,
+        mtimeMs: doc.mtimeMs,
+        ordinal: 0,
+      },
+    ];
+  }
+
+  return chunks;
+}
+
 export async function loadBotDocs(bot: BotId): Promise<KnowledgeDoc[]> {
   const botRoot = getBotRoot(bot);
   const exists = await botExists(bot);
@@ -174,6 +327,18 @@ export async function loadBotDocs(bot: BotId): Promise<KnowledgeDoc[]> {
     `${LOG_PREFIX} Loaded ${docs.length} docs for bot "${bot}" from ${botRoot}`,
   );
   return docs;
+}
+
+export async function loadBotChunks(bot: BotId): Promise<KnowledgeChunk[]> {
+  const docs = await loadBotDocs(bot);
+  const chunks: KnowledgeChunk[] = [];
+  for (const doc of docs) {
+    chunks.push(...chunkMarkdown(doc));
+  }
+  console.log(
+    `${LOG_PREFIX} Built ${chunks.length} chunks for bot "${bot}" from ${docs.length} docs`,
+  );
+  return chunks;
 }
 
 export async function getRootMtimeMs(bot: BotId): Promise<number> {

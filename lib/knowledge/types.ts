@@ -33,6 +33,22 @@ export interface KnowledgeDoc {
   mtimeMs: number
 }
 
+export interface KnowledgeChunk {
+  id: string
+  bot: BotId
+  path: string
+  absolutePath: string
+  folder: string
+  title: string
+  tags: string[]
+  heading: string | null
+  anchor: string | null
+  body: string
+  frontmatter: KnowledgeFrontmatter
+  mtimeMs: number
+  ordinal: number
+}
+
 export interface SearchRequest {
   bot: BotId
   query?: string
@@ -46,11 +62,19 @@ export interface SearchRequest {
 export interface SearchHit {
   path: string
   title: string
+  heading?: string | null
+  anchor?: string | null
   tags: string[]
   score: number
   matchedTags: string[]
   excerpt: string
   frontmatter: KnowledgeFrontmatter
+}
+
+export interface DerivedFilters {
+  tags: string[]
+  folders: string[]
+  signals: Record<string, unknown>
 }
 
 export interface SearchMeta {
@@ -60,6 +84,7 @@ export interface SearchMeta {
   returned: number
   elapsedMs: number
   indexedDocs: number
+  derived?: DerivedFilters
   note?: "no_matches" | "tag_only_match"
 }
 
@@ -70,7 +95,12 @@ export interface SearchResponse {
   tags: string[]
   folders: string[]
   results: SearchHit[]
-  bundle: string
+  contextBundle: string
+  /**
+   * Backwards-compatible alias of `contextBundle`.
+   * Kept temporarily for older clients.
+   */
+  bundle?: string
   meta: SearchMeta
 }
 
