@@ -174,6 +174,25 @@ export default function ImageEditor() {
   const [flux2ProCombineProvider, setFlux2ProCombineProvider] = useState<"fal" | "bfl">("fal")
   const [flux2ProCombineBflCost, setFlux2ProCombineBflCost] = useState<number | null>(null)
 
+  // Flux 2 Dev States (text-to-image pure, fal-ai/flux-2)
+  const [flux2DevPrompt, setFlux2DevPrompt] = useState("")
+  const [flux2DevSettings, setFlux2DevSettings] = useState({
+    image_size: "landscape_4_3",
+    num_inference_steps: 28,
+    guidance_scale: 2.5,
+    num_images: 1,
+    output_format: "png",
+    seed: "",
+    enable_safety_checker: true,
+    acceleration: "regular",
+    enable_prompt_expansion: false,
+  })
+  const [flux2DevResults, setFlux2DevResults] = useState<string[]>([])
+  const [isFlux2DevGenerating, setIsFlux2DevGenerating] = useState(false)
+  const [flux2DevError, setFlux2DevError] = useState<string>("")
+  const [flux2DevGeneratedPrompt, setFlux2DevGeneratedPrompt] = useState<string>("")
+  const [showFlux2DevAdvanced, setShowFlux2DevAdvanced] = useState(false)
+
   // JSON Enhancement States (RAG removed)
   const [useJSONEnhancement, setUseJSONEnhancement] = useState(true)
   const [jsonIntensity, setJsonIntensity] = useState(1.0)
@@ -1852,6 +1871,67 @@ export default function ImageEditor() {
     }
   }
 
+  // Flux 2 Dev Handler
+  const handleFlux2DevSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!flux2DevPrompt.trim()) {
+      setFlux2DevError("Please provide a prompt")
+      return
+    }
+
+    setIsFlux2DevGenerating(true)
+    setFlux2DevError("")
+    setFlux2DevResults([])
+    setFlux2DevGeneratedPrompt("")
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const settings: any = { ...flux2DevSettings }
+
+      if (settings.seed === "") {
+        delete settings.seed
+      } else {
+        settings.seed = parseInt(settings.seed as string)
+      }
+
+      console.log("[FRONTEND] Flux 2 Dev - Sending request")
+
+      const response = await fetch("/api/external/flux-2-dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: flux2DevPrompt,
+          orgType: "general",
+          settings,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        if (errorData?.error) {
+          throw new Error(errorData.error + (errorData.details ? `: ${errorData.details}` : ""))
+        }
+        throw new Error(`Server error (${response.status}). Please try again.`)
+      }
+
+      const result = await response.json()
+
+      console.log("[FRONTEND] Flux 2 Dev - Response:", { success: result.success, images: result.images?.length })
+
+      if (result.images && result.images.length > 0) {
+        setFlux2DevResults(result.images.map((img: { url: string }) => img.url))
+        setFlux2DevGeneratedPrompt(result.prompt || flux2DevPrompt)
+      } else {
+        throw new Error("No images received from server")
+      }
+    } catch (err) {
+      setFlux2DevError(err instanceof Error ? err.message : "Failed to generate image")
+    } finally {
+      setIsFlux2DevGenerating(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -1867,7 +1947,7 @@ export default function ImageEditor() {
         </div>
 
         <Tabs defaultValue="flux-2-pro-edit-create" className="w-full max-w-6xl mx-auto">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="flux-ultra-finetuned" style={{ display: 'none' }}>Generate Images</TabsTrigger>
           <TabsTrigger value="flux-pro-image-combine" style={{ display: 'none' }}>Combine Images</TabsTrigger>
           {/* <TabsTrigger value="edit-image">Edit Image</TabsTrigger> */}
@@ -1876,6 +1956,7 @@ export default function ImageEditor() {
           <TabsTrigger value="flux-2-pro-edit-create">Flux 2 Pro Create</TabsTrigger>
           <TabsTrigger value="flux-2-pro-edit-apply">Flux 2 Pro Apply</TabsTrigger>
           <TabsTrigger value="flux-2-pro-combine">Flux 2 Pro Combine</TabsTrigger>
+          <TabsTrigger value="flux-2-dev">Flux 2 Dev</TabsTrigger>
           <TabsTrigger value="flux-pro-text-to-image" style={{ display: 'none' }}>Flux Lora</TabsTrigger>
         </TabsList>
 
@@ -4083,6 +4164,371 @@ export default function ImageEditor() {
                       <li>- Format: JPEG or PNG</li>
                       <li>- Safety checker toggle</li>
                       <li>- Reproducible with seed</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Flux 2 Dev Tab */}
+          <TabsContent value="flux-2-dev" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Form Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    Flux 2 Dev
+                  </CardTitle>
+                  <CardDescription>
+                    FLUX.2 [dev] text-to-image — fast, open-source, professional quality
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleFlux2DevSubmit} className="space-y-4">
+                    {/* Prompt */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2dev-prompt">Prompt *</Label>
+                      <Textarea
+                        id="flux2dev-prompt"
+                        placeholder="Describe the image you want to generate..."
+                        value={flux2DevPrompt}
+                        onChange={(e) => setFlux2DevPrompt(e.target.value)}
+                        rows={4}
+                        className="text-sm"
+                        required
+                      />
+                    </div>
+
+                    {/* Image Size */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2dev-image-size">Image Size</Label>
+                      <Select
+                        value={flux2DevSettings.image_size}
+                        onValueChange={(value) => setFlux2DevSettings({ ...flux2DevSettings, image_size: value })}
+                      >
+                        <SelectTrigger id="flux2dev-image-size">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="landscape_4_3">Landscape 4:3 (default)</SelectItem>
+                          <SelectItem value="landscape_16_9">Landscape 16:9</SelectItem>
+                          <SelectItem value="square_hd">Square HD</SelectItem>
+                          <SelectItem value="square">Square</SelectItem>
+                          <SelectItem value="portrait_4_3">Portrait 4:3</SelectItem>
+                          <SelectItem value="portrait_16_9">Portrait 16:9</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Number of Images */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="flux2dev-num-images">Number of Images</Label>
+                        <span className="text-sm text-muted-foreground">{flux2DevSettings.num_images}</span>
+                      </div>
+                      <Slider
+                        id="flux2dev-num-images"
+                        min={1}
+                        max={4}
+                        step={1}
+                        value={[flux2DevSettings.num_images]}
+                        onValueChange={(value) => setFlux2DevSettings({ ...flux2DevSettings, num_images: value[0] })}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>1</span>
+                        <span>4</span>
+                      </div>
+                    </div>
+
+                    {/* Acceleration */}
+                    <div className="space-y-2">
+                      <Label htmlFor="flux2dev-acceleration">Acceleration</Label>
+                      <Select
+                        value={flux2DevSettings.acceleration}
+                        onValueChange={(value) => setFlux2DevSettings({ ...flux2DevSettings, acceleration: value })}
+                      >
+                        <SelectTrigger id="flux2dev-acceleration">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="regular">Regular (default)</SelectItem>
+                          <SelectItem value="high">High (faster)</SelectItem>
+                          <SelectItem value="none">None (slowest)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Advanced Settings</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowFlux2DevAdvanced(!showFlux2DevAdvanced)}
+                      >
+                        {showFlux2DevAdvanced ? (
+                          <>
+                            <ChevronUp className="h-4 w-4 mr-1" />
+                            Hide
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-4 w-4 mr-1" />
+                            Show
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Advanced Settings */}
+                    {showFlux2DevAdvanced && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                        {/* Inference Steps */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="flux2dev-steps">Inference Steps</Label>
+                            <span className="text-sm text-muted-foreground">{flux2DevSettings.num_inference_steps}</span>
+                          </div>
+                          <Slider
+                            id="flux2dev-steps"
+                            min={1}
+                            max={50}
+                            step={1}
+                            value={[flux2DevSettings.num_inference_steps]}
+                            onValueChange={(value) => setFlux2DevSettings({ ...flux2DevSettings, num_inference_steps: value[0] })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Fast (1)</span>
+                            <span>Default (28)</span>
+                            <span>Quality (50)</span>
+                          </div>
+                        </div>
+
+                        {/* Guidance Scale */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="flux2dev-guidance">Guidance Scale</Label>
+                            <span className="text-sm text-muted-foreground">{flux2DevSettings.guidance_scale.toFixed(1)}</span>
+                          </div>
+                          <Slider
+                            id="flux2dev-guidance"
+                            min={1}
+                            max={20}
+                            step={0.5}
+                            value={[flux2DevSettings.guidance_scale]}
+                            onValueChange={(value) => setFlux2DevSettings({ ...flux2DevSettings, guidance_scale: value[0] })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Creative (1)</span>
+                            <span>Default (2.5)</span>
+                            <span>Strict (20)</span>
+                          </div>
+                        </div>
+
+                        {/* Output Format */}
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2dev-format">Output Format</Label>
+                          <Select
+                            value={flux2DevSettings.output_format}
+                            onValueChange={(value) => setFlux2DevSettings({ ...flux2DevSettings, output_format: value })}
+                          >
+                            <SelectTrigger id="flux2dev-format">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="png">PNG (default, higher quality)</SelectItem>
+                              <SelectItem value="jpeg">JPEG (smaller file)</SelectItem>
+                              <SelectItem value="webp">WebP (balanced)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Safety Checker */}
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="flux2dev-safety-checker">Enable Safety Checker</Label>
+                          <Switch
+                            id="flux2dev-safety-checker"
+                            checked={flux2DevSettings.enable_safety_checker}
+                            onCheckedChange={(checked) => setFlux2DevSettings({ ...flux2DevSettings, enable_safety_checker: checked })}
+                          />
+                        </div>
+
+                        {/* Prompt Expansion */}
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="flux2dev-prompt-expansion">Prompt Expansion</Label>
+                          <Switch
+                            id="flux2dev-prompt-expansion"
+                            checked={flux2DevSettings.enable_prompt_expansion}
+                            onCheckedChange={(checked) => setFlux2DevSettings({ ...flux2DevSettings, enable_prompt_expansion: checked })}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground -mt-2">Automatically expands your prompt for better results</p>
+
+                        {/* Seed */}
+                        <div className="space-y-2">
+                          <Label htmlFor="flux2dev-seed">Seed (Optional)</Label>
+                          <Input
+                            id="flux2dev-seed"
+                            type="number"
+                            placeholder="Random"
+                            value={flux2DevSettings.seed}
+                            onChange={(e) => setFlux2DevSettings({ ...flux2DevSettings, seed: e.target.value })}
+                          />
+                          <p className="text-xs text-muted-foreground">Use the same seed for reproducible results</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error Display */}
+                    {flux2DevError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{flux2DevError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isFlux2DevGenerating}
+                    >
+                      {isFlux2DevGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate Image
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Result Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Result</CardTitle>
+                  <CardDescription>Your generated image(s) will appear here</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {flux2DevResults.length > 0 ? (
+                    <div className="space-y-4">
+                      {flux2DevResults.map((url, idx) => (
+                        <div key={idx} className="space-y-2">
+                          <div className="relative border rounded-lg overflow-hidden bg-muted/50">
+                            <img
+                              src={url}
+                              alt={`Generated image ${idx + 1}`}
+                              className="w-full h-auto"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                const link = document.createElement('a')
+                                link.href = url
+                                link.download = `flux-2-dev-${Date.now()}-${idx + 1}.${flux2DevSettings.output_format}`
+                                link.click()
+                              }}
+                              className="flex-1"
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Download {flux2DevResults.length > 1 ? `(${idx + 1})` : ''}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {flux2DevGeneratedPrompt && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <p className="text-xs font-medium mb-1">Prompt Used:</p>
+                          <p className="text-xs text-muted-foreground">{flux2DevGeneratedPrompt}</p>
+                        </div>
+                      )}
+
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setFlux2DevResults([])
+                          setFlux2DevGeneratedPrompt("")
+                        }}
+                        className="w-full"
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Clear Results
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <ImageIcon className="h-12 w-12 mb-2" />
+                      <p className="text-sm">No image generated yet</p>
+                      <p className="text-xs mt-1">Enter a prompt and click Generate</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Info Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Flux 2 Dev Features
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Model</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>- FLUX.2 [dev] by Black Forest Labs</li>
+                      <li>- Text-to-image only (no image input)</li>
+                      <li>- Open-source, LoRA training-ready base</li>
+                      <li>- Provider: FAL.ai</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Output Options</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>- 1–4 images per request</li>
+                      <li>- Formats: PNG, JPEG, WebP</li>
+                      <li>- All standard aspect ratios</li>
+                      <li>- Reproducible with seed</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Generation Controls</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>- Inference steps: 1–50 (default 28)</li>
+                      <li>- Guidance scale: 1–20 (default 2.5)</li>
+                      <li>- Acceleration: none / regular / high</li>
+                      <li>- Optional prompt expansion</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Prompting Tips</h4>
+                    <ul className="space-y-1 text-muted-foreground text-xs">
+                      <li>- Supports JSON structured prompts</li>
+                      <li>- Use HEX codes for precise colors</li>
+                      <li>- Lower guidance = more creative freedom</li>
+                      <li>- Enable prompt expansion for complex scenes</li>
                     </ul>
                   </div>
                 </div>
