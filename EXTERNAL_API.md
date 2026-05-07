@@ -20,6 +20,7 @@ https://your-domain.com/api/external
 | `/edit-image` | POST | Edit existing images | `image` + `prompt` |
 | `/seedream-v4-edit` | POST | AI style transfer | `image` only |
 | `/image-to-image` | POST | Transform images | `image` + `prompt` |
+| `/knowledge/search` | POST | Filesystem-based RAG retrieval (no embeddings) | `bot` + `query`/`tags` |
 
 ## Endpoints
 
@@ -882,6 +883,244 @@ if (customResult.success) {
 } else {
   console.error('Error:', customResult.error);
 }
+```
+
+## Knowledge Retrieval API (Filesystem-based RAG)
+
+A deterministic retrieval layer that searches markdown files organized under
+`knowledge/<bot>/` and returns ranked text fragments. **No embeddings, no vector
+database, no LLM inside the retrieval app.** Inspired by the architecture proposed
+by Vercel in [Build knowledge agents without embeddings](https://vercel.com/blog/build-knowledge-agents-without-embeddings),
+adapted to a lightweight Next.js + Railway stack with `minisearch` (BM25 full-text)
+and `gray-matter` (YAML frontmatter).
+
+The retrieval app is exposed as a tool to ChangeAgent in Open WebUI. ChangeAgent
+sends a `query` and a `bot` identifier, receives a ready-to-inject text bundle plus
+auditable per-result metadata.
+
+### Authentication
+
+All `/api/external/knowledge/*` endpoints accept the same auth as other external
+endpoints:
+
+- `Authorization: Bearer $EXTERNAL_API_KEY` (server-to-server, e.g. ChangeAgent), or
+- `playground_token` cookie (browser, same-origin)
+
+### Endpoints
+
+| Method | Path                                  | Purpose                                        |
+| ------ | ------------------------------------- | ---------------------------------------------- |
+| POST   | `/api/external/knowledge/search`      | Search a bot's knowledge base (Strategy A)     |
+
+### POST /api/external/knowledge/search
+
+Strategy A — Direct Retrieval. Single round-trip combining tag filtering, folder
+scoping, full-text search and ranked results.
+
+#### Request body
+
+```json
+{
+  "bot": "fundraising",
+  "query": "peer-to-peer tactics for groups under 20",
+  "tags": ["small-group", "first-timer"],
+  "folders": ["tactics/peer-to-peer"],
+  "maxResults": 5,
+  "maxTokens": 2000,
+  "tagMatchMode": "any"
+}
+```
+
+| Field          | Type                | Required | Description                                                                |
+| -------------- | ------------------- | -------- | -------------------------------------------------------------------------- |
+| `bot`          | string              | Yes      | Bot id; must match a folder under `knowledge/`.                            |
+| `query`        | string              | One of   | Free-text query for full-text search.                                      |
+| `tags`         | string[]            | One of   | Filter on frontmatter `tags`. Lowercased.                                  |
+| `folders`      | string[]            | No       | Path prefixes to scope (e.g. `tactics/peer-to-peer`).                      |
+| `maxResults`   | number              | No       | Default 5, capped at 50.                                                   |
+| `maxTokens`    | number              | No       | Approximate budget for the bundle. Default 2000.                           |
+| `tagMatchMode` | `"any"` \| `"all"`  | No       | `any` = OR (default), `all` = AND across tags.                             |
+
+At least one of `query` or `tags` must be provided.
+
+#### Response
+
+```json
+{
+  "success": true,
+  "bot": "fundraising",
+  "query": "peer-to-peer tactics for groups under 20",
+  "tags": ["small-group", "first-timer"],
+  "folders": ["tactics/peer-to-peer"],
+  "results": [
+    {
+      "path": "tactics/peer-to-peer/dinner-fundraiser.md",
+      "title": "Peer-to-Peer Dinner Fundraiser",
+      "tags": ["peer-to-peer", "small-group", "first-timer", "dinner", "in-person"],
+      "score": 294.94,
+      "matchedTags": ["small-group", "first-timer"],
+      "excerpt": "A dinner fundraiser is one of the most accessible peer-to-peer tactics…",
+      "frontmatter": {
+        "title": "Peer-to-Peer Dinner Fundraiser",
+        "group-size": ["5-30"],
+        "difficulty": "beginner",
+        "content-type": "tactic"
+      }
+    }
+  ],
+  "bundle": "## Peer-to-Peer Dinner Fundraiser\n_source: tactics/peer-to-peer/dinner-fundraiser.md_\n_tags: peer-to-peer, small-group, first-timer, dinner, in-person_\n\n# Peer-to-Peer Dinner Fundraiser\n\nA dinner fundraiser is one of the most accessible…",
+  "meta": {
+    "totalCandidates": 5,
+    "filteredByFolders": 3,
+    "filteredByTags": 2,
+    "returned": 1,
+    "elapsedMs": 4,
+    "indexedDocs": 5
+  }
+}
+```
+
+The `bundle` field is the consolidated, source-attributed markdown ready to inject
+into ChangeAgent's context as the tool result. Each `results[i]` exists separately
+for auditing and debugging — every search query and result set is logged to stdout
+as a structured `kb_search` event (per the architectural spec, full auditability is
+a core requirement of this approach).
+
+#### Error responses
+
+```json
+{ "success": false, "error": "Missing required field: bot" }                       // 400
+{ "success": false, "error": "Either 'query' or 'tags' must be provided" }         // 400
+{ "success": false, "error": "Bot \"foo\" not found", "availableBots": [...] }     // 404
+{ "success": false, "error": "Search failed", "details": "…" }                     // 500
+```
+
+A query that finds zero matches returns 200 with `results: []` and `meta.note: "no_matches"`.
+
+### Markdown content format
+
+Each file under `knowledge/<bot>/` must start with YAML frontmatter:
+
+```markdown
+---
+title: Peer-to-Peer Dinner Fundraiser
+tags: [peer-to-peer, small-group, first-timer, dinner]
+group-size: [5-30]
+archetype: [first-timer, patty-prime]
+difficulty: beginner
+content-type: tactic
+source: shannon-working-doc
+last-updated: 2026-04-29
+---
+
+# Title
+
+Markdown body…
+```
+
+`title` and `tags` are required. All other fields are passed through verbatim under
+`frontmatter` in the API response — useful for filtering on the client side or for
+audit. See [`knowledge/README.md`](knowledge/README.md) for the full content guide.
+
+### Open WebUI tool definition
+
+Drop this into Open WebUI's Tools tab so ChangeAgent can call the retrieval app:
+
+```python
+"""
+title: Knowledge Retrieval (Fundraising)
+description: Search the fundraising knowledge base for tactics, principles, scripts and stories.
+required_open_webui_version: 0.4.0
+"""
+
+import os
+import requests
+from pydantic import BaseModel, Field
+from typing import Optional, List
+
+
+class Tools:
+    class Valves(BaseModel):
+        BASE_URL: str = Field(
+            default=os.getenv("TECTONICA_RETRIEVAL_URL", "https://your-domain.com"),
+            description="Base URL of the Tectonica retrieval app",
+        )
+        API_KEY: str = Field(
+            default=os.getenv("TECTONICA_EXTERNAL_API_KEY", ""),
+            description="Bearer token (matches EXTERNAL_API_KEY on the retrieval app)",
+        )
+        BOT: str = Field(
+            default="fundraising",
+            description="Knowledge bot id (folder under knowledge/)",
+        )
+
+    def __init__(self):
+        self.valves = self.Valves()
+
+    def search_knowledge(
+        self,
+        query: str,
+        tags: Optional[List[str]] = None,
+        folders: Optional[List[str]] = None,
+        max_results: int = 5,
+    ) -> str:
+        """
+        Search the fundraising knowledge base. Use whenever the user asks about
+        specific tactics, scripts, frameworks, or principles. Combine `query`
+        (free-text) with optional `tags` and `folders` for precision.
+
+        :param query: Natural-language search query.
+        :param tags: Optional list of tag slugs (e.g. ["peer-to-peer", "first-timer"]).
+        :param folders: Optional list of folder prefixes (e.g. ["tactics/peer-to-peer"]).
+        :param max_results: Cap on returned fragments. Default 5.
+        :return: A consolidated markdown bundle with source attribution.
+        """
+        payload = {
+            "bot": self.valves.BOT,
+            "query": query,
+            "tags": tags or [],
+            "folders": folders or [],
+            "maxResults": max_results,
+            "maxTokens": 2000,
+        }
+        headers = {"Authorization": f"Bearer {self.valves.API_KEY}"}
+        url = f"{self.valves.BASE_URL.rstrip('/')}/api/external/knowledge/search"
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.RequestException as exc:
+            return f"Knowledge retrieval failed: {exc}"
+
+        if not data.get("success"):
+            return f"Knowledge retrieval error: {data.get('error', 'unknown')}"
+
+        bundle = data.get("bundle") or ""
+        if not bundle:
+            return "No relevant knowledge found for this query."
+        return bundle
+```
+
+In ChangeAgent's system prompt, instruct the model when to call this tool. The
+architectural spec recommends one call per user message — design conversational
+flows that produce specific queries (Strategy A handles them in a single round-trip).
+Multi-call patterns (3-4 retrievals per message) introduce noticeable latency and
+should be avoided.
+
+### curl examples
+
+```bash
+# Search
+curl -X POST "$BASE_URL/api/external/knowledge/search" \
+  -H "Authorization: Bearer $EXTERNAL_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bot": "fundraising",
+    "query": "peer-to-peer tactics for small groups",
+    "tags": ["first-timer"],
+    "folders": ["tactics"],
+    "maxResults": 3
+  }'
 ```
 
 ## Support
