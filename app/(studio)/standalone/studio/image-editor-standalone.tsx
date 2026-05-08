@@ -156,8 +156,7 @@ function ImageEditorStandaloneInner({
   const [showDisclaimerModal, setShowDisclaimerModal] = useState<boolean>(false);
   const [disclaimerPosition, setDisclaimerPosition] = useState<DisclaimerPosition>(EXPORT.DEFAULT_DISCLAIMER_POSITION);
 
-  // Iframe return-to-conversation state
-  const [isReturningToConversation, setIsReturningToConversation] = useState<boolean>(false);
+  // Iframe send-url-to-chat state
   const [isSendingUrlToChat, setIsSendingUrlToChat] = useState<boolean>(false);
 
   // Save state
@@ -761,7 +760,7 @@ function ImageEditorStandaloneInner({
   };
 
   // Detect if editor is running inside an iframe (embedded in ChangeAgent/Open WebUI)
-  const isEmbedded = typeof window !== "undefined" && typeof window.self !== "undefined" && window.self !== window.top;
+  const isEmbedded = true;// typeof window !== "undefined" && typeof window.self !== "undefined" && window.self !== window.top;
 
   // Debug helper: enable with `?debugPostMessage=1`
   useEffect(() => {
@@ -794,91 +793,6 @@ function ImageEditorStandaloneInner({
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
-
-  // Export current canvas (without disclaimer), upload it to Supabase and send the public URL to parent via postMessage
-  const handleReturnToConversation = async () => {
-    if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
-
-    try {
-      setIsReturningToConversation(true);
-
-      const caUserId = params.user_id?.trim();
-      const chatId = new URL(window.location.href).searchParams.get("chat_id")?.trim() ?? "";
-
-      const currentWidth = canvasEditor.canvas.width;
-      const multiplier =
-        currentWidth > 0
-          ? canvasEditor.originalImageDimensions.width / currentWidth
-          : 1;
-
-      const dataURL = canvasEditor.canvas.toDataURL({
-        format: "jpeg",
-        quality: 1,
-        multiplier,
-      } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
-
-      if (!dataURL || !caUserId || !chatId) {
-        toast({
-          title: "Could not export image",
-          description: !chatId
-            ? "Missing chat_id. Reopen Studio from the chat and try again."
-            : "Try again before returning it to the conversation.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const uploadResponse = await fetch("/api/studio/return-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_base64: dataURL,
-          ca_user_id: caUserId,
-          chat_id: chatId,
-          prompt: "Here is the edited image from the Studio",
-        }),
-      });
-
-      const uploadJson = await uploadResponse.json().catch(() => null);
-
-      if (!uploadJson?.image_url) {
-        console.error("Failed to upload image for conversation return:", uploadJson);
-        toast({
-          title: "Could not upload image",
-          description: uploadJson?.error ?? "Try again before returning it to the conversation.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!uploadResponse.ok) {
-        console.error("Partial failure returning to conversation:", uploadJson);
-        toast({
-          title: "Image uploaded, but not sent to chat",
-          description:
-            uploadJson?.change_agent?.error ??
-            uploadJson?.error ??
-            "The image was uploaded, but we couldn't send it back to the conversation. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Image sent to conversation",
-        description: "Sent back to the conversation successfully.",
-      });
-    } catch (error) {
-      console.error("Failed to return image to parent conversation:", error);
-      toast({
-        title: "Error returning image",
-        description: "Something went wrong sending the image back to the conversation.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsReturningToConversation(false);
-    }
-  };
 
   // Export current canvas, upload it, send only URL to chat, then signal parent to close Studio.
   const handleSendUrlToChatAndClose = async () => {
@@ -2030,10 +1944,8 @@ function ImageEditorStandaloneInner({
                     variant="mobile"
                     alignmentSlot={alignmentSlot}
                     onSaveClick={() => setShowSaveModal(true)}
-                    onReturnToConversation={handleReturnToConversation}
                     onSendUrlToChat={handleSendUrlToChatAndClose}
                     isEmbedded={isEmbedded}
-                    isReturning={isReturningToConversation}
                     isSendingUrl={isSendingUrlToChat}
                   />
                 )}
@@ -2053,10 +1965,8 @@ function ImageEditorStandaloneInner({
                 variant="desktop"
                 alignmentSlot={alignmentSlot}
                 onSaveClick={() => setShowSaveModal(true)}
-                onReturnToConversation={handleReturnToConversation}
                 onSendUrlToChat={handleSendUrlToChatAndClose}
                 isEmbedded={isEmbedded}
-                isReturning={isReturningToConversation}
                 isSendingUrl={isSendingUrlToChat}
               />
             </div>
