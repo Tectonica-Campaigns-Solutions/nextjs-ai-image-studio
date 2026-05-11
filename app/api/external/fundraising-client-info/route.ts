@@ -72,6 +72,11 @@ export async function GET(request: NextRequest) {
             user_role_description: fundraising.user_role_description,
             crm_access: fundraising.crm_access,
             crm_tool_note: fundraising.crm_tool_note,
+            cash_handling_process: fundraising.cash_handling_process,
+            org_messaging_notes: fundraising.org_messaging_notes,
+            audience_knowledge_members: fundraising.audience_knowledge_members,
+            audience_knowledge_supporters: fundraising.audience_knowledge_supporters,
+            audience_knowledge_public: fundraising.audience_knowledge_public,
           }
         : null,
     };

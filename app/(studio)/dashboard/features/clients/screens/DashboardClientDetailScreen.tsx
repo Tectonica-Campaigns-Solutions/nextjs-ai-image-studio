@@ -88,6 +88,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     user_role_description: string;
     crm_access: boolean;
     crm_tool_note: string;
+    cash_handling_process: string;
+    org_messaging_notes: string;
+    audience_knowledge_members: string;
+    audience_knowledge_supporters: string;
+    audience_knowledge_public: string;
   }>({
     org_name: initialFundraising?.org_name ?? "",
     donation_page_url: initialFundraising?.donation_page_url ?? "",
@@ -96,6 +101,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     user_role_description: initialFundraising?.user_role_description ?? "",
     crm_access: initialFundraising?.crm_access ?? false,
     crm_tool_note: initialFundraising?.crm_tool_note ?? "",
+    cash_handling_process: initialFundraising?.cash_handling_process ?? "",
+    org_messaging_notes: initialFundraising?.org_messaging_notes ?? "",
+    audience_knowledge_members: initialFundraising?.audience_knowledge_members ?? "",
+    audience_knowledge_supporters: initialFundraising?.audience_knowledge_supporters ?? "",
+    audience_knowledge_public: initialFundraising?.audience_knowledge_public ?? "",
   });
   const [fundraisingSaving, setFundraisingSaving] = useState(false);
   const [fundraisingError, setFundraisingError] = useState<string | null>(null);
@@ -119,6 +129,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           user_role_description: fundraisingForm.user_role_description.trim() || null,
           crm_access: fundraisingForm.crm_access,
           crm_tool_note: fundraisingForm.crm_tool_note.trim() || null,
+          cash_handling_process: fundraisingForm.cash_handling_process.trim() || null,
+          org_messaging_notes: fundraisingForm.org_messaging_notes.trim() || null,
+          audience_knowledge_members: fundraisingForm.audience_knowledge_members.trim() || null,
+          audience_knowledge_supporters: fundraisingForm.audience_knowledge_supporters.trim() || null,
+          audience_knowledge_public: fundraisingForm.audience_knowledge_public.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -1180,6 +1195,76 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                       disabled={fundraisingSaving}
                       placeholder="e.g. Action Network — manual export for now"
                       className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-cash-handling">Cash Handling Process</label>
+                    <textarea
+                      id="fr-cash-handling"
+                      rows={3}
+                      value={fundraisingForm.cash_handling_process}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, cash_handling_process: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. All cash collected at events must be counted by two people and deposited within 24 hours using Form X"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Messaging */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Messaging</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-messaging-notes">Org Messaging Notes</label>
+                    <textarea
+                      id="fr-messaging-notes"
+                      rows={4}
+                      value={fundraisingForm.org_messaging_notes}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, org_messaging_notes: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="Talking points, key messages, and language the model should incorporate when personalizing scripts"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Audience Knowledge */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Audience Knowledge</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-audience-members">Members</label>
+                    <textarea
+                      id="fr-audience-members"
+                      rows={2}
+                      value={fundraisingForm.audience_knowledge_members}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, audience_knowledge_members: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. High familiarity with the issue; already engaged volunteers"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-audience-supporters">Supporters</label>
+                    <textarea
+                      id="fr-audience-supporters"
+                      rows={2}
+                      value={fundraisingForm.audience_knowledge_supporters}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, audience_knowledge_supporters: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. Moderate familiarity; donated before but not deeply engaged"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-audience-public">General Public</label>
+                    <textarea
+                      id="fr-audience-public"
+                      rows={2}
+                      value={fundraisingForm.audience_knowledge_public}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, audience_knowledge_public: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. Low familiarity; needs basic context before the ask"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
                     />
                   </div>
                 </div>

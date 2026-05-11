@@ -92,6 +92,14 @@ export interface ClientFundraisingData {
   // Campaign variables
   crm_access: boolean;
   crm_tool_note: string | null;
+  // Operations
+  cash_handling_process: string | null;
+  // Messaging
+  org_messaging_notes: string | null;
+  // Audience knowledge
+  audience_knowledge_members: string | null;
+  audience_knowledge_supporters: string | null;
+  audience_knowledge_public: string | null;
   // Audit
   created_at: string;
   updated_at: string;

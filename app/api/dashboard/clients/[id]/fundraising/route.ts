@@ -193,6 +193,11 @@ export async function PATCH(
     if (data.user_role_description !== undefined) updateData.user_role_description = data.user_role_description;
     if (data.crm_access !== undefined) updateData.crm_access = data.crm_access;
     if (data.crm_tool_note !== undefined) updateData.crm_tool_note = data.crm_tool_note;
+    if (data.cash_handling_process !== undefined) updateData.cash_handling_process = data.cash_handling_process;
+    if (data.org_messaging_notes !== undefined) updateData.org_messaging_notes = data.org_messaging_notes;
+    if (data.audience_knowledge_members !== undefined) updateData.audience_knowledge_members = data.audience_knowledge_members;
+    if (data.audience_knowledge_supporters !== undefined) updateData.audience_knowledge_supporters = data.audience_knowledge_supporters;
+    if (data.audience_knowledge_public !== undefined) updateData.audience_knowledge_public = data.audience_knowledge_public;
 
     const { data: fundraising, error } = await supabaseAdmin
       .from("client_fundraising_data")

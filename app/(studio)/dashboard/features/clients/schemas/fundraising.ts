@@ -17,6 +17,14 @@ export const createFundraisingSchema = z.object({
   // Campaign variables
   crm_access: z.boolean().optional().default(false),
   crm_tool_note: optionalText,
+  // Operations
+  cash_handling_process: optionalText,
+  // Messaging
+  org_messaging_notes: optionalText,
+  // Audience knowledge
+  audience_knowledge_members: optionalText,
+  audience_knowledge_supporters: optionalText,
+  audience_knowledge_public: optionalText,
 });
 
 export const updateFundraisingSchema = z.object({
@@ -27,6 +35,11 @@ export const updateFundraisingSchema = z.object({
   user_role_description: optionalText,
   crm_access: z.boolean().optional(),
   crm_tool_note: optionalText,
+  cash_handling_process: optionalText,
+  org_messaging_notes: optionalText,
+  audience_knowledge_members: optionalText,
+  audience_knowledge_supporters: optionalText,
+  audience_knowledge_public: optionalText,
 });
 
 export type CreateFundraisingInput = z.infer<typeof createFundraisingSchema>;
