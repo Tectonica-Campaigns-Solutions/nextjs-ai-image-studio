@@ -93,6 +93,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     audience_knowledge_members: string;
     audience_knowledge_supporters: string;
     audience_knowledge_public: string;
+    consent_forms_url: string;
   }>({
     org_name: initialFundraising?.org_name ?? "",
     donation_page_url: initialFundraising?.donation_page_url ?? "",
@@ -106,6 +107,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     audience_knowledge_members: initialFundraising?.audience_knowledge_members ?? "",
     audience_knowledge_supporters: initialFundraising?.audience_knowledge_supporters ?? "",
     audience_knowledge_public: initialFundraising?.audience_knowledge_public ?? "",
+    consent_forms_url: initialFundraising?.consent_forms_url ?? "",
   });
   const [fundraisingSaving, setFundraisingSaving] = useState(false);
   const [fundraisingError, setFundraisingError] = useState<string | null>(null);
@@ -134,6 +136,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           audience_knowledge_members: fundraisingForm.audience_knowledge_members.trim() || null,
           audience_knowledge_supporters: fundraisingForm.audience_knowledge_supporters.trim() || null,
           audience_knowledge_public: fundraisingForm.audience_knowledge_public.trim() || null,
+          consent_forms_url: fundraisingForm.consent_forms_url.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -1207,6 +1210,23 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                       disabled={fundraisingSaving}
                       placeholder="e.g. All cash collected at events must be counted by two people and deposited within 24 hours using Form X"
                       className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Consent */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Consent</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-consent-url">Consent Forms URL</label>
+                    <input
+                      id="fr-consent-url"
+                      type="url"
+                      value={fundraisingForm.consent_forms_url}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, consent_forms_url: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="https://"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
                     />
                   </div>
                 </div>

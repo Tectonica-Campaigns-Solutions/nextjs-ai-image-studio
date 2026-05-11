@@ -198,6 +198,7 @@ export async function PATCH(
     if (data.audience_knowledge_members !== undefined) updateData.audience_knowledge_members = data.audience_knowledge_members;
     if (data.audience_knowledge_supporters !== undefined) updateData.audience_knowledge_supporters = data.audience_knowledge_supporters;
     if (data.audience_knowledge_public !== undefined) updateData.audience_knowledge_public = data.audience_knowledge_public;
+    if (data.consent_forms_url !== undefined) updateData.consent_forms_url = data.consent_forms_url;
 
     const { data: fundraising, error } = await supabaseAdmin
       .from("client_fundraising_data")

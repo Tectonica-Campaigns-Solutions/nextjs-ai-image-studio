@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
             audience_knowledge_members: fundraising.audience_knowledge_members,
             audience_knowledge_supporters: fundraising.audience_knowledge_supporters,
             audience_knowledge_public: fundraising.audience_knowledge_public,
+            consent_forms_url: fundraising.consent_forms_url,
           }
         : null,
     };

@@ -25,6 +25,7 @@ export const createFundraisingSchema = z.object({
   audience_knowledge_members: optionalText,
   audience_knowledge_supporters: optionalText,
   audience_knowledge_public: optionalText,
+  consent_forms_url: optionalText,
 });
 
 export const updateFundraisingSchema = z.object({
