@@ -245,6 +245,13 @@
   .subtle-scrollbar::-webkit-scrollbar-thumb:hover {
     background: color-mix(in oklch, currentColor 28%, transparent);
   }
+
+  /* Studio image editor — font combobox search: remove light theme focus ring */
+  .studio-font-picker-command [data-slot="command-input"]:focus,
+  .studio-font-picker-command [data-slot="command-input"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }
 
 .markdown-content p {

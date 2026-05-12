@@ -30,6 +30,7 @@ import type {
   ExportConfig,
   ImageEditorStandaloneProps,
 } from "./types/image-editor-types";
+import type { GoogleFontCatalogEntry } from "./types/google-font-catalog";
 import type { DisclaimerPosition } from "./types/image-editor-types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -55,11 +56,13 @@ import { useShapeTools } from "./hooks/use-shape-tools";
 import { useAlignmentTools } from "./hooks/use-alignment-tools";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
+import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { getCanvasFontFamily, logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
+import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
 import { DEFAULT_TEXT_BLOCK_DELIMITER, insertAutoTextBlocks, parseTextBlocks } from "./utils/text-blocks";
@@ -199,6 +202,10 @@ function ImageEditorStandaloneInner({
     top: number;
   } | null>(null);
 
+  const [googleFontCatalog, setGoogleFontCatalog] = useState<GoogleFontCatalogEntry[]>([]);
+  const [googleCatalogLoading, setGoogleCatalogLoading] = useState(true);
+  const [googleCatalogError, setGoogleCatalogError] = useState(false);
+
   // Guides and grid
   const [showGrid, setShowGrid] = useState(false);
   const [guidePositions, setGuidePositions] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
@@ -271,6 +278,29 @@ function ImageEditorStandaloneInner({
       cancelled = true;
     };
   }, [rawImageUrl, requiresPreprocess, preprocessImageUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/fonts/google-catalog")
+      .then(async (r) => {
+        const data = (await r.json().catch(() => ({}))) as {
+          fonts?: GoogleFontCatalogEntry[];
+          error?: string;
+        };
+        if (cancelled) return;
+        setGoogleFontCatalog(Array.isArray(data.fonts) ? data.fonts : []);
+        if (!r.ok || data.error) setGoogleCatalogError(true);
+      })
+      .catch(() => {
+        if (!cancelled) setGoogleCatalogError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setGoogleCatalogLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Prevent context menu
   const preventContextMenu = useCallback((e: MouseEvent) => {
@@ -434,6 +464,27 @@ function ImageEditorStandaloneInner({
   }, []);
 
   const { fontsReady } = useEditorFonts(fontAssets, { onFontsLoaded });
+
+  const googleCatalogByFamily = useMemo(() => {
+    const m = new Map<string, GoogleFontCatalogEntry>();
+    for (const f of googleFontCatalog) {
+      m.set(normalizeFontCatalogKey(f.family), f);
+    }
+    return m;
+  }, [googleFontCatalog]);
+
+  const onDynamicFontSettled = useCallback(() => {
+    remeasureTextboxes(canvasRefStable.current);
+  }, []);
+
+  useDynamicGoogleFont({
+    fontFamily: textTools.fontFamily,
+    isBold: textTools.isBold,
+    isItalic: textTools.isItalic,
+    fontAssets,
+    catalogByFamily: googleCatalogByFamily,
+    onFontSettled: onDynamicFontSettled,
+  });
 
   // Re-measure textboxes whenever *any* font finishes loading (covers bundled
   // next/font fonts like Manrope that aren't tracked by useEditorFonts).
@@ -1580,6 +1631,9 @@ function ImageEditorStandaloneInner({
       <TextToolsPanel
         selectedObject={selection.selectedObject}
         fontAssets={fontAssets}
+        googleCatalogFonts={googleFontCatalog}
+        googleCatalogLoading={googleCatalogLoading}
+        googleCatalogError={googleCatalogError}
         fontsReady={fontsReady}
         addText={textTools.addText}
         fontSize={textTools.fontSize}
@@ -1604,7 +1658,7 @@ function ImageEditorStandaloneInner({
         setBackgroundColor={textTools.setBackgroundColor}
       />
     ),
-    [selection.selectedObject, fontAssets, fontsReady, textTools]
+    [selection.selectedObject, fontAssets, fontsReady, googleFontCatalog, googleCatalogLoading, googleCatalogError, textTools]
   );
 
   const aiEditPanel = useMemo(
