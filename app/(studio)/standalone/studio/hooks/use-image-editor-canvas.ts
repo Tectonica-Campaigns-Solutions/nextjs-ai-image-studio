@@ -498,6 +498,9 @@ export function useImageEditorCanvas(
         preserveObjectStacking: true,
         selection: true,
         selectionKey: "shiftKey",
+        // Default true locks corner scaling to aspect ratio; false allows free
+        // width/height (e.g. Textbox corners). Shift still toggles proportional scale.
+        uniformScaling: false,
       });
 
       const canvasElement = fabricCanvas.getElement();
@@ -689,6 +692,20 @@ export function useImageEditorCanvas(
         const angle = normalizeAngleToCanvaRange(Number(target.angle) || 0);
         const { left, top } = getRotationTooltipPosition(target);
         opts.onRotationTooltip({ angle, left, top });
+      });
+
+      // With uniformScaling off, corners scale X/Y independently. QR images must stay square.
+      fabricCanvas.on("object:scaling", (e: any) => {
+        const target = e?.target;
+        if (!target || target.type !== "image" || !target.isQR) return;
+        const sx = target.scaleX ?? 1;
+        const sy = target.scaleY ?? 1;
+        const u = Math.max(Math.abs(sx), Math.abs(sy));
+        const nx = (sx === 0 ? 1 : Math.sign(sx)) * u;
+        const ny = (sy === 0 ? 1 : Math.sign(sy)) * u;
+        if (Math.abs(sx - nx) > 1e-6 || Math.abs(sy - ny) > 1e-6) {
+          target.set({ scaleX: nx, scaleY: ny });
+        }
       });
 
       fabricCanvas.on("object:modified", (e) => {
