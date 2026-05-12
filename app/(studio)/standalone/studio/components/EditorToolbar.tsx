@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Check, Send } from "lucide-react";
+import { Download, Loader2, Check, MessageSquareShare } from "lucide-react";
 import type { HistoryState } from "../types/image-editor-types";
 import { FeedbackButtonInline } from "./FeedbackButton";
 
@@ -34,7 +34,7 @@ export interface EditorToolbarProps {
   onSendUrlToChat?: () => void;
   /** When true, toolbar is being used inside an iframe-embedded studio. Controls visibility of "Done" button. */
   isEmbedded?: boolean;
-  /** Loading state for the "Send URL to chat" action. */
+  /** Loading state while sending the edited image to the chat conversation. */
   isSendingUrl?: boolean;
 }
 
@@ -148,14 +148,15 @@ export function EditorToolbar({
             onClick={onSendUrlToChat}
             disabled={isSendingUrl}
             className="bg-sky-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] flex items-center justify-center gap-[5px] basis-full md:basis-auto transition-all hover:bg-sky-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-sky-500 disabled:hover:scale-100"
-            aria-label="Send URL — post image URL to conversation"
+            aria-label="Send edited image to the chat conversation"
+            title="Send edited image to the chat conversation"
           >
             {isSendingUrl ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <Send className="w-4 h-4" />
-                <span>Send URL</span>
+                <MessageSquareShare className="w-4 h-4 shrink-0" />
+                <span>Send to chat</span>
               </>
             )}
           </Button>
@@ -230,13 +231,13 @@ export function EditorToolbar({
           onClick={onSendUrlToChat}
           disabled={isSendingUrl}
           className="bg-sky-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] transition-all hover:bg-sky-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-sky-500 disabled:hover:scale-100"
-          aria-label="Send URL — post image URL to conversation"
-          title="Send URL to chat"
+          aria-label="Send edited image to the chat conversation"
+          title="Send edited image to the chat conversation"
         >
           {isSendingUrl ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Send className="w-4 h-4" />
+            <MessageSquareShare className="w-4 h-4 shrink-0" />
           )}
         </Button>
       )}

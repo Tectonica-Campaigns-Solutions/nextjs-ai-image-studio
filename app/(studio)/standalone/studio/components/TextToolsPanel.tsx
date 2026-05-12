@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Bold, Italic, Underline, Loader2 } from "lucide-react";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Bold, ChevronDown, Italic, Underline, Loader2 } from "lucide-react";
 import { RgbaColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import {
@@ -23,11 +22,17 @@ import {
 } from "@/components/ui/popover";
 import { rgbaToString } from "../utils/image-editor-utils";
 import type { FontAsset, RgbaColor } from "../types/image-editor-types";
+import type { GoogleFontCatalogEntry } from "../types/google-font-catalog";
+import { normalizeFontCatalogKey } from "../utils/build-google-font-css2-url";
 import { TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextToolIcon } from "./editor-icons";
 
 export interface TextToolsPanelProps {
   selectedObject: any;
   fontAssets: FontAsset[];
+  /** Full Google catalog (Fontsource); "Other fonts" excludes brand names. */
+  googleCatalogFonts: GoogleFontCatalogEntry[];
+  googleCatalogLoading?: boolean;
+  googleCatalogError?: boolean;
   fontsReady?: boolean;
   addText: () => void;
   fontSize: number;
@@ -55,6 +60,9 @@ export interface TextToolsPanelProps {
 export const TextToolsPanel = React.memo(function TextToolsPanel({
   selectedObject,
   fontAssets,
+  googleCatalogFonts,
+  googleCatalogLoading = false,
+  googleCatalogError = false,
   fontsReady = true,
   addText,
   fontSize,
@@ -78,13 +86,43 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
   backgroundColor,
   setBackgroundColor,
 }: TextToolsPanelProps) {
+  const [fontPickerOpen, setFontPickerOpen] = React.useState(false);
   const isAddTextDisabled = fontAssets.length > 0 && !fontsReady;
 
-  const { brandFonts, otherFonts } = React.useMemo(() => {
+  const { brandFonts, otherFontRows } = React.useMemo(() => {
     const brandFonts = fontAssets.filter((f) => f.is_brand);
-    const otherFonts = fontAssets.filter((f) => !f.is_brand);
-    return { brandFonts, otherFonts };
-  }, [fontAssets]);
+    const brandKeys = new Set(
+      brandFonts.map((f) => normalizeFontCatalogKey(f.font_family)),
+    );
+
+    const otherByKey = new Map<
+      string,
+      | { kind: "google"; entry: GoogleFontCatalogEntry }
+      | { kind: "custom"; asset: FontAsset }
+    >();
+
+    for (const entry of googleCatalogFonts) {
+      const key = normalizeFontCatalogKey(entry.family);
+      if (brandKeys.has(key)) continue;
+      otherByKey.set(key, { kind: "google", entry });
+    }
+
+    for (const asset of fontAssets) {
+      if (asset.is_brand) continue;
+      if (asset.font_source !== "custom") continue;
+      const key = normalizeFontCatalogKey(asset.font_family);
+      if (brandKeys.has(key)) continue;
+      otherByKey.set(key, { kind: "custom", asset });
+    }
+
+    const otherFontRows = [...otherByKey.values()].sort((a, b) => {
+      const nameA = a.kind === "google" ? a.entry.family : a.asset.font_family;
+      const nameB = b.kind === "google" ? b.entry.family : b.asset.font_family;
+      return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+    });
+
+    return { brandFonts, otherFontRows };
+  }, [fontAssets, googleCatalogFonts]);
 
   return (
     <div className="space-y-5 w-full">
@@ -108,71 +146,132 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
       <div className="w-full  h-[1px] bg-[#2D2D2D]"></div>
       <div className="grid grid-cols-2 gap-[20px]">
         <div className="w-full">
-          <Select
-            value={fontFamily}
-            onValueChange={setFontFamily}
-            disabled={!selectedObject}
-          >
-            <SelectTrigger className="w-full bg-[#0D0D0D] py-[10px] px-[16px] border-[#2D2D2D] text-[13px] font-medium leading-[135%] text-white font-(family-name:--font-manrope) h-[44px]! rounded-[10px] transition-all hover:border-[#444] focus:ring-2 focus:ring-[#5C38F3]/20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
-              {fontAssets.length > 0 ? (
-                <>
+          <Popover open={fontPickerOpen} onOpenChange={setFontPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!selectedObject}
+                aria-expanded={fontPickerOpen}
+                aria-haspopup="listbox"
+                className={cn(
+                  "w-full justify-between bg-[#0D0D0D] py-[10px] px-[16px] border-[#2D2D2D] text-[13px] font-medium leading-[135%] text-white font-(family-name:--font-manrope) h-[44px]! rounded-[10px] transition-all",
+                  "hover:border-[#444] hover:bg-[#161616] hover:!text-white dark:hover:bg-[#161616] dark:hover:!text-white",
+                  "focus-visible:!text-white focus-visible:ring-2 focus-visible:ring-[#5C38F3]/30 focus-visible:ring-offset-0 focus-visible:ring-offset-transparent",
+                  "[&_svg]:shrink-0 [&_svg]:text-white/80 [&_svg]:opacity-90 hover:[&_svg]:text-white/90",
+                  !selectedObject && "opacity-50 pointer-events-none",
+                )}
+              >
+                <span className="truncate text-left text-inherit">{fontFamily}</span>
+                {googleCatalogLoading ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-inherit opacity-80" aria-hidden />
+                ) : (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-inherit opacity-80" aria-hidden />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-[min(100vw-1.5rem,22rem)] p-0 bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md rounded-[10px] overflow-hidden"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              <Command
+                className={cn(
+                  "studio-font-picker-command bg-[#0D0D0D] text-[#F4F4F4]",
+                  "[&_[cmdk-input-wrapper]]:border-[#2D2D2D] [&_[cmdk-input-wrapper]]:border-b [&_[cmdk-input-wrapper]]:ring-0 [&_[cmdk-input-wrapper]]:shadow-none",
+                  "[&_[data-slot=command-input]]:border-0 [&_[data-slot=command-input]]:shadow-none",
+                  "[&_[data-slot=command-input]]:outline-none [&_[data-slot=command-input]]:ring-0",
+                  "[&_[data-slot=command-input]]:focus:outline-none [&_[data-slot=command-input]]:focus-visible:outline-none",
+                  "[&_[data-slot=command-input]]:focus:ring-0 [&_[data-slot=command-input]]:focus-visible:ring-0",
+                  "[&_[data-slot=command-input]]:focus-visible:ring-offset-0",
+                )}
+                shouldFilter
+                filter={(value, search) => {
+                  if (!search.trim()) return 1;
+                  return value.toLowerCase().includes(search.toLowerCase().trim())
+                    ? 1
+                    : 0;
+                }}
+              >
+                <CommandInput
+                  placeholder="Search fonts…"
+                  className="h-10 border-0 border-b border-[#2D2D2D] bg-transparent text-[13px] text-white placeholder:text-[#929292] shadow-none outline-none ring-0 ring-offset-0 focus:shadow-none focus:outline-none focus:ring-0 focus-visible:shadow-none focus-visible:outline-none focus-visible:ring-0"
+                />
+                <CommandList className="max-h-[min(60vh,320px)]">
+                  {googleCatalogError && (
+                    <p className="px-3 py-2 text-[12px] text-[#929292] font-(family-name:--font-manrope)">
+                      Could not load the full font list. Brand and custom fonts are still available.
+                    </p>
+                  )}
+                  <CommandEmpty className="py-6 text-[13px] text-[#929292]">
+                    No fonts match.
+                  </CommandEmpty>
                   {brandFonts.length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-[11px] uppercase tracking-wider text-[#929292] font-(family-name:--font-manrope) px-2 pt-2 pb-1">
-                        Brand fonts
-                      </SelectLabel>
+                    <CommandGroup
+                      heading="Brand fonts"
+                      className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[#929292] [&_[cmdk-group-heading]]:font-(family-name:--font-manrope)"
+                    >
                       {brandFonts.map((font) => (
-                        <SelectItem
+                        <CommandItem
                           key={`brand-${font.font_family}`}
                           value={font.font_family}
+                          onSelect={() => {
+                            setFontFamily(font.font_family);
+                            setFontPickerOpen(false);
+                          }}
                           style={{ fontFamily: font.font_family }}
-                          className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
+                          className="text-[13px] leading-[135%] text-[#F4F4F4] aria-selected:bg-[#1F1F1F] data-[selected=true]:bg-[#1F1F1F]"
                         >
                           {font.font_family}
-                        </SelectItem>
+                        </CommandItem>
                       ))}
-                    </SelectGroup>
+                    </CommandGroup>
                   )}
-
-                  {otherFonts.length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel className="text-[11px] uppercase tracking-wider text-[#929292] font-(family-name:--font-manrope) px-2 pt-2 pb-1">
-                        Other fonts
-                      </SelectLabel>
-                      {otherFonts.map((font) => (
-                        <SelectItem
-                          key={`other-${font.font_family}`}
-                          value={font.font_family}
-                          style={{ fontFamily: font.font_family }}
-                          className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-                        >
-                          {font.font_family}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
+                  {otherFontRows.length > 0 && (
+                    <CommandGroup
+                      heading="Other fonts"
+                      className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[#929292] [&_[cmdk-group-heading]]:font-(family-name:--font-manrope)"
+                    >
+                      {otherFontRows.map((row) => {
+                        if (row.kind === "custom") {
+                          const { asset } = row;
+                          return (
+                            <CommandItem
+                              key={`other-custom-${asset.font_family}`}
+                              value={asset.font_family}
+                              onSelect={() => {
+                                setFontFamily(asset.font_family);
+                                setFontPickerOpen(false);
+                              }}
+                              style={{ fontFamily: asset.font_family }}
+                              className="text-[13px] leading-[135%] text-[#F4F4F4] aria-selected:bg-[#1F1F1F] data-[selected=true]:bg-[#1F1F1F]"
+                            >
+                              {asset.font_family}
+                            </CommandItem>
+                          );
+                        }
+                        const name = row.entry.family;
+                        return (
+                          <CommandItem
+                            key={`other-google-${name}`}
+                            value={name}
+                            onSelect={() => {
+                              setFontFamily(name);
+                              setFontPickerOpen(false);
+                            }}
+                            style={{ fontFamily: name }}
+                            className="text-[13px] leading-[135%] text-[#F4F4F4] aria-selected:bg-[#1F1F1F] data-[selected=true]:bg-[#1F1F1F]"
+                          >
+                            {name}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
                   )}
-                </>
-              ) : (
-                <>
-                  <SelectItem
-                    value="Manrope"
-                    className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-                  >
-                    Manrope
-                  </SelectItem>
-                  <SelectItem
-                    value="IBM Plex Sans"
-                    className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-ibm-plex-sans) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-                  >
-                    IBM Plex Sans
-                  </SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
         <div>
           <div className="grid grid-cols-3 gap-[5px] h-full">

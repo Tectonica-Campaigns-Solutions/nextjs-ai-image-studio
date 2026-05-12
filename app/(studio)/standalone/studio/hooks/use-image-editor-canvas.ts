@@ -38,7 +38,10 @@ export interface UseImageEditorCanvasOptions {
   /** Called when the object is moved via the move control so the context menu bar can follow. */
   onSelectionContextMenuPosition?: (obj: any, canvas: Canvas) => void;
   /** Ref to current guide positions for snap-to-guide during object:moving. */
-  guidePositionsRef?: React.MutableRefObject<{ v: number[]; h: number[] } | null>;
+  guidePositionsRef?: React.MutableRefObject<{
+    v: number[];
+    h: number[];
+  } | null>;
 }
 
 function gcd(a: number, b: number): number {
@@ -93,7 +96,11 @@ export function constrainObjectToCanvas(obj: any, canvas: Canvas): void {
 
 const SNAP_THRESHOLD = GUIDES.SNAP_THRESHOLD;
 
-function snapObjectToGuides(obj: any, canvas: Canvas, guides: { v: number[]; h: number[] }): void {
+function snapObjectToGuides(
+  obj: any,
+  canvas: Canvas,
+  guides: { v: number[]; h: number[] },
+): void {
   if ((obj as any).isBackground) return;
   obj.setCoords?.();
   const rect =
@@ -154,8 +161,11 @@ function updateControlsPositionForCanvasBounds(obj: any, canvas: Canvas): void {
   const center = obj.getCenterPoint();
   const ch = canvas.height ?? 0;
   const nearBottom =
-    center.y + CANVAS_CONTROLS.OFFSET_BELOW > ch - CANVAS_CONTROLS.BOTTOM_THRESHOLD;
-  const offsetY = nearBottom ? CANVAS_CONTROLS.OFFSET_ABOVE : CANVAS_CONTROLS.OFFSET_BELOW;
+    center.y + CANVAS_CONTROLS.OFFSET_BELOW >
+    ch - CANVAS_CONTROLS.BOTTOM_THRESHOLD;
+  const offsetY = nearBottom
+    ? CANVAS_CONTROLS.OFFSET_ABOVE
+    : CANVAS_CONTROLS.OFFSET_BELOW;
   ctrls.mtr.offsetY = offsetY;
   ctrls.moveCtrl.offsetY = offsetY;
   if (ctrls.resizeH) ctrls.resizeH.offsetY = offsetY;
@@ -318,11 +328,16 @@ export function useImageEditorCanvas(
       if (availableWidth <= 0 || availableHeight <= 0) {
         const viewportWidth = window.innerWidth;
         const isMobile = viewportWidth < 767;
-        const isTabletOrCompactLaptop = viewportWidth >= 767 && viewportWidth < 1200;
+        const isTabletOrCompactLaptop =
+          viewportWidth >= 767 && viewportWidth < 1200;
         const padding = isMobile ? 20 : isTabletOrCompactLaptop ? 32 : 60;
         availableWidth = window.innerWidth - padding;
         const headerHeight = opts.headerRef.current?.offsetHeight || 0;
-        const verticalPadding = isMobile ? 36 : isTabletOrCompactLaptop ? 32 : 40;
+        const verticalPadding = isMobile
+          ? 36
+          : isTabletOrCompactLaptop
+            ? 32
+            : 40;
         const headerMarginBottom = isMobile ? 18 : 25;
         const headerTotalHeight = headerHeight + headerMarginBottom;
         const safetyMargin = 10;
@@ -636,7 +651,8 @@ export function useImageEditorCanvas(
         clearRotationTooltipTimeout();
         opts.onRotationTooltip?.(null);
         const selected = getActiveOrSelected();
-        if (selected) updateControlsPositionForCanvasBounds(selected, fabricCanvas);
+        if (selected)
+          updateControlsPositionForCanvasBounds(selected, fabricCanvas);
         opts.setSelectedObject(selected);
       });
 
@@ -644,7 +660,8 @@ export function useImageEditorCanvas(
         clearRotationTooltipTimeout();
         opts.onRotationTooltip?.(null);
         const selected = getActiveOrSelected();
-        if (selected) updateControlsPositionForCanvasBounds(selected, fabricCanvas);
+        if (selected)
+          updateControlsPositionForCanvasBounds(selected, fabricCanvas);
         opts.setSelectedObject(selected);
       });
 
@@ -739,7 +756,9 @@ export function useImageEditorCanvas(
         const target = e?.target;
         const toRestore = target
           ? [target]
-          : fabricCanvas.getObjects().filter((obj: any) => obj.__layerLocked === true);
+          : fabricCanvas
+              .getObjects()
+              .filter((obj: any) => obj.__layerLocked === true);
         toRestore.forEach((obj: any) => {
           if (obj.__layerLocked === true) {
             const lockProps: Record<string, unknown> = {

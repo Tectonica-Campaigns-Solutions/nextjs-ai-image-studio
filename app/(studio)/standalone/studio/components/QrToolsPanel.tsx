@@ -41,7 +41,7 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
             placeholder="Enter URL to generate QR"
             value={qrUrl}
             onChange={(e) => setQrUrl(e.target.value)}
-            className="flex-1 border-[#2D2D2D] text-[13px] text-white placeholder-white rounded-[10px] px-[16px] py-[10px] h-[44px] transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3]"
+            className="flex-1 !border-[#2D2D2D] !bg-[#1F1F1F] text-[13px] text-white placeholder:text-[#929292] rounded-[10px] px-[16px] py-[10px] h-[44px] transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3]"
             onKeyDown={(e) => {
               if (e.key === "Enter") addQRFromUrl();
             }}

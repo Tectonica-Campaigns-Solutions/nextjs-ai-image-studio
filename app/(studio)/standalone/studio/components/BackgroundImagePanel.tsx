@@ -34,7 +34,7 @@ export const BackgroundImagePanel = React.memo(function BackgroundImagePanel({
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             disabled={isLoading}
-            className="flex-1 border-[#2D2D2D] text-[13px] text-white placeholder-white rounded-[10px] px-[16px] py-[10px] h-[44px] transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3] disabled:opacity-50"
+            className="flex-1 !border-[#2D2D2D] !bg-[#1F1F1F] text-[13px] text-white placeholder:text-[#929292] rounded-[10px] px-[16px] py-[10px] h-[44px] transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3] disabled:opacity-50"
             onKeyDown={(e) => {
               if (e.key === "Enter") handleLoadFromUrl();
             }}
