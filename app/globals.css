@@ -323,8 +323,8 @@
   border: 1px solid hsl(var(--border)) !important;
 }
 
-/* Mejorar contraste en inputs */
-[data-slot="input"]:not(.dashboard-input) {
+/* Mejorar contraste en inputs (solo fuera del studio; dentro de .studio-root los paneles definen borde/fondo) */
+body:not(:has(.studio-root)) [data-slot="input"]:not(.dashboard-input) {
   background-color: hsl(var(--input)) !important;
   border-color: hsl(var(--border)) !important;
 }
