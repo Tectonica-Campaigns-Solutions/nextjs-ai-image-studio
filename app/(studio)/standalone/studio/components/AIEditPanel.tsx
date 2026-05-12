@@ -36,7 +36,7 @@ export const AIEditPanel = React.memo(function AIEditPanel({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}
-            className="min-h-[88px] w-full !border-[#2D2D2D] !bg-[#1F1F1F] text-sm !text-white placeholder-white rounded-[10px] px-[16px] py-[10px] resize-y transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3] !font-(family-name:--font-manrope)"
+            className="min-h-[88px] w-full !border-[#2D2D2D] !bg-[#1F1F1F] text-sm !text-white placeholder:text-white/40 rounded-[10px] px-[16px] py-[10px] resize-y transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3] !font-(family-name:--font-manrope)"
             rows={3}
           />
           <label
