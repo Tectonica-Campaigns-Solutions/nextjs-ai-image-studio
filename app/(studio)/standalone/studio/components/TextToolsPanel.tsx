@@ -12,9 +12,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Bold, ChevronDown, Italic, Underline, Loader2 } from "lucide-react";
+import { Bold, ChevronDown, Italic, Underline, Loader2, Pipette } from "lucide-react";
 import { RgbaColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
+import type { EyedropperTarget } from "../hooks/use-eyedropper";
 import {
   Popover,
   PopoverContent,
@@ -55,6 +56,8 @@ export interface TextToolsPanelProps {
   setTextColor: (c: RgbaColor) => void;
   backgroundColor: RgbaColor;
   setBackgroundColor: (c: RgbaColor) => void;
+  eyedropperTarget: EyedropperTarget;
+  onStartEyedropper?: (target: EyedropperTarget) => void;
 }
 
 export const TextToolsPanel = React.memo(function TextToolsPanel({
@@ -85,6 +88,8 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
   setTextColor,
   backgroundColor,
   setBackgroundColor,
+  eyedropperTarget,
+  onStartEyedropper,
 }: TextToolsPanelProps) {
   const [fontPickerOpen, setFontPickerOpen] = React.useState(false);
   const isAddTextDisabled = fontAssets.length > 0 && !fontsReady;
@@ -319,6 +324,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
       </div>
       <div className="w-full h-[1px] bg-[#2D2D2D]" />
       <div className="grid grid-cols-2 gap-4 items-center">
+        {/* Alignment */}
         <div className="min-w-0 flex shrink-0">
           <div className="grid grid-cols-3 gap-[5px] w-fit">
             <Button
@@ -362,53 +368,90 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
             </Button>
           </div>
         </div>
-        <div className="flex gap-3 justify-end items-center min-w-0">
+        {/* Colors */}
+        <div className="flex gap-4 justify-end items-center min-w-0">
+          {/* Text Color */}
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                disabled={!selectedObject}
-                aria-label="Change text color"
-                className="w-auto justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent shrink-0"
-              >
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform shrink-0"
-                  style={{ backgroundColor: rgbaToString(textColor) }}
-                />
-                <div className="flex flex-col gap-[2px] items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <div className="h-[2px] w-[20px] bg-[#E5E5EF]" />
-                </div>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-3">
-              <RgbaColorPicker color={textColor} onChange={setTextColor} />
-            </PopoverContent>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  disabled={!selectedObject}
+                  aria-label="Change text color"
+                  className={cn(
+                    "flex items-center gap-2 px-0 cursor-pointer bg-transparent border-none shrink-0 group",
+                    !selectedObject && "opacity-50 pointer-events-none",
+                  )}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
+                    style={{ backgroundColor: rgbaToString(textColor) }}
+                  />
+                  <div className="flex flex-col gap-[2px] items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <div className="h-[2px] w-[20px] bg-[#E5E5EF]" />
+                  </div>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
+                <RgbaColorPicker color={textColor} onChange={setTextColor} />
+                {onStartEyedropper && (
+                  <button
+                    type="button"
+                    onClick={() => onStartEyedropper("textColor")}
+                    className={cn(
+                      "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
+                      "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
+                      eyedropperTarget === "textColor" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
+                    )}
+                  >
+                    <Pipette className="w-3.5 h-3.5" />
+                    Pick from canvas
+                  </button>
+                )}
+              </PopoverContent>
           </Popover>
+          {/* Background Color */}
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                disabled={!selectedObject}
-                aria-label="Change text background color"
-                className="w-auto justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent shrink-0"
-              >
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform shrink-0"
-                  style={{ backgroundColor: rgbaToString(backgroundColor) }}
-                />
-                <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="#191919" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-3">
-              <RgbaColorPicker color={backgroundColor} onChange={setBackgroundColor} />
-            </PopoverContent>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  disabled={!selectedObject}
+                  aria-label="Change text background color"
+                  className={cn(
+                    "flex items-center gap-2 px-0 cursor-pointer bg-transparent border-none shrink-0 group",
+                    !selectedObject && "opacity-50 pointer-events-none",
+                  )}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
+                    style={{ backgroundColor: rgbaToString(backgroundColor) }}
+                  />
+                  <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="#191919" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
+                <RgbaColorPicker color={backgroundColor} onChange={setBackgroundColor} />
+                {onStartEyedropper && (
+                  <button
+                    type="button"
+                    onClick={() => onStartEyedropper("backgroundColor")}
+                    className={cn(
+                      "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
+                      "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
+                      eyedropperTarget === "backgroundColor" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
+                    )}
+                  >
+                    <Pipette className="w-3.5 h-3.5" />
+                    Pick from canvas
+                  </button>
+                )}
+              </PopoverContent>
           </Popover>
         </div>
       </div>
