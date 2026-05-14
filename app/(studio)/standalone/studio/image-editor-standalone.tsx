@@ -23,6 +23,7 @@ import {
   ShapeToolsPanel,
   TextToolsPanel,
   UploadPromptCard,
+  EyedropperMagnifier,
 } from "./components";
 import { FeedbackButton } from "./components/FeedbackButton";
 import type { SessionSummary } from "./components/SessionsListPanel";
@@ -54,6 +55,8 @@ import { useLogoTools } from "./hooks/use-logo-tools";
 import { useFrameTools } from "./hooks/use-frame-tools";
 import { useShapeTools } from "./hooks/use-shape-tools";
 import { useAlignmentTools } from "./hooks/use-alignment-tools";
+import { useEyedropper } from "./hooks/use-eyedropper";
+import type { EyedropperTarget } from "./hooks/use-eyedropper";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
@@ -341,6 +344,32 @@ function ImageEditorStandaloneInner({
   const shapeTools = useShapeTools({
     canvasRef: canvasRefStable,
     saveStateRef,
+  });
+
+  // Eyedropper: route picked color to the correct setter
+  const handleEyedropperPick = useCallback(
+    (color: import("./types/image-editor-types").RgbaColor, target: EyedropperTarget) => {
+      switch (target) {
+        case "textColor":
+          textTools.setTextColor(color);
+          break;
+        case "backgroundColor":
+          textTools.setBackgroundColor(color);
+          break;
+        case "shapeFill":
+          shapeTools.setShapeFillColor(color);
+          break;
+        case "shapeStroke":
+          shapeTools.setShapeStrokeColor(color);
+          break;
+      }
+    },
+    [textTools.setTextColor, textTools.setBackgroundColor, shapeTools.setShapeFillColor, shapeTools.setShapeStrokeColor],
+  );
+
+  const eyedropper = useEyedropper({
+    canvasRef: canvasRefStable,
+    onPickColor: handleEyedropperPick,
   });
 
   // Initialize selection hook with real setters wired directly
@@ -1656,9 +1685,11 @@ function ImageEditorStandaloneInner({
         setTextColor={textTools.setTextColor}
         backgroundColor={textTools.backgroundColor}
         setBackgroundColor={textTools.setBackgroundColor}
+        eyedropperTarget={eyedropper.activeTarget}
+        onStartEyedropper={eyedropper.startEyedropper}
       />
     ),
-    [selection.selectedObject, fontAssets, fontsReady, googleFontCatalog, googleCatalogLoading, googleCatalogError, textTools]
+    [selection.selectedObject, fontAssets, fontsReady, googleFontCatalog, googleCatalogLoading, googleCatalogError, textTools, eyedropper.activeTarget, eyedropper.startEyedropper]
   );
 
   const aiEditPanel = useMemo(
@@ -1797,9 +1828,11 @@ function ImageEditorStandaloneInner({
         setShapeStrokeWidth={shapeTools.setShapeStrokeWidth}
         shapeOpacity={shapeTools.shapeOpacity}
         setShapeOpacity={shapeTools.setShapeOpacity}
+        eyedropperTarget={eyedropper.activeTarget}
+        onStartEyedropper={eyedropper.startEyedropper}
       />
     ),
-    [isShapeSelected, shapeTools]
+    [isShapeSelected, shapeTools, eyedropper.activeTarget, eyedropper.startEyedropper]
   );
 
   if (showUploadPrompt) {
@@ -2055,6 +2088,15 @@ function ImageEditorStandaloneInner({
           />
         </div>
       </div>
+      {eyedropper.activeTarget && eyedropper.eyedropperState.magnifierPos && eyedropper.eyedropperState.previewColor && (
+        <EyedropperMagnifier
+          x={eyedropper.eyedropperState.magnifierPos.x}
+          y={eyedropper.eyedropperState.magnifierPos.y}
+          previewColor={eyedropper.eyedropperState.previewColor}
+          pixels={eyedropper.eyedropperState.magnifierPixels}
+          gridSide={eyedropper.magnifierSide}
+        />
+      )}
     </>
   );
 }

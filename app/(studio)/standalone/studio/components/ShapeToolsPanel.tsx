@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { HexColorPicker } from "react-colorful";
+import { Pipette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { RgbaColor, ShapeType } from "../types/image-editor-types";
+import type { EyedropperTarget } from "../hooks/use-eyedropper";
 import { rgbaToString } from "../utils/image-editor-utils";
 import { SHAPE_RANGES } from "../constants/editor-constants";
 
@@ -39,6 +41,8 @@ export interface ShapeToolsPanelProps {
   setShapeStrokeWidth: (n: number) => void;
   shapeOpacity: number;
   setShapeOpacity: (n: number) => void;
+  eyedropperTarget?: EyedropperTarget;
+  onStartEyedropper?: (target: EyedropperTarget) => void;
 }
 
 const sliderClassName = cn(
@@ -207,6 +211,8 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
   setShapeStrokeWidth,
   shapeOpacity,
   setShapeOpacity,
+  eyedropperTarget,
+  onStartEyedropper,
 }: ShapeToolsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight } = useScrollState(scrollRef);
@@ -292,17 +298,21 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
       {/* Color pickers */}
       <div className="flex gap-[50px]">
         {/* Fill Color */}
-        <div>
-          <Label className={cn(labelClassName, "mb-2")}>Fill Color</Label>
+        <div className="flex flex-col items-center gap-1">
+          <Label className={cn(labelClassName, "mb-1")}>Fill Color</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 disabled={!isShapeSelected}
-                className="w-full justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent"
+                aria-label="Change fill color"
+                className={cn(
+                  "flex items-center gap-[14px] px-0 cursor-pointer bg-transparent border-none group",
+                  !isShapeSelected && "opacity-50 pointer-events-none",
+                )}
               >
                 <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform"
+                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105"
                   style={{ backgroundColor: rgbaToString(shapeFillColor) }}
                 />
                 <div className="flex flex-col gap-[2px] items-center justify-center">
@@ -311,29 +321,47 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
                   </svg>
                   <div className="h-[2px] w-[20px] bg-[#E5E5EF]" />
                 </div>
-              </Button>
+              </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-3">
+            <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
               <HexColorPicker
                 color={rgbaToHex(shapeFillColor)}
                 onChange={(hex) => setShapeFillColor(hexToRgba(hex, 1))}
               />
+              {onStartEyedropper && (
+                <button
+                  type="button"
+                  onClick={() => onStartEyedropper("shapeFill")}
+                  className={cn(
+                    "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
+                    "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
+                    eyedropperTarget === "shapeFill" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
+                  )}
+                >
+                  <Pipette className="w-3.5 h-3.5" />
+                  Pick from canvas
+                </button>
+              )}
             </PopoverContent>
           </Popover>
         </div>
 
         {/* Stroke Color */}
-        <div>
-          <Label className={cn(labelClassName, "mb-2")}>Border Color</Label>
+        <div className="flex flex-col items-center gap-1">
+          <Label className={cn(labelClassName, "mb-1")}>Border Color</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 disabled={!isShapeSelected}
-                className="w-full justify-start gap-[14px] px-0 cursor-pointer bg-transparent border-none group hover:bg-transparent"
+                aria-label="Change border color"
+                className={cn(
+                  "flex items-center gap-[14px] px-0 cursor-pointer bg-transparent border-none group",
+                  !isShapeSelected && "opacity-50 pointer-events-none",
+                )}
               >
                 <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform"
+                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105"
                   style={{ backgroundColor: rgbaToString(shapeStrokeColor) }}
                 />
                 <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center">
@@ -341,13 +369,27 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
                     <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="#191919" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-              </Button>
+              </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-3">
+            <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
               <HexColorPicker
                 color={rgbaToHex(shapeStrokeColor)}
                 onChange={(hex) => setShapeStrokeColor(hexToRgba(hex, 1))}
               />
+              {onStartEyedropper && (
+                <button
+                  type="button"
+                  onClick={() => onStartEyedropper("shapeStroke")}
+                  className={cn(
+                    "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
+                    "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
+                    eyedropperTarget === "shapeStroke" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
+                  )}
+                >
+                  <Pipette className="w-3.5 h-3.5" />
+                  Pick from canvas
+                </button>
+              )}
             </PopoverContent>
           </Popover>
         </div>

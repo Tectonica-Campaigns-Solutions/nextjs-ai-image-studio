@@ -16,3 +16,4 @@ export { SessionsListPanel } from "./SessionsListPanel";
 export { ShapeToolsPanel } from "./ShapeToolsPanel";
 export { TextToolsPanel } from "./TextToolsPanel";
 export { UploadPromptCard } from "./UploadPromptCard";
+export { EyedropperMagnifier } from "./EyedropperMagnifier";
