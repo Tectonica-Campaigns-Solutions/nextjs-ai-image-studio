@@ -199,6 +199,25 @@ export async function PATCH(
     if (data.audience_knowledge_supporters !== undefined) updateData.audience_knowledge_supporters = data.audience_knowledge_supporters;
     if (data.audience_knowledge_public !== undefined) updateData.audience_knowledge_public = data.audience_knowledge_public;
     if (data.consent_forms_url !== undefined) updateData.consent_forms_url = data.consent_forms_url;
+    if (data.leader_experience_default !== undefined) updateData.leader_experience_default = data.leader_experience_default;
+    if (data.story_source_rules !== undefined) updateData.story_source_rules = data.story_source_rules;
+    if (data.story_flag_in_brief !== undefined) updateData.story_flag_in_brief = data.story_flag_in_brief;
+    if (data.strategic_goal !== undefined) updateData.strategic_goal = data.strategic_goal;
+    if (data.impact_statement !== undefined) updateData.impact_statement = data.impact_statement;
+    if (data.relational_goal !== undefined) updateData.relational_goal = data.relational_goal;
+    if (data.community_terms !== undefined) updateData.community_terms = data.community_terms;
+    if (data.tone_descriptors !== undefined) updateData.tone_descriptors = data.tone_descriptors;
+    if (data.legal_structure !== undefined) updateData.legal_structure = data.legal_structure;
+    if (data.legal_jurisdiction !== undefined) updateData.legal_jurisdiction = data.legal_jurisdiction;
+    if (data.p2p_page_support !== undefined) updateData.p2p_page_support = data.p2p_page_support;
+    if (data.email_capture_automatic !== undefined) updateData.email_capture_automatic = data.email_capture_automatic;
+    if (data.primary_outreach_channels !== undefined) updateData.primary_outreach_channels = data.primary_outreach_channels;
+    if (data.social_platform_registrations !== undefined) updateData.social_platform_registrations = data.social_platform_registrations;
+    if (data.active_matching_gift !== undefined) updateData.active_matching_gift = data.active_matching_gift;
+    if (data.active_matching_gift_details !== undefined) updateData.active_matching_gift_details = data.active_matching_gift_details;
+    if (data.tactic_settings !== undefined) updateData.tactic_settings = data.tactic_settings;
+    if (data.story_requirement_by_tier !== undefined) updateData.story_requirement_by_tier = data.story_requirement_by_tier;
+    if (data.absolute_guardrails !== undefined) updateData.absolute_guardrails = data.absolute_guardrails;
 
     const { data: fundraising, error } = await supabaseAdmin
       .from("client_fundraising_data")

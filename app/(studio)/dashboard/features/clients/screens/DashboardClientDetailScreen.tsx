@@ -40,6 +40,36 @@ type TabKey =
   | "generated-images"
   | "fundraising";
 
+const TACTICS = [
+  "peer-to-peer",
+  "in-person-ask",
+  "call-banking",
+  "house-parties",
+  "crowdfunding",
+  "email-appeals",
+  "sms-whatsapp",
+  "social-media",
+  "local-business",
+  "community-events",
+  "walk-a-thon",
+  "sporting-sub-a",
+  "sporting-sub-b",
+  "gala",
+  "matching-sub-a",
+  "matching-sub-b",
+  "tribute-memorial",
+  "tribute-occasion",
+  "raffle",
+  "sweepstakes",
+  "giving-days",
+  "merchandise",
+] as const;
+
+type TacticStatus = "encouraged" | "allowed" | "discouraged" | "prohibited";
+const TACTIC_STATUSES: TacticStatus[] = ["encouraged", "allowed", "discouraged", "prohibited"];
+const TIER_KEYS = ["peer_community", "events", "incentive", "supported"] as const;
+type TierKey = (typeof TIER_KEYS)[number];
+
 type DashboardClientDetailScreenProps = Readonly<{
   data: ClientDetailPageData;
 }>;
@@ -94,6 +124,22 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     audience_knowledge_supporters: string;
     audience_knowledge_public: string;
     consent_forms_url: string;
+    leader_experience_default: string;
+    story_source_rules: string;
+    story_flag_in_brief: boolean;
+    legal_structure: string;
+    legal_jurisdiction: string;
+    p2p_page_support: boolean;
+    email_capture_automatic: boolean;
+    primary_outreach_channels: string;
+    social_platform_registrations: string;
+    active_matching_gift: boolean;
+    active_matching_gift_details: string;
+    strategic_goal: string;
+    impact_statement: string;
+    relational_goal: string;
+    community_terms: string;
+    tone_descriptors: string;
   }>({
     org_name: initialFundraising?.org_name ?? "",
     donation_page_url: initialFundraising?.donation_page_url ?? "",
@@ -108,10 +154,56 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
     audience_knowledge_supporters: initialFundraising?.audience_knowledge_supporters ?? "",
     audience_knowledge_public: initialFundraising?.audience_knowledge_public ?? "",
     consent_forms_url: initialFundraising?.consent_forms_url ?? "",
+    leader_experience_default: initialFundraising?.leader_experience_default ?? "",
+    story_source_rules: initialFundraising?.story_source_rules ?? "",
+    story_flag_in_brief: initialFundraising?.story_flag_in_brief ?? true,
+    legal_structure: initialFundraising?.legal_structure ?? "",
+    legal_jurisdiction: initialFundraising?.legal_jurisdiction ?? "",
+    p2p_page_support: initialFundraising?.p2p_page_support ?? false,
+    email_capture_automatic: initialFundraising?.email_capture_automatic ?? false,
+    primary_outreach_channels: initialFundraising?.primary_outreach_channels ?? "",
+    social_platform_registrations: initialFundraising?.social_platform_registrations ?? "",
+    active_matching_gift: initialFundraising?.active_matching_gift ?? false,
+    active_matching_gift_details: initialFundraising?.active_matching_gift_details ?? "",
+    strategic_goal: initialFundraising?.strategic_goal ?? "",
+    impact_statement: initialFundraising?.impact_statement ?? "",
+    relational_goal: initialFundraising?.relational_goal ?? "",
+    community_terms: initialFundraising?.community_terms ?? "",
+    tone_descriptors: initialFundraising?.tone_descriptors ?? "",
   });
   const [fundraisingSaving, setFundraisingSaving] = useState(false);
   const [fundraisingError, setFundraisingError] = useState<string | null>(null);
   const [fundraisingSuccess, setFundraisingSuccess] = useState(false);
+  const [tacticSettings, setTacticSettings] = useState<Record<string, { status: TacticStatus; conditions: string }>>(() => {
+    const existing = initialFundraising?.tactic_settings;
+    return Object.fromEntries(
+      TACTICS.map((t) => [
+        t,
+        {
+          status: (existing?.[t]?.status as TacticStatus | undefined) ?? "allowed",
+          conditions: existing?.[t]?.conditions ?? "",
+        },
+      ])
+    );
+  });
+  const [storyRequirementByTier, setStoryRequirementByTier] = useState<Record<TierKey, "hard_requirement" | "strong_recommendation">>(() => {
+    const existing = initialFundraising?.story_requirement_by_tier;
+    return {
+      peer_community: (existing?.peer_community as "hard_requirement" | "strong_recommendation" | undefined) ?? "strong_recommendation",
+      events: (existing?.events as "hard_requirement" | "strong_recommendation" | undefined) ?? "strong_recommendation",
+      incentive: (existing?.incentive as "hard_requirement" | "strong_recommendation" | undefined) ?? "strong_recommendation",
+      supported: (existing?.supported as "hard_requirement" | "strong_recommendation" | undefined) ?? "strong_recommendation",
+    };
+  });
+  const [guardrails, setGuardrails] = useState<Array<{ id: string; rule: string; reason: string; applies_to: string }>>(() => {
+    const existing = initialFundraising?.absolute_guardrails;
+    return (existing ?? []).map((g, i) => ({
+      id: String(i),
+      rule: g.rule ?? "",
+      reason: g.reason ?? "",
+      applies_to: g.applies_to ?? "both",
+    }));
+  });
 
   const handleSaveFundraising = async () => {
     if (!client) return;
@@ -137,6 +229,35 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           audience_knowledge_supporters: fundraisingForm.audience_knowledge_supporters.trim() || null,
           audience_knowledge_public: fundraisingForm.audience_knowledge_public.trim() || null,
           consent_forms_url: fundraisingForm.consent_forms_url.trim() || null,
+          leader_experience_default: fundraisingForm.leader_experience_default || null,
+          story_source_rules: fundraisingForm.story_source_rules || null,
+          story_flag_in_brief: fundraisingForm.story_flag_in_brief,
+          legal_structure: fundraisingForm.legal_structure.trim() || null,
+          legal_jurisdiction: fundraisingForm.legal_jurisdiction.trim() || null,
+          p2p_page_support: fundraisingForm.p2p_page_support,
+          email_capture_automatic: fundraisingForm.email_capture_automatic,
+          primary_outreach_channels: fundraisingForm.primary_outreach_channels.trim() || null,
+          social_platform_registrations: fundraisingForm.social_platform_registrations.trim() || null,
+          active_matching_gift: fundraisingForm.active_matching_gift,
+          active_matching_gift_details: fundraisingForm.active_matching_gift_details.trim() || null,
+          strategic_goal: fundraisingForm.strategic_goal.trim() || null,
+          impact_statement: fundraisingForm.impact_statement.trim() || null,
+          relational_goal: fundraisingForm.relational_goal.trim() || null,
+          community_terms: fundraisingForm.community_terms.trim() || null,
+          tone_descriptors: fundraisingForm.tone_descriptors.trim() || null,
+          tactic_settings: Object.fromEntries(
+            TACTICS.map((t) => [
+              t,
+              {
+                status: tacticSettings[t]?.status ?? "allowed",
+                conditions: tacticSettings[t]?.conditions?.trim() || null,
+              },
+            ])
+          ),
+          story_requirement_by_tier: storyRequirementByTier,
+          absolute_guardrails: guardrails
+            .map((g) => ({ rule: g.rule.trim(), reason: g.reason.trim(), applies_to: g.applies_to }))
+            .filter((g) => g.rule || g.reason),
         }),
       });
       if (!res.ok) {
@@ -1287,6 +1408,452 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                       className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
                     />
                   </div>
+                </div>
+
+                {/* Leader Profile */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Leader Profile</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-leader-exp">Leader Experience Default</label>
+                    <select
+                      id="fr-leader-exp"
+                      value={fundraisingForm.leader_experience_default}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, leader_experience_default: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                    >
+                      <option value="">— not set —</option>
+                      <option value="first_timer">First Timer</option>
+                      <option value="community_practitioner">Community Practitioner</option>
+                      <option value="organised_informal">Organised Informal</option>
+                      <option value="experienced">Experienced</option>
+                      <option value="mixed">Mixed</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Story Settings */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Story Settings</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-story-source">Story Source Rules</label>
+                    <select
+                      id="fr-story-source"
+                      value={fundraisingForm.story_source_rules}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, story_source_rules: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                    >
+                      <option value="">— not set —</option>
+                      <option value="cleared_library_only">Cleared Library Only</option>
+                      <option value="org_comms_ok">Org Comms OK</option>
+                      <option value="personal_only">Personal Only</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={fundraisingForm.story_flag_in_brief}
+                      onClick={() => setFundraisingForm((f) => ({ ...f, story_flag_in_brief: !f.story_flag_in_brief }))}
+                      disabled={fundraisingSaving}
+                      className={cx(
+                        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50",
+                        fundraisingForm.story_flag_in_brief ? "bg-dashboard-primary" : "bg-outline-variant/40"
+                      )}
+                    >
+                      <span
+                        className={cx(
+                          "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
+                          fundraisingForm.story_flag_in_brief ? "translate-x-4" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                    <span className="text-sm font-medium text-on-surface">Flag Story in Brief</span>
+                  </div>
+                </div>
+
+                {/* Strategic Foundation */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Strategic Foundation</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-strategic-goal">Strategic Goal</label>
+                    <textarea
+                      id="fr-strategic-goal"
+                      rows={3}
+                      value={fundraisingForm.strategic_goal}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, strategic_goal: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="What is the org trying to achieve?"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-impact-statement">Impact Statement</label>
+                    <textarea
+                      id="fr-impact-statement"
+                      rows={3}
+                      value={fundraisingForm.impact_statement}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, impact_statement: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="How does the org describe its impact?"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-relational-goal">Relational Goal</label>
+                    <textarea
+                      id="fr-relational-goal"
+                      rows={3}
+                      value={fundraisingForm.relational_goal}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, relational_goal: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="What relationship does the org want to build with its community?"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Voice & Tone */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Voice & Tone</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-community-terms">Community Terms</label>
+                    <textarea
+                      id="fr-community-terms"
+                      rows={3}
+                      value={fundraisingForm.community_terms}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, community_terms: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="Preferred terms the org uses for its community members"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-tone-descriptors">Tone Descriptors</label>
+                    <input
+                      id="fr-tone-descriptors"
+                      type="text"
+                      value={fundraisingForm.tone_descriptors}
+                      onChange={(e) => setFundraisingForm((f) => ({ ...f, tone_descriptors: e.target.value }))}
+                      disabled={fundraisingSaving}
+                      placeholder="e.g. warm, direct, hopeful, never doom"
+                      className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                {/* Legal & Compliance */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Legal & Compliance</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-legal-structure">Legal Structure</label>
+                      <input
+                        id="fr-legal-structure"
+                        type="text"
+                        value={fundraisingForm.legal_structure}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, legal_structure: e.target.value }))}
+                        disabled={fundraisingSaving}
+                        placeholder="e.g. 501(c)(3), registered charity"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-legal-jurisdiction">Legal Jurisdiction</label>
+                      <input
+                        id="fr-legal-jurisdiction"
+                        type="text"
+                        value={fundraisingForm.legal_jurisdiction}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, legal_jurisdiction: e.target.value }))}
+                        disabled={fundraisingSaving}
+                        placeholder="e.g. United States, California"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Platform & Infrastructure */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Platform & Infrastructure</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-outreach-channels">Primary Outreach Channels</label>
+                      <input
+                        id="fr-outreach-channels"
+                        type="text"
+                        value={fundraisingForm.primary_outreach_channels}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, primary_outreach_channels: e.target.value }))}
+                        disabled={fundraisingSaving}
+                        placeholder="e.g. email, WhatsApp, social media"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-social-platforms">Social Platform Registrations</label>
+                      <input
+                        id="fr-social-platforms"
+                        type="text"
+                        value={fundraisingForm.social_platform_registrations}
+                        onChange={(e) => setFundraisingForm((f) => ({ ...f, social_platform_registrations: e.target.value }))}
+                        disabled={fundraisingSaving}
+                        placeholder="e.g. Meta yes, Instagram yes, YouTube no"
+                        className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={fundraisingForm.p2p_page_support}
+                        onClick={() => setFundraisingForm((f) => ({ ...f, p2p_page_support: !f.p2p_page_support }))}
+                        disabled={fundraisingSaving}
+                        className={cx(
+                          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50",
+                          fundraisingForm.p2p_page_support ? "bg-dashboard-primary" : "bg-outline-variant/40"
+                        )}
+                      >
+                        <span
+                          className={cx(
+                            "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
+                            fundraisingForm.p2p_page_support ? "translate-x-4" : "translate-x-0"
+                          )}
+                        />
+                      </button>
+                      <span className="text-sm font-medium text-on-surface">P2P Page Support</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={fundraisingForm.email_capture_automatic}
+                        onClick={() => setFundraisingForm((f) => ({ ...f, email_capture_automatic: !f.email_capture_automatic }))}
+                        disabled={fundraisingSaving}
+                        className={cx(
+                          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50",
+                          fundraisingForm.email_capture_automatic ? "bg-dashboard-primary" : "bg-outline-variant/40"
+                        )}
+                      >
+                        <span
+                          className={cx(
+                            "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
+                            fundraisingForm.email_capture_automatic ? "translate-x-4" : "translate-x-0"
+                          )}
+                        />
+                      </button>
+                      <span className="text-sm font-medium text-on-surface">Email Capture Automatic</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={fundraisingForm.active_matching_gift}
+                        onClick={() => setFundraisingForm((f) => ({ ...f, active_matching_gift: !f.active_matching_gift }))}
+                        disabled={fundraisingSaving}
+                        className={cx(
+                          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50",
+                          fundraisingForm.active_matching_gift ? "bg-dashboard-primary" : "bg-outline-variant/40"
+                        )}
+                      >
+                        <span
+                          className={cx(
+                            "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform",
+                            fundraisingForm.active_matching_gift ? "translate-x-4" : "translate-x-0"
+                          )}
+                        />
+                      </button>
+                      <span className="text-sm font-medium text-on-surface">Active Matching Gift</span>
+                    </div>
+                    {fundraisingForm.active_matching_gift ? (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-on-surface-variant" htmlFor="fr-matching-gift-details">Matching Gift Details</label>
+                        <textarea
+                          id="fr-matching-gift-details"
+                          rows={2}
+                          value={fundraisingForm.active_matching_gift_details}
+                          onChange={(e) => setFundraisingForm((f) => ({ ...f, active_matching_gift_details: e.target.value }))}
+                          disabled={fundraisingSaving}
+                          placeholder="Details about the matching gift program"
+                          className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50 resize-none"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Tactic Settings */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Tactic Settings</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-outline-variant/10">
+                          <th className="text-left pb-2 pr-3 text-xs font-semibold text-on-surface-variant whitespace-nowrap">Tactic</th>
+                          <th className="text-left pb-2 pr-3 text-xs font-semibold text-on-surface-variant">Status</th>
+                          <th className="text-left pb-2 text-xs font-semibold text-on-surface-variant">Conditions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-outline-variant/10">
+                        {TACTICS.map((tactic) => (
+                          <tr key={tactic}>
+                            <td className="py-2 pr-3 font-medium text-on-surface whitespace-nowrap">{tactic}</td>
+                            <td className="py-2 pr-3">
+                              <select
+                                value={tacticSettings[tactic]?.status ?? "allowed"}
+                                onChange={(e) =>
+                                  setTacticSettings((prev) => ({
+                                    ...prev,
+                                    [tactic]: { ...prev[tactic], status: e.target.value as TacticStatus },
+                                  }))
+                                }
+                                disabled={fundraisingSaving}
+                                className="rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-2 py-1 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                              >
+                                {TACTIC_STATUSES.map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="py-2">
+                              <input
+                                type="text"
+                                value={tacticSettings[tactic]?.conditions ?? ""}
+                                onChange={(e) =>
+                                  setTacticSettings((prev) => ({
+                                    ...prev,
+                                    [tactic]: { ...prev[tactic], conditions: e.target.value },
+                                  }))
+                                }
+                                disabled={fundraisingSaving}
+                                placeholder="conditions..."
+                                className="w-full rounded-lg border border-outline-variant/20 bg-surface-container-lowest px-2 py-1 text-xs text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Story Requirement by Tier */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Story Requirement by Tier</h4>
+                  <div className="space-y-4">
+                    {TIER_KEYS.map((tier) => (
+                      <div key={tier} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                        <span className="text-sm font-medium text-on-surface min-w-[160px] capitalize">{tier.replace(/_/g, " ")}</span>
+                        <div className="flex items-center gap-6">
+                          <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`tier-${tier}`}
+                              value="hard_requirement"
+                              checked={storyRequirementByTier[tier] === "hard_requirement"}
+                              onChange={() => setStoryRequirementByTier((p) => ({ ...p, [tier]: "hard_requirement" as const }))}
+                              disabled={fundraisingSaving}
+                              className="accent-dashboard-primary"
+                            />
+                            Hard Requirement
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-on-surface cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`tier-${tier}`}
+                              value="strong_recommendation"
+                              checked={storyRequirementByTier[tier] === "strong_recommendation"}
+                              onChange={() => setStoryRequirementByTier((p) => ({ ...p, [tier]: "strong_recommendation" as const }))}
+                              disabled={fundraisingSaving}
+                              className="accent-dashboard-primary"
+                            />
+                            Strong Recommendation
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Absolute Guardrails */}
+                <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Absolute Guardrails</h4>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGuardrails((g) => [
+                          ...g,
+                          { id: Date.now().toString(), rule: "", reason: "", applies_to: "both" },
+                        ])
+                      }
+                      disabled={fundraisingSaving}
+                      className="text-xs font-semibold text-dashboard-primary hover:underline disabled:opacity-50"
+                    >
+                      + Add Rule
+                    </button>
+                  </div>
+                  {guardrails.length === 0 ? (
+                    <p className="text-sm text-on-surface-variant/50 italic">No guardrails defined.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {guardrails.map((g) => (
+                        <div
+                          key={g.id}
+                          className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-2 rounded-lg border border-outline-variant/10 bg-surface-container-lowest p-3"
+                        >
+                          <input
+                            type="text"
+                            value={g.rule}
+                            onChange={(e) =>
+                              setGuardrails((gs) =>
+                                gs.map((r) => (r.id === g.id ? { ...r, rule: e.target.value } : r))
+                              )
+                            }
+                            disabled={fundraisingSaving}
+                            placeholder="Rule"
+                            className="rounded-md border border-outline-variant/20 bg-surface-container-lowest px-2 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                          />
+                          <input
+                            type="text"
+                            value={g.reason}
+                            onChange={(e) =>
+                              setGuardrails((gs) =>
+                                gs.map((r) => (r.id === g.id ? { ...r, reason: e.target.value } : r))
+                              )
+                            }
+                            disabled={fundraisingSaving}
+                            placeholder="Reason"
+                            className="rounded-md border border-outline-variant/20 bg-surface-container-lowest px-2 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                          />
+                          <select
+                            value={g.applies_to}
+                            onChange={(e) =>
+                              setGuardrails((gs) =>
+                                gs.map((r) => (r.id === g.id ? { ...r, applies_to: e.target.value } : r))
+                              )
+                            }
+                            disabled={fundraisingSaving}
+                            className="rounded-md border border-outline-variant/20 bg-surface-container-lowest px-2 py-1.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-dashboard-primary/30 disabled:opacity-50"
+                          >
+                            <option value="both">Both</option>
+                            <option value="supporters">Supporters</option>
+                            <option value="groups">Groups</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => setGuardrails((gs) => gs.filter((r) => r.id !== g.id))}
+                            disabled={fundraisingSaving}
+                            className="flex items-center justify-center rounded-md px-2 py-1.5 text-sm text-error hover:bg-error/10 disabled:opacity-50 transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {fundraisingSuccess ? (

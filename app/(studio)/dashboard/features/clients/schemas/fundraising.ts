@@ -26,6 +26,32 @@ export const createFundraisingSchema = z.object({
   audience_knowledge_supporters: optionalText,
   audience_knowledge_public: optionalText,
   consent_forms_url: optionalText,
+  // Leader profile
+  leader_experience_default: optionalText,
+  // Story settings
+  story_source_rules: optionalText,
+  story_flag_in_brief: z.boolean().optional().nullable(),
+  // Strategic foundation
+  strategic_goal: optionalText,
+  impact_statement: optionalText,
+  relational_goal: optionalText,
+  // Voice & tone
+  community_terms: optionalText,
+  tone_descriptors: optionalText,
+  // Legal & compliance
+  legal_structure: optionalText,
+  legal_jurisdiction: optionalText,
+  // Platform & infrastructure
+  p2p_page_support: z.boolean().optional().nullable(),
+  email_capture_automatic: z.boolean().optional().nullable(),
+  primary_outreach_channels: optionalText,
+  social_platform_registrations: optionalText,
+  active_matching_gift: z.boolean().optional().nullable(),
+  active_matching_gift_details: optionalText,
+  // JSONB
+  tactic_settings: z.unknown().optional().nullable(),
+  story_requirement_by_tier: z.unknown().optional().nullable(),
+  absolute_guardrails: z.unknown().optional().nullable(),
 });
 
 export const updateFundraisingSchema = z.object({
@@ -41,6 +67,33 @@ export const updateFundraisingSchema = z.object({
   audience_knowledge_members: optionalText,
   audience_knowledge_supporters: optionalText,
   audience_knowledge_public: optionalText,
+  consent_forms_url: optionalText,
+  // Leader profile
+  leader_experience_default: optionalText,
+  // Story settings
+  story_source_rules: optionalText,
+  story_flag_in_brief: z.boolean().optional().nullable(),
+  // Strategic foundation
+  strategic_goal: optionalText,
+  impact_statement: optionalText,
+  relational_goal: optionalText,
+  // Voice & tone
+  community_terms: optionalText,
+  tone_descriptors: optionalText,
+  // Legal & compliance
+  legal_structure: optionalText,
+  legal_jurisdiction: optionalText,
+  // Platform & infrastructure
+  p2p_page_support: z.boolean().optional().nullable(),
+  email_capture_automatic: z.boolean().optional().nullable(),
+  primary_outreach_channels: optionalText,
+  social_platform_registrations: optionalText,
+  active_matching_gift: z.boolean().optional().nullable(),
+  active_matching_gift_details: optionalText,
+  // JSONB
+  tactic_settings: z.unknown().optional().nullable(),
+  story_requirement_by_tier: z.unknown().optional().nullable(),
+  absolute_guardrails: z.unknown().optional().nullable(),
 });
 
 export type CreateFundraisingInput = z.infer<typeof createFundraisingSchema>;

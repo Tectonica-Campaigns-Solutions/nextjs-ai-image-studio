@@ -102,6 +102,32 @@ export interface ClientFundraisingData {
   audience_knowledge_public: string | null;
   // Consent
   consent_forms_url: string | null;
+  // Leader profile
+  leader_experience_default: string | null;
+  // Story settings
+  story_source_rules: string | null;
+  story_flag_in_brief: boolean | null;
+  // Strategic foundation
+  strategic_goal: string | null;
+  impact_statement: string | null;
+  relational_goal: string | null;
+  // Voice & tone
+  community_terms: string | null;
+  tone_descriptors: string | null;
+  // Legal & compliance
+  legal_structure: string | null;
+  legal_jurisdiction: string | null;
+  // Platform & infrastructure
+  p2p_page_support: boolean | null;
+  email_capture_automatic: boolean | null;
+  primary_outreach_channels: string | null;
+  social_platform_registrations: string | null;
+  active_matching_gift: boolean | null;
+  active_matching_gift_details: string | null;
+  // JSONB
+  tactic_settings: Record<string, { status: string; conditions: string | null }> | null;
+  story_requirement_by_tier: Record<string, string> | null;
+  absolute_guardrails: Array<{ rule: string; reason: string; applies_to: string }> | null;
   // Audit
   created_at: string;
   updated_at: string;
