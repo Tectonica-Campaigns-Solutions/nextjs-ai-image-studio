@@ -40,30 +40,27 @@ type TabKey =
   | "generated-images"
   | "fundraising";
 
-const TACTICS = [
-  "peer-to-peer",
-  "in-person-ask",
-  "call-banking",
-  "house-parties",
-  "crowdfunding",
-  "email-appeals",
-  "sms-whatsapp",
-  "social-media",
-  "local-business",
-  "community-events",
-  "walk-a-thon",
-  "sporting-sub-a",
-  "sporting-sub-b",
-  "gala",
-  "matching-sub-a",
-  "matching-sub-b",
-  "tribute-memorial",
-  "tribute-occasion",
-  "raffle",
-  "sweepstakes",
-  "giving-days",
-  "merchandise",
-] as const;
+const TACTICS: { key: string; label: string }[] = [
+  { key: "peer-to-peer",      label: "Peer-to-peer fundraising — members ask their own networks" },
+  { key: "in-person-ask",     label: "In-person ask at meetings or events" },
+  { key: "call-banking",      label: "Phone / call banking to existing supporters" },
+  { key: "house-parties",     label: "House parties / salon fundraisers" },
+  { key: "crowdfunding",      label: "Crowdfunding — single shared campaign page" },
+  { key: "email-appeals",     label: "Email fundraising appeals" },
+  { key: "sms-whatsapp",      label: "SMS / text / WhatsApp fundraising" },
+  { key: "social-media",      label: "Social media fundraisers" },
+  { key: "local-business",    label: "Local business partnerships / %-of-sales nights" },
+  { key: "community-events",  label: "Community events — bake sales, car washes, fairs, benefit concerts" },
+  { key: "walk-a-thon",       label: "Walk / run / ride-a-thon — self-organized" },
+  { key: "sporting-sub-a",    label: "Participating in an external event as fundraisers — marathon, challenge" },
+  { key: "sporting-sub-b",    label: "Hosting your own sporting event / tournament" },
+  { key: "matching-sub-a",    label: "Matching-gift campaigns — org-provided or group-sourced match" },
+  { key: "tribute-memorial",  label: "Tribute / memorial giving pages" },
+  { key: "raffle",            label: "Raffles & sweepstakes — regs vary by jurisdiction; coach flags legally by location. Mark Prohibited if you bar them on principle" },
+  { key: "merchandise",       label: "Merchandise / product sales — print-on-demand or stock" },
+  { key: "gala",              label: "Gala / dinner fundraiser — complex; strong guidance needed" },
+  { key: "giving-days",       label: "Online giving days — Giving Tuesday, local giving days — org leads, group amplifies" },
+];
 
 type TacticStatus = "encouraged" | "allowed" | "discouraged" | "prohibited";
 const TACTIC_STATUSES: TacticStatus[] = ["encouraged", "allowed", "discouraged", "prohibited"];
@@ -177,7 +174,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
   const [tacticSettings, setTacticSettings] = useState<Record<string, { status: TacticStatus; conditions: string }>>(() => {
     const existing = initialFundraising?.tactic_settings;
     return Object.fromEntries(
-      TACTICS.map((t) => [
+      TACTICS.map(({ key: t }) => [
         t,
         {
           status: (existing?.[t]?.status as TacticStatus | undefined) ?? "allowed",
@@ -246,7 +243,7 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
           community_terms: fundraisingForm.community_terms.trim() || null,
           tone_descriptors: fundraisingForm.tone_descriptors.trim() || null,
           tactic_settings: Object.fromEntries(
-            TACTICS.map((t) => [
+            TACTICS.map(({ key: t }) => [
               t,
               {
                 status: tacticSettings[t]?.status ?? "allowed",
@@ -1697,16 +1694,16 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-outline-variant/10">
-                        {TACTICS.map((tactic) => (
-                          <tr key={tactic}>
-                            <td className="py-2 pr-3 font-medium text-on-surface whitespace-nowrap">{tactic}</td>
+                        {TACTICS.map(({ key, label }) => (
+                          <tr key={key}>
+                            <td className="py-2 pr-3 font-medium text-on-surface">{label}</td>
                             <td className="py-2 pr-3">
                               <select
-                                value={tacticSettings[tactic]?.status ?? "allowed"}
+                                value={tacticSettings[key]?.status ?? "allowed"}
                                 onChange={(e) =>
                                   setTacticSettings((prev) => ({
                                     ...prev,
-                                    [tactic]: { ...prev[tactic], status: e.target.value as TacticStatus },
+                                    [key]: { ...prev[key], status: e.target.value as TacticStatus },
                                   }))
                                 }
                                 disabled={fundraisingSaving}
@@ -1720,11 +1717,11 @@ export function DashboardClientDetailScreen({ data }: DashboardClientDetailScree
                             <td className="py-2">
                               <input
                                 type="text"
-                                value={tacticSettings[tactic]?.conditions ?? ""}
+                                value={tacticSettings[key]?.conditions ?? ""}
                                 onChange={(e) =>
                                   setTacticSettings((prev) => ({
                                     ...prev,
-                                    [tactic]: { ...prev[tactic], conditions: e.target.value },
+                                    [key]: { ...prev[key], conditions: e.target.value },
                                   }))
                                 }
                                 disabled={fundraisingSaving}
