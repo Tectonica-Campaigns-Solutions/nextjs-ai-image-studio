@@ -1,11 +1,27 @@
 ---
-title: Sanity Check Flag Templates
+title: Viability Check Flag Templates
 content-type: LANGUAGE
-context: sanity-check
+context: viability-check
 priority: critical
 ---
 
-# Sanity Check Flag Templates
+# Viability Check Flag Templates
+
+## Pre-check: CLIENT CONTEXT resolution
+
+Before running any viability check flag, check whether the relevant condition is already resolved by the CLIENT CONTEXT. Several flags have a client-layer equivalent that removes the need to ask or flag at all.
+
+| Flag condition | CLIENT CONTEXT field | If pre-loaded |
+|---|---|---|
+| Cash handling process | cash_handling_process | Tell the user the process — do not flag as a gap |
+| Email capture in place | email_capture_automatic = true | Confirmed — skip email collection flag |
+| P2P individual page support | p2p_page_support = false | Route to shared crowdfunding automatically — not a gap |
+| Org-level matching gift | active_matching_gift | If true: surface as amplifier. If false: only ask about group-sourced match |
+| Social platform registration | social_platform_registrations | Route native vs. campaign-to-page automatically per platform |
+| Legal jurisdiction | legal_jurisdiction | Apply tactic-specific legal flags automatically — do not ask Block 1 legal question |
+
+If a field is absent from CLIENT CONTEXT, apply the standard flag behaviour below.
+
 
 ## Standard Flag Pattern
 
@@ -56,6 +72,8 @@ Redirect framing rule: don't just block. Explain why the tactic won't work in on
 ### Community Events
 > "Community events with in-person giving need a cash handling process in place before the day. Collecting cash without a system creates accounting and compliance problems. Does your org have a cash handling process ready?"
 
+*Note: if cash_handling_process is in CLIENT CONTEXT, tell the user what the process is rather than asking this question.*
+
 ### Walk-a-Thon
 > "Walk-a-thons work when participants are willing to fundraise — not just walk. If people are coming for the event and not the fundraising, you'll end up with a nice event and very little money raised. Are your participants ready to make asks of their own networks?"
 
@@ -71,6 +89,8 @@ Redirect framing rule: don't just block. Explain why the tactic won't work in on
 ### Matching Sub-A (Secured match)
 > "Before we build the campaign around this match, I want to confirm the details are locked — in writing. A verbal commitment that isn't confirmed can fall through at the worst time. Is the match documented and confirmed?"
 
+*Note: if active_matching_gift is true in CLIENT CONTEXT, the match is already confirmed — skip this flag.*
+
 ### Matching Sub-B (Unsecured match)
 > "Before we build a campaign around a match you're hoping to secure — let's make sure you have a compelling case and a specific person in mind. A match donor ask is itself a fundraising conversation. Do you have someone specific, and do you know what you're going to say?"
 
@@ -83,8 +103,12 @@ Redirect framing rule: don't just block. Explain why the tactic won't work in on
 ### Raffle
 > "Raffles have legal compliance requirements that vary by jurisdiction. I have to be direct: we cannot proceed without confirming your raffle is legally compliant. Have you checked the rules for your location and confirmed compliance?"
 
+*Note: if legal_jurisdiction is in CLIENT CONTEXT, the model applies the jurisdiction-specific raffle rules automatically rather than asking the leader to confirm.*
+
 ### Sweepstakes
 > "Like raffles, sweepstakes have legal requirements. Before we go further, have you confirmed the rules for your jurisdiction, particularly around free entry requirements?"
+
+*Note: same CLIENT CONTEXT jurisdiction rule applies.*
 
 ### Online Giving Days
 > "Giving day campaigns work best when your org is officially participating and has assets ready — a page, a match, or amplification support. Is your org registered and running a giving day campaign that you can plug into?"

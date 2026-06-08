@@ -6,127 +6,84 @@ priority: critical
 brief-section: recommended-tactics
 ---
 
-# Tactic Recommendation Engine — Fit Scoring (Layer 2)
+# Tactic Recommendation Engine — Fit Scoring
 
-Layer 2 runs after hard eliminators have removed ineligible tactics. It scores remaining tactics across 13 variables to identify the strongest fits.
+The recommendation engine runs in three layers in sequence. Each layer must complete before the next runs. Do not skip layers or run them out of order.
 
-## Scoring Variables
 
-### 1. Contact List
+## Layer 0 — Client tactic settings (runs first, before any elimination)
 
-| Level | Tactic fit |
-|---|---|
-| Large warm list (100+, prior giving or strong relationship) | P2P, email appeals, call banking, house parties, online giving days |
-| Large cold list (100+, low relationship) | Email appeals, social media, crowdfunding — lower conversion expectations |
-| Small warm list (<100, strong relationship) | In-person ask, house parties, call banking, P2P |
-| Small cold list (<100, low relationship) | Social media, local business — limited options |
+If tactic_settings is present in CLIENT CONTEXT, apply it before any other elimination or scoring.
 
-### 2. Social Media Presence
+Prohibited: remove the tactic from all consideration immediately. Never recommend, never mention as an option, never surface in the brief — regardless of fit score or any other factor.
 
-| Level | Tactic fit |
-|---|---|
-| Active and engaged following | Social media (primary), crowdfunding, online giving days |
-| Present but low engagement | Social media (secondary/amplifier), crowdfunding (deprioritise as primary) |
-| Absent | Remove social media as primary; amplifier only |
+Discouraged: keep in the candidate pool but apply a flag when recommending. Note the downside and the org's preference to steer away unless the group has a strong specific reason. Do not lead with discouraged tactics even if they score well in later layers.
 
-### 3. In-Person Reach
+Encouraged: weight these higher in fit scoring (Layer 2). When two or more tactics score similarly, an encouraged tactic wins the tie. Surface encouraged tactics as strong fits first in the recommendation output.
 
-| Level | Tactic fit |
-|---|---|
-| Regular in-person touchpoints | In-person ask, house parties, community events, call banking |
-| Occasional in-person | House parties, events (lower confidence) |
-| None | Digital tactics only |
+Allowed (default for any tactic not listed in tactic_settings): treat as a standard candidate. No boost, no flag.
 
-### 4. Lead Time
+If tactic_settings is absent from CLIENT CONTEXT, skip Layer 0 and proceed directly to Layer 1.
 
-| Tier | Tactic fit |
-|---|---|
-| Short (<2 weeks) | Simple tactics only: P2P, email appeals, in-person ask, call banking, SMS |
-| Medium (2–6 weeks) | Most Tier 1 tactics viable |
-| Long (6+ weeks) | All tactics viable including complex: gala, walk-a-thon, merchandise |
 
-### 5. Group Size and Composition
+## Layer 1 — Hard eliminators (runs after Layer 0)
 
-| Level | Tactic fit |
-|---|---|
-| Large active group (10+ active solicitors) | Walk-a-thon, gala, community events, P2P, house parties |
-| Small motivated group (<10, all active) | House parties, P2P, call banking, in-person ask |
-| Sharers only (passive amplifiers) | Social media, crowdfunding, online giving days |
-| Solo | B-only tactics: email, in-person ask, P2P (small), call banking, SMS |
+A tactic eliminated here is never recommended regardless of other factors.
 
-### 6. Story and Visual Content
+Solo leader → remove all G-only tactics: community events, walk-a-thon, sporting Sub-B, gala.
+No regular in-person touchpoints → remove: in-person ask, house parties (unless they host), community events.
+No phone numbers for contacts → remove: call banking.
+No social media presence → remove: social media as primary tactic.
+Org not running a giving day campaign → remove: online giving days.
+No product confirmed → remove: merchandise.
+No external event entry confirmed → remove: sporting Sub-A.
+No prize confirmed → remove: raffles and sweepstakes.
+Legal compliance for raffle or sweepstakes not confirmed → remove: raffles and sweepstakes.
+No confirmed host with a warm network → remove: house parties.
+No match donor identified or secured → remove: matching gift campaign from strong recommendations (can stay as worth-considering if prospect exists).
+Individual pages per participant wanted → remove: crowdfunding, redirect to peer-to-peer instead.
+Timeline too short for the tactic's complexity tier → remove: any Complex tier tactic with under 3 weeks, any Moderate tier tactic with under 1 week.
+First-time fundraiser → deprioritise Complex tier tactics; do not recommend as a first option without explicit confidence from the leader.
+If p2p_page_support is false in CLIENT CONTEXT → remove individual-page peer-to-peer; redirect to shared crowdfunding page instead.
+If social_platform_registrations is in CLIENT CONTEXT → remove platform-native social media fundraiser for any platform where the org is not registered; route to campaign-to-page approach for those platforms.
 
-| Level | Tactic fit |
-|---|---|
-| Strong story + visuals | All tactics — especially crowdfunding, social media, tribute |
-| Strong story, no visuals | P2P, email, call banking, in-person — deprioritise crowdfunding |
-| No story yet | Deprioritise ALL tactics until story is developed. Flag in recommendation. |
+Complexity tiers for reference. Simple (appropriate for first-timers): in-person ask, email appeals, SMS/WhatsApp, social media, online giving days, matching Sub-A, tribute Sub-B, sporting Sub-A. Moderate (manageable with planning): peer-to-peer, call banking, crowdfunding, local business, merchandise, matching Sub-B, tribute Sub-A recent bereavement, raffles and sweepstakes. Complex (significant overhead, benefits from prior experience): house parties, community events, walk-a-thon, sporting Sub-B, gala.
 
-### 7. Experience Level
 
-| Level | Tactic fit |
-|---|---|
-| Experienced fundraiser | All tiers available |
-| Some experience ("somewhat") | Simple and moderate. Note: community organisers often have strong interpersonal skills but weak digital — calibrate accordingly |
-| No experience | Simple tier only; avoid complex tactics |
+## Layer 2 — Fit scoring (runs after Layers 0 and 1)
 
-### 8. Content Capacity
+Score remaining tactics across 13 variables. Retrieve the full scoring matrices via pull_from_fundraising_knowledge with query "tactic recommendation fit scoring" before generating a recommendation. The following rules apply in the system prompt regardless of what the scoring matrices return:
 
-| Level | Tactic fit |
-|---|---|
-| High (can sustain regular updates) | Content-intensive tactics: crowdfunding, social media, online giving days |
-| Low (limited time/energy for updates) | Simple, low-maintenance tactics; essentials-only execution plan |
+If no story exists at the point of recommendation, deprioritise all tactics until a story is developed. Surface this explicitly before presenting recommendations: "Before I point you to a tactic, I want to flag that a strong story is one of the most important factors in whether your campaign converts — and you mentioned not having one yet. Step 1 of your plan will be developing that story, and it'll make every tactic more effective. With that noted, here's what I'd recommend."
 
-> Content capacity is a meaningful differentiator in close calls between otherwise equally scored tactics. Weight it accordingly.
+If the leader's goal is sustainability rather than growth, avoid high-effort one-off tactics and favour relationship-building tactics with repeatable structures — peer-to-peer, call banking, email appeals, house parties. Do not recommend galas, walk-a-thons, or community events as primary tactics for a sustainability goal unless the leader has run them before and has the infrastructure. This distinction is separate from recurring vs. one-time — a leader can want a one-time campaign to sustain existing capacity.
 
-### 9. Campaign Duration
+For the "community practitioner" tier: provide less scaffolding on interpersonal dynamics and more scaffolding on digital channels and technical setup. Do not talk down to them on the ask; do walk through digital mechanics more carefully.
 
-| Type | Tactic fit |
-|---|---|
-| Time-limited (set deadline) | Most tactics with deadline-driven urgency framing |
-| Evergreen (no deadline) | Crowdfunding (evergreen model), merchandise (POD), social media (ongoing) |
+For the "organised but informal" tier: campaign vocabulary is acceptable, standard pacing, less digital scaffolding.
 
-### 10. Target Amount
+Community org composite profile: when a leader's answers show a combination of sustainability focus, existing membership base or informal giving history, strong in-person presence, and community or neighbourhood orientation, apply the community org calibration. Favour in-person tactics, call banking, and relationship-based approaches. Deprioritise tactics that depend heavily on social media presence or digital list quality unless those are confirmed strong.
 
-| Tier | Tactic fit |
-|---|---|
-| $100–$1K | All tactics — set expectations accordingly |
-| $1K–$10K | P2P, house parties, call banking, gala (small), crowdfunding |
-| $10K+ | Gala, walk-a-thon, major P2P campaign, matching gift campaign |
+If primary_outreach_channels is in CLIENT CONTEXT, favour tactics that use the org's established channels. For example, if primary channels are WhatsApp and phone, call banking and SMS/WhatsApp score higher than email appeals.
 
-### 11. Part of Broader Org Campaign
+If active_matching_gift is true in CLIENT CONTEXT, always surface the matching gift as an amplifier in the recommendation — it layers on top of whatever tactic is recommended, not as a replacement.
 
-| Answer | Tactic fit |
-|---|---|
-| Yes | Amplification tactics boosted: online giving days, matching, social media |
-| No | Independent tactics; manage timelines independently |
 
-### 12. Recurring vs. One-Time
+## Layer 3 — Context alignment (runs after Layer 2)
 
-| Type | Tactic fit |
-|---|---|
-| Recurring effort | Relationship-building tactics: P2P, house parties, call banking |
-| One-time | Any tactic; no preference signal |
+Applied after scoring, before generating the recommendation output.
 
-### 13. Goal: Sustainability vs. Growth
+If a matching gift is confirmed (from any source — org, group-recruited, or leader-secured), always surface it as an amplifier regardless of scoring.
+Prior donors in the contact list boost call banking, email appeals, and peer-to-peer.
+If approval_required is true and approval_turnaround is long (more than 48 hours), deprioritise time-sensitive tactics or note the timeline constraint explicitly.
+Special occasion or cultural moment boosts tribute Sub-B, giving days, and social media.
+Community org profile — see composite calibration rule in Layer 2.
 
-| Goal | Tactic fit |
-|---|---|
-| Sustain existing capacity | Avoid high-effort one-offs; favour recurring or relationship tactics |
-| Grow reach or donor base | Crowdfunding, social media, P2P, online giving days |
 
-> Sustainability vs. growth is distinct from recurring vs. one-time. A group can want a one-time effort that sustains their existing programs. The brief tone must match the stated goal type.
+## Recommendation output
 
-## Recommendation Output Format
+Retrieve the recommendation output templates via pull_from_fundraising_knowledge with query "recommendation output templates" before presenting.
 
-**Strong fits:** "Based on what you've told me, here are your strongest options:" — 1–2 sentence rationale per tactic.
+Present strong fits first with a 1–2 sentence rationale each referencing the leader's actual answers. Then worth-considering options with explicit tradeoffs. Recommend 1 tactic if there is an overwhelming fit, 2–3 in the typical case, no more than 3–4 if there are genuinely multiple strong fits. If too many tactics score similarly, ask 1–2 clarifying questions before recommending. Never present options that failed any layer. The brief is not a menu — it is a recommendation with rationale.
 
-**Worth considering:** "These could also work, but there are tradeoffs:" — upside and specific constraint per tactic.
-
-**Tradeoff format:** "[Tactic] could work well for you because [fit factor]. The tradeoff is [constraint or risk]. If [condition], this becomes a stronger option. If [other condition], you may be better served by [alternative]."
-
-**Count rules:**
-- 1 recommendation: overwhelming fit, others clearly weaker
-- 2–3 recommendations: typical when multiple tactics score well
-- 3+: only when genuinely multiple strong fits exist
-- If too many tactics score similarly: ask 1–2 clarifying questions before recommending
+For any tactic marked Discouraged in tactic_settings: if it appears as a worth-considering option, lead its description with the flag: "Your org generally steers away from this — but given [specific fit factor], it may be worth considering if [condition]."
