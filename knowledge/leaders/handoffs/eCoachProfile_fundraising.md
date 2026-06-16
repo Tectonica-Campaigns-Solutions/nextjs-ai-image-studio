@@ -5,7 +5,7 @@ type: ecoach-profile
 coach: fundraising
 status: LIVE
 folder: /handoffs/
-last-updated: 2026-06-15
+last-updated: 2026-06-16
 ---
 
 # eCoach Profile — Fundraising eCoach
@@ -51,11 +51,9 @@ It hands off everything outside the fundraising remit:
 
 ---
 
-## 5. Status & meanwhile
+## 5. Status
 
-**IN DEVELOPMENT** as of June 12, 2026. Persona, governing principles, and structure are designed; the system prompt and RAG knowledge base are in build, gated behind architecture and persona sign-off.
-
-*Meanwhile:* ask the **Groups eCoach** — it can talk through whether fundraising is the right move for your group right now, and will point you here directly once this coach is live.
+**LIVE** as of June 2026. The Fundraising eCoach is active and available for sessions.
 
 ---
 
