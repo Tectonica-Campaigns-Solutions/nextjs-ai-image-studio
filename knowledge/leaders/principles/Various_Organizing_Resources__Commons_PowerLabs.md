@@ -1,7 +1,6 @@
 ---
 title: "Various Organizing Resources"
-source: "Various Organizing Resources Commons PowerLabs"
-domains: [A5, A6, A7]
+source: "[Various Organizing Resources](https://commonslibrary.org/organising-start-here/) Commons PowerLabs"domains: [A5, A6, A7]
 primary_folder: "/principles/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -42,8 +41,7 @@ last-updated: 2026-06-10
 
 **Motivation is built into the job, not into the person.** Before deciding a volunteer is unmotivated or flaky, look at how their role is designed; a boring, micro-managed, or overwhelming job produces the behavior you're blaming on the person. Five measurable characteristics of the *work itself* — skill variety, task identity, task significance, autonomy, and feedback — predict motivation, satisfaction, and performance, so a leader can engineer commitment by redesigning the task.
 flagship example: Hackman & Oldham studied 658 workers across 62 jobs in 7 organizations (1975) and isolated the five characteristics; the model has since been used to improve volunteer teams at the Sierra Club, the Obama 2008 field program, and Sunrise.
-source: Smith — *How to Design Volunteer Jobs to be More Motivating* (Powerlabs / Commons), citing Hackman & Oldham 1975
-governs: [A5.4] [A3.1] [A3.2]
+source: Smith — *How to Design Volunteer Jobs to be More Motivating* (Powerlabs / Commons), citing [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) & Oldham 1975governs: [A5.4] [A3.1] [A3.2]
 
 ## Layer 1 — The Overall Argument
 
@@ -59,8 +57,7 @@ concepts:    [A5.4 work-and-task-design]
 situations:  [S:work-is-all-on-a-few-people] [S:volunteers-flaky] [S:newcomers-dont-stick]
 handoff:
 anchors to:  Motivation is built into the job, not into the person
-source:      Smith — *How to Design Volunteer Jobs to be More Motivating* (Powerlabs / Commons)
-
+source:      [Smith — *How to Design Volunteer Jobs](https://commonslibrary.org/organising-start-here/) to be More Motivating* (Powerlabs / Commons)
 - **Claim / recommendation:** Evaluate and improve any role against five characteristics rather than treating motivation as fixed. *Skill variety:* are they using a range of talents, or doing one thing on repeat? *Task identity:* does the shift have a beginning, middle, and a visible finished result? *Task significance:* do they know how their slice fits the larger strategy? *Autonomy:* do they get judgment, or a script to follow word-for-word? *Feedback:* does the work itself tell them how they're doing? Don't conclude a person is unmotivated before checking whether the *task* is.
 - **Reasoning / mechanism:** Hackman & Oldham found these five attributes drive motivation, satisfaction, and performance across very different jobs — the cause sits in the work design, not the worker. Each can be raised with small tweaks: end-of-shift debriefs add variety *and* connection [A4.3]; calling one precinct to a target gives a whole finished piece; teaching *why* a script is written as it is lets people internalize the reasons and feel ownership [A3.2].
 - **Example in context:** On a get-out-the-vote phone bank, the article shows each dial turning: debriefs ("what went well, what to try next") for variety; per-turf commitment goals for identity; "you're IDing supporters we'll turn out later" for significance; explaining the plan-to-vote ask for autonomy; jotting contacts and yeses for feedback — with the organizer sharing "I usually get six yeses, but this is tough turf" so people calibrate.
@@ -73,8 +70,7 @@ concepts:    [A7.3 autonomy-vs-direction] [A5.4 work-and-task-design]
 situations:  [S:no-one-takes-initiative] [S:work-is-all-on-a-few-people]
 handoff:
 anchors to:  Motivation is built into the job, not into the person
-source:      Smith — *How to Design Volunteer Jobs to be More Motivating* (Powerlabs / Commons)
-
+source:      [Smith — *How to Design Volunteer Jobs](https://commonslibrary.org/organising-start-here/) to be More Motivating* (Powerlabs / Commons)
 - **Claim / recommendation:** If you can only improve one thing, raise autonomy or feedback. In the Motivating Potential Score, variety/identity/significance average together, but autonomy and feedback enter as *multipliers* — so a role weak in either is capped no matter how rich the rest is. Concretely: give people room for judgment (with support), and build in a way for the work to report back on itself.
 - **Reasoning / mechanism:** Autonomy makes a person feel personally accountable for the result, and feedback feeds the desire to get better over time — together they pull people toward more responsibility and leadership, which is the organizer's real goal [A9.1]. The multiplier structure is why these two outrank the others arithmetically, not just rhetorically.
 - **Example in context:** Autonomy can rise without loosening the message — teaching *why* the script asks for a plan-to-vote ("studies show a plan beats a reminder") lets volunteers internalize the logic and exercise judgment inside it. Feedback rises by having volunteers track their own contacts and yeses rather than waiting for an organizer to tell them.
@@ -94,8 +90,7 @@ source:      Smith — *How to Design Volunteer Jobs to be More Motivating* (Pow
 
 **A bad decision is usually a bad process.** The thorniest failures trace back to a decision point where a flawed process produced the wrong call — or where a hard choice was simply avoided. Because the cause is the *process*, not bad luck or bad people, a deliberate one lowers the risk of solving the wrong problem, taking a shortcut you'll regret, or burning effort that goes nowhere.
 flagship example: A leadership team let high-status members pitch from faulty assumptions, then "sealed the deal" with a groupthink-prone activity; under pressure no one would risk their standing to question it, so they doubled down on a failing plan until the money ran out and the org folded.
-source: Smith — *How to Make Better Decisions Together* (PowerLabs / Commons)
-governs: [A7.2] [A7.5] [A8.2]
+source: [Smith — *How to Make Better Decisions](https://commonslibrary.org/organising-start-here/) Together* (PowerLabs / Commons)governs: [A7.2] [A7.5] [A8.2]
 
 ## Layer 1 — The Overall Argument
 
@@ -111,8 +106,7 @@ concepts:    [A7.2 decisions-as-shared-process]
 situations:  [S:cant-make-decisions] [S:decisions-keep-getting-relitigated]
 handoff:
 anchors to:  A bad decision is usually a bad process
-source:      Smith — *How to Make Better Decisions Together* (PowerLabs / Commons), citing Guo 2008
-
+source:      [Smith — *How to Make Better Decisions](https://commonslibrary.org/organising-start-here/) Together* (PowerLabs / Commons), citing Guo 2008
 - **Claim / recommendation:** Run group decisions through a named sequence rather than ad-hoc debate: **D**efine the problem, **E**stablish criteria, **C**onsider all alternatives, **I**dentify the best, **D**evelop and implement a plan, **E**valuate and adjust. Use it for tiny calls (dinner tonight) and large ones (campaign tactics) alike — the same shape, scaled in time. Treat it as collective problem-solving, not a contest of advocates pitching pre-formed positions.
 - **Reasoning / mechanism:** A systematic process reduces the risk at each link — it forces the real problem into view before solutions, makes the trade-offs explicit, and builds in a feedback loop to catch a wrong turn early. Kristina Lu Guo built DECIDE for healthcare managers (2008); its value is that it externalizes the steps a good decider does implicitly, so a *group* can do them together without one voice steering.
 - **Example in context:** The article splits a big decision across two sessions — define/criteria/alternatives before a break, then more alternatives/choose/plan after — so people's thinking has room to expand rather than collapsing onto the first idea in the room.
@@ -124,8 +118,7 @@ concepts:    [A7.2 decisions-as-shared-process] [A9.2 delegating-outcomes-not-ta
 situations:  [S:volunteers-flaky] [S:work-is-all-on-a-few-people]
 handoff:
 anchors to:  A bad decision is usually a bad process
-source:      Smith — *How to Make Better Decisions Together* (PowerLabs / Commons)
-
+source:      [Smith — *How to Make Better Decisions](https://commonslibrary.org/organising-start-here/) Together* (PowerLabs / Commons)
 - **Claim / recommendation:** Don't dive into solving before you understand what's actually wrong. The problem you *notice* is often a symptom of a structural or contextual cause, so the first DECIDE step is the one most often skipped and most worth slowing down for. As the article puts it: "Don't dive into problem-solving without understanding the problem first."
 - **Reasoning / mechanism:** Misdiagnosing the problem as an individual failing ("they have a time-management problem… or a character flaw") leads to fixes aimed at the wrong target. Tracing causes upstream usually surfaces a *design* issue instead — which is fixable in a way that blaming people is not.
 - **Example in context:** An org whose staff and members kept missing commitments first blamed the individuals; digging revealed the structural cause was assigning tiny tasks with step-by-step instructions. The fix was to "create teams that own outcomes" with the support and autonomy to deliver them — a structural redesign, not a talking-to [A9.2].
@@ -137,8 +130,7 @@ concepts:    [A7.5 collective-agreement-tension] [A8.2 productive-dissent]
 situations:  [S:cant-make-decisions] [S:everyone-just-agrees]
 handoff:
 anchors to:  A bad decision is usually a bad process
-source:      Smith — *How to Make Better Decisions Together* (PowerLabs / Commons)
-
+source:      [Smith — *How to Make Better Decisions](https://commonslibrary.org/organising-start-here/) Together* (PowerLabs / Commons)
 - **Claim / recommendation:** If you expect a fight, move the heat to the **criteria** stage rather than the final choice. Agreeing first on what a good answer must achieve, preserve, and avoid creates the shared ground that lets the group work through disagreement when it picks. Good criteria also head off short-term thinking before it can win.
 - **Reasoning / mechanism:** Criteria are more abstract than options, so people can reconcile differing priorities and goals there more easily than when arguing over a concrete choice they've already attached to. The article borrows Ganz's three criteria as a guard against the mobilize-not-organize trap: a tactic should be **strategic** (measurable progress), **strengthen the organization** (engage new people, grow capacity), and **develop individuals** (build leadership) [A2.5].
 - **Example in context:** For generating options, the article cites evidence that brainstorming-by-shouting underperforms: "idea generation may be improved by giving people independent time to think, write, or draw their ideas before sharing." Independent ideation first, then sharing — so the loudest voice doesn't anchor the group.
@@ -161,8 +153,7 @@ concepts:    [A5.6 boundaries-and-membership] [A5.5 norms-and-operating-agreemen
 situations:  [S:group-too-big-or-chaotic] [S:volunteers-flaky]
 handoff:
 anchors to:  (Ganz / Hackman–Wageman entries already in corpus)
-source:      Dignam — *How to Structure Teams for Organising* (2016), reviewing Ganz & Wageman
-
+source:      [Dignam](https://commonslibrary.org/organising-start-here/) — *How to Structure Teams for Organising* (2016), reviewing Ganz & Wageman
 - **Claim / recommendation:** Set up your team to be **bounded** (clear who is and isn't on it, and what's expected), **stable** (the same people keep turning up), and **interdependent** (one shared purpose pursued through complementary roles). Then make it real with three things: a clear, challenging purpose; explicit norms; and roles that carry accountability. The point isn't tidiness — structure is what lets a team both get the job done *and* grow its people while doing it.
 - **Reasoning / mechanism:** Ganz's claim, quoted in the piece, is that "developing leadership requires structuring the work… so it affords as many people as possible the opportunity to learn to lead." Norms let a team take responsibility for how it works and start correcting when someone underperforms; roles only develop people if "responsibility is only real… if the person is clearly accountable" — assign nothing you won't hold someone to. A well-structured team produces three returns: the job gets done, the team's capacity grows, and individuals learn [A9.1].
 - **Example in context:** Dignam recounts leading a recruitment team for a youth climate summit — clear shared purpose, weekly check-ins, the same people returning, visible completed actions — which made it (serendipitously) bounded, stable, and effective.
@@ -185,8 +176,7 @@ concepts:    [A6.4 common-stall-patterns] [A9.7 onboarding-newcomers]
 situations:  [S:newcomers-dont-stick] [S:group-lost-its-why] [S:low-attendance]
 handoff:
 anchors to:  (commitment-in-stages — see Purpose Driven Campaigning, A3.4)
-source:      Warren, *The Purpose Driven Church*, via Australian Progress (*Levels of Commitment*, Commons)
-
+source:      [Warren, *The Purpose Driven Church*](https://commonslibrary.org/purpose-driven-campaigning/), via Australian Progress (*Levels of Commitment*, Commons)
 - **Claim / recommendation:** Watch for the small group that becomes "all core and nothing else" — the same committed people come to everything, the fellowship grows so close that newcomers can't break in, and the outward mission quietly dies. A leader's job is to keep moving people *from the outside in* (welcome the newcomer, build the crowd) rather than only deepening the people already inside. If your group hasn't brought in anyone new in a while and feels cozy, treat that as a warning, not a success.
 - **Reasoning / mechanism:** Warren names the failure mode "koinonitis" (after Peter Wagner) — a close-knit fellowship turned inward until it's "afraid or unable" to let newcomers in. The mechanism: a group that spends too long in the small-group stage gets comfortable, loses its sense of mission, and the fire of recruiting new people goes out. Comfort is the cause; the inward pull is self-reinforcing because the existing bonds are rewarding and the outward work is effortful [A2.5].
 - **Example in context:** Warren's diagnosis of most small organizations: "the same fifty people come to everything," all converted so long they have few unconverted friends left to bring in. He pairs it with the relational fix — listen and earn trust first, because "most people can't hear until they've first been heard" — so the welcome that pulls new people in is genuine, not a pitch.
@@ -221,8 +211,7 @@ concepts:    [A6.5 psychological-safety]
 situations:  [S:one-person-dominates] [S:everyone-just-agrees] [S:two-members-clashing]
 handoff:
 anchors to:  Safety comes first, built from belonging cues (see Coyle, A6.5)
-source:      Duhigg — *What Google Learned…*, NYT Magazine, Feb. 25 2016 (Project Aristotle)
-
+source:      [Duhigg](https://commonslibrary.org/organising-start-here/) — *What Google Learned…*, NYT Magazine, Feb. 25 2016 (Project Aristotle)
 - **Claim / recommendation:** Stop trying to assemble the "right" mix of people and start shaping how the group *treats one another*. Google's Project Aristotle set out to find the formula for great teams and found that composition — personalities, skills, backgrounds, whether people socialized — predicted nothing. What separated good teams from dysfunctional ones was their **norms**, and above all psychological safety: the shared sense that it's safe to speak up, question, and be wrong.
 - **Reasoning / mechanism:** Across 180 teams, no arrangement of the data showed that the "who" mattered — two teams with near-identical makeups could perform very differently. The signal was in group norms, the unwritten rules that "typically override individual proclivities." Two behaviors recurred in the good teams: roughly **equal conversational turn-taking** (by day's end everyone had spoken about the same amount) and high **average social sensitivity** (members read each other's feelings well, scoring above average on the "Reading the Mind in the Eyes" test). Both are facets of what Amy Edmondson named psychological safety.
 - **Example in context:** As Google's Abeer Dubey summed up the null result: "The 'who' part of the equation didn't seem to matter." And on the first behavior, lead researcher Anita Woolley: "As long as everyone got a chance to talk, the team did well" — but when one person or clique dominated, collective intelligence fell.

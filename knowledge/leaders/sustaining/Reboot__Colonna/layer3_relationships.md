@@ -1,7 +1,6 @@
 ---
 title: "Reboot"
-source: "Colonna — Reboot"
-domains: [A1, A8, A10]
+source: "[Colonna](https://www.goodreads.com/en/book/show/41806857-reboot) — Reboot"domains: [A1, A8, A10]
 primary_folder: "/sustaining/"
 type: ragsrc-summary
 last-updated: 2026-06-10

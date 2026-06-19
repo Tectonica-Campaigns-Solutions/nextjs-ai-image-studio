@@ -1,7 +1,6 @@
 ---
 title: "Small Groups With Purpose"
-source: "Gladen & Warren — Small Groups With Purpose"
-domains: [A1, A2, A5, A6, A9]
+source: "[Gladen & Warren](https://store.pastors.com/collections/small-group-training) — Small Groups With Purpose"domains: [A1, A2, A5, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -23,28 +22,23 @@ last-updated: 2026-06-10
 
 **Health, not growth.** Judge a group by the depth and wellbeing of its members, not by headcount or number of groups. Because a large group can be hollow and a tiny one rich, size measures reach but never tells you whether the thing that makes a group worth belonging to is actually happening — so the leader's target is health, and growth is a by-product, not the goal.
 flagship example: Saddleback began as seven people in Rick and Kay Warren's living room and grew to thousands of groups, but Gladen insists numerical scale was never the success metric — a small church or a two-group ministry can be perfectly healthy, and a huge one unhealthy.
-source:   Gladen — *Small Groups With Purpose*, ch.2 (epigraph attributed to Rick Warren); reinforced ch.18.
-governs:  [A6.3 cohesion-and-belonging] [A10.6 satisfaction-and-retention] [A2.1 shared-purpose]
+source:   [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.2 (epigraph attributed to Rick Warren); reinforced ch.18.governs:  [A6.3 cohesion-and-belonging] [A10.6 satisfaction-and-retention] [A2.1 shared-purpose]
 
 **Define success before you build.** Name what a healthy outcome looks like first; only then choose the structure that produces it. Without a defined end-state a group has no compass, so it drifts to the easiest default — social fellowship only — and members who came for more quietly leave; defining success is what lets a leader tell whether anything is working.
 flagship example: Saddleback's leadership spent 2000–2001 asking "what is our end product?" and only after answering chose small groups as the delivery system — "begin with the end in mind." Gladen keeps a member's resignation letter on his desk ("no contact … in the five years we have been leading it") as a standing reminder of what a missing strategy costs.
-source:   Gladen — *Small Groups With Purpose*, ch.4, ch.2 (Foundation 4).
-governs:  [A2.1 shared-purpose] [A5.3 goal-design]
+source:   [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.4, ch.2 (Foundation 4).governs:  [A2.1 shared-purpose] [A5.3 goal-design]
 
 **Don't lead alone — every member a minister.** The leader's job is to deploy other people's gifts, not to do the work themselves; a group where one person carries everything is both fragile and stunted. Doing it all robs members of the chance to contribute and burns the leader out, whereas distributing the work multiplies capacity and grows people — the same load, shared, gets lighter and develops leaders at once.
 flagship example: Exodus 18 — Moses judges every dispute alone until his father-in-law Jethro tells him "you cannot handle it alone" and has him appoint leaders of thousands, hundreds, fifties and tens, keeping only the hard cases. Result: Moses is relieved and everyone goes home satisfied. Harvard's Robert Putnam, quoted in the book, frames Saddleback's real job as the "recruitment and training and retention of the thousands of volunteer leaders."
-source:   Gladen — *Small Groups With Purpose*, ch.7 (Exod. 18; Putnam, *Bowling Alone*, quoted).
-governs:  [A9.2 delegating-outcomes-not-tasks] [A9.3 avoiding-founder-bottleneck] [A1.2 enabling-vs-doing] [A9.5 functional-shared-leadership]
+source:   [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.7 (Exod. 18; Putnam, *Bowling Alone*, quoted).governs:  [A9.2 delegating-outcomes-not-tasks] [A9.3 avoiding-founder-bottleneck] [A1.2 enabling-vs-doing] [A9.5 functional-shared-leadership]
 
 **Leadership potential, not proven leaders.** Recruit people on willingness and develop the skills on the job, rather than waiting for fully-formed leaders. Requiring proof up front means you never start, because perfect leaders don't volunteer; entry-level responsibility plus support turns ordinary willing members into capable leaders over time.
 flagship example: "God doesn't call the equipped; he equips the called." Gladen contrasts his old approach (fully train before letting anyone lead) with Saddleback's: give a simple first step. He points to Jesus choosing twelve ordinary men with "follow me" — and warns churches scare leaders off by skipping that and effectively asking them to "come die for me."
-source:   Gladen — *Small Groups With Purpose*, ch.2 (Foundation 5), ch.7.
-governs:  [A9.1 developing-leaders] [A1.4 stepping-into-the-role] [A3.5 the-ask / escalating-commitment]
+source:   [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.2 (Foundation 5), ch.7.governs:  [A9.1 developing-leaders] [A1.4 stepping-into-the-role] [A3.5 the-ask / escalating-commitment]
 
 **Effective, not perfect.** Make the decision and adjust as you go; don't let problem-solving stall the call that needs making. Waiting for perfect conditions guarantees nothing ships, and a group learns more from a live attempt it corrects than from a plan it perfects on paper.
 flagship example: When Rick Warren challenged the team to launch 3,000 groups (up from ~300) with six weeks' notice, they shipped scrappy week-by-week resources rather than wait — what later became the polished "40 Days of Purpose" kit. The book's motto: "If you wait for perfect conditions, you'll never get anything done" (Ecclesiastes, TLB, as quoted).
-source:   Gladen — *Small Groups With Purpose*, ch.2 (Foundation 3).
-governs:  [A1.6 failure-as-learning] [A7.2 decisions-as-shared-process]
+source:   [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.2 (Foundation 3).governs:  [A1.6 failure-as-learning] [A7.2 decisions-as-shared-process]
 
 ---
 
@@ -80,8 +74,7 @@ concepts:    [A2.1 shared-purpose / why-before-what] [A5.3 goal-design]
 situations:  [S:unclear-what-were-doing] [S:group-lost-its-why]
 handoff:
 anchors to:  Define success before you build
-source:      Gladen — *Small Groups With Purpose*, ch.4, ch.2 (Foundation 4)
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.4, ch.2 (Foundation 4)
 - **Claim / recommendation:** Before recruiting or running anything, define what a healthy result looks like for your group, then choose activities that produce it. Don't start from "what we've always done" or from a hunt for better curriculum; start from the end-state. A group without a defined purpose won't fail loudly — it will quietly collapse into fellowship-only and lose anyone who wanted more.
 - **Reasoning / mechanism:** Gladen frames this as "begin with the end in mind": a clear target is the only thing that lets you tell whether the group is working, so the absence of one isn't neutral — it actively pulls the group toward the lowest-effort default [A6.3]. The book's diagnostic is that leaders who "lack a clear purpose and focus … flounder," and chase tactics (new study, new training) when the real gap is purpose.
 - **Example in context:** Saddleback's team spent 2000–2001 defining their "end product" before settling on small groups as the vehicle. Gladen keeps a resignation letter on his desk from a couple who led a group for five years with "no contact … from the church" — for him the concrete cost of having no strategy to connect and support people.
@@ -93,8 +86,7 @@ concepts:    [A2.1 shared-purpose / why-before-what]
 situations:  [S:group-lost-its-why] [S:group-feels-transactional]
 handoff:
 anchors to:  Define success before you build
-source:      Gladen — *Small Groups With Purpose*, ch.4
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.4
 - **Claim / recommendation:** Recruit and motivate by sharing a vision, not by listing needs — and share it through your own story and members' testimony rather than a sales pitch. State plainly why this group matters to *you*; let satisfied members speak. Avoid coming across as a salesperson asking people to fill a gap.
 - **Reasoning / mechanism:** Gladen's claim is that "people generally don't give to needs; they give time and resources to a vision" — need triggers guilt and avoidance, while a vision people can picture themselves inside generates durable commitment [A3.2]. The mechanism is identification: a story lets a person locate themselves in the work, which a needs-list never does.
 - **Example in context:** He notes that if people gave on need alone, every hospital and food bank would be flush — they aren't, because needs are infinite and uninspiring. His positive practice is using member testimonies as "the real satisfied customers," and personally watching baptisms to "recharge" his sense of why.
@@ -107,8 +99,7 @@ concepts:    [A5.2 group-size-and-nesting]
 situations:  [S:group-too-big-or-chaotic]
 handoff:     [H:org-level]
 anchors to:  Health, not growth
-source:      Gladen — *Small Groups With Purpose*, ch.9, ch.16
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.9, ch.16
 - **Claim / recommendation:** When a group outgrows intimacy, the book's preference is to plant a *new* group rather than force the existing one to split or "multiply." For the volunteer leader the usable kernel is the symptom: once a group gets too big, the things that made it work — being known, being able to speak — quietly stop. The program-level cadence of how a ministry adds groups is an organizational call, not the leader's.
 - **Reasoning / mechanism:** Gladen reports that pushing existing groups to divide breeds resentment ("all they did was divide — against me!"), because people resist having relationships they value torn apart; "it's easier to start a new group than break up an existing group." Note this *contrasts* with the nesting model in Fisher [A5.2] — both agree a working group must stay small, but disagree on whether you split or seed.
 - **Example in context:** He describes groups that "start with a group of eight and in no time … have twenty-five or thirty people gathering in their home — all trying to arrive early so they will have a … chair." The bloat is concrete: people lose a seat, lose airtime, lose the group.
@@ -121,8 +112,7 @@ concepts:    [A5.5 norms-and-operating-agreements] [A5.7 launch-and-relaunch]
 situations:  [S:decisions-keep-getting-relitigated] [S:lost-momentum-after-launch]
 handoff:     [H:events]
 anchors to:  Community is the foundation but must be led
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** Put the group's operating agreements in writing and go over them in the first session — what we're here for and how we'll behave (attendance, confidentiality/gossip, conflict, day and time). Revisit them yearly and whenever new members join. This is the cheap structural move that prevents recurring friction later.
 - **Reasoning / mechanism:** Naming norms up front turns implicit expectations into explicit ones, so the group has something to point back to instead of relitigating each time [A6.1]. Setting them at launch matters because the first session is when norms are most malleable; agreeing them later means overturning an already-formed (often unspoken) culture.
 - **Example in context:** Saddleback distributes written guidelines to every leader covering exactly these points and recommends covering them in session one, refreshing annually. *(No single dramatised case is given.)*
@@ -135,8 +125,7 @@ concepts:    [A6.3 cohesion-and-belonging] [A2.3 values-as-glue]
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Community is the foundation but must be led
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** Community is the foundation and "the glue that holds your groups together when times get tough" — but a leader should not let the group settle into the comfort zone of social time alone. Real belonging goes below the surface, and that only happens with direction and focused leadership. Convening people in a room is the start, not the result.
 - **Reasoning / mechanism:** The book's core structural claim (the "structure-before-process" lens in our register) is that depth is produced, not waited for: most groups default to surface fellowship, and only "focused leadership can bring about a healthy balance." Mechanically, the leader supplies the direction that a comfortable group won't generate for itself [A1.2].
 - **Example in context:** Gladen draws two circles — most groups looking like a single fellowship blob, a led group balancing several dimensions of group life. The "balanced" frame is the book's "five biblical purposes," translated here as a group that does connection, growth, service, outward reach and shared meaning rather than collapsing into one.
@@ -149,8 +138,7 @@ concepts:    [A3.2 ownership-and-voice]
 situations:  [S:low-attendance] [S:volunteers-flaky]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** Give members real responsibility for a piece of the group early on; people attend and persist for what they feel responsible to, not for what's done *for* them. Without shared ownership, attendance slides and members quietly stop coming. Start small and avoid scary titles up front (they deter people).
 - **Reasoning / mechanism:** The mechanism is felt obligation to peers: a member with no role can rationalise skipping ("I'll catch up next week"), while a member others are counting on shows up [A6.3]. Gladen warns that members "without shared ownership … may sit in a small group week after week and never develop their giftedness" — passivity is both an attendance problem and a development one [A9.1].
 - **Example in context:** His wife Lisa, sleep-deprived after a newborn's all-night crying, drags herself out of bed for her group only because she's responsible for the fellowship table and nine women are counting on her. Gladen's blunt read: without that responsibility she'd have stayed in bed and "caught up the following week" — i.e., started the slide to dropping out.
@@ -162,8 +150,7 @@ concepts:    [A8.1 task-vs-relationship-conflict] [A8.5 repair-and-mutual-accoun
 situations:  [S:two-members-clashing] [S:conflict-got-personal]
 handoff:
 anchors to:
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** Expect lows, and when awkwardness or unresolved tension settles over the group, name it directly and early rather than waiting for it to pass. Address the person involved face to face. Conflict handled openly becomes a source of growth and deeper trust; conflict avoided hardens.
 - **Reasoning / mechanism:** Avoidance lets a small miscommunication calcify into a standing rupture — Gladen's tension "turned into unresolved conflict as time went by" precisely because no one named it. The repair mechanism is direct, private address (he cites the Matthew 18 "go to them" pattern), which keeps the issue on the problem and off a public pile-on [A8.4].
 - **Example in context:** A couple in Gladen's own group was grieving a parent's death while he and Lisa were absorbed in their special-needs son's care; the mutual inattention curdled into a month of awkwardness. He finally invited them over and, after an hour of small talk, asked: "Is there an elephant in the room we need to talk about?" The honest conversation that followed began the repair.
@@ -176,8 +163,7 @@ concepts:    [A10.4 collective-care]
 situations:
 handoff:
 anchors to:
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** A healthy group cares for its members in practical, unasked-for ways — and the leader's job is to build the conditions where that happens, not to be the one who always provides it. Knowing each other's actual lives is what makes help easy and natural. Be willing to be on the receiving end, too.
 - **Reasoning / mechanism:** Care follows knowledge: when members know one another's circumstances, helping stops being a favour and becomes reflex [A6.3]. The deepening runs both ways — receiving help, not just giving it, strengthens the tie, which is why a leader who never lets the group serve *them* caps the group's intimacy.
 - **Example in context:** Gladen's dryer breaks during a brutal day for his wife; a group member who overhears it simply says "I'll take care of that," drives home for a spare dryer, makes a hardware run for the right fitting, installs it, and hauls the old one away — over Gladen's protests. He admits being served was hard, and that accepting it "deepened our connection."
@@ -190,8 +176,7 @@ concepts:    [A1.2 enabling-vs-doing] [A7.3 autonomy-vs-direction]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** Move from being a teacher who dispenses to a facilitator who draws out — and crucially, make members talk to *each other*, not back to you. The book's image is to "throw out the ball and be quiet" while members toss it around, instead of every comment returning to the leader. Resist the reflex to fill silence or to be the hub of every exchange.
 - **Reasoning / mechanism:** When all dialogue routes through the leader, members stay passive consumers; redirecting it sideways turns them into engaged participants who feel their input is valued [A3.2]. The leader's restraint — deliberately staying quiet — is the active move; it's harder than talking and it's what creates room for others.
 - **Example in context:** Gladen contrasts the leader who only asks "what do you think, Bob?" (still leader-centred) with the leader who poses a question and lets members answer one another directly. *(Illustrated as a contrast rather than a named case.)*
@@ -203,8 +188,7 @@ concepts:    [A9.3 avoiding-founder-bottleneck] [A1.2 enabling-vs-doing]
 situations:  [S:doing-everything-myself] [S:burning-out]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.7
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.7
 - **Claim / recommendation:** Stop being the single point through which everything routes; your job is to deploy others' gifts, not to meet every need yourself. Trying to be everything to everyone wears out the leader *and* deprives members of the chance to contribute — it's a double failure, not noble sacrifice. Hand off whole domains, not just chores.
 - **Reasoning / mechanism:** The bottleneck is self-reinforcing: a leader who does it all signals that members aren't needed, so they don't step up, so the leader must keep doing it all [A9.1]. Breaking it requires a structure that pushes decisions and care outward — Jethro's tiered delegation where simple cases are decided locally and only hard ones escalate. The book ties idleness to decay via Bonhoeffer: "the elimination of the weak is the death of the community."
 - **Example in context:** Moses judges every dispute from morning to evening until Jethro warns "you cannot handle it alone," then appoints leaders of thousands/hundreds/fifties/tens. The outcome — Moses relieved, the people satisfied — is the book's template. Gladen confesses he "tried to be everything to everybody" early in his own ministry, the same mistake.
@@ -216,8 +200,7 @@ concepts:    [A9.2 delegating-outcomes-not-tasks] [A1.5 fear-of-asking-or-delega
 situations:  [S:doing-everything-myself] [S:work-is-all-on-a-few-people]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.7
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.7
 - **Claim / recommendation:** Name and break the habit of the leader who does all the group's work — the "ministry hog." Hand members real responsibility for outcomes, then get out of the way; sometimes the most useful thing a leader can do is *not* do something, so someone else steps in. The blocker is usually the leader's own reluctance, not members' incapacity.
 - **Reasoning / mechanism:** Gladen's basketball image: the "ball hog" who dribbles the length of the court and shoots without passing — fun for them, useless for the team. The reason leaders hog is either a group designed around them or a quiet belief that "no one … is capable" — both of which delegation disproves once tried [A9.1]. The counter-move is engineered restraint: "Sometimes the best thing to happen in your church is for it not to happen."
 - **Example in context:** He contrasts the ministry hog with his own group's Gina, who owns hospitality and organisation — "if she wasn't around, we wouldn't do anything." She doesn't do everything, but she ensures the group's annual trip actually happens because that domain is genuinely hers.
@@ -230,8 +213,7 @@ concepts:    [A9.5 functional-shared-leadership] [A3.2 ownership-and-voice]
 situations:  [S:no-one-takes-initiative] [S:work-is-all-on-a-few-people]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.7
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.7
 - **Claim / recommendation:** Assign different members ownership of the different dimensions of a healthy group, so leadership becomes a set of functions held by many rather than a title held by one. Find each person's passion and "give them the authority to run with it." Skip formal titles if they scare people; the point is real ownership, not labels.
 - **Reasoning / mechanism:** A single leader naturally over-weights whatever they personally enjoy and neglects the rest, so the group becomes lopsided; spreading the dimensions across members corrects the imbalance *and* gets more people invested [A6.3]. Gladen's payoff line: instead of one leader dominating, "there will be five or more leaders" — functional shared leadership in practice.
 - **Example in context:** Saddleback translates this as "purpose champions" — a member passionate about one of the five group dimensions who pulls the group toward it. They learned to introduce the *idea* without the *titles* first, because naming the responsibilities up front "scared people away."
@@ -243,8 +225,7 @@ concepts:    [A5.1 composition-and-skills] [A9.6 coaching-group-members]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.7
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.7
 - **Claim / recommendation:** Place people where their strengths and passions actually fit, rather than assigning roles at random or by who's willing. When you ask people what they're gifted at, most say "nothing" or "I don't know" — so the leader's job is to help them surface it by looking at their interests, history, and what they naturally do well. Then aim them at the matching role.
 - **Reasoning / mechanism:** Effort aligned with genuine aptitude produces both better output and more energy — Gladen's "sweet spot" metaphor (the bat's most powerful contact point) [A5.4]. Saddleback's discovery tool, S.H.A.P.E. (Spiritual gifts, Heart/passion, Abilities, Personality, Experiences), is a structured prompt to draw this out of people who can't name it themselves.
 - **Example in context:** Gina's gift for hospitality and organisation makes her the natural owner of the group's social life; assigning that to someone reluctant would have produced neither the trip nor the energy. The leader's move was noticing the fit, not recruiting a volunteer.
@@ -257,8 +238,7 @@ concepts:    [A9.1 developing-leaders] [A9.6 coaching-group-members]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  Leadership potential, not proven leaders
-source:      Gladen — *Small Groups With Purpose*, ch.7
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.7
 - **Claim / recommendation:** Treat developing members as a deliberate sequence, not a hope. Gladen's four steps: help people *understand* why contributing matters (Know), *develop* their strengths (Grow), give them *specific, multiple* chances to serve (Go), and *show* appreciation through the year (Show). The "Go" step matters most for first-timers: people don't fail to serve because they don't want to, but because no one offered them a concrete opportunity.
 - **Reasoning / mechanism:** The bottleneck is rarely willingness; it's that the invitation is vague ("get more involved") or absent. Specific, bounded opportunities lower the threshold to a yes, and recognition closes the loop so the contribution repeats [A10.3]. Skipping "Know" leaves people seeing service as just more program load rather than something meaningful.
 - **Example in context:** Gladen frames the whole arc around the conviction that everyone has a unique contribution and that a member who never makes theirs leaves the group poorer. *(Presented as a model rather than a single dramatised case.)*
@@ -271,8 +251,7 @@ concepts:    [A9.1 developing-leaders] [A1.2 enabling-vs-doing]
 situations:  [S:i-cant-let-go] [S:doing-everything-myself]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.5
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.5
 - **Claim / recommendation:** Hand leadership off in escalating increments rather than all at once. Ask a member to lead a single question, then later a section, then a whole session — each step small enough to say yes to and supported with feedback. By the time you genuinely need them to cover for you, they've already done the thing and can't reasonably refuse.
 - **Reasoning / mechanism:** Big asks trigger the "I'm not ready" refusal; a staircase of small, bounded asks builds both skill and the member's self-image as a leader, so the final ask feels like continuity, not a leap [A1.4]. The leader's coaching — encouraging, debriefing after each step — is what converts the attempt into growth [A9.6].
 - **Example in context:** Gladen splits his group in two for a discussion, sending a member (Joe) to lead half in another room; a few weeks later Joe leads a section; weeks after that, when Gladen calls in "sick," Joe can run the whole study because it's just what he's already been doing. (Gladen jokes the real reason was a Lakers game — then flags that as the wrong motive.)
@@ -284,8 +263,7 @@ concepts:    [A9.1 developing-leaders] [A1.4 stepping-into-the-role]
 situations:  [S:cant-recruit] [S:scared-to-ask-people]
 handoff:     [H:recruitment]
 anchors to:  Leadership potential, not proven leaders
-source:      Gladen — *Small Groups With Purpose*, ch.2 (Foundation 5), ch.7
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.2 (Foundation 5), ch.7
 - **Claim / recommendation:** Recruit leaders on willingness and obedience, not on a track record, and develop the skills as they go. Waiting for fully-formed, all-star leaders means waiting forever; make the first step into leadership simple and small. The recruiting *tactics* route out, but the *stance* — bet on potential — lives here.
 - **Reasoning / mechanism:** Requiring proof up front is self-defeating because capable-but-untested people screen themselves out, and the demand reads as "come die for me" rather than "follow me" [A3.5]. On-the-job development with solid materials lets a willing novice lead competently while learning — "God doesn't call the equipped; he equips the called." The mechanism is lowered threshold plus scaffolding.
 - **Example in context:** Gladen contrasts his pre-Saddleback rule (fully train before anyone leads) with Saddleback's entry-level approach, and points to Jesus recruiting twelve ordinary men with "follow me" — a three-year on-the-job apprenticeship, not a credential check.
@@ -297,8 +275,7 @@ concepts:    [A10.2 leader-self-care] [A10.1 volunteer-burnout]
 situations:  [S:burning-out]
 handoff:
 anchors to:  Don't lead alone — every member a minister
-source:      Gladen — *Small Groups With Purpose*, ch.18
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.18
 - **Claim / recommendation:** Protect your own sustainability deliberately — the work done at the wrong pace will hollow out the very thing it's meant to serve. Gladen's warning: "your work for God can destroy the work of God in you." Set priorities and keep them; build in rest rather than treating activity as proof of devotion.
 - **Reasoning / mechanism:** Relentless activity crowds out the inner replenishment the leader runs on, so output rises while the person empties — the classic burnout curve, where "religious activity takes the place of … intimacy" and the heart hardens. His rest argument runs by analogy to tithing: holding back a portion (Sabbath, the unworked day) yields more than spending all of it, because trust and recovery, not raw hours, sustain the work [A10.6].
 - **Example in context:** Gladen's self-mocking image — "I didn't have time to pray today because I was late for a prayer meeting" — captures the leader so consumed by the mechanics of caring for others that they stop being cared for themselves.
@@ -311,8 +288,7 @@ concepts:    [A6.6 learning-together] [A9.6 coaching-group-members]
 situations:
 handoff:
 anchors to:
-source:      Gladen — *Small Groups With Purpose*, ch.18
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.18
 - **Claim / recommendation:** Treat learning as a standing attitude and build an honest feedback loop into the group's life — actively solicit what's working and what isn't, including criticism of yourself. Gladen's maxim (crediting Warren): "all leaders are learners." The discipline matters more than the instrument: ask, listen, change.
 - **Reasoning / mechanism:** Feedback that only arrives after a mistake reads as punishment, so people withhold it and the leader learns nothing until something breaks; a routine, *anonymous* invitation removes the social cost of telling the leader hard truths, which is the only way the truths surface [A8.2]. Reflection then converts experience into improvement rather than mere repetition.
 - **Example in context:** Each year Gladen emails his team a "360 Review," asking — anonymously, same font so no one's identifiable — what they like, what would improve the team, and what resources they need. He says the letters are "sometimes painful to read" but make the team better.
@@ -325,8 +301,7 @@ concepts:    [A9.7 onboarding-newcomers] [A8.2 productive-dissent]
 situations:  [S:newcomers-dont-stick] [S:everyone-just-agrees]
 handoff:
 anchors to:
-source:      Gladen — *Small Groups With Purpose*, ch.18
-
+source:      [Gladen](https://store.pastors.com/collections/small-group-training) — *Small Groups With Purpose*, ch.18
 - **Claim / recommendation:** Treat a newcomer's fresh, even dissenting input as something to protect, not flatten. New members often assume they have nothing to offer and must just fit the established way — the leader's job is to signal the opposite and invite their challenge. Gladen calls input flowing upward "leading up" and says it "should not be suppressed."
 - **Reasoning / mechanism:** Newcomers see what insiders have stopped noticing, so suppressing their voice forfeits the group's main source of correction and tells them they don't belong — which is how new people drift away [A6.3]. The leader's posture ("just because I … lead the team, that doesn't mean I have all the right answers") is what makes the challenge safe to voice [A6.5].
 - **Example in context:** Gladen gives new team members the children's book *Everyone Poops* — a deliberately disarming way to say everyone, leader included, is an equal and fallible part of the body, so a newcomer's different direction might be exactly the idea the team needs.

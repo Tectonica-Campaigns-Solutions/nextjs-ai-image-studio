@@ -1,7 +1,6 @@
 ---
 title: "Tectonica Frameworks"
-source: "Howey — Tectonica Frameworks Shorter Works"
-domains: [A2, A4, A7]
+source: "[Howey — Tectonica Frameworks](https://www.tectonica.co/posts/the_five_part_framework_digital_organising) Shorter Works"domains: [A2, A4, A7]
 primary_folder: "/principles/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -27,28 +26,23 @@ last-updated: 2026-06-10
 
 **Belonging builds movements, not the cause.** People engage with an issue because of a narrative, but they become activists through connection with other people who share that passion; the cause recruits, the community retains and transforms. It holds because belonging is one of the strongest innate human drivers — stronger, in practice, than altruism — so the relationships around a cause, not the cause's importance, are what solidify identity and drive sustained action.
 flagship example: Howey's reading of organised religion: it is the power of community, not just the appeal of God, that built institutions able to claim a day a week and a share of income from millions for millennia — a scale of commitment no petition ever approaches.
-source: Howey — *People Don't Become Activists Because of a Cause* (Tectonica blog, 2020)
-governs: [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging] [A4.1 relationships-are-strategy] [A9.7 onboarding-newcomers]
+source: [Howey — *People Don't Become Activists](https://www.tectonica.co/posts/equation) Because of a Cause* (Tectonica blog, 2020)governs: [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging] [A4.1 relationships-are-strategy] [A9.7 onboarding-newcomers]
 
 **Coordinated action multiplies; mobilising only sums (mobilizing-vs-organizing lens).** Mobilising power is the sum of individually directed actions; organising power grows exponentially because coordination between people multiplies what strategy and scale alone produce. It holds because coordinated action only works if (nearly) everyone holds — each person choosing the collective outcome over their individual one — which is exactly what central direction cannot manufacture.
 flagship example: Alinsky waking the slum tenant to a rent strike — *"What if nobody in that building paid their rent?"* — one withheld rent means eviction; a building's worth means power over the landlord.
-source: Howey — *How Can We Measure Organising?* (Tectonica, 2021), retelling Alinsky, *Rules for Radicals*
-governs: [A7.1 building-and-using-power] [A7.5 collective-agreement-tension] [A2.5 transformational-vs-transactional]
+source: Howey — *How Can We Measure Organising?* (Tectonica, 2021), retelling [Alinsky](https://citizenshandbook.org/rules.html), *Rules for Radicals*governs: [A7.1 building-and-using-power] [A7.5 collective-agreement-tension] [A2.5 transformational-vs-transactional]
 
 **If it doesn't build relationships, it isn't organising.** Howey's quick test: whatever the activity, if it does not build relationships between the participants themselves, it is communications or mobilising wearing organising's clothes. It holds because every coordination variable — trust, allegiance, belonging, identity — lives *between* people; an activity that touches people without connecting them adds reach but no power.
 flagship example: The equation article's side-note check, offered to organisers auditing their own work: campaigns doing "digital organising" that is really list-building never see movements solidify.
-source: Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-governs: [A4.1 relationships-are-strategy] [A4.3 trust-building] [A3.3 transactional-vs-relational-ask]
+source: [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)governs: [A4.1 relationships-are-strategy] [A4.3 trust-building] [A3.3 transactional-vs-relational-ask]
 
 **Human capacity and leadership are the base; resources alone make no change.** Tools, tactics, and resources matter, but they only produce change when they rest on people capacitated to lead and on supporter relationships of mutual accountability; many organisations gather massive resources and change nothing. It holds because (per the Prisms research the model adopts) what distinguished organisations that actually won was not any tactic or resource but a strategic logic of cultivating people as the source of power.
 flagship example: Han, McKenna & Oyakawa's finding across their cases: *"no tactic, tool, resource, or action that would guarantee success"* — only the people-cultivating logic was common. (At depth: *Prisms of the People* summary.)
-source: Howey — *The Stairway Model* (Tectonica, 2022), citing Han/McKenna/Oyakawa, *Prisms of the People*
-governs: [A9.1 developing-leaders] [A7.1 building-and-using-power]
+source: [Howey — *The Stairway Model](https://www.tectonica.co/posts/equation)* (Tectonica, 2022), citing Han/McKenna/Oyakawa, *Prisms of the People*governs: [A9.1 developing-leaders] [A7.1 building-and-using-power]
 
 **Leaders personify the group's values.** Beyond steering strategy, a leader serves a symbolic function: members commit to coordinated action partly because the leader embodies what the group stands for. It holds because people coordinate around what they trust, and a value made visible in a person is easier to trust than a value stated in a document — which is also why charismatic founders stall unless they invest that trust into developing others.
 flagship example: The Stairway Model's reading of Obama, Macron, and Thunberg: personification propelled each early, but lasting change came only where leaders *"invested in the involvement, empowerment, and leadership of others."*
-source: Howey — *The Stairway Model* (2022) and *How Can We Measure Organising?* (2021)
-governs: [A2.3 values-as-glue] [A1.3 lead-by-example] [A9.1 developing-leaders]
+source: [Howey — *The Stairway Model](https://www.tectonica.co/posts/equation)* (2022) and *How Can We Measure Organising?* (2021)governs: [A2.3 values-as-glue] [A1.3 lead-by-example] [A9.1 developing-leaders]
 
 ---
 
@@ -83,8 +77,7 @@ concepts:    [A7.1 building-and-using-power] [A2.5 transformational-vs-transacti
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Coordinated action multiplies · If it doesn't build relationships, it isn't organising
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** Understand the two power mechanics your group can run on. Mobilising — central direction of individual actions — leverages power that already exists; useful, but its output is just the sum of those actions. Organising builds *new* power: when people coordinate, the result multiplies beyond what the same people produce individually. Don't treat your group as a pool of hours to direct; that converts an organising asset into a mobilising one.
 - **Reasoning / mechanism:** Coordination is the exponent. A rent strike works only if the building holds together; a centrally-blasted petition needs no one to know anyone. Because the multiplier lives in the relationships between participants [A4.1], decentralising decisions isn't a stylistic preference — it's an input to the coordination itself [A7.3]. Han's research grounds the underlying distinction: organising offers personal transformation where mobilising is transactional (at depth: *How Organizations Develop Activists* summary).
 - **Example in context:** Alinsky's slum tenant pays rent because refusing alone means eviction. *"What if nobody in that building paid their rent?"* — the coordinated version flips who holds power over whom. Howey pairs it with the 2020 Tulsa rally, where K-Pop fans and TikTokers coordinated mass ticket reservations and left a presidential rally near-empty; one defector tipping off the campaign could have unraveled it.
@@ -97,8 +90,7 @@ concepts:    [A7.5 collective-agreement-tension] [A7.1 building-and-using-power]
 situations:  [S:volunteers-flaky]
 handoff:
 anchors to:  Coordinated action multiplies
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** Recognize that real coordination asks members for a degree of personal sacrifice: *"Coordination requires collectivity, prioritising the needs of the group over the individual."* Expect that tension rather than designing it away — a member's short-term incentive will sometimes point against the group's long-term win.
 - **Reasoning / mechanism:** A striking worker may be offered terms to break the strike; holding out costs them now and pays the collective later. Self-interest alone can't explain why people hold — altruism and collective goodwill do real motivational work, and they are activated by allegiance and belonging [A2.4], not by instruction. So the leader's lever is the conditions that make the collective choice feel natural, not enforcement [A8.3].
 - **Example in context:** The strike-breaking scenario and the rent-strike defector are the article's two cases: in both, a few individuals taking the personally-rational exit jeopardizes the whole group's power.
@@ -110,8 +102,7 @@ concepts:    [A4.3 trust-building] [A2.4 group-identity-and-belonging]
 situations:  [S:group-feels-transactional] [S:newcomers-dont-stick]
 handoff:
 anchors to:  If it doesn't build relationships, it isn't organising · Belonging builds movements
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** Allegiance is the largest single factor in whether someone will coordinate — and it is allegiance *to the group of people*, even when it looks like allegiance to an organisation. Tend its four components deliberately: trust between members, relationships between members [A4.4], a felt sense of belonging [A6.3], and the cause entering members' identity. Don't mistake loyalty to your org's brand for the real thing.
 - **Reasoning / mechanism:** Each component lowers the cost of the collective choice [A7.5]: I hold the line because I trust these people, know them, belong among them, and see myself in the fight. Identity is the deepest layer — Howey's marker is the shift from "I am voting for the Greens" to "I am a Green": the first supports mobilising, the second underpins organising. Identity, in turn, is built through participation and connection, not messaging [A2.2].
 - **Example in context:** The striking worker who sees themselves as a worker rather than a 'scab' — identity doing the coordinating that no picket captain could enforce.
@@ -123,8 +114,7 @@ concepts:    [A2.1 shared-purpose] [A7.5 collective-agreement-tension] [A3.2 own
 situations:  [S:unclear-what-were-doing] [S:group-lost-its-why]
 handoff:
 anchors to:  Coordinated action multiplies
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** Coordination requires that the group genuinely agrees on its objectives — agreement that can be borrowed from a central body for mobilising, but never for organising. Build it three ways: let the goals be led by the community itself, keep explicit agreement on what the objectives are, and reinforce the agreement in every communication and ask. Don't hand the group objectives and expect coordinated commitment back.
 - **Reasoning / mechanism:** Decentralisation here is an *input*, not a feature: when members shape the goals, alignment with the goals comes built in, and voice itself motivates [A3.2]. Good leadership then keeps the larger objective alive by transparently bringing it back into everyday work — agreement decays if it lives only in a founding document [A6.1].
 - **Example in context:** No in-context example given beyond organisational drift: orgs that orient to funders and policymakers losing the trust of the communities they serve, then needing deliberate re-connection.
@@ -136,8 +126,7 @@ concepts:    [A10.5 resilience-through-setbacks] [A2.1 shared-purpose]
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Coordinated action multiplies
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** People only choose the collective outcome over the personal if they believe their involvement will achieve something. Make the case for how the effort can win overall, and treat small symbolic wins along the way as load-bearing, not decoration. Repeated promises of victory are not enough.
 - **Reasoning / mechanism:** Hope converts sacrifice into investment. It is fed by a credible win theory, by visible interim wins, and by borrowed evidence — a leader's experience winning elsewhere, or similar fights won by others.
 - **Example in context:** Howey leans on Harvey Milk's line — *"You gotta give 'em hope"* — as the variable's banner; the BLM movement's years of setbacks before breakthrough appear earlier in the article as the shape hope must survive.
@@ -150,8 +139,7 @@ concepts:    [A2.2 public-narrative]
 situations:  [S:group-lost-its-why]
 handoff:
 anchors to:  Belonging builds movements
-source:      Howey — *How Can We Measure Organising?* (2021) and *People Don't Become Activists…* (2020)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (2021) and *People Don't Become Activists…* (2020)
 - **Claim / recommendation:** Narrative's deeper job isn't selling the cause's importance — it frames how each member sees their own role in the movement's unfolding story. Tell the story so members are agents in it: unresolved conflict, forces of good, purpose, and a plot whose actions lead somewhere. Don't stop at the recruitment pitch.
 - **Reasoning / mechanism:** We understand the world through story; when someone sees themselves playing an essential part in a story with a place in history, they commit to collective work. The 2020 post adds the boundary condition: narrative brings people in, but connection keeps them — persuasion-only digital messaging shows almost no efficacy.
 - **Example in context:** No in-context example given.
@@ -163,8 +151,7 @@ concepts:    [A2.3 values-as-glue] [A1.3 lead-by-example]
 situations:
 handoff:
 anchors to:  Leaders personify the group's values
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** Accept that as leader you carry a symbolic function: members read the group's values off you. Embody them visibly; and use the group's other symbols — phrases, artifacts, rituals, music — as commitment-builders, not decoration.
 - **Reasoning / mechanism:** If the values are credibly represented in a person, the movement is already centred in, and therefore trusted by, its community [A4.3]. Symbols generalize the same mechanism: they make the shared thing visible and portable.
 - **Example in context:** The hoodie in the Trayvon Martin marches — a physical artifact carrying the movement's meaning; Howey also gestures at millennia of monarchs personifying national identity as proof of the mechanism's raw power.
@@ -176,8 +163,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging]
 situations:  [S:newcomers-dont-stick] [S:low-attendance]
 handoff:
 anchors to:  Belonging builds movements
-source:      Howey — *People Don't Become Activists Because of a Cause* (Tectonica blog, 2020)
-
+source:      [Howey — *People Don't Become Activists](https://www.tectonica.co/posts/equation) Because of a Cause* (Tectonica blog, 2020)
 - **Claim / recommendation:** Activists are not just highly active supporters: they carry the cause in their daily conversations, behavior, risks, and identity — and what makes that shift is connection with others, not the cause's strength. So put connection between members at the center of engagement; don't pour everything into the message and wonder why no one stays.
 - **Reasoning / mechanism:** Humans are hardwired for belonging; Howey argues the need for connection outweighs altruism as a driver. People *"become activists because of shared passion for a cause with others."* He grounds it philosophically in Levinas: ethics arises in encountering the face of the other, and in shared practice toward something beyond ourselves — which is what a group meeting is, and what a mass email is not. (Plain-language gloss: people commit through being genuinely *with* others, not through being messaged at.)
 - **Example in context:** Tectonica's *State of Digital Organising in Europe* report: organisations rate broadcast comms at parity with need (does 81% / should 78%) but collapse down the spectrum — fully decentralised organising at does 32% / should 73%. The movement-building deficit is precisely at the connection-heavy end.
@@ -190,8 +176,7 @@ concepts:    [A6.1 how-norms-form-and-become-culture] [A8.2 productive-dissent]
 situations:  [S:everyone-just-agrees]
 handoff:
 anchors to:  Belonging builds movements
-source:      Howey — *People Don't Become Activists Because of a Cause* (Tectonica blog, 2020)
-
+source:      [Howey — *People Don't Become Activists](https://www.tectonica.co/posts/equation) Because of a Cause* (Tectonica blog, 2020)
 - **Claim / recommendation:** Borrow from the institutions with millennia of practice building commitment through community: keep a regular meeting rhythm with elements of tradition; give everyone a defined role, including low-commitment members [A9.5]; and keep the group structurally outward-facing — the church greeter exists to connect newcomers, and recruitment is everyone's role, not the leader's monopoly [A9.7]. Don't centralise bringing-people-in; Howey calls that one of the largest errors a group can make.
 - **Reasoning / mechanism:** Regularity turns attendance into identity and norms into culture; roles convert attenders into participants; outward focus keeps belonging generative instead of closed. The mirror warning: the same machinery that builds strong community builds cults — strong belonging without dissent becomes an echo chamber, and polarisation electrifies but backfires. "True power comes from a diversity of opinion."
 - **Example in context:** Rick Warren's growth of Saddleback from nothing to the eighth-largest US church — Howey flags the irony of citing Warren and keeps the structural lessons. (His small-group method at depth: *Small Groups With Purpose* and *Purpose Driven Campaigning* summaries.)
@@ -203,8 +188,7 @@ concepts:    [A9.7 onboarding-newcomers]
 situations:  [S:newcomers-dont-stick] [S:cant-recruit]
 handoff:     [H:recruitment]
 anchors to:  Belonging builds movements
-source:      Howey — *People Don't Become Activists Because of a Cause* (Tectonica blog, 2020)
-
+source:      [Howey — *People Don't Become Activists](https://www.tectonica.co/posts/equation) Because of a Cause* (Tectonica blog, 2020)
 - **Claim / recommendation:** When someone new signs up or shows interest, connect them with a real human — a genuine conversation, not an automated welcome — within about 48 hours. Don't let people sit on lists: signing up is a bigger ask than it looks, and the moment after it is when motivation peaks.
 - **Reasoning / mechanism:** The driver behind joining is openness to connection; it decays fast. Howey's practice observation: contact after a week makes conversion to a true activist enormously less likely unless another engagement window happens to align. The principle is the why; outreach mechanics, scripts, and channel choice are recruitment craft [H:recruitment].
 - **Example in context:** No in-context example given beyond the practice claim itself.
@@ -216,8 +200,7 @@ concepts:    [A9.1 developing-leaders] [A7.1 building-and-using-power]
 situations:
 handoff:
 anchors to:  Human capacity and leadership are the base · Leaders personify the group's values
-source:      Howey — *The Stairway Model to Social and Political Change* (Tectonica, 2022)
-
+source:      [Howey — *The Stairway Model](https://www.tectonica.co/posts/equation) to Social and Political Change* (Tectonica, 2022)
 - **Claim / recommendation:** Build all the elements of the work — capacity, resources, tactics, tools — simultaneously, but treat leadership and human capacity as the foundation everything else rests on, and supporter relationships of mutual accountability as the through-line. Don't read growth in money, lists, or reach as growth in power: resources and change have little direct relationship.
 - **Reasoning / mechanism:** Tactics and tools are multipliers with nothing to multiply absent capacitated people; conversely, strong relationships strengthen resource development and tactics. The model's operational core: in every routine activity where supporters are engaged, look for the next opportunity for deeper engagement — resource touchpoints double as relationship touchpoints.
 - **Example in context:** The Prisms research the model adopts: across successful cases there was *"no tactic, tool, resource, or action that would guarantee success"* — only the strategic logic of cultivating people as power and staying accountable to them. (At depth: *Prisms of the People* summary.)
@@ -230,8 +213,7 @@ concepts:    [A10.5 resilience-through-setbacks] [A2.5 transformational-vs-trans
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Coordinated action multiplies
-source:      Howey — *How Can We Measure Organising?* (Tectonica, 2021)
-
+source:      [Howey — *How Can We Measure Organising?*](https://www.tectonica.co/posts/equation) (Tectonica, 2021)
 - **Claim / recommendation:** Two present-tense signs of real organising power, visible before any victory: the group's ability to persist through losses, backlash, and spinning in place; and the transformation of the people in it. Treat transformation as the mechanism of movement-building, not a happy side effect.
 - **Reasoning / mechanism:** Wins lag; what coordination builds first is the capacity to absorb setbacks — because allegiance, alignment, and hope are exactly the reserves adversity draws down. And because organising changes its participants (Han's transformational distinction), a group can be succeeding while its scoreboard says otherwise.
 - **Example in context:** Argentina's multi-year fight for abortion rights — persistence through repeated setbacks as the visible form of organising power; BLM's years of being booed off candidate stages before becoming a defining civil-rights movement.

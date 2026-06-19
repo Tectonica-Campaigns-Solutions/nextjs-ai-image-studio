@@ -1,7 +1,6 @@
 ---
 title: "The Art of Community"
-source: "Vogl — The Art of Community"
-domains: [A2, A4, A6, A9]
+source: "[Vogl](https://www.charlesvogl.com/books) — The Art of Community"domains: [A2, A4, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -27,28 +26,23 @@ last-updated: 2026-06-10
 
 **Community is mutual concern, not shared interest.** A community is a group whose members share a concern for one another's welfare; a group that merely shares an interest, a cause, or a location is not yet a community. The distinction matters because concern is what makes people invest, stay, and show up under strain — interest alone produces a mailing list, not a body that holds together.
 flagship example: Vogl borrows Putnam's line about fans of the same team — they share symbols, leaders, and ideals "but not to one another" — to mark the gap between a large membership and an actual community.
-source:  Vogl — *The Art of Community*, ch.1
-governs: [A2.4] [A2.3]
+source:  [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.1governs: [A2.4] [A2.3]
 
 **Belonging is built from designed symbolic acts, not just goodwill.** The feeling of belonging is produced by deliberate, often invisible practices — a boundary, an initiation, rituals, stories, symbols, a path inward — not by warmth or good intentions alone. Because these practices operate whether or not a leader notices them, a first-timer who learns to see and shape them gains leverage that effort and sincerity cannot buy.
 flagship example: Vogl's own Friday dinners at Yale began as plain hospitality, then strengthened once they carried initiations (invitations), rituals (the weekly meal), tokens, and named inner-ring roles (guests → volunteers → dinner leaders).
-source:  Vogl — *The Art of Community*, preface, ch.2–8
-governs: [A6.1] [A5.6] [A9.7] [A10.3] [A2.2]
+source:  [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, preface, ch.2–8governs: [A6.1] [A5.6] [A9.7] [A10.3] [A2.2]
 
 **A boundary makes the inside safe; "everyone belongs" makes no community.** A boundary is the recognized line between insiders and outsiders, and its job is less to keep outsiders out than to make the inside safe enough for members to be vulnerable and trust shared values. A group that insists everyone belongs cannot be told apart from no group at all, because if no one could ever be excluded there is no shared value to recognize.
 flagship example: Vogl calls this the everything–nothing conundrum: if everything is "good," good distinguishes nothing; likewise a community open to literally everyone is indistinguishable from non-community.
-source:  Vogl — *The Art of Community*, ch.2
-governs: [A5.6] [A2.4]
+source:  [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.2governs: [A5.6] [A2.4]
 
 **The crisis of belonging is near-universal, and invitations resolve it.** In almost any group — especially a selective or impressive one — many members privately fear they don't really belong and will be exposed as frauds; this is the crisis of belonging. The cure is disarmingly simple: extend invitations. An invitation is evidence to the receiver that they belong, and it plants the inviter more firmly inside the group, regardless of title.
 flagship example: "Invitations resolve the crisis of belonging" — Vogl's friend Melo nearly quit Yale, then returned because he remembered the standing dinner invitations; he attended only a few times in three years, but each invitation did its work.
-source:  Vogl — *The Art of Community*, ch.3
-governs: [A1.4] [A9.7]
+source:  [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.3governs: [A1.4] [A9.7]
 
 **The journey inward should widen concern outward — and the healthy leader inverts the cult features.** In a strong community the path through successive inner rings is a journey of maturing concern: from concern for oneself, to one's peers, to the whole group, to the world. The same machinery that builds belonging can be turned coercive, so the ethical test is structural — bounded authority, accountability, welcome dissent, and an always-available exit are what separate a healthy values community from a cult.
 flagship example: Vogl notes the irony that "the smaller and the more exclusive the ring" a person belongs to, the broader their concern for others should become — the opposite of status-seeking.
-source:  Vogl — *The Art of Community*, ch.8, ch.9
-governs: [A3.4] [A9.1] [A7.1] [A8.2]
+source:  [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.8, ch.9governs: [A3.4] [A9.1] [A7.1] [A8.2]
 
 ---
 
@@ -94,8 +88,7 @@ concepts: [A9.1 developing-leaders] [A9.4 succession-and-ceding-control]
 concepts:    [A2.4 group-identity-and-belonging]
 situations:  [S:group-feels-transactional]
 anchors to:  Community is mutual concern, not shared interest
-source:      Vogl — *The Art of Community*, ch.1
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.1
 - **Claim / recommendation:** Vogl defines a community as a group whose members "share a mutual concern for one another's welfare." A shared interest, cause, or location is *not* enough — those produce a group, possibly a large one, but not a community. For a first-time leader the takeaway is diagnostic: if people in your group don't yet care about *each other's* wellbeing (only about the cause or the activity), you have a group to convert into a community, and that conversion is the actual work.
 - **Reasoning / mechanism:** Concern is what produces investment. When people sense that others care about their welfare, they invest more and feel more connected, which deepens the concern — a reinforcing loop. Interest without concern leaves people transactional and easily detached, because nothing is at stake between them [A4.1].
 - **Example in context:** Vogl cites political scientist Robert Putnam on fans of the same team: their ties are to common symbols, leaders, and ideals, "but not to one another." Greenpeace or a professional association can have huge membership and almost no community, because members are unaware of each other's existence.
@@ -107,8 +100,7 @@ source:      Vogl — *The Art of Community*, ch.1
 concepts:    [A2.3 values-as-glue]
 situations:  [S:group-lost-its-why] [S:group-feels-transactional]
 anchors to:  Community is mutual concern, not shared interest
-source:      Vogl — *The Art of Community*, ch.1
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.1
 - **Claim / recommendation:** Every community runs on values, and those values exist in two layers: *explicit* (what's on the website, said aloud) and *implicit* (whom you welcome, what you share, where you actually spend time). Vogl's recommendation to a leader is to read the implicit values honestly, because members will trust those over any stated value — and to make sure the two layers match. Do not assume your stated values are the operative ones. **[register-gap flag: "values made visible / the warm-body test" has no dedicated leaf; tagged to A2.3 as the nearest home.]**
 - **Reasoning / mechanism:** Implicit values reveal "the real deal" because they are demonstrated, not declared, and people read demonstrations as more reliable signals. Vogl's heuristic: look at where members put their "warm body" — what they care about enough to physically show up for. A mismatch between stated and enacted values is the thing that quietly erodes trust and drives the most committed people out.
 - **Example in context:** At CrossFit Oakland, members "join because the gym offers" hard varied training but "stay because they feel connected"; founder Mike Minium's people demonstrate unstated values (patience, safety, honoring low performers) by spending time greeting newcomers and helping the weakest, not only the strongest. Conversely, Vogl's friend Margaret watched a corporate takeover of "Ski Valley" replace a culture of mutual care with three new signs — No Dogs, No Alcohol, No Drones — and the "do-gooders" left.
@@ -119,8 +111,7 @@ source:      Vogl — *The Art of Community*, ch.1
 concepts:    [A2.4 group-identity-and-belonging] [A2.3 values-as-glue]
 situations:  [S:group-lost-its-why]
 anchors to:  Community is mutual concern, not shared interest
-source:      Vogl — *The Art of Community*, ch.1
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.1
 - **Claim / recommendation:** Because members share values, a community answers three identity questions for them: *Who am I? How should I act? What do I believe?* Vogl calls this membership identity, and urges leaders to be able to articulate it. If your group can't say who it tells members they are, it is leaving identity to chance — and a vague identity is a weak glue.
 - **Reasoning / mechanism:** Identity is reinforced in the presence of other members: when people are around the group, its values and the self it offers them feel "comfortable and right." That reinforcement is what makes belonging sticky. Vogl notes identity can be compartmentalized — someone generous in one community can be selfish elsewhere — which is why the community context, not the person's general character, does the work [A6.1].
 - **Example in context:** Vogl describes his own membership in an informal community of social-justice documentary filmmakers in New York: no card or handshake, but a clear shared identity — people who valued telling important stories over financial return — strong enough that when one member's partner was kidnapped in Nigeria, the group raised money for the rescue.
@@ -132,8 +123,7 @@ source:      Vogl — *The Art of Community*, ch.1
 concepts:    [A5.6 boundaries-and-membership] [A2.4 group-identity-and-belonging]
 situations:  [S:newcomers-dont-stick]
 anchors to:  A boundary makes the inside safe; "everyone belongs" makes no community
-source:      Vogl — *The Art of Community*, ch.2
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.2
 - **Claim / recommendation:** A boundary is "the recognized demarcation between insiders and outsiders," and Vogl's reframe is that its purpose is to make the inside *safe*, not to keep outsiders *out*. A leader should therefore have a boundary — a recognizable shared value that marks who's in — and resist the generous-sounding instinct to declare that everyone belongs. The boundary should be enforced by *community values*, never by personal preference or whim.
 - **Reasoning / mechanism:** Where there's a boundary, insiders can be confident they share values, which is what lets them be vulnerable and form deep ties. Without one, the group hits what Vogl calls the everything–nothing conundrum: if anyone in the world belongs, the community can't be distinguished from no community. He separates *self-selection* (no invitation needed) from "everyone belongs" — even a wide-open group has a defining value, or it isn't a group. A boundary can fail in two directions: too inclusive (mismatched-values people get in, members feel unsafe) or too exclusive (shared-values people are turned away, members doubt the real values).
 - **Example in context:** Vogl's friend Amanda belongs to a young mothers' group where only mothers are admitted — not pediatricians, therapists, nannies, or fathers — because the boundary is what lets her share fears and failures safe from "uninformed, dated, or insensitive judgment." The boundary isn't exclusion for its own sake; it's what makes the inside usable.
@@ -145,8 +135,7 @@ source:      Vogl — *The Art of Community*, ch.2
 concepts:    [A5.6 boundaries-and-membership] [A7.1 building-and-using-power]
 situations:  [S:newcomers-dont-stick]
 anchors to:  A boundary makes the inside safe; "everyone belongs" makes no community
-source:      Vogl — *The Art of Community*, ch.2
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.2
 - **Claim / recommendation:** Most groups that believe they have no boundary or gatekeepers actually do — both are simply informal and unspoken. Vogl's recommendation is to *name* the boundary and the gatekeepers you already have, and to make sure newcomers can find a gatekeeper, because a community can't grow if outsiders never meet anyone with the authority to welcome them across.
 - **Reasoning / mechanism:** When asked, members can usually recall someone being excluded and can describe how it was enforced — proof the boundary and an authority existed all along. Gatekeepers are whoever can grant a newcomer access; if newcomers never reach one, evaluation never happens and they can't truly cross over. Hidden authority is still authority, and pretending it's absent makes enforcement arbitrary rather than values-based.
 - **Example in context:** In an Interspiritual community that insisted it was "for everyone," Vogl learned a member advocating polyamory had earlier been asked to leave — by two leaders who maintained they were merely "facilitators." Once he pointed out that one of them, Jim, had the standing to expel a member and he himself did not, the group had to admit it had boundary-keepers and real authority after all.
@@ -157,8 +146,7 @@ source:      Vogl — *The Art of Community*, ch.2
 concepts:    [A5.6 boundaries-and-membership] [A9.7 onboarding-newcomers]
 situations:  [S:newcomers-dont-stick] [S:cant-recruit]
 anchors to:  A boundary makes the inside safe; "everyone belongs" makes no community
-source:      Vogl — *The Art of Community*, ch.2
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.2
 - **Claim / recommendation:** Give outsiders a safe way to explore before committing by separating *outer-ring* activities (open to visitors) from *inner-ring* ones (reserved for members). Vogl advises that the vast majority of activities can be outer-ring — the larger the outer ring, the more people can evaluate the group — while keeping a real inner ring so members have safe space and explorers have something to aspire to.
 - **Reasoning / mechanism:** Visitors want to participate without accidentally becoming members; members want space protected for shared-values people. The outer/inner split serves both at once. Where you'd rather welcome everyone to every event, the inner ring can be marked by *privileges* instead of access — members may open events, invite guests, schedule, reserve space, teach — so visitors still know they're visiting.
 - **Example in context:** Vogl's chef friend Adam hosts dinners for friends (outer ring) but keeps the kitchen for chefs only (inner ring); they don't want to spend the evening training amateurs. Newcomers who seem to share the values get invited to chefs-only dinners — but contribute an uncreative dish and you won't be asked back.
@@ -171,8 +159,7 @@ concepts:    [A9.7 onboarding-newcomers] [A6.1 how-norms-form-and-become-culture
 situations:  [S:newcomers-dont-stick]
 handoff:     [H:events]
 anchors to:  Belonging is built from designed symbolic acts, not just goodwill
-source:      Vogl — *The Art of Community*, ch.3
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.3
 - **Claim / recommendation:** An initiation is any act understood as official welcome across the boundary — and Vogl insists it needn't be elaborate. A warm letter, a phone call, a pat on the back with the right words can be a real initiation. The recommendation: make the crossing *explicit*, because if there's no clear initiation, newcomers can't tell when (or whether) they've become members.
 - **Reasoning / mechanism:** Vogl defines initiation as "official recognition and welcome into the community"; after it, an insider "has nothing more to prove" and can relax into belonging. Where no intentional initiation exists, people invent an *accidental* one — they'll seize on a compliment, an off-list invitation, an intimate conversation, and read it as the moment they joined. So the choice isn't whether to have an initiation but whether to design it.
 - **Example in context:** Peace Corps trainees are sworn in by a diplomat and pinned with the logo; New Belgium brewery employees become shareholders on their one-year anniversary and give a speech on what ownership means; first-time Burning Man arrivals roll in the desert dust three times and strike a gong. Each is an unmistakable "you're in now."
@@ -184,8 +171,7 @@ source:      Vogl — *The Art of Community*, ch.3
 concepts:    [A1.4 stepping-into-the-role] [A9.7 onboarding-newcomers]
 situations:  [S:i-feel-like-an-imposter] [S:newcomers-dont-stick]
 anchors to:  The crisis of belonging is near-universal, and invitations resolve it
-source:      Vogl — *The Art of Community*, ch.3
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.3
 - **Claim / recommendation:** In many groups — especially selective or impressive ones — members privately become convinced they don't belong and fear being exposed as frauds. Vogl names this the crisis of belonging and offers a single, almost too-simple cure: extend invitations. To social gatherings, insider events, one-on-one time. A leader who feels like an imposter should invite *others*, and a leader who sees the crisis in members should invite *them*.
 - **Reasoning / mechanism:** Invitations work through two mechanisms. First, extending one establishes the inviter "as having the power to invite," regardless of formal role — so inviting others plants *you* more firmly inside. Second, receiving an invitation from any insider becomes "evidence of their belonging," directly contradicting the receiver's fear of being an outsider. Strikingly, "it's not even important whether they accept" — the invitation does its work simply by being made.
 - **Example in context:** Vogl found the crisis rampant among peers at Yale, himself included. The resolution shows up in Melo — who nearly didn't return after a brutal first year, but came back because he remembered the standing dinner invitations and "knew that I belonged." Melo attended only a few times across three years; the invitations, not the meals, changed his life.
@@ -196,8 +182,7 @@ source:      Vogl — *The Art of Community*, ch.3
 concepts:    [A6.1 how-norms-form-and-become-culture] [A10.3 celebration-and-recognition]
 situations:  [S:lost-momentum-after-launch] [S:group-feels-transactional]
 anchors to:  Belonging is built from designed symbolic acts, not just goodwill
-source:      Vogl — *The Art of Community*, ch.4, ch.5
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.4, ch.5
 - **Claim / recommendation:** A ritual is "any practice that marks a time or event as special or important." Vogl's recommendation: notice the rituals your group already has (most do, unrecognized), and strengthen or add them deliberately, because rituals are how a group manufactures meaning and a sense of continuity. A simple test of whether something is a ritual: would removing it make the time feel less important? **[register-gap flag: ritual-as-leadership-tool has no dedicated leaf; tagged to A6.1 (norms→culture) and A10.3 (recognition) as nearest homes.]**
 - **Reasoning / mechanism:** Rituals connect the present to the past and to hopes for the future, and that integration is what produces *meaningfulness* (distinct from momentary happiness) — Vogl draws on psychologist Roy Baumeister's roughly 400-person survey separating the two. Because meaning gives stability amid change, rituals hold a group together when circumstances don't. Rituals usually have a recognizable *form* (a pattern participants learn), and simple repetition can grow one unnoticed. **The transferable fragment of Vogl's dropped Temple principle lives here:** a community that is spread apart can sustain belonging through a reliable *rhythm* (a recurring call, meeting, or gathering) that functions as the place members know they'll find their group — Vogl's "minor temples" idea, drawn down for a distributed team.
 - **Example in context:** Vogl walks through the American birthday-party form (invite, cake, candles representing years, singing, blowing out, cheering, presents) as a ritual so familiar we don't see it as one. A recurring weekly or monthly gathering becomes a ritual once people rearrange their schedules and arrive prepared and anticipating it.
@@ -209,8 +194,7 @@ source:      Vogl — *The Art of Community*, ch.4, ch.5
 concepts:    [A2.2 public-narrative] [A2.3 values-as-glue]
 situations:  [S:group-lost-its-why] [S:unclear-what-were-doing]
 anchors to:  Belonging is built from designed symbolic acts, not just goodwill
-source:      Vogl — *The Art of Community*, ch.6
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.6
 - **Claim / recommendation:** Stories are how members, prospects, and outsiders learn a community's values and worth. Vogl singles out two kinds a leader should hold: a *single origin story* (how the founders were inspired, learned or did something new, and invited others to join) and *values stories* (how the group's values show up in real people's lives). His claim is that stories teach identity far better than a mission or values statement ever can.
 - **Reasoning / mechanism:** A statement asserts a value; a story *demonstrates* it, and people learn and remember demonstrations. Origin stories can carry factual, emotional, and ideological truth, and are strongest when all three are present; as a community changes, new origin stories emerge to explain how it met new challenges. Values stories are the ones told to newcomers and repeated among members — they encode "this is who we are" more efficiently than any list.
 - **Example in context:** Vogl gives the (anonymized) Lowell Mothers community: thirteen years ago twelve mothers met in a church breastfeeding group, set up an online space to swap babysitting and advice, and grew to thousands — an origin story that carries the values (mutual support, peer empathy) without stating them. He pairs this with New Belgium Brewing, whose collaborative-ownership culture is taught through stories employees tell, not the HR manual.
@@ -222,8 +206,7 @@ source:      Vogl — *The Art of Community*, ch.6
 concepts:    [A10.3 celebration-and-recognition] [A2.4 group-identity-and-belonging]
 situations:  [S:burning-out]
 anchors to:  Belonging is built from designed symbolic acts, not just goodwill
-source:      Vogl — *The Art of Community*, ch.7
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.7
 - **Claim / recommendation:** Symbols stand in for a community's values and identity, and Vogl's craft note is that they "work best when they're not too literal," because a literal symbol leaves little room to hold many evolving meanings. He extends this to *tokens* — symbols given to a person as a keepsake of belonging, accomplishment, or commitment — and offers a simple formula for giving one with power: state your *intention* (why you're giving it), its *symbolism* (what it represents), and a *connection to the future* (how you hope it serves them). **[register-gap flag: symbols/tokens have no dedicated leaf; tagged to A10.3 (recognition) and A2.4 (identity) as nearest homes.]**
 - **Reasoning / mechanism:** A token's power comes mostly from the *giver* and the *intention*, not its material value — the meaning is imbued, not purchased. Given honestly in front of others, an inexpensive object becomes a durable, portable reminder that the community is rooting for the person. Everyday objects can also accrue meaning over time and be passed on as tokens.
 - **Example in context:** Vogl's Peace Corps pin (any trainee could have bought a hundred, but the *given* one became special); the search-and-rescue "challenge coins" his friend Joel receives, with no exchange value but heavy meaning; and his sample token speech handing on dinner-series candleholders to "Stephanie," naming what they've witnessed and what he hopes they'll carry.
@@ -235,8 +218,7 @@ source:      Vogl — *The Art of Community*, ch.7
 concepts:    [A3.4 commitment-over-time] [A9.1 developing-leaders]
 situations:  [S:no-one-takes-initiative]
 anchors to:  The journey inward should widen concern outward — and the healthy leader inverts the cult features
-source:      Vogl — *The Art of Community*, ch.8
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.8
 - **Claim / recommendation:** Strong communities offer a path through successive *inner rings* — levels members can grow into (gaining access, knowledge, or responsibility) — but Vogl's key move is to define the *right* progression as one of *maturing concern*, not status. The healthy ladder runs: visitor (concern for no one) → novice (self) → member (peer group) → elder (whole group) → principal elder (the world). Crucially, not every member must climb; it's fine to find a level and stay.
 - **Reasoning / mechanism:** The C.S. Lewis "inner ring" trap is endless status-seeking — each ring you enter reveals a more exclusive one beyond, forever — which Lewis said drives good people to do bad things. Vogl's reframe inverts the polarity: in a mature community, going inward should *widen* your circle of care, so that "the smaller and the more exclusive the ring," the broader the concern for others. Skill-progression (better kites, faster races) can organize a group, but Vogl calls it a "superficial measure" — a community's real ladder tracks growth in concern.
 - **Example in context:** His own dinner series labels its rings information-seekers → dinner guests → volunteers → dinner leaders → leader coordinators → hosts. He also relays Lama Surya Das's mandala image, where every point is the center and the innermost ring's concern is "bigger than the space outside" — the mystic at the center cares for all beings.
@@ -248,8 +230,7 @@ source:      Vogl — *The Art of Community*, ch.8
 concepts:    [A7.1 building-and-using-power] [A8.2 productive-dissent] [A8.3 peer-accountability-without-authority]
 situations:  [S:one-person-dominates] [S:everyone-just-agrees]
 anchors to:  The journey inward should widen concern outward — and the healthy leader inverts the cult features
-source:      Vogl — *The Art of Community*, ch.9
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.9
 - **Claim / recommendation:** The same principles that build belonging can be turned coercive, so Vogl gives a values leader a structural ethics check: a harmful cult has eight features, and a healthy community is built by *inverting* each one. The recommendation is to design for the healthy versions deliberately — they don't appear by default just because intentions are good.
 - **Reasoning / mechanism:** Vogl's logic: "almost all dogs have tails, but putting a tail on something doesn't make it a dog" — using ritual, boundary, and inner rings doesn't make a group a cult; the *coercive structure* does. The eight inversions: leader has **bounded** (not absolute) moral authority and can be removed; leadership is **accountable** to a higher body (elders, funders, or the membership); commitment is **limited and contextualized** within a member's other commitments, and **dissent is welcome** when respectful; members are encouraged to **engage with the outside** (not isolate); **exit is always available** (no high barriers); the worldview is **connected** to the wider world (not us-vs-them); moral permission is **bounded** by the outside world's limits (ends don't justify any means); and growing the group is a priority **equal to**, never above, serving current members — never worth lying or pressuring to achieve.
 - **Example in context:** Vogl contrasts the cult feature "absolute moral authority resides with the leader alone" with mainstream clergy — ministers, monks, rabbis — who sit under higher bodies that can evaluate and restrain them. That accountability structure is the difference, not the robes or the rituals.
@@ -261,8 +242,7 @@ source:      Vogl — *The Art of Community*, ch.9
 concepts:    [A9.1 developing-leaders] [A9.4 succession-and-ceding-control]
 situations:  [S:no-one-takes-initiative]
 anchors to:  The journey inward should widen concern outward — and the healthy leader inverts the cult features
-source:      Vogl — *The Art of Community*, ch.10
-
+source:      [Vogl](https://www.charlesvogl.com/books) — *The Art of Community*, ch.10
 - **Claim / recommendation:** People pursue at least three kinds of success, and Vogl warns it matters greatly which kind you put in positions of authority. *Relative* success means wanting to do better than others (their success feels like a threat); *personal-maximization* means maximizing your own absolute success regardless of others; *community-maximization* means seeking the whole community's success. Recommendation: weight authority roles toward people whose orientation is community-maximizing, because a relative-success orientation corrodes cooperation from inside a leadership role.
 - **Reasoning / mechanism:** A relative-success seeker can act against the group even at cost to themselves — Vogl's image is hiding apple buckets from a fellow picker, losing your own picking time just to ensure the other person gathers fewer. In an authority role, that orientation quietly suppresses others' contribution. People aren't fixed to one mode (we default differently across work, family, philanthropy), so this is about *fit to role*, not labeling a person.
 - **Example in context:** Vogl ties this back to the inner-rings idea that concern should widen as one gains privileges — the danger is handing authority to someone whose domain of concern stays narrow ("do better than other people") even as their power grows.

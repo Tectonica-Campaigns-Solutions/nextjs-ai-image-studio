@@ -1,7 +1,6 @@
 ---
 title: "Organizing and Democracy"
-source: "Han Baggetta Oser — Organizing and Democracy"
-domains: [A2, A3, A4]
+source: "[Han Baggetta Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — Organizing and Democracy"domains: [A2, A3, A4]
 primary_folder: "/purpose/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -37,33 +36,27 @@ last-updated: 2026-06-10
 
 **Organizing builds people; mobilizing moves them.** The determining feature of organizing is not scale but the *intention to transform* individuals and groups into agents — what organizers call developing leaders. Mobilizing aggregates and activates people's *existing* preferences and treats them as consumers, with no expectation of changing anyone. Because organizing changes who people are while mobilizing only channels who they already are, the two yield different strategic logics even when they go to the same mass scale.
 flagship example: Ella Baker drew the distinction in practice — organizing was the patient "spadework" of developing local leaders and building local activist communities; mobilizing was the sporadic, intense bursts of mass action in dramatic events. Both have a place; they are different work with different aims.
-source: Han, Baggetta & Oser — "Organizing and Democracy," §What Is Organizing?
-governs: [A2.5] [A3.3] [A9.1] [A2.1]
+source: [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — "Organizing and Democracy," §What Is Organizing?governs: [A2.5] [A3.3] [A9.1] [A2.1]
 
 **The same tactic can be either — the proof is in how it's used.** A one-to-one, a phone bank, a canvass, a social-media push can serve organizing *or* mobilizing; the tool doesn't settle it. What distinguishes them is whether the action is treated as an end (a door opened, a body at an event) or as the start of a path embedded in a longer sequence that cultivates agents. Because the strategic logic lives in the sequence, not the technique, you can't read organizing off a checklist of tactics.
 flagship example: Both organizers and mobilizers use broadcast ads, phone banking, and door-knocking. Mobilizers use them transactionally — largest scale at lowest cost to everyone. Organizers use the *same* tactics but look upstream and downstream for chances to build lasting capacity, treating turnout as a beginning rather than the finish line.
-source: Han, Baggetta & Oser — §What Is Organizing?
-governs: [A3.3] [A2.5] [A3.4] [A4.2]
+source: [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §What Is Organizing?governs: [A3.3] [A2.5] [A3.4] [A4.2]
 
 **People become through doing — orientations are endogenous to participation.** Organizing changes attitudes, identities, interests, and emotions by engaging people in action; these are not fixed inputs but outcomes of acting together. Because participation itself reshapes who people understand themselves to be, a leader's engagement choices are identity-shaping, not just task-filling — which is why depth of involvement, not just frequency, matters.
 flagship example: Woodly's formulation of the shift: the result of organizing is to "become the kind of person who does what is to be done." A study of unions found organizing *causally reduced* racial resentment (Frymer & Grumbach) — evidence that orientations long treated as fixed can move through participation.
-source: Han, Baggetta & Oser — §The Micro Level
-governs: [A2.4] [A3.1] [A9.1] [A6.6]
+source: [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Micro Levelgoverns: [A2.4] [A3.1] [A9.1] [A6.6]
 
 **Relationships in organizing are "public relationships" — interest-based but commitment-bound.** They are distinct from one-off interactions, from *exchange* relationships (each party specifies what they'll get), and from *social* relationships (open-ended mutual care). A public relationship is grounded in interests like an exchange, yet held by mutual commitment toward *shared* interests like a social tie. Because this kind of relationship is what sustains commitment when the work gets hard, building it deliberately is the medium of organizing, not a soft add-on.
 flagship example: The authors name three forms and place organizing's in the middle: exchange (specify the trade upfront), social (give without specifying a return), and what they call "public relationships" — interest-rooted but oriented to shared interests in the public domain. The one-to-one meeting is the mechanism that converts an episodic interaction into a committed public relationship.
-source: Han, Baggetta & Oser — §The Micro Level
-governs: [A4.1] [A4.2] [A4.3] [A3.3]
+source: [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Micro Levelgoverns: [A4.1] [A4.2] [A4.3] [A3.3]
 
 **A real collective is more than the sum of its members.** Organizing develops *collective properties* — shared identity, affective bonds, a sense of common fate — that are independent of how individual actions were aggregated. Because a group that can act in concert is qualitatively different from a pile of individuals who happen to act at once, the leader's job at the group level is to grow the "we," not just to accumulate participation.
 flagship example: Wood & Fulton describe how deliberative practice let a multiracial, multifaith community negotiate divergent interests and articulate a genuinely *new* set of common interests. Collective identity, the review stresses, doesn't pre-exist organizing — it emerges *through* it. Democratic theorists called this "action in concert" (Arendt); recent work studies it as collective effervescence.
-source: Han, Baggetta & Oser — §The Meso Level
-governs: [A6.3] [A2.4] [A7.5] [A6.5]
+source: [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Levelgoverns: [A6.3] [A2.4] [A7.5] [A6.5]
 
 **Structure is a dilemma to navigate, not a default to pick.** Both poles fail. Rigid hierarchy concentrates power in oligarchs and saps a group's ability to disrupt (Michels; Piven & Cloward). Pure flatness produces drawn-out debate, unclear resolutions, stalled action — and informal cliques of *de facto* oligarchs (Freeman; Polletta). The aim is governance that stays responsive to members *and* can act effectively, through transparent, renewable mechanisms.
 flagship example: Freeman's "tyranny of structurelessness" — flat, leaderless groups still concentrate power, just invisibly and unaccountably. The Chicago Teachers' Union built the opposite: rank-and-file reading full contract text on the picket line, large delegate meetings, competitive elections, high-turnout votes — transparency that kept it both responsive and able to act.
-source: Han, Baggetta & Oser — §The Meso Level (Building Accountable Governance Mechanisms)
-governs: [A7.6] [A7.2] [A5.5] [A6.4]
+source: [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Level (Building Accountable Governance Mechanisms)governs: [A7.6] [A7.2] [A5.5] [A6.4]
 
 ---
 
@@ -111,8 +104,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A3.3 transactional-vs-rel
 situations:  [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to:  Organizing builds people; mobilizing moves them
-source:      Han, Baggetta & Oser — §What Is Organizing?
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §What Is Organizing?
 - **Claim / recommendation:** Know which of two approaches you're running. *Organizing* sets out to transform people and groups into agents who can pursue shared goals in public — to develop leaders. *Mobilizing* activates and aggregates the preferences people already hold, treating them as consumers, with no aim of changing anyone. The determining feature of organizing is not headcount — it can reach mass scale — but the *intention* to develop people. Don't mistake a big turnout for organizing.
 - **Reasoning / mechanism:** Mobilizing builds products (opportunities for action) that switch on latent or existing motivation, then channels those preferences into the public sphere. Organizing treats each engagement as a chance to build capacity with long-term consequences for how people see their own role in public life [A3.3]. The two carry different strategic logics — different upstream and downstream choices — even when, from outside, the activity looks identical. The authors note the distinction comes from organizers' own praxis (Baker, Ganz, McAlevey).
 - **Example in context:** Ella Baker separated organizing — the patient "spadework" of developing local leaders and building activist communities — from the sporadic, intense mass action of dramatic events. The review's point is that both are real, but they are different work; the one that builds a lasting group is the spadework.
@@ -125,8 +117,7 @@ concepts:    [A3.3 transactional-vs-relational-ask] [A2.5 transformational-vs-tr
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  The same tactic can be either — the proof is in how it's used
-source:      Han, Baggetta & Oser — §What Is Organizing?
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §What Is Organizing?
 - **Claim / recommendation:** You cannot identify organizing from a list of techniques. The same one-to-one, phone bank, or canvass can be organizing or mobilizing depending on how it's used. Ask of any activity: is the response (a door opened, a person at the event) the *end*, or the *start* of a path to deeper engagement? Organizing means designing the activity to sit inside a longer sequence that cultivates people as agents.
 - **Reasoning / mechanism:** Mobilizers use tools transactionally — the aim is the largest scale at the lowest cost to both the organizers and the participants. Organizers use the same tools but invest in upstream and downstream moments to build individual and collective capacity [A2.5]. Some practices (one-to-ones, "snowflake" interdependent structures, public-narrative work) are *more likely* to signal organizing — but even these only embody it when they fit a sequence cultivating agents. A single tactic in isolation proves nothing.
 - **Example in context:** The authors note the common error of distinguishing collective action as "thick vs. thin," "slow vs. quick," or "offline vs. online." These categorize the *action* rather than how actions work in concert: a slow offline action can still be transactional and disconnected, and a brief online action can be one move in a transformative sequence.
@@ -139,8 +130,7 @@ concepts:    [A9.1 developing-leaders] [A1.4 stepping-into-the-role]
 situations:  [S:no-one-takes-initiative] [S:doing-everything-myself]
 handoff:
 anchors to:  People become through doing — orientations are endogenous to participation
-source:      Han, Baggetta & Oser — §The Micro Level (Developing Capabilities)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Micro Level (Developing Capabilities)
 - **Claim / recommendation:** The individual-level core of organizing is leadership development: moving a person from *consuming* political action to *producing* it. Concretely, help people develop the capacity to act as strategic agents, not just to attend. A key leadership skill to grow in others is the ability to draw still more people into ongoing activity — leadership that produces leadership.
 - **Reasoning / mechanism:** Organizing develops the civic skills any participation can build (speaking publicly, working with others, knowing where to advocate) *and* a further set distinctive to organizing: an emotional capacity for risk, the ability to build narratives that call others to action, strategizing under political uncertainty, committing to sustained participation accountable to a group, and locating one's own engagement in a broader analysis of power [A2.4]. The shift is one of *being*, not just doing.
 - **Example in context:** The review captures the shift in Woodly's words — the result of organizing is to "become the kind of person who does what is to be done." The transformation is in identity and capacity, not merely in the completion of a task.
@@ -153,8 +143,7 @@ concepts:    [A4.1 relationships-are-strategy] [A4.3 trust-building]
 situations:  [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to:  Relationships in organizing are "public relationships"
-source:      Han, Baggetta & Oser — §The Micro Level (Public Relationships)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Micro Level (Public Relationships)
 - **Claim / recommendation:** Build a specific kind of tie — what the authors call "public relationships" — and treat it as the actual medium of the work. First, distinguish a *relationship* from an *interaction*: a relationship exists when both parties expect recurrence and derive meaning from it. Then aim for the public kind: grounded in interests, but held together by mutual commitment toward *shared* interests, not by a specified trade.
 - **Reasoning / mechanism:** The authors locate public relationships against two others. In an *exchange* relationship, parties specify upfront what each gets. In a *social* relationship, both contribute without specifying a return and attend to each other's needs. A *public* relationship borrows from each — interest-rooted like exchange, commitment-bound like social — but is oriented to negotiating and serving shared interests in public [A3.3]. The one-to-one meeting is the named mechanism for forming it: people articulate interests, then commit to act together in ways that make them accountable to one another [A4.2].
 - **Example in context:** No single flagship case is given; the review's contribution here is the typology itself and its claim that such relationships are *necessary* for organizing to endure, because they sustain commitment when collective action gets complex.
@@ -167,8 +156,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A3.1 intrinsic-motivation]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  People become through doing — orientations are endogenous to participation
-source:      Han, Baggetta & Oser — §The Micro Level (Shaping Attitudes, Interests, Identities, Emotions)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Micro Level (Shaping Attitudes, Interests, Identities, Emotions)
 - **Claim / recommendation:** Don't treat people's attitudes, interests, and identities as fixed givens you must work around. Organizing can *shift* them — and it does so through the act of participating, not before it. Engage people as participants in shaping the work, and expect their sense of themselves as public actors to develop through that engagement.
 - **Reasoning / mechanism:** Much political-science research treats orientations as relatively stable and *exogenous* to involvement. Organizing makes them *endogenous*: participation reshapes the frames people use to interpret the world and creates ongoing contexts for reflecting on who they are as public actors [A9.1]. The authors invoke Stuart Hall — developing people's vision of the kind of person they want to *become*, and drawing on that future self to shape present choices.
 - **Example in context:** A comprehensive study found union organizing *causally* reduced racial resentment (Frymer & Grumbach). Other field experiments show interpersonal conversation and collective ritual can shift attitudes, empathy, and moral regard (Kalla & Brookman; Yudkin et al.), which can then forge new personal identities.
@@ -181,8 +169,7 @@ concepts:    [A2.2 public-narrative]
 situations:  [S:group-lost-its-why]
 handoff:
 anchors to:  People become through doing — orientations are endogenous to participation
-source:      Han, Baggetta & Oser — §The Micro Level
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Micro Level
 - **Claim / recommendation:** Use story deliberately to keep emotional energy flowing. Narratives that connect a person's own experience to a collective struggle are not decoration — they "expand and replenish the wells of emotion" needed to start and sustain engagement, and they help forge new shared identities.
 - **Reasoning / mechanism:** Emotion is treated here as a renewable resource that organizing must actively top up, not a one-time spark. Connecting the personal to the collective gives people a reason that survives setbacks and routine, which is why public-narrative work recurs across organizing traditions [A2.4].
 - **Example in context:** The review points to public-narrative pedagogy as a practice that strengthens collective identity by preparing leaders to articulate shared values (Ganz et al.). It cites rather than develops the case — the depth lives in Ganz.
@@ -195,8 +182,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging]
 situations:  [S:group-lost-its-why] [S:newcomers-dont-stick]
 handoff:
 anchors to:  A real collective is more than the sum of its members
-source:      Han, Baggetta & Oser — §The Meso Level (Orienting Collective Identities)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Level (Orienting Collective Identities)
 - **Claim / recommendation:** Don't assume your group's shared identity is already there waiting to be activated. The "we" is built — through organizing — and it forms by negotiating who the group is, deliberating to bridge differences, and repeating interactions, socializing, and rituals that build bonds of solidarity. Treat building the collective identity as active work, not a given.
 - **Reasoning / mechanism:** Collective identity is the dynamic process by which a collective actor constitutes itself; it does not exist before the organizing practices that create it [A6.3]. It can be strengthened by preparing leaders to articulate shared values through public narrative oriented toward the common good. The implication: a leader who waits for cohesion to appear will wait forever — it's produced by deliberate practice.
 - **Example in context:** Ransby describes Ella Baker's aim to build people's collective power to determine their own lives and shape the direction of history — a collective that created its *own* source of meaning, rather than inheriting one.
@@ -209,8 +195,7 @@ concepts:    [A4.6 cross-cutting-ties-before-conflict] [A2.4 group-identity-and-
 situations:  [S:two-members-clashing]
 handoff:
 anchors to:  A real collective is more than the sum of its members
-source:      Han, Baggetta & Oser — §The Meso Level
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Level
 - **Claim / recommendation:** Aim to widen people's sense of their own interest to include the interests of others in the group. Organizing can expand a person's self-interest into a sense of *shared fate* — seeing one's own future as bound up with others' — which becomes the basis for acting together across difference. Build ties across lines, not only within the in-group.
 - **Reasoning / mechanism:** The review draws on Tocqueville's "self-interest rightly understood": people come to see their fates as interlinked, providing a foundation for collective action toward more broadly defined interests [A2.4]. Deliberative practice across difference is what does the bridging — negotiating divergent interests into a genuinely new common interest, rather than papering over them.
 - **Example in context:** Wood & Fulton's multiracial, multifaith community used deliberation to negotiate divergent interests and form a network around a *new* set of common interests it had articulated together — bridging as a built outcome, not a starting condition.
@@ -223,8 +208,7 @@ concepts:    [A6.3 cohesion-and-belonging] [A7.5 collective-agreement-tension]
 situations:  [S:everyone-just-agrees]
 handoff:
 anchors to:  A real collective is more than the sum of its members
-source:      Han, Baggetta & Oser — §The Meso Level and §Research Agenda (Meso)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Level and §Research Agenda (Meso)
 - **Claim / recommendation:** Treat your group as something that can develop properties no individual member has. Conventional thinking treats collective action as the additive sum of individual actions; organizing tries to generate *collective* properties — shared identity, bonds, a capacity to act in concert — that are independent of how those individual actions were aggregated. The leader's meso-level job is to grow that collective thing, not just to sum participation.
 - **Reasoning / mechanism:** Democratic theorists named this "action in concert" (Arendt) and conjoint action (Dewey); recent psychology studies it as collective effervescence. The review is candid that scholars "largely lack conceptual tools" for distinguishing a true collective from a mere aggregation — so this is a frontier claim [A7.5], offered as a real phenomenon worth building toward rather than a fully measured one.
 - **Example in context:** The review again leans on Wood & Fulton's community articulating new common interests, and on collective-effervescence research (Yudkin et al.) on transformative multi-day gatherings, as gestures toward what an emergent collective looks like.
@@ -237,8 +221,7 @@ concepts:    [A7.6 hierarchy-just-enough] [A7.2 decisions-as-shared-process]
 situations:  [S:cant-make-decisions] [S:decisions-keep-getting-relitigated] [S:one-person-dominates]
 handoff:
 anchors to:  Structure is a dilemma to navigate, not a default to pick
-source:      Han, Baggetta & Oser — §The Meso Level (Building Accountable Governance)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Level (Building Accountable Governance)
 - **Claim / recommendation:** Don't default to either "we'll be a clear hierarchy" or "we'll be flat and equal." Both fail in predictable ways. Build governance that is *transparent and renewable* — clear enough to act, open enough to stay accountable to members — and accept that you're navigating a tension, not solving it once.
 - **Reasoning / mechanism:** Hierarchy can concentrate power in oligarchs (Michels) and sap a group's ability to disrupt the status quo (Piven & Cloward). But flat, consensus-based structures produce long debates (Polletta), unclear resolutions (Staggenborg), stalled action (Tufekci), and informal cliques of *de facto* oligarchs — Freeman's "tyranny of structurelessness" [A7.2]. Organizing aims for structures that enable constant renewal while still advancing strategic aims. The how-to of running such meetings routes out; the *why* lives here. [route-out → **H:events** / **H:comms** for the mechanics]
 - **Example in context:** The Chicago Teachers' Union, rebuilding power in the early 2000s, expanded school-level delegate roles, held large delegate meetings on contracts and strikes, had rank-and-file read full proposed contracts on the picket line, and ran broad, high-turnout elections — transparency engineered to keep it both responsive and effective.
@@ -251,8 +234,7 @@ concepts:    [A1.6 failure-as-learning] [A9.1 developing-leaders]
 situations:  [S:lost-momentum-after-launch] [S:burning-out]
 handoff:
 anchors to:  People become through doing — orientations are endogenous to participation
-source:      Han, Baggetta & Oser — §The Macro Level
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Macro Level
 - **Claim / recommendation:** Judge an effort by what it built, not only by whether it won. Because organizing develops leaders and durable relationships that persist beyond any single campaign, even an effort that misses its stated goal can leave the group stronger — more capable people, denser ties, a clearer analysis. Design actions to build, so a loss isn't wasted.
 - **Reasoning / mechanism:** The authors argue organizing seeks not only visible wins (an election, a policy) but a *durable infrastructure* of leaders and collective entities that outlasts any one win and becomes an ongoing source of power [A9.1]. That's why an organizing campaign that fails its goal can still remake the situation — the people and relationships remain.
 - **Example in context:** No single case is developed here; the claim is made at the level of principle, contrasting organizing's lasting infrastructure with mobilizing's tendency to produce sporadic action that fades.
@@ -265,8 +247,7 @@ concepts:    [A2.5 transformational-vs-transactional]
 situations:
 handoff:     [H:org-level]
 anchors to:  Organizing builds people; mobilizing moves them
-source:      Han, Baggetta & Oser — §The Meso Level (citing Skocpol 2003)
-
+source:      [Han, Baggetta & Oser](https://www.annualreviews.org/content/journals/10.1146/annurev-polisci-041322-043040) — §The Meso Level (citing Skocpol 2003)
 - **Claim / recommendation:** Mostly context, not a leader's call. Historically, federated structures — local units that recruited members, built relationships, developed leaders, and connected up to county, state, and national levels — sustained collective action. These have weakened as civic actors shifted toward centrally managed lobbying; in the review's terms, many groups "largely stopped organizing and resorted to only mobilizing." For a single group leader, the takeaway is diagnostic, not structural: a group that can only spur sporadic action, not sustain engagement, has drifted to mobilizing.
 - **Reasoning / mechanism:** Skocpol argues new political opportunities and funding shifted civic life "from membership to management" — structures that can spark action but cannot sustain it. The cross-group, federated design question itself is org/program-level [route → **H:org-level**].
 - **Example in context:** The review treats this as a historical trend (Skocpol; Karpf; Tufekci) rather than a case.

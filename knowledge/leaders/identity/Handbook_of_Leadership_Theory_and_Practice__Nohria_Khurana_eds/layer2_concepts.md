@@ -1,7 +1,6 @@
 ---
 title: "Handbook of Leadership Theory"
-source: "Nohria Khurana — Handbook of Leadership Theory"
-domains: [A1, A6, A7, A9]
+source: "[Nohria Khurana](https://store.hbr.org/product/handbook-of-leadership-theory-and-practice/12326) — Handbook of Leadership Theory"domains: [A1, A6, A7, A9]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -143,8 +142,7 @@ source: Useem — *Handbook*, ch.18
 concepts: [A5.1] [A5.3]
 situations: [S:lost-momentum-after-launch]
 anchors to: Conditions over causes
-source: Hackman — *Handbook*, ch.4
-
+source: [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.4
 - **Claim / recommendation:** Spend the larger share of your energy establishing the conditions that make good outcomes likely — clear purpose, the right people, sound norms — and the smaller share on real-time intervention. Trying to drive a group's behaviour moment to moment is both exhausting and less effective than getting it "stabilised on approach" early.
 - **Reasoning / mechanism:** Hackman argues social systems can't be reliably steered by cause-effect commands; what works is putting structural conditions in place and then letting the group chart its own course, intervening only as needed. He likens it to a pilot who stabilises the aircraft far out rather than wrestling it down at the last second — the prudent move, if you're fighting it at the threshold, is to go around and re-establish the approach [A5.7].
 - **Example in context:** Temirkanov prepared his orchestra fully in rehearsal, then at the performance cued the start and lowered his hands, "managing at the margin" — the conditions did the work.
@@ -155,8 +153,7 @@ source: Hackman — *Handbook*, ch.4
 concepts: [A5.3] [A5.6]
 situations: [S:lost-momentum-after-launch] [S:cant-make-decisions]
 anchors to: Conditions over causes
-source: Wageman & Hackman — *Handbook*, ch.17
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17
 - **Claim / recommendation:** A core team that has the authority to set itself up well will often fail to use it — drifting into vague purpose, poor task design, and thin support. Treat your own group's design as a deliberate job, not something that takes care of itself because the members are capable.
 - **Reasoning / mechanism:** Wageman & Hackman's studies of top-management *and* volunteer activist teams found both were "underdesigned, underled, and underresourced" despite having full authority to fix that — partly because such teams feel they should guard resources rather than claim them, and partly because articulating what a group does *together* (beyond the sum of individuals) is genuinely hard. A team's effectiveness is a joint function of effort, sound strategy, and talent applied — and poor design depresses all three.
 - **Example in context:** In a grassroots environmental association, elected committees with full latitude to choose their strategic focus nonetheless showed *less* compelling shared purpose than far more constrained frontline teams.
@@ -167,8 +164,7 @@ source: Wageman & Hackman — *Handbook*, ch.17
 concepts: [A5.6] [A5.2]
 situations: [S:group-too-big-or-chaotic] [S:cant-make-decisions]
 anchors to: Conditions over causes
-source: Wageman & Hackman — *Handbook*, ch.17
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17
 - **Claim / recommendation:** Keep the working team clearly bounded and sized to its task, and choose members for what they contribute to the shared work — not because their role or seniority "entitles" them to a seat. Resist the pull toward inclusiveness that quietly bloats the group until it can no longer do real work.
 - **Reasoning / mechanism:** In the study, of 120 top teams only 9% agreed on who was even *on* the team; teams composed by role rather than task became overlarge and porous, and an overlarge group cannot answer "what are we interdependent *for*?" — so it defaults to mere information-sharing [A6.4]. Leaders err toward inclusion because disinviting someone risks loss of face and, in volunteer settings, the fear of losing an active participant altogether.
 - **Example in context:** A "five o'clock meeting" national-security team grew so large through repeat "guests" that the senior executive abandoned it for smaller informal groups to make real decisions.
@@ -192,8 +188,7 @@ source: Hill, Travaglini, Brandeau & Stecker — *Handbook*, ch.21
 concepts: [A5.3]
 situations: [S:unclear-what-were-doing]
 anchors to: Conditions over causes
-source: Wageman & Hackman — *Handbook*, ch.17 (with Hill et al. — ch.21)
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17 (with Hill et al. — ch.21)
 - **Claim / recommendation:** Define a circumscribed, compelling shared purpose for the group, and re-state it as conditions change — it is the single condition most tied to whether a team functions. Don't fear hard constraints (deadlines, limited resources); used well, they focus a group rather than crushing it.
 - **Reasoning / mechanism:** Wageman & Hackman found that teams whose leaders explicitly defined the team's overall purpose made better decisions and ran better processes than those whose leaders were laissez-faire about it; an amorphous "provide leadership for the organisation" purpose leaves members unable to orient or engage. Hill adds that leaders often deliberately introduce a "hard stop" — a deadline or budget reality — to force evaluation and reframing.
 - **Example in context:** Hill quotes a leader: the creative process "will go on forever unless there is a hard stop," and constraints "force the team to find ways to get around them."
@@ -205,8 +200,7 @@ concepts: [A5.7]
 situations: [S:lost-momentum-after-launch]
 handoff: H:events
 anchors to: Conditions over causes
-source: Wageman & Hackman — *Handbook*, ch.17
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17
 - **Claim / recommendation:** Treat establishing a group's conditions as an art you repeat, not a one-time setup. The specific conditions a given group needs are idiosyncratic and shift over time, and membership turns over — so expect to re-launch (re-purpose, re-compose, re-norm) periodically rather than assuming the original setup holds.
 - **Reasoning / mechanism:** The authors call this "the art of structuring": there is no formula, because the right purpose, norms, and roles depend on the group's history, relationships, and the moment's challenge. Volunteer teams in particular face "chronic patterns of team dissolution and relaunch" — election cycles and turnover reset the team repeatedly, each time requiring a fresh structuring.
 - **Example in context:** In the activist association, committee membership changed predictably with the cycle of elections, so each new committee had in effect to be structured all over again.
@@ -242,8 +236,7 @@ source: Chatman & Kennedy — *Handbook*, ch.6
 ### The common stall: the meeting that decays into updates
 concepts: [A6.4]
 situations: [S:lost-momentum-after-launch] [S:burning-out]
-source: Wageman & Hackman — *Handbook*, ch.17
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17
 - **Claim / recommendation:** Watch for the most common failure mode of a core team: meetings that drift into round-the-table updates and trivial decisions while real, interdependent work goes undone. Counter it by curating, each time the group meets, a short list of genuinely shared, consequential tasks.
 - **Reasoning / mechanism:** Wageman & Hackman found leadership teams waste time three ways — trivial matters, unresolved conflict, and agreeing to disagree then disaggregating the work into solo efforts. The result is "many things done poorly versus a few things done superbly," with power dissipated and members both overloaded *and* bored. The fix is the leader actively crafting an agenda of meaningful interdependent work, repeatedly, not once.
 - **Example in context:** Activist committees that defaulted to information-sharing dissipated their power across many thin activities; ones that focused on a few shared decisions mobilised the whole group.
@@ -254,8 +247,7 @@ source: Wageman & Hackman — *Handbook*, ch.17
 concepts: [A6.6] [A9.6]
 situations: [S:newcomers-dont-stick]
 anchors to: System viability is the measure
-source: Chatman & Kennedy — *Handbook*, ch.6 (citing Hackman & Wageman)
-
+source: Chatman & Kennedy — *Handbook*, ch.6 (citing [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf))
 - **Claim / recommendation:** Coach the group on task-relevant matters, and time the *kind* of coaching to where the group is in its cycle — motivational coaching at the start, strategic coaching at the midpoint, and reflection toward the end. Generic encouragement at the wrong moment wastes the intervention.
 - **Reasoning / mechanism:** Hackman & Wageman's team-coaching theory holds that coaching only produces performance gains when it focuses on the task (not personalities) and lands at the predictable phase when the group is ready for it — energy at launch, strategy when the work is underway. Learning is the engine of a group becoming *more capable over time*, the second test of viability.
 - **Example in context:** *The chapter states the timing rule in the abstract (motivational at the beginning, strategic at the midpoint) rather than via a single case.*
@@ -348,8 +340,7 @@ source: Hill, Travaglini, Brandeau & Stecker — *Handbook*, ch.21
 ### The undiscussables: authority dynamics no one will name
 concepts: [A8.4] [A8.2]
 situations: [S:one-person-dominates] [S:conflict-got-personal]
-source: Wageman & Hackman — *Handbook*, ch.17
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17
 - **Claim / recommendation:** Notice that the most damaging group dynamics are often the ones members won't put on the table — deference to "the boss," resentment of a dominating member, simmering conflict everyone avoids. Part of the leader's job is to make the undiscussable discussable, because a group can't fix what it won't look at.
 - **Reasoning / mechanism:** Wageman & Hackman found leadership teams ruled by authority dynamics members wouldn't discuss: people treated the group as "the leader's responsibility" and stayed passive, or fell into Bion's unconscious patterns (depend on the leader to fix everything, fight/flee, or hope a deputed pair will rescue them). The norms of such groups actively discourage raising exactly the issues that matter most — so problems persist not because they're invisible but because they're unspeakable.
 - **Example in context:** Asked why he stayed silent while a committee chair dominated and harmed the team, one activist member just laughed and said, in effect, why start a fight — a vivid case of an undiscussable left to fester.
@@ -359,8 +350,7 @@ source: Wageman & Hackman — *Handbook*, ch.17
 ### Keep conflict on the issue: let people own their interests
 concepts: [A8.1]
 situations: [S:two-members-clashing] [S:conflict-got-personal]
-source: Wageman & Hackman — *Handbook*, ch.17 (citing Berg)
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17 (citing Berg)
 - **Claim / recommendation:** When members represent different constituencies or commitments, make those interests explicit and discussable rather than expecting everyone to argue only "for the good of the whole." Pretending interests don't exist backfires; naming them keeps disagreement about the issue instead of curdling into suspicion about motives.
 - **Reasoning / mechanism:** Wageman & Hackman cite Berg's counter-intuitive advice to "let people have their groups": a norm of speaking only big-picture makes others assume any position is secretly self-serving, so trust erodes. Making one's stake explicit converts a hidden agenda into a shared topic — and the best teams in the study both put individual concerns on the table and showed high empathy for each other's.
 - **Example in context:** Activist teams that built explicit norms acknowledging members' particular concerns were better able to mobilise the whole group and less likely to fracture into competing efforts.
@@ -373,8 +363,7 @@ source: Wageman & Hackman — *Handbook*, ch.17 (citing Berg)
 concepts: [A9.5]
 situations: [S:doing-everything-myself] [S:work-is-all-on-a-few-people]
 anchors to: Functional, distributed, and ultimately dispensable
-source: Wageman & Hackman — *Handbook*, ch.17 (with Hackman — ch.4)
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17 (with Hackman — ch.4)
 - **Claim / recommendation:** Think of leadership as a set of functions to be filled by whoever can — the leader's job is to "do, or get done, whatever is not being adequately handled" for the group (McGrath). But don't expect shared leadership to arise spontaneously; in a group of capable people it is *least* likely to emerge on its own and must be deliberately set up early.
 - **Reasoning / mechanism:** The functional view (Barnard, McGrath, Hackman) holds that anyone who fulfils a needed function is leading, freeing the leader from being the sole source. Yet Wageman & Hackman's "fifth irony" is that the very conditions that distribute leadership — clear purpose, good composition, working norms, coaching — are best *initiated* by one authority, especially at the start; capable people default to their individual roles rather than to shared responsibility unless someone structures for it.
 - **Example in context:** Across the activist and corporate teams studied, shared leadership "took" only where a single leader first established the conditions and modelled the norms, then handed responsibility on.
@@ -408,8 +397,7 @@ source: Chatman & Kennedy — *Handbook*, ch.6
 concepts: [A9.2] [A9.3]
 situations: [S:i-cant-let-go] [S:work-is-all-on-a-few-people]
 anchors to: Functional, distributed, and ultimately dispensable
-source: Wageman & Hackman — *Handbook*, ch.17 (with Ibarra et al. — ch.22)
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17 (with Ibarra et al. — ch.22)
 - **Claim / recommendation:** Hand over ownership of a *result*, with latitude on how to achieve it — and then resist the strong pull to retake control the moment it looks shaky. Specifying the details of execution, or snatching the work back at the first wobble, teaches members they are not really responsible.
 - **Reasoning / mechanism:** Wageman & Hackman found leaders who articulated a purpose but then "specified the details of execution" reinforced members' sense that their job was only to do as told; and leaders who delegated but then lost patience and reclaimed the work taught the group not to feel collectively responsible. Ibarra et al. add the personal cost: letting go means the leader's own "unlearning" — giving up the doer identity that delegating threatens [A1.2].
 - **Example in context:** An activist committee chair turned over a fundraising event to her team; when she found a week later that no venue was booked, she made her own plan and issued directives — and so unintentionally taught the team they needn't feel responsible for it.
@@ -434,8 +422,7 @@ source: Hill, Travaglini, Brandeau & Stecker — *Handbook*, ch.21
 concepts: [A10.6] [A6.2]
 situations: [S:burning-out]
 anchors to: System viability is the measure
-source: Hackman — *Handbook*, ch.4
-
+source: [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.4
 - **Claim / recommendation:** Judge the group's health on three things, not just output: whether those it serves are satisfied, whether the group is becoming *more capable* over time, and whether members get at least as much learning and fulfilment as frustration from the work. Member wellbeing and growth are not soft extras — they are part of the definition of effective leadership.
 - **Reasoning / mechanism:** Hackman's "system viability" reframes success away from one good result toward the conditions that let a group keep performing: a burnt-out, stagnant, or resentful group is failing on viability even if it hit this month's goal. Because viability includes members' fulfilment, the leader who runs people into the ground is, by this measure, leading badly regardless of short-term output.
 - **Example in context:** *Stated as a general criterion rather than via one case (see the Layer 0 note); Hackman contrasts it with the reflex of crowning whoever was present when good numbers appeared.*
@@ -445,8 +432,7 @@ source: Hackman — *Handbook*, ch.4
 ### Burnout and the overloaded leader (and team)
 concepts: [A10.1] [A10.2]
 situations: [S:burning-out] [S:work-is-all-on-a-few-people]
-source: Wageman & Hackman — *Handbook*, ch.17
-
+source: Wageman & [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.17
 - **Claim / recommendation:** Notice that the people carrying leadership in a volunteer group are often at real risk of burnout — and that the cure is genuine sharing of the load, not just adding meetings. Sharing leadership functions among peers reduces the cognitive, emotional, and effort strain on any one person; meetings that don't share real work add to it.
 - **Reasoning / mechanism:** Wageman & Hackman observed members of both corporate and activist leadership teams "at serious risk of burnout," and noted that the whole point of a leadership team — spreading the burden — is defeated when the team wastes time and members leave more drained, not less [A6.4]. Research they cite (Andrews et al.) found civic associations whose leaders worked as interdependent teams sustained their energy better and engaged others more.
 - **Example in context:** *The chapter reports burnout risk and the energy benefit of interdependent teams from its study data rather than a single named case.*

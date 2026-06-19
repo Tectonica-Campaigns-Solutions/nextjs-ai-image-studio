@@ -1,7 +1,6 @@
 ---
 title: "Groundbreakers"
-source: "McKenna & Han — Groundbreakers"
-domains: [A9, A3, A2, A5]
+source: "[McKenna & Han](https://global.oup.com/academic/product/groundbreakers-9780199394609?cc=us&lang=en&) — Groundbreakers"domains: [A9, A3, A2, A5]
 primary_folder: "/developing-others/"
 type: ragsrc-summary
 last-updated: 2026-06-10

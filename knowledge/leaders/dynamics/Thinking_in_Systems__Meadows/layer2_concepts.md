@@ -1,7 +1,6 @@
 ---
 title: "Thinking in Systems"
-source: "Meadows — Thinking in Systems"
-domains: [A5, A6, A9]
+source: "[Meadows](https://donellameadows.org/systems-thinking-resources/) — Thinking in Systems"domains: [A5, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -17,8 +16,7 @@ concepts:    [A6.4 common-stall-patterns]   *(register-gap: the systems lens its
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Structure produces behavior
-source:      Meadows — *Thinking in Systems*, Intro & ch.1
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, Intro & ch.1
 - **Claim / recommendation:** Treat the group as a system — a set of people interconnected so they produce their own recurring pattern of behavior. When the same problem keeps coming back (people drift off, decisions get relitigated, everything lands on you), the first move is *not* to find who's at fault but to ask what in the structure keeps producing this. Do not reach for a culprit or a one-off fix; reach for the wiring.
 - **Reasoning / mechanism:** A system's behavior is "characteristic of itself" — an outside event triggers a response, but the same event hitting a differently-wired group produces a different result. So the recurring pattern is information about the structure, not about the people in it [A8.1]. Meadows' caution: we are trained to trace cause→effect in straight lines and to locate the problem "out there," which makes us blame individuals and miss the structure generating them.
 - **Example in context:** The Slinky on her palm. She drops her lower hand and it bounces; students say "your hand made it bounce." She does the same with the empty box — nothing. The bounce was latent in the spring's *structure*; the hand only released it. A group's recurring trouble is the same: the trigger is not the cause.
@@ -31,8 +29,7 @@ concepts:    [A4.3 trust-building] [A6.3 cohesion-and-belonging] [A3.4 commitmen
 situations:  [S:lost-momentum-after-launch] [S:group-feels-transactional]
 handoff:
 anchors to:  A stock changes slowly
-source:      Meadows — *Thinking in Systems*, ch.1
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.1
 - **Claim / recommendation:** The things a leader most wants more of — trust, momentum, cohesion, members' confidence and commitment — are *stocks*: accumulations that build up over time. Name them as stocks, and you stop expecting to fix them in one conversation. Manage them by attending to the *flows* that fill and drain them, not by willing the level up.
 - **Reasoning / mechanism:** "A stock is the memory of the history of changing flows within the system." A stock doesn't have to be physical — Meadows explicitly counts a reserve of good will, or self-confidence, as stocks. Each rises when inflows exceed outflows and falls when they don't, and it carries the accumulated history with it [A3.4].
 - **Example in context:** Meadows' insight that you can raise a stock by *cutting its outflow*, not only by boosting inflow — "there's more than one way to fill a bathtub." A company grows its workforce by hiring *or* by reducing quitting. A group builds commitment by recruiting *or* by stopping the slow leak of people who feel unseen — often the cheaper lever.
@@ -44,8 +41,7 @@ concepts:    [A6.2 stages-and-development] [A4.3 trust-building]
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  A stock changes slowly · Feedback loops drive the cycle
-source:      Meadows — *Thinking in Systems*, ch.1 & ch.4
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.1 & ch.4
 - **Claim / recommendation:** Flows are the rates that fill and drain a stock, and most flows carry *delays* — gaps between an action and its visible effect. Expect change to take time, and resist over-correcting to every short-term dip. When you change something (a new norm, a harder ask), give the stock time to respond before you yank the wheel again.
 - **Reasoning / mechanism:** Because stocks change slowly, they "act as delays or buffers or shock absorbers." Delays cause overshoot and oscillation: a decision maker responding to delayed information, or responding with a delay, overshoots the target — "overshoots, oscillations, and collapses are always caused by delays" [A6.4]. Act too fast and you "nervously amplify short-term variation."
 - **Example in context:** Forrester's rule of thumb, which Meadows passes on: ask everyone how long a delay is, take your best guess, then multiply by three. (She notes it works for estimating how long it takes to write a book, too.) Trust and group norms build on exactly this kind of lagged schedule.
@@ -58,8 +54,7 @@ concepts:    [A9.3 avoiding-founder-bottleneck] [A6.4 common-stall-patterns]
 situations:  [S:doing-everything-myself] [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Feedback loops drive the cycle
-source:      Meadows — *Thinking in Systems*, ch.1 & ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.1 & ch.5
 - **Claim / recommendation:** A reinforcing loop amplifies itself: the more of X, the more of X. These produce both the snowballs you want (energy that attracts more energy) and the spirals you fear (a founder bottleneck that deepens itself). Learn to spot a reinforcing loop early, because it compounds — and decide whether to feed it or break it.
 - **Reasoning / mechanism:** Reinforcing loops "generate exponential growth" or runaway decline; left alone they "build exponentially… faster than anyone would believe possible." The leader's job is direction: virtuous loops want feeding, vicious ones want an interruption somewhere in the circle [A6.3].
 - **Example in context:** The over-helpful leader: the more the leader does, the less others step up, so the leader must do more — "another reinforcing feedback loop running downhill." Meadows' general point is that nothing about the people changed; the loop itself manufactures the worsening.
@@ -71,8 +66,7 @@ concepts:    [A6.4 common-stall-patterns] [A7.5 collective-agreement-tension]
 situations:  [S:cant-make-decisions] [S:decisions-keep-getting-relitigated]
 handoff:
 anchors to:  Feedback loops drive the cycle
-source:      Meadows — *Thinking in Systems*, ch.1, ch.4 & ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.1, ch.4 & ch.5
 - **Claim / recommendation:** A balancing loop is goal-seeking: it pushes the system back toward a set point and holds it in equilibrium — even when that equilibrium is one you dislike. When a group keeps returning to the same stuck state no matter what you try, suspect a balancing loop quietly defending the current level, and look for what goal it's protecting.
 - **Reasoning / mechanism:** A single balancing loop "brings a system stock back to its desired state." When several actors each pull the system toward their *own* goal, you get *policy resistance* — push harder on the whole and everyone pushes back harder, so it stays stuck while effort and tension rise [A7.5]. The fix is rarely more force; it's surfacing the competing goals.
 - **Example in context:** Meadows' policy-resistance pattern: each actor monitors a variable against their own goal and acts to close the gap, "the greater the discrepancy… the more emphatic the action." A leader pushing attendance harder while members quietly defend their own limits is in exactly this tug-of-war.
@@ -84,8 +78,7 @@ concepts:    [A10.5 resilience-through-setbacks] [A9.5 functional-shared-leaders
 situations:  [S:burning-out] [S:doing-everything-myself]
 handoff:
 anchors to:  Resilience and self-organization are precious
-source:      Meadows — *Thinking in Systems*, ch.3
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.3
 - **Claim / recommendation:** Resilience — the capacity to absorb shocks and bounce back — comes from having *several* overlapping ways to recover, not from being finely optimized to one. Build redundancy into the group (more than one person who can do each key thing) even though it looks less efficient. A group tuned so one person carries each function is fragile, not lean.
 - **Reasoning / mechanism:** Resilience comes from "a rich structure of many feedback loops" with redundancy — one kicking in when another fails. It is often invisible: a system attends to its activity, not to the space it has to move in, so it looks stable right up until it exceeds a limit and crashes. "There are always limits to resilience."
 - **Example in context:** Meadows contrasts static stability with resilience: managed monoculture forests yield wood efficiently but, stripped of species diversity, lose resilience and collapse under a new stress like air pollution. A group optimized to one indispensable leader is the monoculture.
@@ -97,8 +90,7 @@ concepts:    [A7.3 autonomy-vs-direction] [A3.2 ownership-and-voice] [A9.1 devel
 situations:  [S:no-one-takes-initiative] [S:i-cant-let-go]
 handoff:
 anchors to:  Resilience and self-organization are precious
-source:      Meadows — *Thinking in Systems*, ch.3
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.3
 - **Claim / recommendation:** Self-organization is a system's capacity "to create new structure, to learn, diversify, and complexify" — to come up with its own roles, solutions, and leaders. It is the most precious property a group has, and it is the first thing over-control destroys. Leave room — freedom, some disorder, permission to experiment — for the group to organize itself rather than scripting everything.
 - **Reasoning / mechanism:** Self-organization "requires freedom and experimentation, and a certain amount of disorder," which feels threatening to anyone holding control, so it is routinely sacrificed "for purposes of short-term productivity and stability" — turning people into "mechanical adjuncts." But it can never be fully killed; it can only be suppressed [A7.3].
 - **Example in context:** Meadows' striking point that vast complexity grows from "just a few simple organizing principles" (her Koch-snowflake illustration). The leader's parallel: a few clear, simple shared rules can let a group generate far richer structure than the leader could design — if they don't smother it first.
@@ -111,8 +103,7 @@ concepts:    [A7.6 hierarchy-just-enough] [A5.2 group-size-and-nesting]
 situations:  [S:group-too-big-or-chaotic]
 handoff:     [H:org-level]
 anchors to:  Resilience and self-organization are precious
-source:      Meadows — *Thinking in Systems*, ch.3
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.3
 - **Claim / recommendation:** Hierarchy and nesting exist to *serve* the small working units, not to control them — keep only as much as coordination genuinely requires. When a group grows past what one circle can hold, nest it into smaller sub-teams rather than adding layers of oversight; the point of any layer is to help the units below it work better.
 - **Reasoning / mechanism:** Hierarchies "reduce the amount of information that any part… has to keep track of": relationships within a subsystem are denser than those between subsystems, so no part is overwhelmed. But the structure's purpose is "to help its originating subsystems do their jobs better" — and both over-control (the center strangling the units) and suboptimization (a unit serving itself over the whole) break it [A5.2].
 - **Example in context:** Meadows' caution against too much central control: if the brain regulated each cell so tightly it couldn't self-maintain, the organism dies; a coach who overrides a good player's on-the-spot judgment hurts the team. The structure has to leave the units enough autonomy to function.
@@ -125,8 +116,7 @@ concepts:    [A8.1 task-vs-relationship-conflict] [A3.2 ownership-and-voice] [A6
 situations:  [S:volunteers-flaky] [S:conflict-got-personal]
 handoff:
 anchors to:  People act rationally from where they sit
-source:      Meadows — *Thinking in Systems*, ch.4
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.4
 - **Claim / recommendation:** Assume people are acting reasonably given what they can see from where they sit. The volunteer who flakes, the member who won't step up, the person who derails a meeting is usually responding sensibly to *their* information, incentives, and pressures — not being lazy or hostile. So don't lead with blame or with swapping the person out; lead with curiosity about what their position looks like from the inside.
 - **Reasoning / mechanism:** Herbert Simon's bounded rationality: "people make quite reasonable decisions based on the information they have," but that information is partial and delayed — we satisfice rather than optimize. Crucially, swapping in new actors without changing the system won't improve its performance, because "blaming the individual rarely helps create a more desirable outcome." The lever is the structure each actor sits in [A6.4].
 - **Example in context:** Meadows' thought experiment: lifted into a role you've criticized — manager, financier, someone very poor — you would, within the bounds of what that seat shows you, behave much as they do. She cites that simulated fishermen overfish and that the Stanford prison experiment (Zimbardo) had ordinary students adopt guard/prisoner behavior fast.
@@ -138,8 +128,7 @@ concepts:    [A6.4 common-stall-patterns]   *(register-gap: levels-of-seeing; ne
 situations:  [S:lost-momentum-after-launch] [S:cant-make-decisions]
 handoff:
 anchors to:  Structure produces behavior
-source:      Meadows — *Thinking in Systems*, ch.4 & ch.7
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.4 & ch.7
 - **Claim / recommendation:** A single event ("only three people came on Tuesday") is the surface. Underneath is *behavior over time* (attendance has been sliding for two months), and under that is the *structure* generating it (the reinforcing loop, the missing feedback, the eroded goal). Don't diagnose from the latest event; pull back to the pattern and then to the structure.
 - **Reasoning / mechanism:** "Structure determines what behaviors are latent in the system." Meadows urges starting from behavior over time, not the snapshot: a time-graph of several variables "begins to suggest… how they might be interconnected." Reacting to events keeps a leader fixing symptoms while the structure quietly reloads the same problem [A6.4].
 - **Example in context:** Meadows' New Hampshire selectmen, each "positive that growth in a town will lower taxes" — but plot growth against tax rates and you find "a scatter as random as the stars," no relationship at all. Watching actual behavior over time "can explode many careless causal hypotheses."
@@ -151,8 +140,7 @@ concepts:    [A9.3 avoiding-founder-bottleneck] [A1.2 enabling-vs-doing] [A9.2 d
 situations:  [S:doing-everything-myself] [S:i-cant-let-go]
 handoff:
 anchors to:  Resilience and self-organization are precious
-source:      Meadows — *Thinking in Systems*, ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.5
 - **Claim / recommendation:** The most dangerous trap for a first-time leader: when you keep stepping in to solve the group's problems, you can erode the group's *own* capacity to solve them, so it needs you more, so you step in more. The discipline is to resist the quick rescue and instead rebuild the group's capacity — even though rescuing feels helpful and right.
 - **Reasoning / mechanism:** Meadows: a well-meaning intervenor takes load off a struggling system and brings it to the desired state fast (cue self-congratulation). But the root problem is untouched, so it reappears; more "solution" is applied, which "undermines the original capacity of the system to maintain itself." As that capacity atrophies, ever more intervention is needed — addiction/dependence [A9.3].
 - **Example in context:** Meadows names the structure addiction, dependence, or "shifting the burden to the intervenor": a fix that dulls the symptom while doing "nothing to solve the underlying problem." The leader who answers every question and patches every gap is the intervenor whose help quietly disables the group.
@@ -164,8 +152,7 @@ concepts:    [A10.1 volunteer-burnout] [A8.3 peer-accountability-without-authori
 situations:  [S:work-is-all-on-a-few-people] [S:burning-out]
 handoff:
 anchors to:  Structure produces behavior
-source:      Meadows — *Thinking in Systems*, ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.5
 - **Claim / recommendation:** When a shared resource has no feedback linking each user to its condition, individually reasonable use adds up to collective ruin. In a group, the shared, erodable resource is often the *few reliable people* (or the group's goodwill and energy): everyone leans on them because it's easy, and they burn out. The fix is structural — restore the missing feedback or share the load by agreement, not by exhortation alone.
 - **Reasoning / mechanism:** Ecologist Garrett Hardin (1968): each herder rationally adds one more cow to the common pasture because the gain is theirs and the cost is shared — until the pasture collapses. Meadows' three ways out: educate and appeal to morality (weakest — it relies on everyone respecting the tradition), privatize (link use to consequence), or regulate by "mutual coercion, mutually agreed upon" [A8.3].
 - **Example in context:** Hardin's pasture, where each rational herder keeps adding cattle, "each pursuing his own best interest," until the shared land collapses. Meadows notes the commons structure "makes selfish behavior much more convenient" than acting for the whole — it's the structure, not the character.
@@ -177,8 +164,7 @@ concepts:    [A6.4 common-stall-patterns] [A3.4 commitment-over-time] [A5.3 goal
 situations:  [S:lost-momentum-after-launch] [S:low-attendance]
 handoff:
 anchors to:  Feedback loops drive the cycle
-source:      Meadows — *Thinking in Systems*, ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.5
 - **Claim / recommendation:** If a group lets its standards drift down whenever performance disappoints — "well, three is a fine turnout these days" — it sets up a slow slide: lower expectations license lower performance, which lowers expectations again. Hold the bar steady; better still, set it by the group's *best* moments, not its worst.
 - **Reasoning / mechanism:** Meadows describes letting performance standards bend to recent — and negatively-perceived — performance: doing so sets up a reinforcing loop of eroding goals. Bad news pulls the standard down, and the lowered standard pulls performance down — a vicious loop on the *goal* itself [A3.4].
 - **Example in context:** The structure's antidotes, in her words: "Keep performance standards absolute" — or, better, let them be set by the group's *best* actual performances, so the same loop drives a drift *up*. A group that anchors on its best night (the one where it was packed and electric) drifts toward that, not away from it.
@@ -190,8 +176,7 @@ concepts:    [A9.1 developing-leaders] [A9.2 delegating-outcomes-not-tasks] [A5.
 situations:  [S:work-is-all-on-a-few-people] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Structure produces behavior
-source:      Meadows — *Thinking in Systems*, ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.5
 - **Claim / recommendation:** When winners get rewarded with the resources to win again, they pull further ahead while everyone else stalls. A leader who keeps giving the important work to the one proven person makes that person stronger and the rest weaker — and then wonders why no one else has grown. Deliberately level the field: route growth opportunities to the people who haven't had them.
 - **Reasoning / mechanism:** Meadows names this "the competitive exclusion principle" from ecology — the slightly better competitor wins more of the resource, which lets it win still more, until it dominates and the others are squeezed out. It is, in Meadows' summary, a structure that works "to make the rich richer and the poor poorer" [A9.1].
 - **Example in context:** Her way out is "periodically leveling the playing field" — Monopoly restarts everyone equal; sports use handicaps; the Native American potlatch redistributes from those with most to those with least. The group equivalent is consciously rotating the meaningful work, not defaulting it to the reliable star.
@@ -203,8 +188,7 @@ concepts:    [A5.3 goal-design] [A2.1 shared-purpose / why-before-what] [A5.5 no
 situations:  [S:group-lost-its-why] [S:decisions-keep-getting-relitigated]
 handoff:
 anchors to:  Intervene high, not low
-source:      Meadows — *Thinking in Systems*, ch.5
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.5
 - **Claim / recommendation:** A system delivers whatever its goal/metric actually rewards — so a badly chosen indicator produces "something stupid happening because it's the rule." If a group optimizes attendance counts, sign-ups, or task-completion divorced from its real purpose, it will hit the number and miss the point. Define the goal as the *purpose*, and watch for rules people technically obey while gutting the intent (rule-beating).
 - **Reasoning / mechanism:** Meadows distinguishes two perversions: *seeking the wrong goal* (the system obeys the rule and produces a result no one wants) and *rule-beating* (the system evades the rule while appearing to comply). Both follow from where the goal/incentive is set, and both can run on the same rule at once [A5.5]. The transformational-vs-transactional lens [A2.5] lives right here: optimizing the transactional metric can hollow out the relational purpose.
 - **Example in context:** Meadows' counsel to "be a quality detector… a walking, noisy Geiger counter" for what's actually valuable — because treating what's hard to quantify as if it didn't exist produces faulty models. Groups chase what's countable (RSVPs) over what matters (committed relationships) for the same reason.
@@ -218,8 +202,7 @@ concepts:    [A2.1 shared-purpose / why-before-what] [A5.3 goal-design] [A6.1 ho
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Intervene high, not low
-source:      Meadows — *Thinking in Systems*, ch.6
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.6
 - **Claim / recommendation:** Places to intervene in a system are not equally powerful, and people habitually push the weakest ones. Before adding effort, ask *where* on the ladder you're pushing. Sending one more reminder is near the bottom; changing what people can see, the group's norms, its goal, and how members see themselves climbs toward the top. Aim higher with less force.
 - **Reasoning / mechanism:** Meadows' ordered list, weak to strong: 12 numbers/parameters, 11 buffers, 10 stock-and-flow structure, 9 delays, 8 balancing loops, 7 reinforcing loops, 6 information flows, 5 rules, 4 self-organization, 3 goals, 2 paradigms, 1 the power to transcend paradigms. Most attention goes to the bottom — "diddling with the details, arranging the deck chairs on the Titanic" — where "there's not a lot of leverage" [A5.5].
 - **Example in context:** Forrester's observation that experienced people can usually locate a system's leverage point intuitively — and then push it the wrong way. Meadows' through-line: even when we find the high leverage, we shove it in the wrong direction (tightening rules that needed loosening, adding control that needed releasing).
@@ -232,8 +215,7 @@ concepts:    [A5.5 norms-and-operating-agreements] [A6.6 learning-together] [A7.
 situations:  [S:volunteers-flaky] [S:no-one-takes-initiative]
 handoff:     [H:comms]
 anchors to:  Intervene high, not low · People act rationally from where they sit
-source:      Meadows — *Thinking in Systems*, ch.4 & ch.6
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.4 & ch.6
 - **Claim / recommendation:** One of the highest-leverage and most overlooked moves is to fix *who can see what*. Often the problem isn't motivation or rules; it's that the feedback people need to act well never reaches them. Get the right information to the right person at the right time and behavior shifts — often with surprising ease and no coercion. (Tools and channels for this route to comms; the *why* stays here.)
 - **Reasoning / mechanism:** Because behavior is bounded by what each actor can see, "Missing information flows is one of the most common causes of system malfunction." Meadows notes how quickly behavior shifts simply "by providing better, more complete, timelier information." Restoring a missing feedback link is cheaper and higher-leverage than rules or exhortation [A7.2].
 - **Example in context:** The Dutch houses near Amsterdam, identical but for the electric meter's location. Homes with the meter in the front hall — where the wheel was seen many times a day — used a third less electricity than those with it hidden in the basement. Same families, same price; only the visibility of feedback differed.
@@ -245,8 +227,7 @@ concepts:    [A2.1 shared-purpose / why-before-what] [A6.1 how-norms-form-and-be
 situations:  [S:group-lost-its-why] [S:group-feels-transactional]
 handoff:
 anchors to:  Intervene high, not low
-source:      Meadows — *Thinking in Systems*, ch.6
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.6
 - **Claim / recommendation:** Near the top of the ladder sit the system's *goal* (its purpose/function) and its *paradigm* (the shared mind-set the whole thing arises from). For a group, that's its real *why* and how members see themselves and the group. Change these and goals, rules, and behavior reorganize beneath them. This is the deepest, slowest, highest-leverage place a leader works.
 - **Reasoning / mechanism:** "Paradigms are the sources of systems": from the shared sense of what's real and what matters flow the goals, rules, information flows, and everything else [A6.1]. The goal is decisive because the whole system bends toward whatever it actually optimizes — get the goal right and "the system would produce a result that everyone wants." Meadows' nuance: you needn't change everyone's values, you "just have to get the system to operate around real values."
 - **Example in context:** Meadows reframes goals so the system serves what matters — "not growth, but progress," she writes, rather than mere expansion. The group parallel: a shift from chasing headcount to building people and power is a goal-and-paradigm change that re-sorts everything downstream [A2.4].
@@ -258,8 +239,7 @@ concepts:    [A1.6 failure-as-learning] [A6.6 learning-together] [A7.2 decisions
 situations:  [S:cant-make-decisions]
 handoff:
 anchors to:  Structure produces behavior · Resilience and self-organization are precious
-source:      Meadows — *Thinking in Systems*, ch.7
-
+source:      [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.7
 - **Claim / recommendation:** You can't control a group like a machine; you can only "dance with" it. Before changing anything, watch how it actually behaves. Stay in learning mode, expect surprises, and resist defining the problem as "the absence of my favorite solution." Locate responsibility *inside* the structure — design things so the people making decisions feel their consequences. This is the leader's stance, and the coach's.
 - **Reasoning / mechanism:** "Before you disturb the system in any way, watch how it behaves" — starting from behavior "forces you to focus on facts, not theories," and guards against leaping to a pet solution. "Intrinsic responsibility" means feedback about a decision reaches the decision-maker "directly and quickly and compellingly," so people own outcomes [A7.2]. Humility is structural, not just polite: the system knows things the leader doesn't.
 - **Example in context:** Meadows' image of intrinsic responsibility: because the pilot rides in the front of the plane, the pilot directly experiences the consequences of their decisions. A group designs this in by letting the person who owns a task also see how it lands — not by routing all consequence back through the leader.

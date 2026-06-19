@@ -1,7 +1,6 @@
 ---
 title: "A Theory of Team Coaching"
-source: "Hackman & Wageman — A Theory of Team Coaching"
-domains: [A5, A6, A9]
+source: "[Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching"domains: [A5, A6, A9]
 primary_folder: "/structure/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -22,18 +21,15 @@ last-updated: 2026-06-10
 
 **Coaching is functional, not stylistic.** A leader's job is not to have the right personality or style but to ensure the group's critical functions get met — by whatever means, and by whoever is positioned to meet them. Drawing on McGrath, the leader's task is to "do, or get done, whatever is not being adequately handled" for the group's needs, which leaves an open-ended set of ways to lead and frees a first-timer from copying any one model. Coaching specifically targets three *task* performance processes — the effort members spend, the strategy they use, and the knowledge and skill they bring — not their feelings about each other.
 flagship example: In a study of 268 task-performing teams across 88 organizations, leaders and members both ranked coaching the team *dead last* among four leader activities (mean rank 3.02, behind structuring the work at 1.75). Hackman and Wageman read this not as wisdom but as a sign leaders mostly don't know how to coach a team.
-source:  Hackman & Wageman — A Theory of Team Coaching, "Team Coaching" & "Functions"
-governs: [A9.5] [A9.6] [A1.2] [A3.1]
+source:  [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Team Coaching" & "Functions"governs: [A9.5] [A9.6] [A1.2] [A3.1]
 
 **Timing gates coaching: readiness, not the calendar.** The same intervention helps or does nothing depending on *when* it lands, because a group's openness to coaching changes systematically over its life. A group is "ready" when the issue raised is already on members' minds and they aren't preoccupied with something more pressing; outside those windows even a competent intervention slides off, or distracts and harms. Groups are most open at three moments — the beginning, the midpoint, and the end of a piece of work — and each window suits a different kind of coaching.
 flagship example: Tracking project teams over days to months, Gersick found each group locked in an approach at its very first meeting, held it unchanged until *precisely* halfway to deadline, then in a concentrated burst dropped old patterns and re-engaged — a "midpoint transition" — before settling into focused execution. Mann later showed groups time this to both a real and a manipulated clock: with a fast clock, teams had *two* transitions.
-source:  Hackman & Wageman — A Theory of Team Coaching, "Timing" (Proposition 2)
-governs: [A6.2] [A5.7] [A6.6]
+source:  [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Timing" (Proposition 2)governs: [A6.2] [A5.7] [A6.6]
 
 **Structure dominates coaching.** How a group is set up and supported shapes its results far more than any coaching its leader provides; coaching makes only "small adjustments to an already defined trajectory." Good coaching helps a well-designed group exploit its strengths, but no amount of coaching rescues a badly structured one — "it is nearly impossible to coach a team to greatness" in a situation that undermines teamwork. This is the original behind Fisher's "structure is king"; the coach's first move is therefore diagnostic — check the structure before coaching the process.
 flagship example: In Wageman's study of Xerox field-service teams, design features controlled about 37% of the variance in team performance and 42% in self-management, while the quality of leaders' coaching controlled less than 1% and under 10% respectively. Poor coaching hurt badly-designed teams far more than well-designed ones.
-source:  Hackman & Wageman — A Theory of Team Coaching, "Conditions" (Proposition 4)
-governs: [A5.1] [A5.4] [A5.5] [A6.4]
+source:  [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Conditions" (Proposition 4)governs: [A5.1] [A5.4] [A5.5] [A6.4]
 
 ---
 
@@ -72,8 +68,7 @@ concepts:   [A9.6 coaching-group-members] [A1.2 enabling-vs-doing]
 situations: [S:doing-everything-myself]
 handoff:
 anchors to: Coaching is functional, not stylistic
-source:     Hackman & Wageman — A Theory of Team Coaching, "Team Coaching"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Team Coaching"
 - **Claim / recommendation:** Coaching the group is only one of several things a leader does — alongside structuring the work, clearing outside obstacles, and helping individuals — and it is neither the only nor usually the most consequential one. A first-time leader should not imagine that "leading" means constantly intervening in the group's process; much of the leverage is upstream, in how the work is set up. Team coaching specifically means working *with the group as a whole* to help members use their collective resources well, distinct from helping one member at a time.
 - **Reasoning / mechanism:** The authors take a functional view of leadership: the leader's role is to see that critical group functions get met, by whatever means, not to perform a fixed set of behaviors. That makes coaching one tool among many, to be reached for when it is what the group needs — and left aside when structure or external interference is the real lever.
 - **Example in context:** Across 268 teams in 88 organizations, both leaders and members ranked coaching the team last of four activities (mean rank 3.02), behind structuring the work (1.75) and running external interference (2.16). The authors read this as a skills gap, not good judgment — leaders avoid coaching because attempts misfired, not because it's worthless.
@@ -85,8 +80,7 @@ concepts:   [A3.1 intrinsic-motivation] [A7.2 decisions-as-shared-process] [A5.1
 situations:
 handoff:
 anchors to: Coaching is functional, not stylistic
-source:     Hackman & Wageman — A Theory of Team Coaching, "Functions"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Functions"
 - **Claim / recommendation:** A group's effectiveness rests on just three things members can manage: how much *effort* they collectively put in, how well their *performance strategy* (their choices about how to do the work) fits the task, and how much *knowledge and skill* they bring and use. A leader diagnosing a stuck group should ask which of these three is failing, rather than chasing vaguer "team problems."
 - **Reasoning / mechanism:** Each process carries a characteristic "process loss" (Steiner's term — interaction that drags effort, strategy, or skill *down*, like social loafing) and a matching "process gain" (interaction that lifts them above the sum of individuals). Coaching is precisely the act of inhibiting the loss and fostering the gain on whichever process is in play. This three-way split is what makes coaching diagnosable instead of mystical.
 - **Example in context:** Strategy is illustrated concretely: a manufacturing team choosing to split into three sub-assembly groups, or a basketball team choosing a modified zone defense with one player on the opponent's best shooter — both are strategy choices, not effort or skill choices. The point is that "how we'll go about this" is a distinct, coachable lever.
@@ -98,8 +92,7 @@ concepts:   [A5.7 launch-and-relaunch] [A3.2 ownership-and-voice]
 situations: [S:lost-momentum-after-launch]
 handoff:    [H:events]
 anchors to: Timing gates coaching · Coaching is functional, not stylistic
-source:     Hackman & Wageman — A Theory of Team Coaching, "Beginnings"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Beginnings"
 - **Claim / recommendation:** The beginning of a piece of work is the prime window for coaching that builds effort and commitment, because that is when members are most uncertain and most open to anything that helps them get oriented. Use the launch to "breathe life into a team's structural shell" — affirm the setup, then go further and engage members in what's unique about *this* effort. Don't waste the launch on strategy debates (see the next entry). *(How to actually run a launch session → H:events; the why stays here.)*
 - **Reasoning / mechanism:** At start-up, members are simultaneously settling who's in, what the roles are, and what the task means — a high-readiness state for reducing uncertainty. A good launch converts that openness into commitment and motivation that persists through the work; a fumbled one leaves the group adrift. The effect is durable, not momentary.
 - **Example in context:** Ginnett studied airline captains in a new crew's first minutes. The structural "shell" (aircraft, roles, checklists) was already fixed, yet what happened in those minutes shaped the whole flight: captains who gave no briefing, or undermined the shell, produced worse crews; those who affirmed it did better; and those who *elaborated* it — discussing the specifics of this trip — turned skilled individuals into a motivated crew.
@@ -111,8 +104,7 @@ concepts:   [A5.7 launch-and-relaunch] [A6.2 stages-and-development]
 situations:
 handoff:
 anchors to: Timing gates coaching
-source:     Hackman & Wageman — A Theory of Team Coaching, "Beginnings"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Beginnings"
 - **Claim / recommendation:** Resist the urge to make a brand-new group sit down and plan its strategy in detail before it starts. At the beginning, members lack the experience to have a useful strategy conversation, and pushing one usually produces a perfunctory exchange that doesn't take. Let the group log some experience first; save the real strategy work for the midpoint.
 - **Reasoning / mechanism:** Strategy planning requires data about what's working, and at the start there is none. Groups are also preoccupied with orientation, not method. So a strategy intervention at launch competes with what members actually need and rarely sticks.
 - **Example in context:** When Hackman, Brousseau, and Weiss asked teams to discuss strategy before starting, they found it nearly impossible to get more than a token discussion — the only way to force a real one was to package it as a required "preliminary task" with steps to check off. Left to themselves, teams "plunge right in." (And plunging in is correct when the obvious approach happens to be the best one — the cost only shows up when it isn't.)
@@ -124,8 +116,7 @@ concepts:   [A6.2 stages-and-development] [A7.2 decisions-as-shared-process]
 situations: [S:lost-momentum-after-launch]
 handoff:
 anchors to: Timing gates coaching
-source:     Hackman & Wageman — A Theory of Team Coaching, "Midpoints"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Midpoints"
 - **Claim / recommendation:** The midpoint — when about half the time or half the work is gone — is when a group is finally ready to rethink *how* it's working. This is the moment to prompt a strategy review: what's working, where effort and talent are going, what to change. Groups with no fixed deadline hit the same readiness at any natural halfway break.
 - **Reasoning / mechanism:** By the midpoint the group has logged enough experience to have real data, and Gersick's midpoint transition means members are already primed for upheaval — anxious about time remaining and open to dropping old patterns. Readiness and information peak together, so a strategy nudge that would have bounced at the start now takes.
 - **Example in context:** Woolley had teams build a LEGO model of a college residence hall, judged on sturdiness and aesthetics. A strategy intervention delivered at the midpoint roughly doubled performance (about 7.0 vs about 3.9) over the same intervention at the beginning; an interpersonal intervention helped at neither time. Timing, not just focus, decided the payoff.
@@ -137,8 +128,7 @@ concepts:   [A6.6 learning-together] [A9.6 coaching-group-members]
 situations:
 handoff:
 anchors to: Timing gates coaching
-source:     Hackman & Wageman — A Theory of Team Coaching, "Ends"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Ends"
 - **Claim / recommendation:** When a piece of work finishes, run a deliberate review to capture what the group learned — about the task and about working together. This builds the group's "reservoir of talent" for next time and grows individual members. Without it, groups don't learn on their own: after a win they'd rather celebrate, after a loss they'd rather rationalize.
 - **Reasoning / mechanism:** Endings are uniquely fertile because the work is done — the anxieties that block learning have dissipated, the data are all in, and there's finally room to reflect. But left alone, members reach for self-serving explanations, so coaching is what aligns the group's account with reality and turns experience into a usable lesson.
 - **Example in context:** Corn collected teams that had done well and poorly and asked members why. Most explanations pinned results on individuals or the leader rather than on structure or context — an attributional bias that invites "splitting" (Smith & Berg's term), where leaders are over-credited for wins and minority members over-blamed for failures. A competent debrief works members through that and produces collective learning instead.
@@ -150,8 +140,7 @@ concepts:   [A8.1 task-vs-relationship-conflict] [A6.6 learning-together]
 situations: [S:two-members-clashing] [S:conflict-got-personal]
 handoff:
 anchors to: Coaching is functional, not stylistic
-source:     Hackman & Wageman — A Theory of Team Coaching, "Functions" (Proposition 1)
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Functions" (Proposition 1)
 - **Claim / recommendation:** When a group is struggling *and* tense, don't assume the tension is the problem to solve. Check first whether the real trouble is in the work — an unclear task, a poor strategy, missing skill — because friction is often what a performance problem *produces*, not what causes it. This is a diagnostic caution, not a reason to deprioritize relationships: in organizing, relationships are the medium of the work (the eCoach's A4 frame), so the point is to read the friction correctly, not to ignore it.
 - **Reasoning / mechanism:** People assume an input→process→output chain, so they see friction and infer it caused the poor results — then conclude that smoothing relationships will fix performance. The inference is wrong as often as right: research shows performance frequently drives the relationships, not the reverse. Hackman and Wageman go further and argue, strongly, that task-focused coaching outperforms interpersonal coaching, and that team-building reliably shifts attitudes but not performance — a claim worth knowing even where this coach doesn't fully adopt it.
 - **Example in context:** Staw's false-feedback experiment is the clean demonstration: teams told they'd succeeded described their own communication as more harmonious than teams told they'd failed, though only the (bogus) feedback differed. The harmony was a story *about* the result, not its cause.
@@ -164,8 +153,7 @@ concepts:   [A7.3 autonomy-vs-direction] [A5.4 work-and-task-design]
 situations:
 handoff:    [H:org-level]
 anchors to: Structure dominates coaching
-source:     Hackman & Wageman — A Theory of Team Coaching, "Task and Organizational Constraints" (Proposition 3)
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Task and Organizational Constraints" (Proposition 3)
 - **Claim / recommendation:** Coach only the processes that are actually movable. If effort, strategy, or skill is locked down by the task or the organization, coaching it is wasted — and can backfire by pulling attention from what the group *can* change. Before coaching, check which of the three processes is genuinely under the group's control.
 - **Reasoning / mechanism:** A process is "salient" only when it's unconstrained. Effort can't be coached up if inputs are externally paced; strategy can't be improved if procedures are fully prescribed; skill can't help if the task is simple and predictable. Coaching a constrained process tries to improve something that doesn't affect the outcome.
 - **Example in context:** The authors contrast a product-development team (pace, methods, and skill all open — all three functions help) with an assembly-line team (inputs machine-paced, procedures fixed, work simple), which they call "a team in name only" because performance barely depends on how members interact. Surgical teams sit between, with skill unconstrained but effort and strategy partly fixed.
@@ -177,8 +165,7 @@ concepts:   [A5.4 work-and-task-design] [A5.1 composition-and-skills] [A6.4 comm
 situations: [S:work-is-all-on-a-few-people] [S:lost-momentum-after-launch]
 handoff:    [H:org-level]
 anchors to: Structure dominates coaching
-source:     Hackman & Wageman — A Theory of Team Coaching, "Group Design" (Proposition 4)
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Group Design" (Proposition 4)
 - **Claim / recommendation:** Coaching is a small adjustment to a trajectory set by structure and context, so a leader should get the design right before relying on coaching to carry the group. Good coaching amplifies a well-designed group; on a badly designed one it does little, and *bad* coaching does real damage. Diagnose structure first.
 - **Reasoning / mechanism:** Each of the three processes is shaped by a structural feature plus an organizational support: effort by task design (whole, meaningful work with real feedback) plus the reward system; strategy by the group's early norms plus the information system; skill by composition (as small as possible, right skills, members "neither peas from the same pod" nor too different to coordinate) plus the education system. The structural halves are largely the leader's; the three org-systems are not (route to H:org-level).
 - **Example in context:** Wageman's Xerox field-service study: design controlled ~37% of performance variance and ~42% of self-management variance, versus under 1% and under 10% for coaching quality. Effective coaching lifted well-designed teams but barely moved poorly-designed ones; ineffective coaching sharply *dragged down* poorly-designed teams — coaching's effect is conditional on the design it lands in.
@@ -191,8 +178,7 @@ concepts:   [A9.3 avoiding-founder-bottleneck] [A6.6 learning-together]
 situations: [S:doing-everything-myself]
 handoff:
 anchors to: Structure dominates coaching
-source:     Hackman & Wageman — A Theory of Team Coaching, "Group Design" (close)
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Group Design" (close)
 - **Claim / recommendation:** A leader's aim should be a group that increasingly needs less coaching, not one permanently dependent on them. Favorable conditions pay a double dividend: well-structured groups hit fewer problems beyond their own capacity *and* absorb the coaching they do get more readily, because they aren't bogged down in structural trouble.
 - **Reasoning / mechanism:** Over time such groups can become skilled at coaching themselves and enter a self-fueling spiral of rising capability — each cycle of competent self-management builds the confidence and skill for the next. The leader's leverage is front-loaded into design; the payoff is a group that runs without them.
 - **Example in context:** The authors note that leaders who take on too much of the coordination themselves risk becoming so absorbed in the work that they miss chances to build the group's capacity — and members may quietly hand back their own responsibility for managing the work to the leader. The remedy is to build conditions that let the group carry itself.
@@ -204,8 +190,7 @@ concepts:   [A10.6 satisfaction-and-retention] [A6.6 learning-together]
 situations:
 handoff:
 anchors to: Coaching is functional, not stylistic
-source:     Hackman & Wageman — A Theory of Team Coaching, "Team Performance Effectiveness"
-
+source:     [Hackman & Wageman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — A Theory of Team Coaching, "Team Performance Effectiveness"
 - **Claim / recommendation:** Judge a group on three things at once, never just output: (1) the work meets the standards of the *clients* who use it, (2) the group grows *more capable* as a unit over time, and (3) members' learning and well-being come out net positive. A group that hits its target while deskilling or alienating its people isn't effective.
 - **Reasoning / mechanism:** The dimensions trade off in the short run but must balance over time; sacrificing any one entirely undermines the others. This is the precursor to Fisher's "task performance plus satisfaction," with an extra dimension Fisher folds in less explicitly — the group becoming a stronger performing unit, which is why learning is built into the model rather than bolted on.
 - **Example in context:** No single flagship case is given; the authors define the standard structurally — note that it's the clients' assessment that counts for the output dimension, not the team's own or its manager's, since the manager rarely uses the product.

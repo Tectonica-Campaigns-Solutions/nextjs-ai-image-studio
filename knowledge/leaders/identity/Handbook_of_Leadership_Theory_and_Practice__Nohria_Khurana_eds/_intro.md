@@ -1,7 +1,6 @@
 ---
 title: "Handbook of Leadership Theory"
-source: "Nohria Khurana — Handbook of Leadership Theory"
-domains: [A1, A6, A7, A9]
+source: "[Nohria Khurana](https://store.hbr.org/product/handbook-of-leadership-theory-and-practice/12326) — Handbook of Leadership Theory"domains: [A1, A6, A7, A9]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -20,18 +19,15 @@ last-updated: 2026-06-10
 
 **Conditions over causes (structure-before-process lens).** A leader shapes a group far more by setting the conditions it runs under than by managing behaviour in the moment. Hackman argues social systems resist cause-effect steering; getting the structure right "stabilises the approach" so the good outcome becomes the natural course, leaving only marginal correction.
 flagship example: Conductor Yuri Temirkanov led a U.S. orchestra through a Mahler symphony, cued the players, then let his hands drop to his sides — having set the conditions in rehearsal, he was "managing at the margin" when it counted.
-source: Hackman — *Handbook*, ch.4
-governs: [A5.1] [A5.3] [A5.4] [A5.5] [A5.7] [A6.1]
+source: [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.4governs: [A5.1] [A5.3] [A5.4] [A5.5] [A5.7] [A6.1]
 
 **System viability is the measure.** Good leadership is what raises a group's *viability*, not what produces one good result. Three tests: those the group serves are satisfied; the group grows more capable over time; members take more learning and fulfilment than frustration from the work — which decouples "effective" from a single output.
 flagship example: *[Thin — Hackman states viability abstractly with no single case. He frames it against the reflex of crowning whoever happened to be in charge when good numbers appeared, asking instead whether the unit is more capable, and its people more fulfilled, next time.]*
-source: Hackman — *Handbook*, ch.4
-governs: [A10.6] [A6.2] [A6.6] [A6.3]
+source: [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook*, ch.4governs: [A10.6] [A6.2] [A6.6] [A6.3]
 
 **Functional, distributed, and ultimately dispensable.** Leadership is a set of functions any member can perform, and the leader's aim is to become unnecessary. If leadership is any act that fosters viability, no one holds it solely and there is no one best style; the acid test is how the group does when the leader is *absent*.
 flagship example: Chatman & Kennedy call the best leaders self-aware and interpersonally adept, "ultimately dispensable" — their job is to set the context so members make aligned calls on their own.
-source: Hackman — *Handbook* ch.4; Chatman & Kennedy — *Handbook* ch.6
-governs: [A9.5] [A9.3] [A9.1] [A1.2]
+source: [Hackman](https://26225792.fs1.hubspotusercontent-eu1.net/hubfs/26225792/Hackman%20%26%20Wageman%20(2005).%20A%20Theory%20of%20Team%20Coaching.pdf) — *Handbook* ch.4; Chatman & Kennedy — *Handbook* ch.6governs: [A9.5] [A9.3] [A9.1] [A1.2]
 
 **Made, not born.** Leadership is developmental — a set of learnable capabilities, not a fixed personality — so "am I really a leader?" is the wrong question for a first-timer. The trait view (confidence, dominance, intelligence) shows weak predictive validity; what matters is leadership as something people *do*, not who they *are*. Avolio's twin studies put leadership emergence at roughly 30% heritable, 70% environmental.
 flagship example: Chatman & Kennedy note the behaviours that *win* someone a leadership role — solo achievement — are the ones they must unlearn to *perform* it, since the role is too wide for a lone hero.

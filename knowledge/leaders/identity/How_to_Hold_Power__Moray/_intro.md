@@ -1,7 +1,6 @@
 ---
 title: "How to Hold Power"
-source: "Moray — How to Hold Power"
-domains: [A1, A7, A8, A10]
+source: "[Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — How to Hold Power"domains: [A1, A7, A8, A10]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -30,8 +29,7 @@ last-updated: 2026-06-10
 ## The leadership capacities — key reference list
 
 concepts: [A1.4 stepping-into-the-role]
-source: Moray — *How to Hold Power*, ch.2 ("The Competencies You Need as a Leader"); reused in ch.6
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.2 ("The Competencies You Need as a Leader"); reused in ch.6
 **The one list to use with leaders.** Moray names the concrete capacities a leader needs — and frames them as *capacities you train*, not fixed traits. That framing is the point: it turns "am I a leader?" into "which of these am I building right now?" A first-timer doesn't need all fifteen at once; they pick the one or two they most need and practice it. The coach can hand a leader this list to self-assess ("which feel strong, which need work?") and to choose a focus.
 
 A leader needs the capacity to:
@@ -61,28 +59,23 @@ A leader needs the capacity to:
 
 **Leadership is somatic, not positional.** People do not follow a title; they follow a *body* that is grounded, present, and clear. Because a team unconsciously reads the leader's nervous system for cues about safety, "how you are" carries more than what you say — they will respond to how you are more than to what you say.
 flagship example: At a Buddhist retreat, a disruptive newcomer had the room rattled; the facilitator Nil, drawing on years of daily somatic practice, set a firm-but-warm boundary without expelling him, and the whole room's nervous system visibly relaxed. His presence, not his position, resolved it.
-source: Moray — *How to Hold Power*, Intro & ch.5
-governs: [A1.4] [A1.1] [A7.1] [A6.5]
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, Intro & ch.5governs: [A1.4] [A1.1] [A7.1] [A6.5]
 
 **The body is information; change is bottom-up.** Sensation and emotion carry data the analytic mind can't reach, and durable change comes from reshaping three things together — your *narratives* (stories you believe), your *practices* (what you repeatedly do), and *how you live in your body* — not from insight alone. Under stress, your body reverts to your level of practice (Strozzi-Heckler), so what you rehearse in calm is what shows up in crisis.
 flagship example: Moray closed her own company the moment a flash of bodily shame told her she'd stepped out of integrity — a decision months of thinking hadn't reached, but a long embodiment practice made legible and actionable in seconds.
-source: Moray — ch.1, ch.3
-governs: [A1.4] [A1.6] [A6.1] [A10.2]
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — ch.1, ch.3governs: [A1.4] [A1.6] [A6.1] [A10.2]
 
 **Power is neutral; how you hold it is everything.** Power is not inherently corrupt — power equals access to internal and external resources to meet needs (Miki Kashtan). The decisive question is *which kind* you exercise: power-over (domination), power-under (covert resistance), power-with (shared), or power-within (self-mastery). The leadership task is to feel the difference and choose power-with and power-within.
 flagship example: The "dragon tail" — on becoming a leader, Moray dragged a huge, invisible power "tail" that destroyed things behind her until she learned it was there; once felt and operated, the same tail could shelter and protect the people in her care.
-source: Moray — ch.5 (drawing on Starhawk, Kashtan)
-governs: [A7.1] [A1.1] [A7.3] [A7.6]
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — ch.5 (drawing on Starhawk, Kashtan)governs: [A7.1] [A1.1] [A7.3] [A7.6]
 
 **Boundaries, consent, listening — the three-legged stool.** Relationship skill is learnable and rests on three legs: having/honoring boundaries, practicing consent, and listening. They interlock: If you cannot say no, you cannot say a true yes — without a real no there is no consent, and without listening you can't hear either.
 flagship example: Mona and Dre, conflict-avoidant nonprofit co-founders, had spent a decade unable to say no to each other; only after painstakingly building the capacity for an honest "no" could they reach honest agreement and a culture of real check-ins.
-source: Moray — ch.8, ch.9, ch.10
-governs: [A6.5] [A8.2] [A9.6] [A1.5]
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — ch.8, ch.9, ch.10governs: [A6.5] [A8.2] [A9.6] [A1.5]
 
 **Conflict is generative; repair builds the trust.** Handled with self-regulation, conflict surfaces hard truths and strengthens a group rather than threatening it — and the repair *after* a rupture, not the absence of rupture, is what deepens trust. Repair never returns things to "before"; it builds something new on top of the break.
 flagship example: Lou and Jen, best friends turned boss-and-report, let an unspoken conflict fester through avoidance (Lou) and gossip (Jen) until Jen quit and the friendship ended — a clinic short a doctor mid-pandemic, all for want of conflict-and-repair skill.
-source: Moray — ch.11
-governs: [A8.1] [A8.5] [A8.2] [A6.5]
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — ch.11governs: [A8.1] [A8.5] [A8.2] [A6.5]
 
 ---
 

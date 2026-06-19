@@ -1,7 +1,6 @@
 ---
 title: "Tribe"
-source: "Junger — Tribe"
-domains: [A2, A3, A6]
+source: "[Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — Tribe"domains: [A2, A3, A6]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -29,18 +28,15 @@ The load-bearing claims the book rests on — the baselines a coach returns to a
 
 **Belonging is a primal need, not a perk.** People crave the close, interdependent group with a force that material comfort does not satisfy and can actively starve. Junger's evidence is the recurring frontier pattern — colonists who joined Indian tribes almost never wanted to come back, while captives "rescued" into white society kept escaping to the tribe — which he reads as a standing verdict on what humans actually want. For a leader this reframes the whole job: a group is not a delivery mechanism for tasks, it is a place people are trying to belong to.
 flagship example: Under the 1764 Bouquet treaty, white captives returned to colonial families had to be physically bound to stop them fleeing back to the tribes that had adopted them.
-source:  Junger — *Tribe*, ch.1 ("The Men and the Dogs")
-governs: [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging]
+source:  [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.1 ("The Men and the Dogs")governs: [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging]
 
 **Being needed is the engine.** People bond hardest to a group that genuinely depends on them; feeling useless corrodes faster than hardship does. The mechanism is psychological, not material — Junger leans on self-determination theory (competence, autonomy, connection) to argue that mattering to others is a core driver of well-being, and that affluence erodes it by removing the occasions to be needed. The practical inversion: the surest way to lose someone is to give them nothing only they can do.
 flagship example: In 1970s Belfast, depression and suicide *fell* in the most violence-torn districts and *rose* in the peaceful ones — which researcher H. A. Lyons read as people in calm areas suffering because they couldn't help their community.
-source:  Junger — *Tribe*, ch.1 and ch.2
-governs: [A2.4 group-identity-and-belonging] [A3.2 ownership-and-voice]
+source:  [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.1 and ch.2governs: [A2.4 group-identity-and-belonging] [A3.2 ownership-and-voice]
 
 **Shared work under real stakes bonds people — but you never engineer the stakes.** Cohesion is a *byproduct* of facing something together as equals, not a thing you build directly; it appears when survival or a real goal subsumes individual interest into group interest. The boundary condition is absolute and Junger names it through his own sources: adversity is not a tool a leader reaches for. The usable lesson is the *ingredient* underneath — interdependence and a shared task that matters — which a leader can supply without any hardship at all.
 flagship example: During the London Blitz, strangers crammed into shelters spontaneously generated their own rules and order, psychiatric admissions fell, and long-standing patients saw symptoms subside.
-source:  Junger — *Tribe*, ch.2 ("War Makes You an Animal")
-governs: [A6.3 cohesion-and-belonging] [A2.4 group-identity-and-belonging]
+source:  [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.2 ("War Makes You an Animal")governs: [A6.3 cohesion-and-belonging] [A2.4 group-identity-and-belonging]
 *Source reach: this is the source's most contested claim and carries the doc-level caveat. State the interdependence mechanism with confidence; attribute the crisis-improves-mental-health framing to Junger and present it as directional. Do not let it imply manufactured difficulty is good for a group.*
 
 ---
@@ -73,8 +69,7 @@ concepts:    [A2.4 group-identity-and-belonging]
 situations:  [S:group-feels-transactional] [S:newcomers-dont-stick]
 handoff:
 anchors to:  Belonging is a primal need, not a perk
-source:      Junger — *Tribe*, ch.1
-
+source:      [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.1
 - **Claim / recommendation:** Treat belonging as the thing a group actually provides, and the reason people stay. A first-time leader who frames the group as a vehicle for outputs — tasks done, events run — will keep losing people to better-resourced demands on their time. The pull that holds a volunteer is the felt sense of being one of *us*. Do not mistake a polished offer for a reason to belong.
 - **Reasoning / mechanism:** Junger's recurring frontier evidence is that the communal life of a tribe out-competed the material comforts of colonial society for the people exposed to both — emigration "always seemed to go from the civilized to the tribal." He reads this as a standing human preference for interdependence over autonomy [A6.3], not a quirk of one era. The mechanism is that affluence and independence remove the occasions on which people need each other, and a group that needs you is one you belong to.
 - **Example in context:** A French émigré, Crèvecoeur, observing in 1782 that thousands of Europeans had become "Indians" while no native had chosen the reverse, concluded their social bond held something "singularly captivating and far superior" to anything in his own society.
@@ -87,8 +82,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A3.2 ownership-and-voice]
 situations:  [S:no-one-takes-initiative] [S:low-attendance]
 handoff:
 anchors to:  Being needed is the engine
-source:      Junger — *Tribe*, Introduction and ch.1–2
-
+source:      [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, Introduction and ch.1–2
 - **Claim / recommendation:** Give every member something the group genuinely needs *them* to do — not busywork, but a real dependency. The fastest way to lose a volunteer is to make them feel optional. This is the understanding behind low attendance and passive members: people withdraw from groups that don't need them, and lean in to groups that do.
 - **Reasoning / mechanism:** Junger's thesis line is that "what they mind is not feeling necessary" — humans tolerate hardship far better than uselessness. He grounds this in self-determination theory's three pillars (competence, authenticity/autonomy, connection [A3.1]), arguing modern life supplies comfort while withholding the chance to be needed. The causal claim is that mattering to others is itself a driver of well-being, so a role only this person fills is also a reason to stay.
 - **Example in context:** Lyons's Belfast finding is the sharp illustration: in the most violent districts depression and suicide fell, while a quiet county nearby saw male depression *rise* — which Lyons read as men there suffering because they couldn't help their society through the struggle.
@@ -101,8 +95,7 @@ concepts:    [A6.3 cohesion-and-belonging]
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Shared work under real stakes bonds people — but you never engineer the stakes
-source:      Junger — *Tribe*, ch.2
-
+source:      [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.2
 - **Claim / recommendation:** Stop trying to manufacture closeness directly — through bonding exercises or by talking about how close the group should be — and instead give the group a real, shared task that matters and requires people to depend on each other. Cohesion follows from working toward something together; it cannot be installed in advance. The hard guard: this is *never* a license to invent adversity or pressure to "bond" a group.
 - **Reasoning / mechanism:** Junger argues that crisis subsumes individual interest into group interest "because there is no survival outside group survival," and that this is what produces the bond people miss. Charles Fritz, studying disaster after disaster, could not find a single community that lapsed into panic; instead social bonds *strengthened*. Strip the catastrophe away and the transferable ingredient is interdependence on a task with real stakes — which a leader can supply without any hardship at all [A2.4].
 - **Example in context:** Fritz argued disasters create a "community of sufferers" in which class and income fall away and people are judged simply by what they'll do for the group — a fleeting equality he found genuinely therapeutic.
@@ -115,8 +108,7 @@ concepts:    [A6.3 cohesion-and-belonging] [A2.4 group-identity-and-belonging]
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Belonging is a primal need, not a perk
-source:      Junger — *Tribe*, ch.1
-
+source:      [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.1
 - **Claim / recommendation:** Keep the group small, broadly equal, and resource-sharing — these are not nice-to-haves but the conditions under which belonging forms at all. Junger's evidence is that the appeal of tribal life rested heavily on its egalitarianism, and that scale and accumulated advantage are what erode the felt "us." A leader who lets a group stratify into a core few and a passive many is quietly dismantling the thing that holds it together.
 - **Reasoning / mechanism:** Junger draws on anthropology — the !Kung sharing the day's food so everyone gets an equitable portion; Christopher Boehm's survey of 154 foraging societies finding a near-universal low tolerance for anyone "dominating, bossing, or denigrating the others." Early human bands ran ~50 people, mobile and egalitarian, and punished hoarding hard. The mechanism: equality keeps everyone genuinely interdependent, which is what makes the group worth belonging to [A2.4]. Past a certain size and inequality, that interdependence breaks.
 - **Example in context:** Boehm's foragers treated "failure to share" as one of the most-punished offenses, alongside murder and theft — a sign of how directly small-group survival depended on no one taking more than their share.
@@ -128,8 +120,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A2.3 values-as-glue]
 situations:  [S:conflict-got-personal] [S:group-lost-its-why]
 handoff:
 anchors to:  Belonging is a primal need, not a perk
-source:      Junger — *Tribe*, ch.4 ("Calling Home from Mars")
-
+source:      [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.4 ("Calling Home from Mars")
 - **Claim / recommendation:** A group is held together by a felt sense of who "we" are and a willingness to sacrifice for each other — but the same in-group force has a failure mode the leader must watch: contempt. When disagreement curdles into one faction treating another as morally beneath them, the "us" fractures. Protect the boundary of the group (a clear, shared identity and values) while refusing to let internal difference become internal contempt.
 - **Reasoning / mechanism:** Junger defines the most basic unit of tribe as the people you would help feed and help defend, glued by mutual sacrifice. He then names the toxin: contempt assumes moral superiority and "excommunicates" people from the group, and is statistically one of the strongest predictors of divorce. The mechanism is symmetrical — the loyalty that binds an "us" turns destructive the moment it's aimed *inward* at fellow members [A8.1]. Difference and even competition are healthy; contempt is not.
 - **Example in context:** Junger reports the psychotherapist Rachel Yehuda's prescription for a society at war with itself — stop magnifying difference and instead "underscore your shared humanity" — which scales straight down to a small group splitting into camps.
@@ -142,8 +133,7 @@ concepts:    [A6.2 stages-and-development] [A10.5 resilience-through-setbacks]
 situations:  [S:burning-out]
 handoff:
 anchors to:  Being needed is the engine
-source:      Junger — *Tribe*, ch.2–3
-
+source:      [Junger](https://www.sebastianjunger.com/tribe-by-sebastian-junger) — *Tribe*, ch.2–3
 - **Claim / recommendation:** Treat the winding-down or loss of a group as a real event with real grief, and plan for it. What people miss when an intense shared effort ends is almost never the task or even the hardship — it's the closeness and the sense of being needed. A leader who lets a group dissolve without marking it, or who assumes relief at the end, misreads what the group meant to people.
 - **Reasoning / mechanism:** Junger's central observation about homecoming is that returning combatants miss the *unit*, not the war — the daily closeness of people who depended on each other. He extends this to civilians: twenty years on, Sarajevo siege survivors spoke of longing not for danger but for who they had been to each other. Yehuda's clinical framing is that what's lost is being embedded in a world where you mattered. The loss is of belonging and being-needed [A2.4], which is exactly what the group supplied.
 - **Example in context:** Junger reports graffiti on a wall in post-war Bosnia, on the loss of wartime solidarity: "It was better when it was really bad." The danger was gone; so was the closeness, and people mourned the second, not the first.

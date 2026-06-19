@@ -1,7 +1,6 @@
 ---
 title: "Turn the Ship Around"
-source: "Marquet — Turn the Ship Around"
-domains: [A1, A6, A7, A9]
+source: "[Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — Turn the Ship Around"domains: [A1, A6, A7, A9]
 primary_folder: "/developing-others/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -26,28 +25,23 @@ last-updated: 2026-06-10
 
 **Leader-leader, not leader-follower.** The dominant model splits a group into one leader and many followers; it was built to extract physical labor and quietly wastes everyone's judgment. Marquet's alternative assumes everyone can and should lead, because a group whose performance depends on one person's brilliance is fragile and a group that grows leaders is not. It holds because tying results to a single personality means the results leave when the person does — *"it's best when we all are leaders"* (Marquet) — whereas distributed leadership compounds and outlasts the founder.
 flagship example: Ten years after Marquet left, his old crew kept winning combat-effectiveness awards and produced a wildly disproportionate number of officers who rose to command — the gains had been built into the people and practices, not into him.
-source:  Marquet — *Turn the Ship Around!*, Introduction; ch.29 (Ripples)
-governs: [A1.2 enabling-vs-doing] [A9.4 succession-and-ceding-control] [A9.5 functional-shared-leadership] [A1.1 leading-by-earned-authority-and-consent]
+source:  [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, Introduction; ch.29 (Ripples)governs: [A1.2 enabling-vs-doing] [A9.4 succession-and-ceding-control] [A9.5 functional-shared-leadership] [A1.1 leading-by-earned-authority-and-consent]
 
 **Divest control only as fast as competence and clarity rise (the Control–Competence–Clarity triad).** Handing people decision authority is the bridge to leader-leader, but control alone is dangerous: people need the *skill* to decide well (competence) and a shared picture of *what the group is for* (clarity) or the handoff produces chaos, not initiative. The triad holds because a decision is only as good as the knowledge and the purpose behind it — *"control without competence is chaos"* (Marquet) — so as a leader lets go, they must simultaneously be building the other two pillars.
 flagship example: On an earlier posting (the *Will Rogers*) Marquet pushed authority down to a team whose technical skill had atrophied under years of being told what to do; performance got worse, and he retreated into micromanaging. He later traced the failure to giving control without first building competence.
-source:  Marquet — *Turn the Ship Around!*, Introduction; ch.28 ("We Learn")
-governs: [A9.2 delegating-outcomes-not-tasks] [A9.3 avoiding-founder-bottleneck] [A7.3 autonomy-vs-direction] [A7.6 hierarchy-just-enough]
+source:  [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, Introduction; ch.28 ("We Learn")governs: [A9.2 delegating-outcomes-not-tasks] [A9.3 avoiding-founder-bottleneck] [A7.3 autonomy-vs-direction] [A7.6 hierarchy-just-enough]
 
 **Emancipate, don't empower.** "Empowerment" sounds generous but smuggles in the very problem it claims to solve: it says *I* have the power and will grant some to *you*, which re-states that you are a follower. Real release — emancipation — recognizes that people's energy and creativity were always theirs; the leader's only power was to suppress it. It holds because motivation that depends on the leader's granting evaporates when the leader looks away, while released motivation is self-sustaining: an emancipated team is no longer "relying on you as their source of power."
 flagship example: Marquet contrasts the two words directly, arguing the leader's job is to stop blocking *"the inherent genius, energy, and creativity in all people"* rather than to dispense permission.
-source:  Marquet — *Turn the Ship Around!*, ch.28 (A New Method of Resupplying)
-governs: [A1.2 enabling-vs-doing] [A3.2 ownership-and-voice] [A7.1 building-and-using-power]
+source:  [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.28 (A New Method of Resupplying)governs: [A1.2 enabling-vs-doing] [A3.2 ownership-and-voice] [A7.1 building-and-using-power]
 
 **Aim at excellence, not the absence of error.** A group that organizes itself around *not screwing up* trains its members to avoid risk, hide problems, and do as little as possible — because the safest way to make no mistakes is to make no decisions. Pointing instead at a positive standard of excellence releases initiative, and error reduction follows as a by-product rather than the goal. It holds because what a group measures is what it optimizes: measure mistakes and you get timidity; aim at excellence and you get people willing to try.
 flagship example: A running joke on Marquet's worst-to-first crew captured the old culture exactly — *"Your reward is no punishment."* He set excellence, not error-avoidance, as the goal, and reframed mistakes as information.
-source:  Marquet — *Turn the Ship Around!*, ch.16 ("I Relieve You!")
-governs: [A2.1 shared-purpose] [A6.5 psychological-safety] [A6.1 how-norms-form-and-become-culture]
+source:  [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.16 ("I Relieve You!")governs: [A2.1 shared-purpose] [A6.5 psychological-safety] [A6.1 how-norms-form-and-become-culture]
 
 **Durable change lives in mechanisms, not personality.** Exhortation, speeches, and "try harder" produce nothing lasting; change sticks only when it is built into concrete, repeated practices that don't depend on the leader being present or charismatic. Marquet's rule was to change behavior first and let new thinking follow, and to insist that every decision produce a mechanism rather than a sentiment. It holds because, as he borrows from *Built to Last*, "personalities come and go but institutional mechanisms endure" — a habit embedded in how the group operates survives the founder.
 flagship example: Rather than lecture his crew about taking initiative, Marquet had them invent specific operating changes ("act your way to new thinking"), reasoning that they would *"start acting differently and the new thinking would follow."*
-source:  Marquet — *Turn the Ship Around!*, ch.8 (Change, in a Word); ch.3 (Change of Course)
-governs: [A9.4 succession-and-ceding-control] [A6.1 how-norms-form-and-become-culture] [A1.3 lead-by-example]
+source:  [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.8 (Change, in a Word); ch.3 (Change of Course)governs: [A9.4 succession-and-ceding-control] [A6.1 how-norms-form-and-become-culture] [A1.3 lead-by-example]
 
 ---
 
@@ -79,8 +73,7 @@ concepts:    [A3.2 ownership-and-voice] [A9.2 delegating-outcomes-not-tasks]
 situations:  [S:no-one-takes-initiative] [S:doing-everything-myself]
 handoff:
 anchors to:  Emancipate, don't empower; Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, ch.11 ("I Intend To . . .")
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.11 ("I Intend To . . .")
 - **Claim / recommendation:** Change how people speak to you and you change how much they own. Instead of members asking permission ("Can I…?" / "What should I do about…?"), have them state intention: *"I intend to…"* — then handle the rest themselves. The leader's job shrinks to a nod or a question, not a decision. Don't mistake this for a script; it is a way of relocating who is doing the thinking.
 - **Reasoning / mechanism:** Asking permission keeps the thinking with the leader: the asker only has to surface a problem, while the leader has to solve it. Stating intention forces the member to do the analysis — to decide what *should* happen and be ready to defend it — before they ever reach the leader. The active verb is the lever; over time, people who must say "I intend to" start thinking like the person responsible [A1.2].
 - **Example in context:** The phrase was given to Marquet years earlier by a captain who, when young Marquet hesitated to act, prompted him to say "I intend to…" instead of asking. The taste of actually being in charge was, he wrote, a powerful tonic; he later made it the everyday language of his whole crew, who shifted from waiting for orders to announcing intentions.
@@ -93,8 +86,7 @@ concepts:    [A9.2 delegating-outcomes-not-tasks] [A7.3 autonomy-vs-direction]
 situations:  [S:doing-everything-myself] [S:i-cant-let-go]
 handoff:
 anchors to:  Leader-leader, not leader-follower; Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, Introduction; ch.8 (Change, in a Word)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, Introduction; ch.8 (Change, in a Word)
 - **Claim / recommendation:** Move decision authority to the people who hold the information and do the work — *"push authority and responsibility downward"* — while you keep responsibility for outcomes. Letting go of control is not letting go of accountability; you remain on the hook, which is exactly why you must build the conditions (next two entries) that make divesting safe. Don't divest to people who aren't ready and then call it empowerment.
 - **Reasoning / mechanism:** In a top-down group, performance is bottlenecked by the leader's own capacity and judgment; every decision waits on one person. Relocating decisions to where the knowledge already lives removes the bottleneck and engages people's full intellect. The reason most leaders won't do it is the responsibility paradox: they fear that since they'll be blamed, they must decide — Marquet's answer is that keeping responsibility while releasing control is the whole discipline.
 - **Example in context:** Marquet started not at the top (contradictory) nor the bottom (no standing) but with the chiefs — the layer with credibility and reach — handing them control over schedules, qualifications, and their people, areas a captain would normally guard. He called the resulting standard "eyeball accountability": you own your patch.
@@ -107,8 +99,7 @@ concepts:    [A7.3 autonomy-vs-direction]
 situations:  [S:no-one-takes-initiative] [S:unclear-what-were-doing]
 handoff:
 anchors to:  Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, ch.20 (Under Way on Nuclear Power); ch.27/ch.16
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.20 (Under Way on Nuclear Power); ch.27/ch.16
 - **Claim / recommendation:** Tell people clearly *what* outcome you need and leave *how* to them. The opposite — handing over a vague goal and then specifying the steps — is what Marquet calls playing *"bring me a rock,"* where people guess at what you want and waste effort. Define the end; release the means.
 - **Reasoning / mechanism:** When the leader owns the method, members can't take responsibility for the result, and they stop self-organizing because the route is already dictated. A clear *goal* without a prescribed *method* gives people both something to aim at and room to use their judgment — the autonomy that intrinsic motivation depends on (see Pink, A3.1, for the underlying mechanism). The specificity belongs on the *what*, not the *how*.
 - **Example in context:** A fire-response drill kept failing because rules dictated exactly who manned which hose, so people ran past equipment to reach "their" station. Marquet stripped the method: the goal was to put the fire out, and *"I didn't care who was on the hose."* People nearest the fire self-organized, and response time dropped sharply.
@@ -120,8 +111,7 @@ concepts:    [A1.2 enabling-vs-doing] [A9.6 coaching-group-members]
 situations:  [S:doing-everything-myself] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Leader-leader, not leader-follower
-source:      Marquet — *Turn the Ship Around!*, ch.22 (Up Scope!)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.22 (Up Scope!)
 - **Claim / recommendation:** When you can see the answer, do not give it. Handing people your solution — even a correct one, even helpfully — teaches them to wait for you and erodes their ownership. Offer the problem, the goal, and your reasoning process if useful; let them reach the decision. The discipline is hardest precisely when you're right and short on time.
 - **Reasoning / mechanism:** Every time the leader supplies the answer, two things happen: the member's thinking is short-circuited, and the group relearns that the leader is the source of answers. Marquet found that giving a specific instruction *without the underlying thought process* simply didn't work in a complex, changing environment — people executed the letter and missed the intent. Withholding the answer is how you build the judgment you're trying to delegate to. (This is adjacent to Heifetz & Linsky's "give the work back to the people," held there at depth; Marquet's contribution is the in-the-moment behavioral restraint.)
 - **Example in context:** Exhausted, Marquet told his watch team the exact position to reach by morning — *here*, at 0600 — without explaining why. They drifted out of position overnight, having followed the instruction without owning the goal. He concluded that supplying answers, not the team, was the failure: "that made matters worse."
@@ -133,8 +123,7 @@ concepts:    [A9.3 avoiding-founder-bottleneck] [A3.2 ownership-and-voice]
 situations:  [S:doing-everything-myself] [S:volunteers-flaky]
 handoff:
 anchors to:  Emancipate, don't empower
-source:      Marquet — *Turn the Ship Around!*, ch.13 (Who's Responsible?)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.13 (Who's Responsible?)
 - **Claim / recommendation:** Systems built to track and chase people send a message that undercuts ownership. A tracking apparatus quietly says *"we will keep track and monitor you,"* which erodes the more powerful message that *"you are responsible for your job."* Where you can, replace top-down monitoring with people reporting their own status and owning their own follow-through.
 - **Reasoning / mechanism:** Monitoring assumes the work won't happen unless someone watches — and people live up (or down) to the assumption embedded in the system around them. A leader who maintains the tracker also absorbs the responsibility that should sit with the member, recreating the bottleneck. Removing the apparatus forces ownership back where it belongs, *provided* the goal and competence are clear.
 - **Example in context:** Marquet's ship kept a three-inch binder (the "tickler") of everything owed to higher authority, with weekly meetings to read through it — hours of supervisory time spent cataloguing undone work rather than doing it. He scrapped the leader-owned tracking in favor of each department head monitoring and answering for their own work.
@@ -147,8 +136,7 @@ concepts:    [A6.5 psychological-safety] [A8.2 productive-dissent]
 situations:  [S:everyone-just-agrees]
 handoff:
 anchors to:  Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, ch.14 ("A New Ship")
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.14 ("A New Ship")
 - **Claim / recommendation:** Have people — leader included — voice their intentions, hunches, and uncertainties out loud, even when the picture is incomplete. In a divested group where no single person controls every decision, spoken thinking is how teammates stay aligned and how mistakes get caught before they happen. Don't reserve speech for certainty.
 - **Reasoning / mechanism:** When thinking is silent, others can't correct a wrong assumption or anticipate the next move; errors surface only after they've happened. Thinking out loud externalizes judgment so the group can act on it — and crucially, when the *leader* voices doubt, it makes it safe for everyone else to. Marquet notes his group initially lacked even the language to express ambiguity, which kept problems hidden.
 - **Example in context:** He pairs this with "anticipatory" voicing: in a steep emergency dive, a watchstander placed a hand on the next control and explained he wanted to be ready — signaling the correct next action to the supervisor without overstepping. The spoken/gestured intention let the team self-correct in real time.
@@ -160,8 +148,7 @@ concepts:    [A1.2 enabling-vs-doing] [A9.1 developing-leaders]
 situations:  [S:doing-everything-myself] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Leader-leader, not leader-follower
-source:      Marquet — *Turn the Ship Around!*, ch.14 ("A New Ship")
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.14 ("A New Ship")
 - **Claim / recommendation:** Every time a leader jumps in to take over a task someone else owns, that person disengages — even when the takeover is well-meant and the situation turns out fine. Notice the cost of rescuing, and let people finish (and sometimes stumble) on what is theirs. The exception is genuine danger; most takeovers aren't that.
 - **Reasoning / mechanism:** Initiative is fragile and contextual: a member who is mid-decision and gets overridden reads it as "I'm not really trusted with this," and withdraws. The leader gets the short-term result and loses the long-term capability. The damage is usually invisible to the leader, who only sees the task get done.
 - **Example in context:** An officer was steering the ship into port, judging a turn a few seconds out, when Marquet — anxious — prompted him. The turn was fine, but Marquet watched the man visibly lose initiative, confidence, and control: *"lost initiative, lost confidence, and lost control."* He had taken back the wheel without meaning to.
@@ -173,8 +160,7 @@ concepts:    [A9.2 delegating-outcomes-not-tasks] [A9.1 developing-leaders]
 situations:  [S:i-cant-let-go] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, ch.28 ("We Learn")
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.28 ("We Learn")
 - **Claim / recommendation:** Before you hand someone a decision, make sure they have the skill and knowledge to make it well — otherwise you get not initiative but expensive mistakes. *"Control without competence is chaos."* The implication runs both ways: don't delegate into a competence gap, and don't use "they're not ready" as a permanent excuse — close the gap so you *can* let go.
 - **Reasoning / mechanism:** As Marquet puts it, *"as authority is delegated, technical knowledge at all levels takes on a greater importance."* If your only job is to follow instructions, you needn't understand your craft; the moment you can decide, you need the understanding the decision rests on. So divesting control *raises*, not lowers, the demand for competence — which is why naïve "empowerment" so often backfires.
 - **Example in context:** This is the lesson Marquet drew from his earlier failure on the *Will Rogers*, where he pushed authority to an engineering team whose competence had withered under years of top-down direction. He had assumed the skill was there; it wasn't, and chaos followed. On his next command he refused to repeat it.
@@ -186,8 +172,7 @@ concepts:    [A6.6 learning-together]
 situations:  [S:newcomers-dont-stick]
 handoff:
 anchors to:  Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, ch.17/ch.28 ("We Learn")
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.17/ch.28 ("We Learn")
 - **Claim / recommendation:** Treat learning not as an occasional event (a training session, an onboarding) but as the group's constant background activity, tied directly to the right to decide. The more you want people to act on their own judgment, the more continuous, self-driven competence-building has to be the norm. Don't separate "doing the work" from "getting better at it."
 - **Reasoning / mechanism:** In a leader-leader group, competence is the licence for autonomy, so it can't be rationed to scheduled events — it has to be woven into daily operation, with people responsible for their own learning. Marquet's crew adopted "We learn" as a core creed precisely because learning was the thing that made everything else (divested control) possible. (The mechanics of reflection and debrief cycles are held at depth elsewhere in the corpus — e.g. Fisher on the learning loop; this entry's net-new is the *coupling* of learning to decision rights.)
 - **Example in context:** Marquet's crew built continuous study, qualification, and self-improvement into the rhythm of the deployment — people pursuing courses and certifications at sea — rather than waiting for shore-based schools. Competence became something the group produced, not something delivered to it.
@@ -200,8 +185,7 @@ concepts:    [A6.6 learning-together] [A9.7 onboarding-newcomers]
 situations:  [S:newcomers-dont-stick]
 handoff:
 anchors to:  Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, ch.30 (All Present and Accounted For)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.30 (All Present and Accounted For)
 - **Claim / recommendation:** Replace one-way briefing ("here's the plan — any questions?") with certification ("tell me how this works"). A briefing lets people nod along without understanding; a certification puts the burden on them to demonstrate they actually know, which both verifies competence and forces engagement. Stop assuming that because you said it, they got it.
 - **Reasoning / mechanism:** Briefings are passive: the informed person talks, the others listen, and silence is misread as comprehension. Certification flips the direction — the team has to articulate the plan, the risks, and their role — so gaps surface *before* the work, not after. It also signals that understanding is everyone's responsibility, reinforcing the same ownership the whole model depends on.
 - **Example in context:** Marquet describes the ritual of a supervisor reading a procedure aloud and asking "any questions?" to silence — then discovering people hadn't understood at all. Switching to questioning the team beforehand turned a compliance ritual into a real check on shared knowledge.
@@ -213,8 +197,7 @@ concepts:    [A6.6 learning-together] [A6.5 psychological-safety]
 situations:
 handoff:
 anchors to:  Aim at excellence, not the absence of error
-source:      Marquet — *Turn the Ship Around!*, ch.27 ("Mistakes Just Happen!"); ch.22 (A Remembrance of War)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.27 ("Mistakes Just Happen!"); ch.22 (A Remembrance of War)
 - **Claim / recommendation:** Reject "mistakes just happen" as an explanation. Build a shared habit of acting deliberately — pausing to vocalize or gesture an intended action before taking it — so the person and their teammates have a beat to catch an error before it lands. The point is a group practice, not a personal virtue.
 - **Reasoning / mechanism:** A deliberate pause does two things: it engages the actor's own attention (reducing slips of autopilot) and it gives anyone nearby a window to intervene. In its "anticipatory" form, signaling the next intended action also keeps the team synchronized — error reduction becomes a property of how the group operates together, which is itself a form of collective competence.
 - **Example in context:** After a sailor moved a safety tag and tripped an incident, Marquet refused the easy route of punishment-and-retraining and spent hours with the team designing deliberate action instead — and rewarded the candor of the person who'd erred rather than punishing it.
@@ -227,8 +210,7 @@ concepts:    [A2.1 shared-purpose] [A7.3 autonomy-vs-direction]
 situations:  [S:unclear-what-were-doing] [S:group-lost-its-why]
 handoff:
 anchors to:  Divest control as competence and clarity rise
-source:      Marquet — *Turn the Ship Around!*, Part IV (Clarity); ch.33
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, Part IV (Clarity); ch.33
 - **Claim / recommendation:** When many people are making decisions on their own, the only thing keeping those decisions aligned is a clear, widely shared understanding of what the group is for and what "good" looks like. Without it, autonomy produces fragmentation — everyone optimizing for something slightly different. Invest in clarity in direct proportion to how much control you've divested.
 - **Reasoning / mechanism:** Control and clarity are coupled: the more decisions you push outward, the more each decider needs the *organizational* picture, not just their local task, or they'll make locally sensible choices that don't add up. Clarity is what lets a group be both decentralized and coherent — it substitutes for the central controller you've deliberately removed.
 - **Example in context:** Marquet found early that telling people to "take initiative" while they still pictured the goal as *avoiding problems* produced timid, defensive choices. Only once the crew shared a positive picture of the mission did their independent decisions start pulling the same direction. He spent the deployment making purpose explicit and repeated.
@@ -240,8 +222,7 @@ concepts:    [A2.3 values-as-glue] [A2.1 shared-purpose]
 situations:  [S:cant-make-decisions] [S:decisions-keep-getting-relitigated]
 handoff:
 anchors to:  Divest control as competence and clarity rise; Durable change lives in mechanisms
-source:      Marquet — *Turn the Ship Around!*, ch.23 (Leadership at Every Level)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.23 (Leadership at Every Level)
 - **Claim / recommendation:** Write the group's guiding principles so they actually help a member *choose between two courses of action* — not as inspirational wallpaper. The test for any principle: would it give someone facing a real fork the criteria to pick? If not, it's decoration. And don't hand the group your principles from on high; surface and co-author them.
 - **Reasoning / mechanism:** In a divested group, principles do the coordinating work that a boss's say-so used to: they let people decide consistently without checking in. That only works if principles are concrete enough to *"provide guidance on decisions"* and if people own them — which is why Marquet refused to author a vision alone and instead drew the principles out of the crew, seeing his job as tapping existing energy rather than imposing direction.
 - **Example in context:** Asked at command school to submit guiding principles for his future ship, Marquet turned in a blank page, arguing the principles should come from the command, not from him. He later built them with the crew, producing a short set (Initiative, Innovation, Courage, Integrity, and others) designed as decision criteria.
@@ -253,8 +234,7 @@ concepts:    [A8.2 productive-dissent] [A6.5 psychological-safety]
 situations:  [S:everyone-just-agrees]
 handoff:
 anchors to:  Aim at excellence, not the absence of error
-source:      Marquet — *Turn the Ship Around!*, ch.38 (Combat Effectiveness)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.38 (Combat Effectiveness)
 - **Claim / recommendation:** Build a group where people will question a wrong instruction — including yours — rather than comply with it. Obedience feels safe and efficient, but a group that won't push back has removed its own last line of defense against a leader's mistake. Actively reward the person who says "I think that's wrong."
 - **Reasoning / mechanism:** Even a competent, well-intentioned leader is sometimes wrong, and in a compliance culture no one corrects them — the error simply propagates. A questioning attitude makes the group resilient: errors get stopped instead of executed. This is the same psychological safety that underwrites dissent generally; what's distinctive is Marquet's framing of it as *combat effectiveness*, i.e. a hard performance asset, not a soft nicety.
 - **Example in context:** Positioning at night to recover a team, Marquet — misreading the display — ordered the ship the wrong way. A junior sailor told him flatly, *"No, Captain, you're wrong."* The sailor was right; obeying would have blown the mission. Marquet contrasts this with the *Costa Concordia* grounding, asking whether anyone aboard had the questioning attitude to stop the captain.
@@ -266,8 +246,7 @@ concepts:    [A6.1 how-norms-form-and-become-culture] [A2.1 shared-purpose]
 situations:  [S:group-lost-its-why]
 handoff:
 anchors to:  Aim at excellence, not the absence of error
-source:      Marquet — *Turn the Ship Around!*, ch.16 ("I Relieve You!")
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.16 ("I Relieve You!")
 - **Claim / recommendation:** Point the group at a positive standard of excellence rather than at not making mistakes. A culture organized around error-avoidance teaches people that the safest move is to do as little as possible, because action creates exposure. Set the bar at "achieve something great"; let fewer errors be a side effect.
 - **Reasoning / mechanism:** What a group rewards, it gets. If the only feedback is punishment for mistakes, the rational response is risk-aversion and hiding problems — the joke *"Your reward is no punishment"* captures the whole sick incentive. An excellence goal gives people something to move *toward*, which licenses the initiative that error-avoidance suppresses. Understanding errors still matters, but as input to excellence, not as the objective.
 - **Example in context:** Marquet inherited a crew so focused on passing inspections and avoiding write-ups that initiative had died. He reframed inspections as the natural by-product of being excellent, not the goal — and watched willingness to act return.
@@ -279,8 +258,7 @@ concepts:    [A1.2 enabling-vs-doing] [A3.2 ownership-and-voice]
 situations:  [S:doing-everything-myself]
 handoff:
 anchors to:  Emancipate, don't empower; Leader-leader, not leader-follower
-source:      Marquet — *Turn the Ship Around!*, ch.28 (A New Method of Resupplying)
-
+source:      [Marquet](https://davidmarquet.com/books/turn-the-ship-around-book/) — *Turn the Ship Around!*, ch.28 (A New Method of Resupplying)
 - **Claim / recommendation:** The end state Marquet aims at is not empowered people but emancipated ones — and the difference is the whole point. *"Emancipation is fundamentally different from empowerment."* Empowerment keeps the leader as the source of power ("I empower you"); emancipation recognizes the capability was always theirs and removes what was suppressing it. You'll know you've reached it when the team no longer needs you to empower them — and you no longer could, because they aren't relying on you as their source of power.
 - **Reasoning / mechanism:** Empowerment fails on two counts: it's incomplete (it doesn't work without competence and clarity) and it's structurally top-down (it re-states the leader's primacy in the act of "granting"). Emancipation is what you get when control, competence, and clarity are all present at once — at that point motivation is self-sustaining because it never came from the leader to begin with. This is why the triad matters: any one pillar alone collapses back into leader-follower.
 - **Example in context:** Late in a deployment, a brand-new ensign — unschooled in "how things are done" — spotted a supply ship and simply suggested asking it for the oil the submarine needed; the team set it up with an "I intend to," and it worked. The point isn't the oil; it's that the most junior, least "empowered" person acted like an owner because the conditions had been built.

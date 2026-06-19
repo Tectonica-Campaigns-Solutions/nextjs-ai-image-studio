@@ -1,7 +1,6 @@
 ---
 title: "No Shortcuts"
-source: "McAlevey — No Shortcuts"
-domains: [A2, A3, A4, A7]
+source: "[McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — No Shortcuts"domains: [A2, A3, A4, A7]
 primary_folder: "/relationships/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -39,28 +38,23 @@ The load-bearing claims the relevant slice rests on — the baselines a coach re
 
 **Only organizing builds power (the mobilizing-vs-organizing lens).** Three approaches to change differ by *where the agency for success sits*: advocacy has paid experts act *for* people, who stay spectators; mobilizing turns out the already-committed without building a new base; organizing continually brings in people who weren't involved before and makes them the authors of the analysis, strategy, and outcome. Only organizing actually shifts power, because power for ordinary people comes from large numbers — and only organizing manufactures new numbers rather than re-counting the converted.
 flagship example: McAlevey's running contrast — mobilizing produces a staff-directed turnout of the usual activists, "enough for a photo good enough to tweet," while organizing produced the 2012 Chicago teachers' strike, where tens of thousands acted and the wider community stood behind them. Table 1.1 sets the three side by side on power, strategy, and people.
-source:  McAlevey — *No Shortcuts*, ch.1 (Introduction)
-governs: [A2.5] [A3.3] [A7.1] [A2.1]
+source:  [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)governs: [A2.5] [A3.3] [A7.1] [A2.1]
 
 **No shortcuts — deep organizing is the work, and it cannot be skipped.** Building a real base through slow, relational, person-by-person work has no substitute; frames, paid staff, polling, and clever messaging are shortcuts that produce thin or false victories. The mechanism is that durable power rests on people who understand and own the fight, and that ownership is only built by doing the slow work — money and message cannot manufacture it, and often backfire.
 flagship example: McAlevey traces a four-decade decline of progressive power to a drift from organizing toward shallow mobilizing. The sharpest illustration: in 2012 unions spent $23 million on a Michigan ballot initiative to protect collective bargaining and lost — no amount of spending could undo decades of having no organized base. As she puts it, "Self-blame demobilizes people, and it is a strategy."
-source:  McAlevey — *No Shortcuts*, ch.1 & ch.7 (Conclusion)
-governs: [A4.1] [A2.5] [A3.4] [A6.4]
+source:  [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 & ch.7 (Conclusion)governs: [A4.1] [A2.5] [A3.4] [A6.4]
 
 **Organic leaders are the key to scale — develop who people already follow.** The highest-leverage people to invest in are not the eager volunteers who show up to everything, but the *organic leaders*: people with no title who already hold the trust and following of their peers. Identify them first, then develop them, because they arrive with a base of followers attached — so leadership poured into one of them reaches many.
 flagship example: McAlevey's *leadership identification* method — in a workplace, the organizer hunts for the nurse, teacher, anesthesia tech, or bus driver whom coworkers already rely on and persuade through, rather than the self-selecting activist. Developing those people, she argues, is "the key to scale."
-source:  McAlevey — *No Shortcuts*, ch.1 & ch.2
-governs: [A9.1] [A9.5] [A4.4] [A1.1] [A5.1]
+source:  [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 & ch.2governs: [A9.1] [A9.5] [A4.4] [A1.1] [A5.1]
 
 **Organize the whole person, not the role — the power to win lives in the community.** People are not only their function; engage their family, faith, neighbors, and full relational web (*whole-worker organizing*), because durable solidarity and the power to win a hard fight live in that wider community, not in the workplace or meeting room alone. A fight rooted only in a narrow role is brittle; one woven through people's whole lives recruits the community as an ally before the opponent can split them off.
 flagship example: Chicago's teachers spent years building relationships with parents and community groups *before* the 2012 strike; when the mayor attacked the strike as teachers abandoning their students, that frame failed precisely because the teacher–parent ties were already forged. McAlevey calls this restoring the old CIO approach for a new economy.
-source:  McAlevey — *No Shortcuts*, ch.2 & ch.4
-governs: [A4.1] [A4.4] [A4.6] [A2.4]
+source:  [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.2 & ch.4governs: [A4.1] [A4.4] [A4.6] [A2.4]
 
 **People become agents by participating — understanding and participation are dialectical.** You move people from passive object to active subject by involving them in *making* the analysis and strategy, not by handing them a finished plan. The relationship is reciprocal: people invest to the extent they understand the fight, and they come to understand it to the extent they help build it — so participation and understanding pull each other up together.
 flagship example: McAlevey's argument for doing power-structure analysis *with* ordinary people. When people discover for themselves that their CEO sits on commissions alongside their own minister, their city council member, and their kids' PTA head, they start imagining and plotting strategy of their own — and, having helped make it, stay invested for the long haul.
-source:  McAlevey — *No Shortcuts*, ch.1 (Introduction)
-governs: [A3.2] [A1.2] [A7.1] [A9.2]
+source:  [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)governs: [A3.2] [A1.2] [A7.1] [A9.2]
 
 ---
 
@@ -98,8 +92,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A3.3 transactional-vs-rel
 situations:  [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to:  Only organizing builds power
-source:      McAlevey — *No Shortcuts*, ch.1 (Introduction)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)
 - **Claim / recommendation:** Recognize which of three modes you're running. *Advocacy* has paid experts (lawyers, pollsters, communications firms) act for people, who stay spectators — fine for installing seatbelts, useless against entrenched power. *Mobilizing* brings large numbers but usually the same dedicated activists, directed by staff who see themselves as the agents of change. *Organizing* places agency with an ever-expanding base of people who don't consider themselves activists at all, and makes them author the analysis, strategy, and win. For a group leader, keep moving work toward the organizing pole — let members shape the plan and recruit beyond the choir — rather than defaulting to the easier mobilizing reflex of rallying the same faces.
 - **Reasoning / mechanism:** The three sort by *where the agency for success rests* [A3.2]. Power for ordinary people comes from large numbers, so an approach that never expands the base can win small advances but never shift real power. Mobilizing feels like organizing because bodies appear; the tell is that the people in the room had no hand in the analysis, aren't told the strategy, and won't be there for the next, unrelated fight. McAlevey notes mobilizing is a real improvement on advocacy — it at least brings people — but it stalls at the edge of the already-convinced.
 - **Example in context:** McAlevey contrasts a mobilized turnout — staff-directed, judged only by whether enough bodies show for a usable photo — with organizing, where ordinary people place themselves at the center: organizing relies on mass, open negotiations to win, not the closed-door deal-making typical of both advocacy and mobilizing. Across the book this is the line between Local 775's deal-driven growth and the Chicago teachers' member-built strike.
@@ -111,8 +104,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A6.4 common-stall-pattern
 situations:  [S:lost-momentum-after-launch] [S:group-feels-transactional]
 handoff:
 anchors to:  No shortcuts; Only organizing builds power
-source:      McAlevey — *No Shortcuts*, ch.3 & ch.7 (Conclusion)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.3 & ch.7 (Conclusion)
 - **Claim / recommendation:** Resist the appeal of shortcuts — turning out the dependable few, buying ads, perfecting a frame — when what's needed is the slow work of widening the base. The shortcut isn't laziness; it's seductive precisely *because* it produces visible activity (a full room, a clip, a number) without the grind. Name it for what it is so you don't mistake motion for power, and so you don't conclude from a thin turnout that your people are apathetic when the real gap is that no base was ever built.
 - **Reasoning / mechanism:** A mobilized turnout is a flare that quickly smolders; durable power requires people who own the fight, and ownership only forms through participation over time [A3.4]. McAlevey adds that messaging shortcuts actively backfire for progressives, because most of their frames run *against* the dominant individualist narrative while the corporate right's frames run *with* it — so a frame fight is one the shortcut tends to lose. The deeper trap is self-blame: a working class taught it is individually inadequate is demobilized in advance, and no slogan undoes a century of that conditioning.
 - **Example in context:** The nursing-home chapter is the cautionary tale. Under leadership McAlevey casts as a clone of Andy Stern, SEIU pursued growth through top-down deals — its per-capita income nearly tripled (about $101 million to just under $300 million, 2000–2012) while membership rose only roughly 37%, and staff and revenue ballooned faster than member power. She names the pattern class snuggle vs. class struggle: a union that snuggles up to employers and politicians for growth, versus one that builds the strike-ready power of its members.
@@ -124,8 +116,7 @@ concepts:    [A2.1 shared-purpose] [A3.1 intrinsic-motivation]
 situations:  [S:group-lost-its-why] [S:low-attendance]
 handoff:
 anchors to:  No shortcuts
-source:      McAlevey — *No Shortcuts*, ch.1 (Introduction)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)
 - **Claim / recommendation:** Don't reduce people's stake to the material ask (the raise, the policy, the task). Underneath the concrete issue is usually something deeper — dignity, self-worth, being treated as a person who matters — and that is what actually sustains effort and risk. Lead toward the deeper why, not only the surface fix; a group organized only around a deliverable loses its pull the moment the deliverable stalls.
 - **Reasoning / mechanism:** McAlevey argues the day-in, day-out degradation of people's self-worth is what drives them to the solidarity needed to take real risk — dignity is, in her words, "one of the deepest of human emotional needs." This is intrinsic motivation [A3.1]: the fight gives people back a sense of agency and worth that no transactional reward replaces. She faults scholars and organizers alike for missing it — treating workplace fights as merely about money when the deepest motive is the refusal to keep being humiliated.
 - **Example in context:** At Smithfield, what moved workers was not a wage calculation but the felt indignity of dangerous, degrading conditions — the sense that the hogs on the line were treated better than the humans slaughtering them. At Make the Road, an immigrant car-wash worker, asked what the group meant, answered that it meant *us* — a people who refuse to be pushed around — a dignity claim, not a benefits claim.
@@ -138,8 +129,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A2.3 values-as-glue] [A10.5 re
 situations:  [S:group-lost-its-why] [S:group-feels-transactional]
 handoff:
 anchors to:  No shortcuts
-source:      McAlevey — *No Shortcuts*, ch.7 (Conclusion)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.7 (Conclusion)
 - **Claim / recommendation:** You cannot talk or message a group into solidarity; people have to *go through* something together to feel it durably. So if you want a group that holds, design for shared experience and collective action, not just shared statements — and expect that experiencing struggle together is also what builds the group's resilience through losses.
 - **Reasoning / mechanism:** McAlevey distinguishes the intense, short-lived solidarity that flares after a disaster from the durable solidarity organizing builds. Real organizing manufactures a critical situation — a shared confrontation — and the craft is helping people connect that experience to the larger system, giving them "a new way of seeing themselves." That reframed self-understanding is what persists after the immediate fight, and what lets a group survive setbacks: people who have struggled together once have a felt reason to do it again.
 - **Example in context:** She points to the instant solidarity after September 11 or Hurricane Sandy — real but quickly fading — versus the solidarity of the Chicago teachers, Connecticut nursing-home workers, and North Carolina meatpacking workers, forged through collective struggle and carried afterward, even into the voting booth. Smithfield is the resilience case in miniature: the win came only after failed rounds stretching back to 1993, each loss feeding the organization that finally won in 2008.
@@ -151,8 +141,7 @@ concepts:    [A4.1 relationships-are-strategy] [A4.4 the-relationship-web]
 situations:  [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to:  Organize the whole person; People become agents by participating
-source:      McAlevey — *No Shortcuts*, ch.2
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.2
 - **Claim / recommendation:** Engage members as whole people, not as a single function. Know and involve their family, faith, neighbors, and the rest of their relational web — what McAlevey calls *whole-worker organizing*. The point is not to be nosy but to treat relationships as the actual medium of the work, because a person's full life is where both their commitment and their reach live.
 - **Reasoning / mechanism:** A tie to someone only in their narrow role (just a volunteer, just a coworker) is thin and easily severed by an opponent or by life pressure. Weaving the work through someone's whole life makes the bond durable and multiplies reach, because each person brings their own networks [A4.4]. McAlevey frames this as restoring the 1930s CIO model — helping people see the connections between corporate domination of their work lives, their home lives, and their political structures, so the fight is understood as one fight, not a workplace errand.
 - **Example in context:** McAlevey's *whole-worker charting* maps each person's outside-of-role relationships — who they know beyond work, how, how well, how they can be reached — as strategic information, not soft trivia. She illustrates with how Chicago's teachers behaved after 2010, how Smithfield's workers won their final round, and how a Connecticut union "brings the whole community into the fight." Alinsky, she argues, broke this by bifurcating workplace from community; whole-worker organizing puts them back together.
@@ -164,8 +153,7 @@ concepts:    [A4.6 cross-cutting-ties-before-conflict] [A4.4 the-relationship-we
 situations:  [S:two-members-clashing] [S:low-attendance]
 handoff:
 anchors to:  Organize the whole person
-source:      McAlevey — *No Shortcuts*, ch.4 (Chicago Teachers)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.4 (Chicago Teachers)
 - **Claim / recommendation:** Build relationships with the people and groups around your fight *before* you need them — before the conflict, not during it. The community that could be your ally, or your opponent's wedge, is decided largely in advance, by whether the ties already exist. Don't wait for the crisis to start relationship-building; by then it reads as instrumental and it's too late.
 - **Reasoning / mechanism:** In a fight, your opponent will try to split your natural allies away from you — typically by claiming you're hurting the very people you say you serve. That wedge only works if the relationships aren't already there. Ties built ahead of time mean allies experience the attack as an attack on a relationship they value, and it fails [A8.1]. Relationships do strategic work [A4.1]; built late, under pressure, they can't.
 - **Example in context:** Chicago's teachers spent *years* of community work — including building a coalition (the Grassroots Education Movement) with neighborhood groups against school closings — and *months* of intentional conversations with parents before the 2012 strike. When Mayor Emanuel framed the strike as teachers abandoning their students and community, the frame collapsed, because the teacher–parent and union–community relationships were already forged. Parents three blocks away honked support; the city, as one organizer put it, suddenly felt like theirs.
@@ -177,8 +165,7 @@ concepts:    [A9.1 developing-leaders] [A4.4 the-relationship-web] [A1.1 leading
 situations:  [S:no-one-takes-initiative] [S:newcomers-dont-stick]
 handoff:
 anchors to:  Organic leaders are the key to scale
-source:      McAlevey — *No Shortcuts*, ch.1 & ch.2
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 & ch.2
 - **Claim / recommendation:** Spend your development effort on the people others already trust and follow — the *organic leaders* — not on whoever is most eager to volunteer. Organic leaders rarely call themselves leaders and rarely hold a title; you identify them by their natural influence with peers. Do it in order: *leadership identification* (find them) before *leadership development* (grow them). Picking the willing instead of the influential is the most common and most expensive mistake.
 - **Reasoning / mechanism:** Developing a random willing volunteer reaches one person. Developing an organic leader reaches everyone who already follows them — McAlevey notes these leaders "start with a base of followers," so investment in one of them propagates through their network [A9.5]. Their authority is *earned and granted by peers*, not assigned [A1.1], which is exactly why it carries others; a title given to a non-leader does not. This is the merged identification-vs-random-volunteers logic: same investment, far greater reach. CIO-style unions deliberately recruit organic leaders, not activists, into representative roles, because the lone-wolf activist solves problems alone while the organic leader moves a group.
 - **Example in context:** In the workplace, McAlevey's organizer doesn't recruit the activist who turns up to everything; she finds the nurse or bus driver whom coworkers rely on and persuade through, and works to win and develop *them*. In the nursing-home case, Salinas was exactly such an organic leader — real popular support among the rank and file — which is why his choices mattered far more than his title suggested.
@@ -190,8 +177,7 @@ concepts:    [A5.6 boundaries-and-membership]
 situations:  [S:cant-recruit] [S:low-attendance]
 handoff:     [H:org-level]
 anchors to:  Organic leaders are the key to scale; Only organizing builds power
-source:      McAlevey — *No Shortcuts*, ch.1 (Introduction)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)
 - **Claim / recommendation:** Define who your constituency actually is and set out to win *all* of them — including the indifferent and the initially opposed — not just the people already on your side. Don't mistake a bounded group (everyone in this workplace, this building, this neighborhood) for the subset who self-select into your meetings. A majority of the bounded set is the goal, and the word *majority* is a hard target, not a flip-chart slogan.
 - **Reasoning / mechanism:** When the goal is a majority of a defined set, you're forced to keep engaging people who start with little or no interest — which is what grows a real base. As McAlevey puts it, "the more people, the more power." A bounded constituency also lets you *measure*: with, say, 500 workers or parishioners, you can know concretely when you've reached a majority, and gauge commitment by what people will actually do. Self-selecting groups can't measure this way and don't try, so they plateau [A6.4].
 - **Example in context:** McAlevey contrasts structure-based organizing (workplace, church — bounded, countable, target-rich) with self-selecting movement work. In a union drive, many workers begin *opposed* to the very idea of a union, and many parishioners resist a more activist church; the organizer's job is to win them anyway, methodically, name by name. She holds up the historical benchmark of 35% union density — reached when inequality was falling — as proof the bounded base can be very large.
@@ -203,8 +189,7 @@ concepts:    [A6.4 common-stall-patterns] [A9.7 onboarding-newcomers]
 situations:  [S:low-attendance] [S:newcomers-dont-stick] [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Organic leaders are the key to scale
-source:      McAlevey — *No Shortcuts*, ch.1 (Introduction)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)
 - **Claim / recommendation:** Notice when your group has quietly become a club of the already-convinced. The people who self-select into your meetings feel like your base, but a group that only ever talks to its own side stops growing and stalls. Treat the regulars as a launch pad for reaching outward, not as the destination — and read clubbiness as a warning sign, not a comfort.
 - **Reasoning / mechanism:** Self-selecting groups recruit from people with a preexisting interest, so they plateau at the size of the already-sympathetic and mistake activity among the choir for power [A2.5]. Structure-based organizing forces constant contact with the uninterested, which is the only thing that expands the base. The stall is invisible because the room still feels full — of the same faces — so a leader can feel busy and committed while the group slowly shrinks toward its core.
 - **Example in context:** McAlevey, drawing on Hahrie Han, distinguishes self-selecting activist groups (environmental, single-issue, identity-based, many descended from the New Left) that talk mostly to their own side, from structure-based groups that must win over people who don't identify as being with progressives at all. The latter build a scalable grassroots base; the former stay activist-sized no matter how dedicated.
@@ -216,8 +201,7 @@ concepts:    [A1.2 enabling-vs-doing] [A9.2 delegating-outcomes-not-tasks]
 situations:  [S:doing-everything-myself] [S:no-one-takes-initiative]
 handoff:
 anchors to:  People become agents by participating
-source:      McAlevey — *No Shortcuts*, ch.1 & ch.2
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 & ch.2
 - **Claim / recommendation:** When you do the thinking, analysis, and deciding *for* your members, you keep them passive — objects rather than subjects of the work. The job is to set conditions and hand real ownership over, even though doing it yourself is faster in the moment. Resist the rescue reflex; every problem you solve for the group is a problem the group doesn't learn to solve.
 - **Reasoning / mechanism:** Agency is built by exercising it. McAlevey's whole argument turns on *where agency rests*: people transition from passive masses into serious, invested actors only when they're made central to the process, not handed conclusions [A3.2]. A leader who absorbs all the work trains members to stay dependent and removes the very experience that would develop them — and burns out doing it.
 - **Example in context:** In the hostile legal terrain of private-sector organizing, McAlevey notes the law forces "100 percent worker agency" — only the workers themselves can run an inside campaign, so the organizer *cannot* do it for them, and that constraint turns out to be a strength: it guarantees the workers are the actors. Her broader prescription is to involve ordinary people in building the power analysis itself rather than presenting it finished, precisely so they own what results.
@@ -229,8 +213,7 @@ concepts:    [A7.1 building-and-using-power]
 situations:  [S:cant-make-decisions]
 handoff:     [H:org-level]
 anchors to:  Only organizing builds power
-source:      McAlevey — *No Shortcuts*, ch.1 (Introduction)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)
 - **Claim / recommendation:** Treat power as something ordinary people can actually build and hold, not a fixed possession of elites. McAlevey distinguishes power *over* (the ability to compel or stop) from power *to* (the creative ability to build something better); organized people can exercise both. The first move is to reject the quiet assumption that elites will always rule and the most you can do is find a friendlier one to lobby.
 - **Reasoning / mechanism:** An *elite theory of power* (power is held by the few; you just persuade them) leads to advocacy and mobilizing; a *contestable* theory of power leads to organizing, because it assumes who holds power is itself up for grabs and can be shifted by numbers [A2.5]. The single concrete advantage ordinary people have over elites is mass: as McAlevey puts it, the 1 percent have a vast armory of resources, but "the 99 percent have an army." Strategy, in Ganz's phrase she adapts, is turning what you have into what you need — and what ordinary people have is each other.
 - **Example in context:** McAlevey points to local and regional unions that still run democratic, open negotiations — tens of thousands of workers uniting to pull up to the table as equals and win something better — as living proof that ordinary people can wield both forms of power, even as national-scale elite power persists.
@@ -242,8 +225,7 @@ concepts:    [A7.1 building-and-using-power] [A3.2 ownership-and-voice]
 situations:  [S:no-one-takes-initiative] [S:cant-make-decisions]
 handoff:
 anchors to:  People become agents by participating
-source:      McAlevey — *No Shortcuts*, ch.1 (Introduction)
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 (Introduction)
 - **Claim / recommendation:** Build the plan *with* your people, not for them, because participation and understanding feed each other. The more someone helps shape the analysis and strategy, the more they understand it; the more they understand it, the more they participate — and the more they'll stay invested for the long haul. Don't optimize for a faster plan at the cost of an owned one.
 - **Reasoning / mechanism:** McAlevey calls the relationship dialectical: "People participate to the degree they understand," and they understand to the degree they participate. Investment follows authorship. When people help make the strategy, they are sustained and propelled to achieve more meaningful wins — the opposite of a handed-down plan they execute without conviction [A1.2]. It also raises ambition: people demand more when they grasp what they could actually get.
 - **Example in context:** Her power-structure-analysis prescription: rather than an expert presenting findings, bring ordinary people into doing the analysis themselves, so they discover that their CEO sits on boards alongside their minister and council member — and then start imagining and plotting strategy of their own. The act of co-discovering the map is what converts spectators into strategists.
@@ -255,8 +237,7 @@ concepts:    [A3.4 commitment-over-time] [A8.3 peer-accountability-without-autho
 situations:  [S:volunteers-flaky] [S:low-attendance]
 handoff:     [H:events]
 anchors to:  No shortcuts; Only organizing builds power
-source:      McAlevey — *No Shortcuts*, ch.2 & ch.4
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.2 & ch.4
 - **Claim / recommendation:** Gauge how committed your group really is by what people will actually *do*, not by who shows up once or says supportive things. McAlevey's *structure tests* are escalating, low-to-higher-risk collective actions that *measure* real organization before you bet everything on it. For a leader: test commitment with small concrete asks and read the result honestly, rather than assuming enthusiasm equals reliability.
 - **Reasoning / mechanism:** Commitment is observable in "the nature, frequency, and riskiness of actions" people are willing to take [A3.2]. A structure test starts by measuring an individual organic leader's pull — can she get a majority of her shift to do one small visible thing? — and builds up worksite by worksite to collective action. Each test reveals where organization is strong and where it's hollow, so you fix weakness before the high-stakes moment rather than discovering it during. Like a muscle, as one of McAlevey's sources says, the capacity for collective action atrophies if it isn't exercised.
 - **Example in context:** Before the 2012 strike, Chicago's CORE caucus ran a low-risk structure test — winning two pension-board trustee seats by member vote — to measure its real mobilization capacity. The escalating logic culminated when the union cleared a strike-authorization threshold (a turnout bar designed to be impossible) and then struck — the strike itself the highest structure test of whether the organization held.
@@ -268,8 +249,7 @@ concepts:    [A3.5 the-ask / escalating-commitment] [A1.5 fear-of-asking-or-dele
 situations:  [S:scared-to-ask-people] [S:volunteers-flaky]
 handoff:     [H:recruitment]
 anchors to:  No shortcuts; People become agents by participating
-source:      McAlevey — *No Shortcuts*, ch.1 & ch.2
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.1 & ch.2
 - **Claim / recommendation:** Make real asks, and don't water them down out of fear of scaring people off. McAlevey's organizing tradition treats high expectations as a form of respect: people rise to a serious ask and are developed by it, whereas a trivial ask signals you don't think they can do much. For a nervous first-timer, the recommendation is to ask for genuine commitment, not the safest minimal favor.
 - **Reasoning / mechanism:** Asks that carry real weight are what move people from spectator to actor and what let you read their commitment [A3.4]. Lowering the bar to avoid rejection produces a group of low-investment members and tells you nothing about who's actually with you. The ask also builds the *asker*: McAlevey's organizers must repeatedly ask people for hard, escalating commitments, and that practice is where both sides grow. A culture of soft asks is a culture that never finds out what it could have done.
 - **Example in context:** The clearest illustration is the escalating asks McAlevey's organizers make — to identify publicly as a leader, to recruit one's own coworkers, ultimately to risk one's job in a strike. These are not soft requests; the willingness to make and meet them is the craft. Connecticut nursing-home workers, before striking, even take on the ask of preparing patients' families to step in and supplement care — a serious ask of themselves and of the community, made precisely because they refuse to lower the stakes of what they're doing.
@@ -281,8 +261,7 @@ concepts:    [A1.1 leading-by-earned-authority-and-consent] [A8.3 peer-accountab
 situations:  [S:i-feel-like-an-imposter] [S:i-cant-let-go]
 handoff:
 anchors to:  Organic leaders are the key to scale; People become agents by participating
-source:      McAlevey — *No Shortcuts*, ch.2
-
+source:      [McAlevey](https://janemcalevey.com/book/no-shortcuts-organizing-for-power-in-the-new-gilded-age/) — *No Shortcuts*, ch.2
 - **Claim / recommendation:** Be honest about the fact that you *are* a leader, and own the accountability that comes with it. McAlevey's sharp critique of Alinsky is that pretending the organizer isn't a leader — that they merely answer to the grassroots — is a fiction that hides real power and dodges accountability. For a volunteer leader, the lesson is: don't hide behind "I'm just a facilitator"; name your role so members can actually hold you to it.
 - **Reasoning / mechanism:** McAlevey argues Alinsky compromised the organizing model in three ways — delinking method from the left mission that drove it, splitting community from workplace, and installing the fiction that full-time organizers aren't leaders. That last move, she contends, obscured organizers' accountability for decades, because hidden authority can't be checked while named authority — earned and granted by members [A1.1] — can be held to account by them [A8.3]. Honest, named leadership is therefore *more* democratic, not less.
 - **Example in context:** McAlevey describes Alinsky's approach as "a mobilizing model dressed up as an organizing model" — control of the masses maintained through the pretense that the organizer is merely a servant of the leaders he himself recruited. She traces the same fiction forward into post-1995 union leadership, where it again let those with real power avoid being answerable for it.

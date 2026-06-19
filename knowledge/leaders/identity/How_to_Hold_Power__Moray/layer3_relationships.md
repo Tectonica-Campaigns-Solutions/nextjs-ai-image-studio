@@ -1,7 +1,6 @@
 ---
 title: "How to Hold Power"
-source: "Moray — How to Hold Power"
-domains: [A1, A7, A8, A10]
+source: "[Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — How to Hold Power"domains: [A1, A7, A8, A10]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10

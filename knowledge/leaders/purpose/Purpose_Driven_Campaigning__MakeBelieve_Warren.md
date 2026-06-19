@@ -1,7 +1,6 @@
 ---
 title: "Purpose-Driven Campaigning"
-source: "Purpose-Driven Campaigning"
-domains: [A2, A3, A5]
+source: "[Purpose-Driven Campaigning](https://commonslibrary.org/purpose-driven-campaigning/)"domains: [A2, A3, A5]
 primary_folder: "/purpose/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -25,23 +24,19 @@ last-updated: 2026-06-10
 
 **Purpose comes first — and mostly tells you what *not* to do.** Before anything else a group must answer "why do we exist?", and the payoff of a sharp answer is subtractive: it makes deciding what to drop easy. Warren's mechanism is that without an agreed why, disagreement on everything downstream is inevitable, whereas a clear purpose lets a leader ask of any activity, "would we start this today if we weren't already doing it?" — and cut accordingly. He stresses purpose decays fast and must be re-stated (he puts the half-life at roughly 26 days), so re-fanning the why is a core, recurring leadership act, not a founding ritual.
 flagship example: Warren's counsel to a plateaued or discouraged organisation is that its *first* task is to redefine purpose, not add programs — and that "Nothing precedes purpose."
-source:  Warren, in Make Believe — *Purpose Driven Campaigning* (after *The Purpose Driven Church*), §2.
-governs: [A2.1] [A2.3] [A6.4]
+source:  [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning* (after *The Purpose Driven Church*), §2.governs: [A2.1] [A2.3] [A6.4]
 
 **Build on commitment, not toward it.** People climb from low to high commitment only when you actually ask — and you start from whatever they can give now rather than waiting for the big yes. The mechanism is two-sided: asking signals the work matters (if you don't ask, people infer it's unimportant and give their commitment to whoever does), and each small accepted ask becomes the rung you build the next ask on. Counter-intuitively, raising the bar tends to *attract* rather than repel.
 flagship example: Warren pairs every ask with naming the benefit and celebrating the step, and frames the rule as "Build on commitment rather than toward commitment."
-source:  Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-governs: [A3.4] [A3.5] [A1.5]
+source:  [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.governs: [A3.4] [A3.5] [A1.5]
 
 **People stay for friends, not for the leader.** Recruitment can turn on a compelling leader, but *retention* turns on whether members make friends inside the group. A leader is a single thread; friendships are a web, and a web survives when one thread snaps — so belonging, not the leader's pull, is what holds people through turnover and dull stretches.
 flagship example: Warren reports Saddleback's most effective retention tool was not better services but weekend retreats, whose real function was manufacturing friendships — "People might join because of a leader, but they stay because of new friends."
-source:  Warren, in Make Believe — *Purpose Driven Campaigning*, §1.
-governs: [A4.1] [A10.6] [A6.3]
+source:  [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §1.governs: [A4.1] [A10.6] [A6.3]
 
 **Build people through a process, not programs.** The point is to grow people who *act*, not to fill program slots or count attendance; strength is measured by who serves, not who shows up. The mechanism is a drift Warren names: program-driven groups quietly shift their goal from developing people to filling positions, blame falling results on members' effort, and never ask whether the program still works — a people-first *process* keeps the unit of success the person.
 flagship example: Warren's image is to "turn an audience into an army" — judge strength not by how many sit in the mess hall but by how many serve on the front line.
-source:  Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-governs: [A2.5] [A9.1] [A9.6]
+source:  [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.governs: [A2.5] [A9.1] [A9.6]
 *(lens anchor — mobilizing pole; see the A2.5 entry's Source reach for the organizing caveat.)*
 
 ---
@@ -75,8 +70,7 @@ concepts:    [A3.4 commitment-over-time] [A3.5 the-ask]
 situations:  [S:scared-to-ask-people]
 handoff:     [H:recruitment]
 anchors to:  Build on commitment, not toward it
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Ask people explicitly for commitment; if you don't, they assume the work doesn't matter and someone else gets it. Start from whatever they can give *now*, however small, and treat that as the base for the next ask rather than holding out for a big yes. Name the benefit of committing and celebrate each step. Don't confuse asking a lot with scaring people off.
 - **Reasoning / mechanism:** Two forces. First, the ask is a signal — its size tells people how much the work matters, so a serious ask reads as serious work [A2.1]. Second, commitment compounds: a small accepted ask is the rung the next one stands on, which is why "build *on* commitment" beats "build *toward* it." Warren's surprising finding is that raising the bar attracts more than it repels.
 - **Example in context:** Saddleback paired every ask with two moves — explaining the concrete benefit and publicly celebrating each person who stepped up — and treated the moment of joining as the highest-leverage time to ask for a strong commitment [A9.7].
@@ -88,8 +82,7 @@ source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
 concepts:    [A2.1 shared-purpose / why-before-what]
 situations:  [S:group-lost-its-why] [S:unclear-what-were-doing]
 anchors to:  Purpose comes first
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §2.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §2.
 - **Claim / recommendation:** Hold a clear, agreed purpose for the group, and use it less as inspiration than as a filter — its main job is to tell you what to *stop* doing. Re-state it often (the source says roughly monthly), because purpose decays. Don't let the group accrete activities without ever cutting any.
 - **Reasoning / mechanism:** Warren's claim is that decision-making gets easy once purpose is fixed, because "would we start this today if we weren't already doing it?" becomes answerable [A5.4]. Vision fades not from disagreement but from distraction, so re-fanning it is maintenance against drift, not repetition for its own sake [A6.4].
 - **Example in context:** Warren warns against "majoring in the minors" — good-but-secondary causes that diffuse a group's focused light until its power is lost — and notes older groups suffer most, having added programs for years without cutting any.
@@ -101,8 +94,7 @@ concepts:    [A2.3 values-as-glue] [A6.3 cohesion-and-belonging]
 situations:
 handoff:
 anchors to:  People stay for friends
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Don't expect to *instruct* people into conviction. People absorb belief and commitment by being around others who already hold it, which is why small groups, not broadcasts, are where conviction spreads. For a leader this reframes "how do I motivate them?" into "who do I put them next to?"
 - **Reasoning / mechanism:** The mechanism is social contagion through proximity — "Conviction is caught as much as it is taught." Small groups maximise the contact surface, so they're the transmission medium, not just a venue [A4.1].
 - **Example in context:** Warren names small groups as the reason Saddleback could propagate conviction at scale; no further specifics are given.
@@ -115,8 +107,7 @@ concepts:    [A4.1 relationships-are-strategy] [A10.6 satisfaction-and-retention
 situations:  [S:low-attendance] [S:newcomers-dont-stick]
 handoff:
 anchors to:  People stay for friends
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §1.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §1.
 - **Claim / recommendation:** Treat friendship-formation as a retention *task*, not a happy by-product. People may arrive for the leader or the cause but they stay because of relationships, so a leader losing people should ask whether newcomers are actually making friends — and build occasions whose real job is connection.
 - **Reasoning / mechanism:** Relationships diversify the reasons to stay: a single tie (to the leader, to the issue) is fragile; a web of friendships holds when any one strand weakens [A4.4]. Belonging is what converts attendance into membership — "Members have a sense of ownership," the source notes, "they are contributors, not just consumers."
 - **Example in context:** Saddleback's most effective retention tool was weekend retreats — not for content but because they manufactured friendships faster than anything else.
@@ -128,8 +119,7 @@ concepts:    [A8.4 the-dominating-or-toxic-member] [A5.4 work-and-task-design]
 situations:  [S:one-person-dominates]
 handoff:
 anchors to:
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Letting chronic complainers steer the group is an abdication of leadership. Notice too that complaint concentrates where there's nothing real to do — so the fix is often *work*, not management of the complainer. Don't mistake the loudest voice for the group's will.
 - **Reasoning / mechanism:** Warren's structural read: "the smaller an organisation is, the more influence the most negative member has," because there are fewer voices to dilute one. And his front-line image — soldiers dodging bullets don't grumble, the rear echelon does — locates complaint in idleness, making meaningful work a *preventive* for it [A5.4].
 - **Example in context:** Warren's line is that the biggest complainers are usually committee members with nothing to do — i.e. people given titles but not real work.
@@ -142,8 +132,7 @@ concepts:    [A9.1 developing-leaders] [A3.2 ownership-and-voice]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  Build people through a process, not programs
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Assume your members already hold skills you can't see, and that they'll grow when trusted with responsibility. A leader's job includes *surfacing* latent talent (people rarely volunteer it) and then handing over real ownership rather than chores.
 - **Reasoning / mechanism:** Talent hides in the crowd because revealing it takes initiative most people won't take unasked — so the leader must go looking. And responsibility is itself the developmental input: "People respond to responsibility," growing into trust extended to them [A9.2].
 - **Example in context:** No specific case is given; the source asserts the pattern and pairs it with a low-barrier ethos (let people get involved quickly rather than vetting them into positions).
@@ -155,8 +144,7 @@ concepts:    [A5.4 work-and-task-design] [A9.2 delegating-outcomes-not-tasks]
 situations:  [S:work-is-all-on-a-few-people]
 handoff:     [H:org-level]
 anchors to:  Build people through a process, not programs
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Distinguish *maintenance* (admin, meetings, internal machinery) from *ministry* (the outward work that is the point), and notice that loading people with maintenance wastes the very time they'd spend on the mission. Every group eventually chooses, in effect, whether it is structured for growth or for control.
 - **Reasoning / mechanism:** Internal busywork crowds out external work and the relationships it depends on — Warren's line is that members don't engage outward because they're "too busy attending meetings." Control-oriented structure multiplies maintenance; growth-oriented structure minimises it so people are freed to act [A2.5].
 - **Example in context:** The source's whole "audience into an army" frame sits here: strength is measured on the front line, not in the mess hall, so structure that keeps people in the mess hall is self-defeating.
@@ -168,8 +156,7 @@ concepts:    [A2.5 transformational-vs-transactional]
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Build people through a process, not programs
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Measure the group by who *acts*, not who attends, and run a people-growing *process* (bring in → build up → train → send out) rather than a calendar of programs. Use this as the anchor for explaining the mobilizing-vs-organizing lens — *and* hold it in tension, because this source's version of "developing people" is geared to growth and output, not to the slower power-building organizing prizes.
 - **Reasoning / mechanism:** Program-driven groups suffer a goal-drift from *developing people* to *filling positions*; results fall, members self-blame, and no one asks if the program still works. A people-first process keeps the person as the unit of success [A9.1]. The mechanism Warren trusts — escalating asks up a commitment ladder — is the **mobilizing** engine [A3.5].
 - **Example in context:** "Turn an audience into an army": judge strength by the front line, not the mess hall.
@@ -182,8 +169,7 @@ concepts:    [A6.1 how-norms-form-and-become-culture] [A6.2 stages-and-developme
 situations:
 handoff:
 anchors to:
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §3.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §3.
 - **Claim / recommendation:** Expect a group's *processes and rituals* to harden into culture faster, and resist change more stubbornly, than its stated beliefs or goals. So a leader who wants to adapt should expect more resistance to changing how things are done than to changing what the group says it stands for — and plan accordingly.
 - **Reasoning / mechanism:** Warren's claim — "easier to change the organisation's theology than its order of service" — is that the *form* (how meetings run, what they look like) accrues comfort and identity, so it ossifies; Make Believe glosses this as easier to change policy than process. Each generation of a group must consciously decide which methods to keep and which to discard [A6.6].
 - **Example in context:** Saddleback met fifteen years before building a building — Warren credits this enforced flexibility with keeping the culture open to change and focused on people over fixtures.
@@ -195,8 +181,7 @@ concepts:    [A9.7 onboarding-newcomers] [A2.4 group-identity-and-belonging]
 situations:  [S:newcomers-dont-stick]
 handoff:
 anchors to:  People stay for friends
-source:      Warren, in Make Believe — *Purpose Driven Campaigning*, §1.
-
+source:      [Warren, in Make Believe](https://commonslibrary.org/purpose-driven-campaigning/) — *Purpose Driven Campaigning*, §1.
 - **Claim / recommendation:** How someone joins shapes how they'll participate "for years to come," and the moment of joining is the best time to set expectations and elicit a real commitment. Position the group as a family/community rather than an institution, and make joining feel meaningful rather than administrative.
 - **Reasoning / mechanism:** Joining is an identity event: it's when a person shifts from talking about "that group" to "our group" and starts seeing themselves as a contributor, not a consumer [A2.4]. Setting the tone early is cheaper than re-setting it later, which is why the induction moment is high-leverage [A3.4].
 - **Example in context:** Warren notes people weigh four questions before committing — will I make friends, am I needed, what's the benefit, what's expected of me — and that addressing these at the door determines whether they stick [A4.1].

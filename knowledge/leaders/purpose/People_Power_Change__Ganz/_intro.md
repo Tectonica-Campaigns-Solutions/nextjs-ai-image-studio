@@ -31,33 +31,27 @@ The load-bearing claims the relevant slice rests on — the baselines a coach re
 
 **Leadership is enabling, not doing.** Ganz defines leadership as *accepting responsibility for enabling others to achieve shared purpose under conditions of uncertainty.* It is a practice, not a position, and it works by entering a relationship with people rather than performing for them — the leader sets conditions and develops others rather than doing the work themselves.
 flagship example: Ganz brings our practice of public narrative to a cohort of U.S. mayors during the 2020 George Floyd protests; those who failed were the ones who tried to fix the problem themselves, putting on a performance, while those who succeeded asked for help and made others part of the solution. (Large-scale; the principle — enable, don't perform — is what scales down.)
-source:  Ganz — *People, Power, Change*, ch.1
-governs: [A1.1] [A1.2] [A9.1] [A9.3]
+source:  [Ganz — *People, Power, Change*](https://www.journals.uchicago.edu/doi/abs/10.1086/737245), ch.1governs: [A1.1] [A1.2] [A9.1] [A9.3]
 
 **Practice over theory; understanding flows from action.** Democracy and organizing are learnable crafts, and the way you learn them is by doing them and then debriefing — explain, model, practice, debrief — not by perfecting a plan first. Action precedes and produces understanding, so leadership is more about learning than knowing.
 flagship example: learning to organize is like learning to ride a bike — the first thing that happens is you fall off, and the real moment of truth is whether you find the courage to get back on, knowing you'll keep falling until you find your balance. Ganz cites Jane Addams's warning against "the snare of preparation."
-source:  Ganz — *People, Power, Change*, ch.1
-governs: [A6.6] [A1.6] [A1.4]
+source:  [Ganz — *People, Power, Change*](https://www.journals.uchicago.edu/doi/abs/10.1086/737245), ch.1governs: [A6.6] [A1.6] [A1.4]
 
 **Relationships are the medium — motivated by difference, bound by commitment.** Relationships are not a soft add-on but the fabric the work is made of. They begin in an *exchange* of differing resources (I have what you need; you have what I need), but a momentary exchange only becomes a relationship when both parties commit a scarce resource — usually time — to giving it a future. Commitment is what turns a transaction into a transforming relationship.
 flagship example: the coffee-shop conversation that never becomes a relationship because, when you reach for your calendar, the other person keeps deflecting — "why don't I send you an email." What was missing was a mutual decision to commit an hour, the most valuable resource, to giving the relationship a chance.
-source:  Ganz — *People, Power, Change*, ch.2
-governs: [A4.1] [A4.3] [A2.5] [A3.3]
+source:  [Ganz — *People, Power, Change*](https://www.journals.uchicago.edu/doi/abs/10.1086/737245), ch.2governs: [A4.1] [A4.3] [A2.5] [A3.3]
 
 **Narrative is how a leader moves people — self, us, now.** Story works in the language of the heart (values, the *why*) and is the partner to strategy's head (the *how*). Through a story of self, a story of us, and a story of now, a leader builds an "empathetic bridge" that lets people experience shared values and respond to a disruption with agency — a mindful choice — rather than a fearful reaction.
 flagship example: Obama's 2004 convention keynote — he shares the choices and values that shaped his life (self), reminds the audience of the values that unite them (us), then names the urgent challenge and calls them to act (now); he wasn't asking them to choose what *he* wanted, but to find the courage to choose what *they* wanted.
-source:  Ganz — *People, Power, Change*, ch.3
-governs: [A2.2] [A2.1] [A2.4] [A2.3]
+source:  [Ganz — *People, Power, Change*](https://www.journals.uchicago.edu/doi/abs/10.1086/737245), ch.3governs: [A2.2] [A2.1] [A2.4] [A2.3]
 
 **Motivation comes from how the work is designed, and commitment compounds.** People give more effort, initiative, and learning to work that is intrinsically motivating — significant, owned, and visibly progressing — than to work done only for reward or recognition. And a valuable ask beats an easy one: because commitments generate further commitments, and because moral resources (commitment, skill, relationships) grow with use rather than depleting like money.
 flagship example: two phone-bank volunteers, Ashley with Molly. Scenario 1 (packet, desk, "good luck") scores 5/25 on task design; Scenario 2 (her *why* heard, a clear goal tied to a bigger one, autonomy on the calls, visible feedback, recognition at the end) scores 25/25 — and Ashley re-commits for the next night.
-source:  Ganz — *People, Power, Change*, ch.5
-governs: [A3.1] [A5.4] [A3.4] [A3.5]
+source:  [Ganz — *People, Power, Change*](https://www.journals.uchicago.edu/doi/abs/10.1086/737245), ch.5governs: [A3.1] [A5.4] [A3.4] [A3.5]
 
 **Distribute leadership or stay small — the snowflake.** No one person can do it all, yet many try; the alternative to both the "I'm the leader" hub and the leaderless "we're all leaders" is an interdependent leadership team whose members each build their own team, and so on outward — a snowflake. An organizer's job is to identify, recruit, and develop leaders who can identify, recruit, and develop more.
 flagship example: Moses, exhausted from judging every dispute himself, is told by his father-in-law Jethro to choose capable people over each ten, train them, and delegate — then have each of those do the same. As one of Ganz's students put it, the test of leadership is not how many hats you can wear, but how many people you can enable to wear hats.
-source:  Ganz — *People, Power, Change*, ch.7
-governs: [A9.1] [A9.2] [A9.5] [A5.2]
+source:  [Ganz — *People, Power, Change*](https://www.journals.uchicago.edu/doi/abs/10.1086/737245), ch.7governs: [A9.1] [A9.2] [A9.5] [A5.2]
 
 ---
 

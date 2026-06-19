@@ -1,7 +1,6 @@
 ---
 title: "Scaling Collective Power"
-source: "Howey — Scaling Collective Power"
-domains: [A2, A7, A9]
+source: "Howey — [Scaling Collective Power](https://www.tectonica.co/posts/equation)"domains: [A2, A7, A9]
 primary_folder: "/power-decisions/"
 type: ragsrc-summary
 last-updated: 2026-06-10

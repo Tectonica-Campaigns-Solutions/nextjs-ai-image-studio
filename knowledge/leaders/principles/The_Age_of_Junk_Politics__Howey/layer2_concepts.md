@@ -15,8 +15,7 @@ concepts:   [A2.5 transformational-vs-transactional]
 situations: [S:group-feels-transactional]
 handoff:
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.3.2 (drawing on Burns, *Leadership*, 1978)
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.2 (drawing on Burns, *Leadership*, 1978)
 - **Claim / recommendation:** Notice which of two modes you're operating in. A *transactional* relationship to members exchanges a defined thing — a task done, a shift filled, hours logged — and asks no one to change. A *transformational* one treats participation as a chance for the member to grow and for you both to be moved by a shared purpose. Neither is wrong; the failure mode is operating *only* transactionally and being surprised when commitment stays shallow. For a first-timer the practical cue is: are you extracting outputs from people, or developing people through the work?
 - **Reasoning / mechanism:** The distinction is James MacGregor Burns's (1978). Transactional leadership is an exchange of values (you do this, you get that); transformational leadership engages the full person so that leader and follower "raise one another to higher levels of morality and motivation," bound by shared purpose [A2.1]. Because transactional exchange leaves identity untouched, the commitment it buys is contingent and thin; transformational engagement reaches identity, where durable commitment lives [A3.4]. Marshall Ganz and Hahrie Han carried this distinction into organizing, where mobilizing skews transactional and organizing transformational.
 - **Example in context:** Howey's recurring contrast is the "junk food" campaign that optimizes for the most immediate, measurable response (a click, a vote, a donation) versus the slower work that actually changes people. He's explicit that the transactional has real value — salt is necessary to live — and that the problem is the *imbalance*, transactional tactics having crowded transformational practice out by "tens if not hundreds of degrees."
@@ -28,8 +27,7 @@ concepts:   [A3.3 transactional-vs-relational-ask]
 situations: [S:group-feels-transactional] [S:scared-to-ask-people]
 handoff:
 anchors to: Belonging is primary to belief · Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.2.4 (resource-mobilization critique)
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.2.4 (resource-mobilization critique)
 - **Claim / recommendation:** Make asks that are rooted in relationship and purpose, not asks that treat the person as a resource to be harvested. The extractive ask — Howey's word is "spamming" — blasts everyone for the maximum yield (a signature, a donation, a shift) and ignores the people most ready to go deeper. The relational ask is grounded in a real connection and an invitation to participate meaningfully. For a leader nervous about asking at all [A1.5], the reframe is liberating: a good ask isn't taking from someone, it's inviting them into something.
 - **Reasoning / mechanism:** Howey's critique of transactional resource-mobilization is that, practiced as extraction, it alienates — people sense they are being mined, not engaged, and an underlying distrust hardens. A relational ask works because it carries the thing extraction strips out: the person's agency and a relationship they value [A4.1]. This is why belonging precedes belief here — people say yes to people and purposes they feel part of, not to volume.
 - **Example in context:** Howey describes the US-normal practice of buying contact lists and blasting candidate-voiced SMS and email crafted by vendors paid on volume — "a far cry," he writes, from a leader inspiring constituents to meaningful action. The yield is measured in numbers raised while the people most willing to step up are overlooked.
@@ -41,8 +39,7 @@ concepts:   [A2.5 transformational-vs-transactional]
 situations:
 handoff:    H:events
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.3.6, ch.3.7
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.6, ch.3.7
 - **Claim / recommendation:** Understand the organizing distinction your work inherits: *mobilizing* moves people who already agree to take an action (transactional by default), while *organizing* builds people's capacity and power and changes who they are (transformational). But don't treat the labels as destiny — the line is about whether human connection and participation are honored, not which activity it is. Even a "mobilizing" activity can be transformational when done with depth.
 - **Reasoning / mechanism:** Organizing, in Howey's definition, is "the capacitation and building of collective power" drawn from the connections between people [A4.1][A9.1]. Mobilizing channels existing passion into a discrete action. The reason canvassing breaks the tidy mobilizing-is-transactional rule is its unusually high dose of *experiential participation and human contact* — the two engines of transformation [A3.1][A2.4] — so a doorstep conversation can change both parties.
 - **Example in context:** The 1978 "No on 6" (Briggs Initiative) campaign in California, co-managed by Gwenn Craig under Harvey Milk's "You've gotta give them hope." Volunteers — often in rural, conservative areas — knocked doors not to deliver a slogan but to let voters meet, perhaps for the first time, someone they'd presume to be gay or an ally. Those brief human encounters broke down stereotypes; the initiative was defeated, the first such LGBTQ ballot victory in the US.
@@ -54,8 +51,7 @@ concepts:   [A3.2 ownership-and-voice] [A3.4 commitment-over-time]
 situations: [S:no-one-takes-initiative]
 handoff:
 anchors to: People form beliefs by taking part
-source:     Howey — *The Age of Junk Politics*, ch.3.4
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.4
 - **Claim / recommendation:** Stop trying to convince people into commitment; give them something real to do and a voice in shaping it, and let the experience do the work. Howey inverts the intuitive order — "they form their beliefs by taking part" — which means the route to deeper buy-in runs through participation, not persuasion. For a leader facing a passive group, the move is to hand over genuine agency, not to make a better case.
 - **Reasoning / mechanism:** Belief sits in identity — "where their hearts, values, identity and view of their place in the world exists" — so it resists surface messaging but moves through lived experience [A2.4]. Participation supplies that experience: doing, deciding, erring, being responsible. Crucially the person must be the agent of their own change; the leader can only "open the way." This is the agency condition that distinguishes transformation from manipulation [A7.3].
 - **Example in context:** The author's mother, long silent about her gay son, attends a "Gay Awareness Day," hears hostile speakers, and stands up to confront them publicly. It wasn't being confronted that fixed her stance — it was *her own act of speaking*. "Having a voice solidified her identity as an ally."
@@ -67,8 +63,7 @@ concepts:   [A3.2 ownership-and-voice] [A7.3 autonomy-vs-direction]
 situations:
 handoff:
 anchors to: People form beliefs by taking part · Power-with, not power-over
-source:     Howey — *The Age of Junk Politics*, ch.3.4
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.4
 - **Claim / recommendation:** Accept the limit: you cannot perform transformation *on* another person; you can only create the conditions in which they transform themselves. The leadership implication is to facilitate, not lecture — to "provide opportunities for this transformational shift rather than lecture." This protects you from the futile, alienating work of trying to argue people into change, and points you toward designing experiences instead.
 - **Reasoning / mechanism:** Because the person's own agency is the necessary driver, any attempt to override it ("power-over") fails to transform and often backfires as resistance [A7.1]. Howey's analogy is the teacher: the best ones don't deposit answers, they design the discovery so the student arrives themselves. The leader's role is the same — set the conditions, hold space, let the person walk the last step.
 - **Example in context:** Howey threads this through the marriage-equality story arc: US support rose from 27% (1996) to roughly 71% today, not through cleverer ads but through countless personal encounters and participations in which people moved themselves. No campaign "changed minds" by force; conditions were created and minds moved.
@@ -80,8 +75,7 @@ concepts:   [A3.1 intrinsic-motivation] [A2.4 group-identity-and-belonging]
 situations:
 handoff:
 anchors to: People form beliefs by taking part · Belonging is primary to belief
-source:     Howey — *The Age of Junk Politics*, ch.3.3
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.3
 - **Claim / recommendation:** When you want an experience to be genuinely formative for a member, build in two ingredients: *participation* (the human experience of doing, which draws on will and agency) and *human contact* (encountering another person, which draws on connection, belonging, and even conflict). A task with neither is just a chore; an experience with both is where people change.
 - **Reasoning / mechanism:** Howey proposes these as the two elements within a group's control that produce transformation. Participation activates agency — the felt sense of being an author, not a subject [A3.2]. Human contact activates the relational drivers, including productive friction, that connect us to others and reshape identity [A2.4][A4.1]. The two compound: doing alongside others you've connected with is far more transformative than either alone.
 - **Example in context:** Howey notes that his mother's transformation came from *both* engines at once — the participation of speaking up *and* the human contact (and conflict) of confronting people attacking her son. Either alone might have passed; together they "drew her to shift her beliefs."
@@ -93,8 +87,7 @@ concepts:   [A4.1 relationships-are-strategy]
 situations: [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to: Belonging is primary to belief
-source:     Howey — *The Age of Junk Politics*, ch.3.6, ch.2.3
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.6, ch.2.3
 - **Claim / recommendation:** Treat relationships not as a nicety layered on top of the "real" work but as the actual substance that drives everything — agency, commitment, and the capacity to move people. The relationships created through shared participation are what keep momentum going; they are, in Howey's framing, the transcendent line connecting engagement and conversation. Scale *depth*, not just numbers.
 - **Reasoning / mechanism:** People are "agents of change, not subjects of it," and what moves agents is their relationship to the effort and to each other, pulled along by connection and belonging [A2.4]. A group held together only by tasks or data is brittle, because there's nothing underneath the transaction; a group held by relationships can flex through volatility because the bond, not the message, is the load-bearing element [A4.3].
 - **Example in context:** Bloomberg's 2020 primary run is Howey's cautionary case: a hyper-resourced, ad-driven campaign with no relationships built in collapsed within two weeks of Elizabeth Warren's debate jab ("one arrogant billionaire for another") — with no depth of connection to the base, there was nothing to absorb the hit. Money and message without relationships proved fragile.
@@ -106,8 +99,7 @@ concepts:   [A2.4 group-identity-and-belonging] [A6.3 cohesion-and-belonging]
 situations: [S:newcomers-dont-stick]
 handoff:
 anchors to: Belonging is primary to belief
-source:     Howey — *The Age of Junk Politics*, ch.3.6
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.6
 - **Claim / recommendation:** Build belonging deliberately, because it is one of the strongest forces moving people — Howey calls it "primary to belief." People align with the groups they feel part of; a sense of "us" does more to sustain involvement than the cause itself. For a leader, this means a newcomer's early experience of acceptance and "we" matters more than how well you explained the mission.
 - **Reasoning / mechanism:** Belief is largely a *group* experience, not a private one: the words in our heads were "given to us as a gift through connection with others," so transformation of belief is really the alignment of connection [A3.2]. Belonging isn't a weakness or fear of being alone — it's the social, ethical core of being human, and the soil transformation grows in. When we see our responsibility to another and connect with their humanity, we're most open to change.
 - **Example in context:** Tectonica's "Organising Equation" names belonging explicitly — "a stronger factor in involvement than the cause itself" — alongside identity (how membership becomes part of who someone is) and relationships between supporters (the willingness to sacrifice for the community over oneself).
@@ -119,8 +111,7 @@ concepts:   [A4.1 relationships-are-strategy] [A4.2 the-1:1-relational-meeting]
 situations:
 handoff:
 anchors to: Belonging is primary to belief
-source:     Howey — *The Age of Junk Politics*, ch.3.9.1
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.9.1
 - **Claim / recommendation:** Favor the personal, close, high-bandwidth interaction over the broad, impersonal one whenever transformation is the goal. Howey's principle: "the more impersonal and distant… the less likely it is to have transformative value." A leader's instinct should run opposite to the efficiency instinct — fewer, deeper contacts beat many shallow ones for building commitment.
 - **Reasoning / mechanism:** Personal interaction carries the relational drivers that impersonal broadcast strips out; a dinner-table conversation reaches identity in a way an ad never can. Howey grounds the directional claim in Gerber and Green's *Get Out the Vote* finding — drawn from turnout research — that more personal interactions raise a person's likelihood of acting, and observes the pattern extends well beyond turnout. Personalization (and decentralization) is also the high-value end of Tectonica's Five-Part Framework.
 - **Example in context:** Howey's refrain — "The TV or digital ad will never be as powerful as the dinner table conversation" — and the research point that door-to-door and in-person contact, though costlier per contact than mass comms, are markedly more effective at moving people.
@@ -132,8 +123,7 @@ concepts:   [A2.2 public-narrative]
 situations:
 handoff:
 anchors to: People form beliefs by taking part
-source:     Howey — *The Age of Junk Politics*, ch.3.9.3
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.9.3
 - **Claim / recommendation:** Lead and converse from your own experience, not from talking points — and help your members do the same. Howey's compression: "far harder to deny a human experience" than a political opinion. The most persuasive and transformative move available to a non-expert volunteer is to speak honestly from their own story; this is a skill a leader can cultivate in the group.
 - **Reasoning / mechanism:** Persuasion depends on connecting to a human experience, which is why personal story outperforms argument. Howey invokes Marshall Ganz's Public Narrative structure as the model: the **Story of Self** (your own motivating experience), the **Story of Us** (what we as a community can do), and the **Story of Now** (the urgency to act). The structure works because it routes a public claim through a personal, relational channel where transformation is possible [A2.4][A4.1].
 - **Example in context:** The Irish Marriage Equality referendum's #RingYourGranny effort had people share personal stories across generations; one grandmother, initially hesitant about same-sex parenting, voted Yes after being informed and encouraged to openly discuss her concerns — opinion moved by human story, not by policy debate.
@@ -145,8 +135,7 @@ concepts:   [A4.2 the-1:1-relational-meeting]
 situations:
 handoff:    H:comms
 anchors to: Belonging is primary to belief
-source:     Howey — *The Age of Junk Politics*, ch.3.9.2
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.9.2
 - **Claim / recommendation:** Connect the work to the concrete realities of people's actual lives rather than to abstract headlines — "the closer we can get to people's lives… the stronger our case." For a group, this means people who are *of* a community can translate the larger purpose into what it means right here, on this street, which a central message never can.
 - **Reasoning / mechanism:** Hyper-local, tangible concerns carry more salience and emotional charge than national abstractions, and they bypass the reflexive distrust of distant "establishment" voices. The mechanism is relational and authenticity-based: a local person speaking to local realities is trusted because they belong, whereas a distant caller who doesn't understand (or misrepresents) the community can backfire [A4.6].
 - **Example in context:** Harvey Milk launched not by announcing he wanted gay representation but by getting reporters to the park and talking about it being full of dog poop — a daily nuisance that built a broad base from which he could later raise bigger issues. Decades later Danica Roem, the first openly transgender US state legislator, centered her campaign on a notorious local road (Route 28).
@@ -158,8 +147,7 @@ concepts:   [A2.1 shared-purpose / why-before-what] [A2.3 values-as-glue]
 situations: [S:group-lost-its-why]
 handoff:
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.3.6, ch.3.2
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.6, ch.3.2
 - **Claim / recommendation:** Keep a shared purpose explicit and alive, because it is the force underneath everything else — "underlying the motion itself is one beyond any resource: shared purpose." When a group loses its why, the transactional tasks remain but the thing that bound people is gone. The leader's job is to name and re-name the purpose so it stays the gravitational center.
 - **Reasoning / mechanism:** In Burns's transformational model, what lets leaders and followers raise each other is precisely a shared purpose beyond the exchange [A2.5]. Purpose works because it connects the work to people's values and identity — the level at which durable commitment forms [A2.4]. Without it, you're left with transactional exchange, which can't sustain a volunteer effort. Values function as the glue [A2.3].
 - **Example in context:** Howey reads Obama 2008 as carrying "a thread of purpose running throughout" — the messaging of hope that "led people to ideas" and articulated the values behind a higher purpose — and credits that thread, more than charisma alone, for the campaign's transformational reach.
@@ -171,8 +159,7 @@ concepts:   [A2.1 shared-purpose / why-before-what]
 situations:
 handoff:
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.1.4, ch.3.5
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.1.4, ch.3.5
 - **Claim / recommendation:** Cultivate and protect *hope* — the belief that a positive outcome is possible — because it is a genuine driver of collective action, and recognize that as leader you partly symbolize the group's shared values. Hope isn't naïve cheerleading; it's a resource that makes effort feel worthwhile, and it's fed by leadership, past wins, and symbolic markers along the way.
 - **Reasoning / mechanism:** In Tectonica's Organising Equation, hope ("belief in the likelihood of achieving a positive outcome") and "leadership & symbolism" appear as factors in why people commit to coordinated action — leaders embody collective values, and symbols (phrases, logos, music, artifacts) build dedication. The mechanism is motivational and identity-based: people sustain effort for something they believe can win and that reflects who they are [A2.4][A10.5].
 - **Example in context:** Harvey Milk's "You've gotta give them hope," invoked as the spirit of the long-shot No on 6 campaign — the call to fight everywhere oppression appears, and the source of the will to keep going against the odds. The initiative won.
@@ -184,8 +171,7 @@ concepts:   [A7.1 building-and-using-power] [A1.1 leading-by-earned-authority-an
 situations: [S:doing-everything-myself]
 handoff:
 anchors to: Power-with, not power-over
-source:     Howey — *The Age of Junk Politics*, ch.3.9.4, ch.3.6
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.9.4, ch.3.6
 - **Claim / recommendation:** Lead with "power-with," not "power-over." Power-over commands people to act regardless of their agency; power-with shares a higher purpose so that the leader and the led move together, with the followers' agency at the center. The leader's aim is to "unleash and liberate" the power people already have — including helping them see it — not to harness people for the leader's own ends.
 - **Reasoning / mechanism:** Power-over can't transform because transformation requires the other person's agency, which command overrides [A7.3]. Power-with grows the *total* power available rather than merely transferring it, "growing power rather than just interchanging it." The Latin American idea of *acompañar* — accompaniment that neither controls nor isolates but stands in solidarity and amplifies the other — is Howey's model for the stance [A1.1].
 - **Example in context:** *acompañar* itself, contrasted with the transactional campaign that "most controls the people it targets." Howey reframes the leadership job as facilitating connections between people to liberate their power and reaffirm their agency — a facilitator, not a commander.
@@ -197,8 +183,7 @@ concepts:   [A9.1 developing-leaders] [A9.5 functional-shared-leadership]
 situations: [S:doing-everything-myself] [S:no-one-takes-initiative]
 handoff:
 anchors to: Build leadership, experientially
-source:     Howey — *The Age of Junk Politics*, ch.3.9.4 (citing Han & McKenna, *Groundbreakers*)
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.9.4 (citing Han & McKenna, *Groundbreakers*)
 - **Claim / recommendation:** Treat developing other leaders as core work, not a delegation afterthought — leadership is "needed at every point of contact," and a leader's reach scales by growing leaders who can in turn inspire and coordinate others. Drop the image of leadership as a titled person commanding from on high; it's the capacity to inspire, facilitate, and coordinate, and it can live in anyone, at any level.
 - **Reasoning / mechanism:** Power scales through people, not money or message: organizers "build power by developing the leadership capacities of individuals" and bringing them together (Han & McKenna) [A7.1]. Leadership is also distinct from volume of hours — a leader is not just your most active member but the one who can move others [A9.5]. Distributing leadership functions across many people is what lets transformation scale from individual to community.
 - **Example in context:** Obama 2008: 2.2 million volunteers organized on Ganz's "snowflake" model of nested, empowered volunteer leadership. Han and McKenna document that the campaign built power by capacitating individual leaders rather than by out-messaging opponents — and that participation became life-redirecting for many.
@@ -210,8 +195,7 @@ concepts:   [A9.6 coaching-group-members] [A6.6 learning-together]
 situations:
 handoff:
 anchors to: Build leadership, experientially
-source:     Howey — *The Age of Junk Politics*, ch.3.8
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.8
 - **Claim / recommendation:** Understand "building capacity" as an experiential journey, not a class. A quick training plus a script doesn't make a leader; capacity grows through *doing the work* with proper space for reflection, coaching, and development. The leader's role is to create that supported experience — action plus debrief — rather than to deliver knowledge and send people off.
 - **Reasoning / mechanism:** Real capacity is the skill *and mindset* to take initiative, adapt, and connect with people — qualities formed by navigating real situations, then reflecting on them with a coach [A9.1]. Howey is explicit that this is "not a training program or class," it's "the growth that happens through experience, and the space for intention and reflection throughout." That reflective loop is the learning engine [A6.6]; without it, experience doesn't compound into capacity.
 - **Example in context:** Howey warns that "simply running a quick training for super excited volunteers and then sending them out" can *alienate* the people they contact — especially across community lines — because the volunteers were given tasks, not capacity. He recommends continually fine-tuning practice from volunteer debriefs.
@@ -223,8 +207,7 @@ concepts:   [A7.3 autonomy-vs-direction] [A9.1 developing-leaders]
 situations: [S:i-cant-let-go]
 handoff:    H:org-level
 anchors to: Power-with, not power-over · Build leadership, experientially
-source:     Howey — *The Age of Junk Politics*, ch.3.9.4, ch.2.4
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.9.4, ch.2.4
 - **Claim / recommendation:** Cede real decision-making to people ready to grow into it — leadership "is developed experientially," and experience requires that "some degree of decision making be decentralized." You can hold the direction (the what and the why) while letting others own how it gets done. Without handing over genuine decisions, you can't actually develop leaders, only helpers.
 - **Reasoning / mechanism:** Agency is the condition for both transformation and leadership growth; making decisions is where leadership capacity is forged [A9.6]. Decentralizing the *how* while holding the *what* keeps coordination intact without smothering initiative [A7.6]. This is the power-with stance applied to authority [A7.1] — sharing decisions grows total capacity rather than diluting control.
 - **Example in context:** Howey points to distributed-organizing structures (Ganz's snowflake; Tectonica's distributed-organizing work) that scale leadership by ceding some central decision-making to supporters — though he distinguishes "big organizing," which by its own account does *not* seek to capacitate leadership, making it more transactional despite huge participation.
@@ -236,8 +219,7 @@ concepts:   [A6.6 learning-together]
 situations:
 handoff:    H:org-level
 anchors to: Build leadership, experientially
-source:     Howey — *The Age of Junk Politics*, ch.3.8
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.8
 - **Claim / recommendation:** Treat your members' frontline experience as real intelligence and build a habit of listening to it — debriefs aren't just coaching for them, they're learning for you. People doing the actual conversations are continually gathering what's true on the ground, and a leader who isn't listening "is missing a lot of the deeper intelligence."
 - **Reasoning / mechanism:** Members rooted in the community surface signals no survey captures, and — because participation transforms — their own views are evolving through the work, which is itself useful information [A3.4]. Howey ties this to the learning loop: continually fine-tune the group's approach from what members report back [A6.6]. The relationship, not just the data, is what lets a group stay responsive amid volatility.
 - **Example in context:** Howey's illustration: a volunteer reporting that everyone in a neighborhood was furious about a particular issue is "invaluable information that shouldn't be ignored" — and that volunteer's own opinion is likely shifting from the conversations, "and this is a good thing."
@@ -249,8 +231,7 @@ concepts:   [A3.4 commitment-over-time] [A6.2 stages-and-development]
 situations:
 handoff:
 anchors to: People form beliefs by taking part
-source:     Howey — *The Age of Junk Politics*, ch.3.6, ch.3.3
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.6, ch.3.3
 - **Claim / recommendation:** Hold a long horizon. Transformation — of a person, a relationship, a group — "doesn't always happen quickly and can take patience," and "it always takes love." Don't judge transformational work by the speed of transactional returns; expect a slow build and don't abandon it because it doesn't show on the scale the next day.
 - **Reasoning / mechanism:** Because transformation works through accumulated experience and deepening relationship rather than a single intervention, its returns are real but lagged [A3.4]. Howey's diet analogy: incremental, conscious change — healthy habits, social validation of a group effort — compounds, but "one low calorie diet day" won't register immediately. Groups, like people, move through phases that each need patience [A6.2].
 - **Example in context:** Howey and his devout Mormon best friend Sam stayed close for two decades across a deep difference, "the power of the connection between us stronger than the difference in our surface beliefs," neither demanding the other change. Roughly twenty years on, Sam left the church partly over LGBTQ rights and asked forgiveness for an old letter. The relationship held the long arc; love, not pressure, did the work.
@@ -262,8 +243,7 @@ concepts:   [A3.6 money-and-motivation]
 situations:
 handoff:
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.3.7 ("A Note on Paid Canvassers")
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.3.7 ("A Note on Paid Canvassers")
 - **Claim / recommendation:** Paying people for their time is legitimate and sometimes necessary — it's fair, and it lets people participate who otherwise couldn't. But if the transactional exchange of pay becomes the *only* driver, transformational value is lost for both the paid person and those they reach. Where transformation matters, ensure paid contributors still share the underlying purpose.
 - **Reasoning / mechanism:** Extrinsic reward doesn't automatically destroy intrinsic motivation — Howey notes paid canvassers are often "true believers" — but it can crowd out the deeper purpose if it's all that's holding someone there [A3.1]. The screen he suggests is diagnostic of intrinsic alignment: can the person say *why this work matters to them personally* (from life experience, not just ideology) and express genuine hope in the change? If not, little transformation is likely to open up.
 - **Example in context:** The book's caution that paid canvassers selected only for availability, not shared purpose, "still might have value, but it is less likely it will be a transformational one" — pay can deliver task completion while missing the human connection that transforms.
@@ -275,8 +255,7 @@ concepts:   [A2.5 transformational-vs-transactional]
 situations:
 handoff:    H:org-level
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.2.1–2.4
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.2.1–2.4
 - **Claim / recommendation:** *(Orienting only — this is org/campaign-strategy altitude.)* Howey maps three dominant campaign strategies — message-based **persuasion** (move undecided voters with targeted messaging), voter **mobilization** (turn out the base), and **resource mobilization** (accumulate money/volunteers/structure) — and argues that, run transactionally, all three converge on the same byproduct: **alienation**, because each treats people as targets, suppliers, or numbers rather than agents.
 - **Reasoning / mechanism:** Persuasion ends up moving the *campaign* toward a narrow slice of persuadables rather than moving people, breeding charges of inauthenticity. Transactional mobilization fires up a base in ways that can repel persuadables (Howey cites Alinsky's "pick the target… polarize it" as effective in movements but counterproductive in elections, where the majority need only take the small action of voting). Resource mobilization "spams." The shared root is the abandonment of transformation.
 - **Why it matters / evidence:** A group leader doesn't run this paradigm, but understanding it explains the *water they swim in* — why the default pull is transactional and what the transformational alternative is reacting against. Examples (Bloomberg's collapse; Corbyn's doubled membership followed by historic losses) illustrate the failure modes. *Full treatment of campaign strategy belongs to* **H:org-level**.
@@ -287,8 +266,7 @@ concepts:   [A2.5 transformational-vs-transactional]
 situations:
 handoff:    H:org-level
 anchors to: Transformation vs. transaction
-source:     Howey — *The Age of Junk Politics*, ch.1.1–1.3
-
+source:     [Howey — *The Age of Junk Politics*](https://www.tectonica.co/age_of_junk_politics_book), ch.1.1–1.3
 - **Claim / recommendation:** *(Orienting only — society/industry altitude.)* Howey's framing concept: our political culture has become "junk politics," optimized like fast food for immediate response and profit by market forces in the political industry and on commercial platforms — unchosen, emergent, and corrosive of trust. The remedy is conscious, intentional transformational practice.
 - **Reasoning / mechanism:** Market logic ("people are not consumers of democracy… they are agents of it," after Wendy Brown) and platform incentives reward simplicity, outrage, and reach over depth and participation, driving transactionality and, in response, distrust and protest. Howey is careful that transactional tactics aren't the enemy — the problem is the *imbalance* and the loss of transformation.
 - **Why it matters / evidence:** For a group leader this is background, not method — but it explains *why* relationship and participation feel countercultural and effortful, and why a small group built on connection is itself a small act of repair. *The systemic/industry analysis routes to* **H:org-level**.

@@ -1,7 +1,6 @@
 ---
 title: "Leadership"
-source: "Burns — Leadership"
-domains: [A1, A2, A9, A8]
+source: "[Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — Leadership"domains: [A1, A2, A9, A8]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -25,28 +24,23 @@ The load-bearing claims the relevant slice rests on — the baselines a coach re
 
 **Leadership is not naked power.** Power-wielding marshals resources to make others serve the wielder's goals, whether or not those are the others' goals; leadership mobilizes resources to arouse and satisfy *followers'* own motives toward goals held in common. Burns insists both power and leadership are relationships, not possessions — we must see them "not things but as relationships" — so leadership cannot be modelled on command: it engages motives rather than overriding them, and is measured by the production of *intended* effects, not by the size of the lever.
 flagship example: Burns sets the coercion Lord Acton warned of — power that turns people into objects, his figure being Hitler seeing only "things" — against leadership so attuned to followers' motives that the two roles become interdependent. Grand-scale; the principle (legitimacy, not compulsion) is what scales down.
-source:  Burns — *Leadership*, ch.1
-governs: [A7.1] [A1.1] [A4.1]
+source:  [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.1governs: [A7.1] [A1.1] [A4.1]
 
 **Transforming vs. transactional leadership.** Two forms of the leader–follower relation. *Transactional* leadership is exchange — a swap of valued things (jobs for votes, support for recognition) that ends when the trade is done. *Transforming* leadership occurs when leaders and followers raise one another to higher motivation, fusing what began as separate purposes — "mutual stimulation and elevation that converts followers into leaders." This is the book's central distinction and the headwater of the mobilizing/organizing lens.
 flagship example: Burns's modern exemplar is Gandhi, who aroused and elevated the hopes of millions of Indians and whose own life was enlarged in the process. Grand-scale; for a volunteer group the transferable core is that an exchange relationship dissolves when the reward stops, while a transforming one builds people who keep going.
-source:  Burns — *Leadership*, ch.1
-governs: [A2.5] [A3.3] [A2.1]
+source:  [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.1governs: [A2.5] [A3.3] [A2.1]
 
 **Lead to people's true wants, not their apparent or imposed ones.** Burns separates *wants* (the person's own felt drives) from *needs* (what others — parents, teachers, leaders — define as needful), and warns that leadership decays into manipulation when a leader substitutes their own conception of need for the follower's authentic want. The discipline: "only the followers themselves can ultimately define their own true needs." Drawing on Maslow, leaders work the *real*, often higher and latent, motives — which makes voice structural, not decorative.
 flagship example: a parent who insists on milk and rice over the infant's undiscriminating want is substituting their own conception of the child's need — Burns calls this "the initial act of leadership," and the model for every later one: the question is always whose wants are being served.
-source:  Burns — *Leadership*, ch.2–3
-governs: [A3.1] [A3.2]
+source:  [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.2–3governs: [A3.1] [A3.2]
 
 **Conflict is the engine, not the failure.** Leadership is "grounded in the seedbed of conflict": it lives in competition over goals and values, and it works by making latent dissatisfaction *conscious*. A group with no friction is empty of process; Burns treats the harmony-seeking "static bias" as the error. Leaders express, shape, and channel conflict — softening or sharpening it, widening or narrowing who's drawn in — rather than suppressing it.
 flagship example: Burns notes (via Malinowski) that the *smaller* and more intimate the group, the easier it is for members "to flare up in anger" — friction is densest exactly where a volunteer leader works, so the skill is using it, not banning it.
-source:  Burns — *Leadership*, ch.2
-governs: [A8.2] [A7.2]
+source:  [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.2governs: [A8.2] [A7.2]
 
 **Real leadership is measured by intended, lasting change — and rests on conscious choice.** Burns's test of leadership is "real, intended change": a marked, sustained shift in people's attitudes, behaviour, and arrangements that the leader meant to bring about — not symbolic motion or a decision that never reaches lived experience. Its moral legitimacy is "grounded in conscious choice among real alternatives," which is why a leader builds followers' judgment rather than substituting their own (the link to Tectonica's designed-friction).
 flagship example: when a British Labour government nationalised the coal mines, many miners experienced it as swapping one bureaucracy for another — a dramatic decision that produced little *real* change because it never touched the miners' own motives. Change that doesn't reach felt experience isn't change.
-source:  Burns — *Leadership*, ch.15
-governs: [A2.3] [A2.1] [A9.4]
+source:  [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.15governs: [A2.3] [A2.1] [A9.4]
 
 ---
 
@@ -93,8 +87,7 @@ concepts:    [A7.1 building-and-using-power] [A1.1 leading-by-earned-authority-a
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Leadership is not naked power
-source:      Burns — *Leadership*, ch.1
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.1
 - **Claim / recommendation:** Treat leadership as a *kind* of power, not its raw form. Power-wielding activates others' motives to serve the wielder's ends regardless of the others' own ends; leadership activates followers' motives toward ends they hold jointly with the leader. Don't import a command model: a leader cannot, in Burns's phrase, treat people as things. What you have instead is influence that runs through others' consent.
 - **Reasoning / mechanism:** Burns reframes power and leadership as relationships rather than possessions, and locates the difference in *engagement*: naked power admits no competition or conflict (there is nothing to negotiate), whereas leadership is exercised precisely by contending for followers' motive bases [A8.2]. Both are measured the same way — by the production of intended effects — but only leadership achieves them through, not over, people.
 - **Example in context:** Burns sets the absolute, objectifying power Lord Acton warned of (his figure: Hitler, who saw only "things") against the opposite pole, where leader and follower roles become interdependent. The cases are heads of state; the transferable point is the contrast itself.
@@ -109,8 +102,7 @@ concepts:    [A4.1 relationships-are-strategy] [A1.1 leading-by-earned-authority
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Leadership is not naked power
-source:      Burns — *Leadership*, ch.1
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.1
 - **Claim / recommendation:** Leadership is a *relationship* between people with different motives and power, pursuing a joint purpose — and within it the leader is distinguished by taking the initiative: opening the connection, reading members' motives, and keeping the tie alive. Crucially, the leader addresses followers' wants and needs, not only their own; an ask that serves the leader's ends alone is power, not leadership.
 - **Reasoning / mechanism:** Because leaders "address themselves to followers' wants, needs, and other motivations," they actually change the follower's motive base by gratifying motives — the relationship does causal work [A3.2]. Leadership is therefore an *act inside a relationship*, not a fixed title: it shifts to whoever, in a given moment, reaches out and reads the other.
 - **Example in context:** Burns's small illustration: a candidate accosting a voter is leading; but if the voter accosts the candidate, the voter "is assuming a leadership function, at least for that brief moment." The initiative, not the office, marks the leader.
@@ -124,8 +116,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A3.3 transactional-vs-rel
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Transforming vs. transactional leadership
-source:      Burns — *Leadership*, ch.1, ch.16
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.1, ch.16
 - **Claim / recommendation:** Diagnose which kind of relationship your group runs on. *Transactional* leadership is exchange — each party trades a valued thing and the bond lasts only as long as the trade. *Transforming* leadership engages the whole person and raises both sides' motivation and purpose. Most real relationships are transactional, and that's not wrong — but a group held together only by exchange disperses the moment the exchange stops.
 - **Reasoning / mechanism:** In transforming leadership purposes that began separate "become fused," and leaders and followers "raise one another to higher levels of motivation and morality." The mechanism is mutual elevation: the leader appeals not only to an existing want but to higher, latent motives [A3.1], so the relationship deepens instead of clearing like a settled debt. This is the lens, tagged here because the entry is *explicitly about* it.
 - **Example in context:** Burns paints the transactional pole as a marketplace — "quick connections and quick fixes," substitutable buyers and sellers — and the transforming pole as Gandhi arousing and enlarging a mass following. The poles are recountable even if the scale isn't a volunteer's.
@@ -139,8 +130,7 @@ concepts:    [A9.1 developing-leaders] [A9.5 functional-shared-leadership]
 situations:  [S:no-one-takes-initiative] [S:doing-everything-myself]
 handoff:
 anchors to:  Transforming vs. transactional leadership
-source:      Burns — *Leadership*, ch.1, ch.5
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.1, ch.5
 - **Claim / recommendation:** The mark of transforming leadership is that followers don't just comply — they become more active and start leading themselves. So the test of whether you're leading well isn't how much the group depends on you; it's how many leaders you're producing. Aim to make followers into leaders, not to accumulate followers.
 - **Reasoning / mechanism:** Burns describes transforming leaders as throwing themselves into a relationship where followers feel elevated and "often become more active themselves, thereby creating new cadres of leaders." Because the relationship raises people's motivation rather than merely exchanging with it, it is self-propagating — each elevated follower becomes a node that can elevate others [A2.5].
 - **Example in context:** Burns argues that leaders like Lenin, Gandhi, and Mao brought "hundreds of millions" out of political isolation into active participation. Strongly grand-scale; the recountable kernel is the *direction* — leadership flowing outward into more leaders, not inward into one.
@@ -155,8 +145,7 @@ concepts:    [A3.1 intrinsic-motivation] [A3.2 ownership-and-voice]
 situations:  [S:group-lost-its-why] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Lead to people's true wants
-source:      Burns — *Leadership*, ch.3
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.3
 - **Claim / recommendation:** Build the group's work around what members actually want, and let *them* define that — don't substitute your idea of what they "should" need. Burns separates *wants* (the person's own felt drives) from *needs* (what others define as needful for them) and warns that leadership slides into manipulation when a leader quietly swaps in their own conception. Voice isn't a courtesy; it's the only way real wants surface.
 - **Reasoning / mechanism:** Leadership "first occurs" in transmuting a want into a need — the leader shapes which wants get encouraged. Burns layers Maslow over this: needs sit on a rough ladder (physiological → safety → belonging → esteem → higher), and its key property is *dynamic* — as lower needs are met, higher motivations come into play, so a leader can "gratify lower needs so that higher motivations will arise" [A2.1]. That is the engine of elevation.
 - **Example in context:** the everyday model is a parent insisting on milk over the infant's undiscriminating want — Burns calls it "the initial act of leadership." At scale: U.S. industrial workers grew militant for unions in 1935, not in the depths of 1931–33 — once immediate needs eased ("Bread before Bach"), higher motivations engaged.
@@ -171,8 +160,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A3.4 commitment-over-time
 situations:  [S:low-attendance] [S:cant-recruit]
 handoff:     [H:recruitment]
 anchors to:  Transforming vs. transactional leadership
-source:      Burns — *Leadership*, ch.5, ch.10
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.5, ch.10
 - **Claim / recommendation:** Followers aren't only found; they're *made*. A leader arouses the latent — naming a dissatisfaction people already feel but haven't articulated, and connecting it to action. Understand *why* arousal precedes any ask: people commit to a cause that has named something true for them, not to a request that arrives cold. (The how — channels, scripts, the actual ask — routes to the recruitment coach.)
 - **Reasoning / mechanism:** Burns casts leaders as "catalytic agents in arousing followers' consciousness": they discern signs of strain, articulate grievances and wants, and gauge a group's potential for mobilization [A8.2]. The causal claim is that consciousness of a shared want has to be raised *before* commitment can be asked for — which is why a transforming appeal recruits where a transactional one only rents attention [A2.5].
 - **Example in context:** Burns points to leaders who reach "the bored and apathetic" and give new meaning to issues, converting dormant into active participants. The cases are movements and parties; the transferable mechanism is arousal-before-ask.
@@ -187,8 +175,7 @@ concepts:    [A1.1 leading-by-earned-authority-and-consent] [A7.6 hierarchy-just
 situations:  [S:one-person-dominates] [S:everyone-just-agrees]
 handoff:
 anchors to:  Leadership is not naked power
-source:      Burns — *Leadership*, ch.11 (drawing on Whyte, *Street Corner Society*)
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.11 (drawing on Whyte, *Street Corner Society*)
 - **Claim / recommendation:** In a small group the leader's standing is *granted by the group*, not imposed on it. Burns: leaders "emerge from the group," sit at the centre of its communication, are among its most conforming members, and are "to a large degree creations and captives of the group" — yet the same leader is also the group's lever for changing its own norms. Hold authority lightly: it's real, but it's on loan.
 - **Reasoning / mechanism:** A small group is a web of face-to-face exchange that settles into an equilibrium and pulls hard toward conformity; standing accrues to whoever best relates to the group's goals and lives up to its norms [A6.1]. So a leader's power is less their formal role than their capacity to satisfy members' specific needs — earned authority, revocable the moment the group's needs go unmet [A3.2]. Burns also flags a built-in conformity trap: small-group studies (and small groups) overweight consensus and underweight conflict, the "no-conflict assumption" [A8.2].
 - **Example in context:** Whyte's late-1930s Norton Street boys: the leader, "Doc," was the focal point whose lieutenants "let the man lead" because of how he did things — earned, not assigned. Whyte found that when the leader was absent the group's "cohesion disintegrates and the group becomes a collection of smaller groups." This is Burns's one genuinely small-group case — use it.
@@ -202,8 +189,7 @@ concepts:    [A8.2 productive-dissent] [A7.2 decisions-as-shared-process]
 situations:  [S:everyone-just-agrees] [S:two-members-clashing]
 handoff:
 anchors to:  Conflict is the engine
-source:      Burns — *Leadership*, ch.2
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.2
 - **Claim / recommendation:** Stop treating disagreement as the thing to eliminate. Burns: "leadership assumes competition and conflict, and brute power denies it." A group with no friction has no process; the leader's job is to express, shape, and channel conflict — to make latent dissatisfaction conscious — not to keep the peace at the cost of the work.
 - **Reasoning / mechanism:** Conflict "galvanizes, prods, motivates"; leaders act as catalytic agents who surface what members feel but haven't named, then influence the *intensity* and *scope* of the disagreement (softening or sharpening, widening or narrowing who's drawn in) [A2.5]. Suppressing it doesn't resolve it — it just removes the engine and leaves a group in dead equilibrium.
 - **Example in context:** Burns notes (via Malinowski) that the smaller and more intimate the group, the easier it is for members "to flare up in anger" — and treats the West's harmony-seeking "static bias" as the real error. Conflict is densest exactly at the small-group scale a volunteer leader works in.
@@ -218,8 +204,7 @@ concepts:    [A7.2 decisions-as-shared-process] [A8.2 productive-dissent]
 situations:  [S:cant-make-decisions] [S:everyone-just-agrees] [S:decisions-keep-getting-relitigated]
 handoff:
 anchors to:  Conflict is the engine
-source:      Burns — *Leadership*, ch.15
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.15
 - **Claim / recommendation:** Make decisions by *engineering* dissent, not by chasing agreement. Burns calls consensus in planning "deceptive and dangerous" and urges building "multiple access and multiple advocacy" into how a group decides — actively soliciting divergent views and protecting the right of less senior or less confident members to disagree. And remember the follow-through: "Decisions are rarely self-implementing."
 - **Reasoning / mechanism:** Deliberately structured conflict produces "constructive" dissonance and exposes the decision-maker to a wider range of wants, values, and information than a smoothed-over consensus ever would [A8.2]. Burns also warns of the counter-move: dissent that isn't quelled can be quietly *re-organized* and concentrated until it has no effect — so the safeguard is diffusing conflict through every level, not staging it once.
 - **Example in context:** Burns contrasts two Kennedy decisions. The Bay of Pigs was an inherited plan executed without full multiple advocacy — a disaster. The Cuban Missile Crisis ran through an ExCom that "solicited divergent views, encouraged advocacy of a variety of proposals," and pressed junior officials to recommend even against their superiors. Same leader, opposite design, opposite result.
@@ -234,8 +219,7 @@ concepts:    [A2.3 values-as-glue] [A2.1 shared-purpose]
 situations:  [S:group-lost-its-why] [S:conflict-got-personal]
 handoff:
 anchors to:  Real leadership rests on conscious choice
-source:      Burns — *Leadership*, ch.3, ch.2
-
+source:      [Burns](https://www.goodreads.com/en/book/show/18936255-leadership) — *Leadership*, ch.3, ch.2
 - **Claim / recommendation:** Distinguish the values that are your group's *goals and standards* (Burns's **end-values** — e.g. equality, justice) from the values that are your *modes of conduct* (his **modal values** — honesty, fairness, civility, keeping your word). Both bind a group, and a leader needs to name both — but watch the place they collide: pursuing a high end by dubious means corrodes the modal values that hold the group together.
 - **Reasoning / mechanism:** Values, Burns argues, are internalized deeply enough to drive behaviour even with no incentive or witness, which is what makes shared values genuine glue rather than decoration [A2.4]. But end-values and modal values can conflict — and Burns calls that clash "perhaps the most disruptive force" — so a leader who wins the goal by trampling the group's norms of conduct can lose the group.
 - **Example in context:** Burns's case is FDR's court-packing plan — dubious *means* (modal values like due process) deployed toward a high *end* (his policy goals). The means-end tension, not the goal itself, is what cost him support.

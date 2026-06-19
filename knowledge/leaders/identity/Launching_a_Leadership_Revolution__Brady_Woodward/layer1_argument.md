@@ -1,7 +1,6 @@
 ---
 title: "Launching a Leadership Revolution"
-source: "Brady & Woodward — Launching a Leadership Revolution"
-domains: [A1, A4, A9]
+source: "[Brady & Woodward](https://www.goodreads.com/en/book/show/624022.Launching_a_Leadership_Revolution) — Launching a Leadership Revolution"domains: [A1, A4, A9]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10

@@ -1,7 +1,6 @@
 ---
 title: "Rules for Radicals"
-source: "Alinsky — Rules for Radicals"
-domains: [A1, A3, A4, A7]
+source: "[Alinsky](https://citizenshandbook.org/rules.html) — Rules for Radicals"domains: [A1, A3, A4, A7]
 primary_folder: "/power-decisions/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -25,8 +24,7 @@ The load-bearing claims the relevant slice rests on — the baselines a coach re
 
 **Power is the leader's business, and it isn't a dirty word.** Power is organized energy — the capacity to act — neither good nor evil in itself; flinching from the word doesn't make a leader virtuous, it leaves them unable to name where their group's strength comes from. Because *power*, like *self-interest* and *conflict*, triggers a reflexive recoil, leaders swap in soft synonyms that quietly change the meaning and dull their own thinking.
 flagship example: Alinsky devotes a whole chapter to rehabilitating "tainted" words, arguing that substituting "harnessing energy" for "power" leaves you "averse to thinking in vigorous, simple, honest terms" — an aseptic imitation of the real thing.
-source:  Alinsky — *Rules for Radicals*, "A Word About Words"
-governs: [A7.1] [A1.4]
+source:  [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "A Word About Words"governs: [A7.1] [A1.4]
 
 > verbatim: "To know power and not fear it is essential to its constructive use." — Alinsky
 
@@ -90,8 +88,7 @@ concepts:    [A7.1 building-and-using-power]
 situations:  [S:cant-make-decisions]
 handoff:
 anchors to:  Power is the leader's business
-source:      Alinsky — *Rules for Radicals*, "A Word About Words"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "A Word About Words"
 - **Claim / recommendation:** Treat *power* as a neutral, necessary word and a normal part of leading — not something to apologize for or rename. Don't reach for softer substitutes ("influence," "energy," "empowerment") in the hope of sounding nicer; the substitution quietly changes what you mean and weakens your grip on the real question, which is where your group's strength comes from and how to grow it.
 - **Reasoning / mechanism:** Alinsky's point is semantic and psychological: a culture that codes power, self-interest, and conflict as sinister trains people to flinch from naming them, and "striving to avoid the force, vigor, and simplicity" of the word makes you averse to thinking clearly about the thing [A8.2]. Power is simply the capacity to act; the only real choice is between organized and unorganized power, not between power and purity.
 - **Example in context:** He marshals Hamilton, Pascal, and St. Ignatius to show that everyone who actually moved history used the plain word — and notes that even Lord Acton's famous line is routinely misquoted ("power corrupts" for "power *tends* to corrupt"), because the conditioned mind can't read it straight.
@@ -106,8 +103,7 @@ concepts:    [A7.1 building-and-using-power] [A4.1 relationships-are-strategy]
 situations:  [S:low-attendance]
 handoff:
 anchors to:  A group's power is its organized people
-source:      Alinsky — *Rules for Radicals*, "In the Beginning"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "In the Beginning"
 - **Claim / recommendation:** Understand that your group's only real resource is people acting together, so growing and holding that membership is not a chore that precedes the work — it *is* the work. Don't treat recruitment and turnout as logistics to get past before the "real" organizing; the organized people are the power. *(How-to recruiting/turnout → H:recruitment.)*
 - **Reasoning / mechanism:** Alinsky collapses any gap between organization and power: a church, a party, and a union all exist for the one reason of organized strength toward a common purpose [A2.1]. Change requires power, and for those without money, power is numbers brought into coordinated action — so the question behind every move is whether it adds to, or subtracts from, that organized base.
 - **Example in context:** No in-context small-group example given; Alinsky's illustration is structural (the church/party/union parallel) rather than a single anecdote.
@@ -122,8 +118,7 @@ concepts:    [A1.2 enabling-vs-doing] [A9.3 avoiding-founder-bottleneck]
 situations:  [S:doing-everything-myself] [S:i-cant-let-go]
 handoff:
 anchors to:  Build power for others to use
-source:      Alinsky — *Rules for Radicals*, "The Education of an Organizer," "Communication"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "The Education of an Organizer," "Communication"
 - **Claim / recommendation:** Aim to build capacity that *other people* carry, and treat your own gradual irrelevance as the goal, not a loss. Don't measure yourself by how central you are; measure yourself by how much the group can do without you. The catalyst sets things in motion and then steps back.
 - **Reasoning / mechanism:** Alinsky's pivotal distinction is between the leader, "driven by the desire for power," and the organizer, "driven by the desire to create" — to make power others use [A9.5]. The mechanism is deliberate withdrawal: the organizer recedes from the decision-making circle as members grow, so that dependency on any one person never hardens into the group's single point of failure [A9.4].
 - **Example in context:** He describes his own arc inside a group — beginning "the general," knowing the moves but never wearing the stars, then steadily handing decisions back until the group runs itself and his work is finished.
@@ -138,8 +133,7 @@ concepts:    [A9.6 coaching-group-members] [A1.2 enabling-vs-doing]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  Build power for others to use
-source:      Alinsky — *Rules for Radicals*, "Communication"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "Communication"
 - **Claim / recommendation:** Move a group toward good decisions by asking, not telling — surface the weaknesses of bad options and the merits of good ones through questions, so the choice is genuinely theirs. Resist the pull to "explain" and issue the answer, even when you're sure you have it; the answer that arrives as an order builds resentment, the one the group reaches builds ownership.
 - **Reasoning / mechanism:** Alinsky lays out a Socratic exchange in which the organizer, convinced of a course, never names it — instead probing each proposed tactic with questions until the group itself lands there [A3.2]. He's candid that this is a form of manipulation, "just as a teacher manipulates," and that its legitimacy rests entirely on it being education toward the group's own judgment, not a trick to extract a predetermined result — including the discipline to let the group be *right* when their answer beats yours.
 - **Example in context:** His scripted dialogue (Organizer + Leaders 1–3) shows a preferred tactic being talked *out of* the room by the members themselves through questioning, with no one losing face — and he adds the honest coda: sometimes the questions reveal that your own pre-chosen answer was wrong.
@@ -154,8 +148,7 @@ concepts:    [A9.1 developing-leaders] [A1.2 enabling-vs-doing]
 situations:  [S:no-one-takes-initiative] [S:i-feel-like-an-imposter]
 handoff:
 anchors to:  Build power for others to use
-source:      Alinsky — *Rules for Radicals*, "In the Beginning"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "In the Beginning"
 - **Claim / recommendation:** In the early days, take the exposed position yourself — absorb the risk and the blame — and route the credit to members; then, as the group's confidence grows, deliberately let them step out front to take both. Don't hoard the visible role, and don't leave beginners exposed before they have the backing to handle it.
 - **Reasoning / mechanism:** Alinsky's image is the organizer as "the septic tank in the early stages" — if it goes wrong it's his fault, if it goes right the credit is the locals' [A1.3]. The mechanism is a confidence ladder: shielding people from consequences they can't yet bear lets them act at all, and as power accrues the risks shrink, so the leader can progressively hand the front line over [A9.4].
 - **Example in context:** No single anecdote; the principle is stated as a rule of the opening phase, paired with his observation that early on the establishment can still get someone fired or evicted, which is exactly why the leader stands in front first.
@@ -170,8 +163,7 @@ concepts:    [A4.3 trust-building] [A4.2 the-1:1-relational-meeting]
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Meet people inside their own experience
-source:      Alinsky — *Rules for Radicals*, "Communication"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "Communication"
 - **Claim / recommendation:** Build understanding and trust by getting inside the other person's experience first — learn their world, listen, and pitch everything in terms they've actually lived. Communication is two-way: if you talk past someone's experience, or ignore what they tell you, you aren't communicating regardless of how right or eloquent you are. *(Channels, tooling, content production → H:comms.)*
 - **Reasoning / mechanism:** Alinsky's claim is that people only take in what connects to their own lived reality, so the organizer must "get within their experience" — and where that experience offers no point of contact, you sometimes have to *create* an experience to make the idea land [A9.6]. Relationship is the gate: sensitive things simply aren't heard until there's a tie strong enough to carry them.
 - **Example in context:** The chicken-liver-omelet and the give-away-a-$10-bill demonstrations: by stepping just outside a waiter's or a stranger's frame, Alinsky shows his trainees, concretely, how communication collapses the instant you leave the other person's experience.
@@ -186,8 +178,7 @@ concepts:    [A3.2 ownership-and-voice]
 situations:  [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to:  Meet people inside their own experience
-source:      Alinsky — *Rules for Radicals*, "Communication," "A Word About Words"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "Communication," "A Word About Words"
 - **Claim / recommendation:** Ask people in terms of what genuinely matters to *them*, not in terms of your cause or an appeal to their better nature. Don't assume people will show up for the mission in the abstract; find the real stake each person has and connect the work to it.
 - **Reasoning / mechanism:** Alinsky treats self-interest as a plain fact of motivation, not a flaw — and notes it's fluid, shifting as circumstances change, so the leader's job is to read the *current* live interest rather than a fixed one. He's blunt that he reaches clergy through their church's welfare, never through scripture, because the moral appeal sits outside their operative interest and so does nothing.
 - **Example in context:** No single small-group anecdote; the worked illustration is his standing practice with religious leaders — self-interest in, moralism out.
@@ -202,8 +193,7 @@ concepts:    [A3.4 commitment-over-time]
 situations:  [S:low-attendance] [S:group-lost-its-why]
 handoff:
 anchors to:  Meet people inside their own experience
-source:      Alinsky — *Rules for Radicals*, "The Education of an Organizer," "In the Beginning"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "The Education of an Organizer," "In the Beginning"
 - **Claim / recommendation:** Recognize that each person carries their own hierarchy of priorities, so a group built on a single issue stays small and short-lived. Don't expect everyone to care equally about the one thing you care most about; a durable group holds enough live concerns that different people each find their own reason to act.
 - **Reasoning / mechanism:** Alinsky argues a single issue is "a fatal strait jacket": it limits appeal to the few who rank that issue first, and it guarantees a lull in action — and a group, like a person, dies without action [A6.4]. Multiple issues mean continuous activity and a reason for many different people to stay in.
 - **Example in context:** His block of neighbors — one fighting urban renewal to save his house, one focused on drug pushers and her kids' schools, one on welfare income, one on consumer prices — each turning out hard for *their* No. 1 priority and only lightly for the others.
@@ -218,8 +208,7 @@ concepts:    [A3.2 ownership-and-voice] [A1.2 enabling-vs-doing]
 situations:  [S:no-one-takes-initiative] [S:doing-everything-myself]
 handoff:
 anchors to:  Participation is the point
-source:      Alinsky — *Rules for Radicals*, "In the Beginning"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "In the Beginning"
 - **Claim / recommendation:** Never do *for* people what builds their capacity to do for themselves — and don't mistake delivering outcomes *to* members for serving them. Helping people while denying them a real part in the action takes their dignity rather than gives, and produces nothing that lasts.
 - **Reasoning / mechanism:** Alinsky's compass is "the dignity of the individual": self-respect comes only from playing an active role in solving one's own problem, so a benefit handed down without participation has nothing holding it up [A9.2]. He's frank that the hard part is the leader's own surrender of the quiet belief that they know best.
 - **Example in context:** Mexico returned pawned sewing machines as a Mother's Day gift; within three weeks the same number were back in the pawnshop — the unearned gift didn't hold. He pairs it with Liberia, "given" freedom it never had to fight for, and reads its political sterility from that.
@@ -234,8 +223,7 @@ concepts:    [A7.1 building-and-using-power] [A3.2 ownership-and-voice]
 situations:  [S:no-one-takes-initiative] [S:low-attendance]
 handoff:
 anchors to:  Participation is the point
-source:      Alinsky — *Rules for Radicals*, "In the Beginning"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "In the Beginning"
 - **Claim / recommendation:** Understand that people don't think hard about problems they feel powerless to change — so apparent apathy is often just an accurate read that nothing can be done. The lever is not to lecture people into caring; it's to give them genuine capacity to act, after which the engagement, the questions, and the competence appear on their own.
 - **Reasoning / mechanism:** Alinsky's formula is "policy follows power": absent any means to change a thing, thinking about how to change it is pointless fantasy, so people don't — what looks like resignation is rational [A6.4]. Once a real instrument of power exists, the same people start asking sharp, specific questions and seeking expertise, because now there's a reason to know. (His complementary point on apathy — that an organizer surfaces latent dissatisfaction so people will act — sits here too, but its agitate-against-the-enemy framing is org-level; keep only the diagnostic.)
 - **Example in context:** Ask a powerless person what's wrong with the schools and you get clichés and a shrug; build an organization with real leverage and the same people start asking what makes a good teacher, why communication fails, how to fix it.
@@ -250,8 +238,7 @@ concepts:    [A1.4 stepping-into-the-role] [A1.1 leading-by-earned-authority-and
 situations:  [S:i-feel-like-an-imposter] [S:scared-to-ask-people]
 handoff:
 anchors to:  Power is the leader's business
-source:      Alinsky — *Rules for Radicals*, "A Word About Words," "The Education of an Organizer"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "A Word About Words," "The Education of an Organizer"
 - **Claim / recommendation:** Cultivate grounded confidence that the group can succeed — and keep it strictly separate from arrogance. *Ego* in Alinsky's sense is unselfconscious belief in your ability to do what must be done; *egotism* is the vanity and impatience that repels people. Start from where you actually are ("the world as it is"), not from a wished-for version of yourself or the group.
 - **Reasoning / mechanism:** Alinsky insists that without the conviction you can win, "the battle is lost before it is even begun" — and that this confidence has to be real, because no contrived humility can hide an underlying arrogance, and nothing alienates people faster than flashes of vanity and contempt. Egotism, he notes, is mostly a defensive reaction to *felt inadequacy*; settled confidence has no need to perform.
 - **Example in context:** He recalls trained organizers sent to a new city of 100,000 who "take one look and promptly wire in a resignation" — the failure is confidence, not skill; the real organizer can look at the same task and believe it's doable.
@@ -266,8 +253,7 @@ concepts:    [A6.4 common-stall-patterns]
 situations:  [S:lost-momentum-after-launch]
 handoff:
 anchors to:  Participation is the point
-source:      Alinsky — *Rules for Radicals*, "In the Beginning"
-
+source:      [Alinsky](https://citizenshandbook.org/rules.html) — *Rules for Radicals*, "In the Beginning"
 - **Claim / recommendation:** When a group offers reasons it can't move, treat them as rationalizations to see past, not problems to solve. Don't get drawn into debating the surface excuse as though it were the real obstacle — recognize it as a defense and work through to what's actually blocking action.
 - **Reasoning / mechanism:** Alinsky borrows the therapeutic frame: people throw up "defenses" — often a subconscious justification for not having acted sooner — and chasing each one on its own terms is futile [A1.6]. The skill is to name the defense as a defense and break through, rather than spending the conversation arguing about a reason that was never the point.
 - **Example in context:** His exchange with Canadian Indian leaders who said they "can't organize" because of "creative fishing" and "creative welfare" — Alinsky bluntly refused to chase the rhetoric ("I think that that's just a pile of shit"), which broke the loop and got them to the real issue; one leader later said it was the first time a white man had talked to them as equals.

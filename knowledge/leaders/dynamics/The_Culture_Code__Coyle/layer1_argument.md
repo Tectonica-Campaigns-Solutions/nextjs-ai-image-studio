@@ -1,7 +1,6 @@
 ---
 title: "The Culture Code"
-source: "Coyle — The Culture Code"
-domains: [A2, A6, A9]
+source: "[Coyle](https://danielcoyle.com/the-culture-code/) — The Culture Code"domains: [A2, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10

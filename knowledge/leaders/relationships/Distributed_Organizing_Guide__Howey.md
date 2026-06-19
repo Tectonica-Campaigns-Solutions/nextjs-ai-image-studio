@@ -1,7 +1,6 @@
 ---
 title: "Distributed Organizing Guide"
-source: "NGP VAN — Distributed Organizing Guide"
-domains: [A4, A5, A2, A7, A9]
+source: "[NGP VAN](https://www.tectonica.co/the_definitive_distributed_organizing_guide) — Distributed Organizing Guide"domains: [A4, A5, A2, A7, A9]
 primary_folder: "/relationships/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -25,28 +24,23 @@ last-updated: 2026-06-10
 
 **Blend the broad and the deep (mobilizing-vs-organizing lens).** Distributed organizing wins because it does two things at once: *mobilizing* reaches a large supporter base for coordinated action, and *organizing* builds the deep relationships and leadership that change minds and sustain effort. It holds because the two feed each other — organizing makes more people available to mobilize, and mobilizing surfaces the people worth organizing.
 flagship example: The guide contrasts Sanders' "Big Organizing" — mobilizing-heavy, "the work is distributed, the plan is centralized" (Bond & Exley) — with Obama's organizing-heavy snowflake; both are distributed organizing, sitting at different points on the same spectrum.
-source: Howey — *Distributed Organizing Guide*, §3, §3.2 (quoting Han; Bond & Exley)
-governs: [A2.5 transformational-vs-transactional] [A3.3 transactional-vs-relational-ask] [A7.3 autonomy-vs-direction] [A4.1 relationships-are-strategy]
+source: [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3, §3.2 (quoting Han; Bond & Exley)governs: [A2.5 transformational-vs-transactional] [A3.3 transactional-vs-relational-ask] [A7.3 autonomy-vs-direction] [A4.1 relationships-are-strategy]
 
 **Power comes from developing people, not from money, message, or product.** The source's adopted thesis (from Han & McKenna): organizing builds power by growing individuals' leadership capacity and bringing them into strategic collective action — a different lever than fundraising or advertising. It holds because a developed leader compounds (they recruit and develop others), where a dollar or an ad spends once.
 flagship example: Han & McKenna observe that most campaigns ran like "medieval war machines," whereas community organizing *"build[s] power by developing the leadership capacities of individuals"* and joining them in collective action.
-source: Howey — *Distributed Organizing Guide*, §4 (quoting McKenna & Han, *Groundbreakers*)
-governs: [A9.1 developing-leaders] [A2.5 transformational-vs-transactional] [A7.1 building-and-using-power] [A1.2 enabling-vs-doing]
+source: Howey — *Distributed Organizing Guide*, §4 (quoting [McKenna & Han](https://global.oup.com/academic/product/groundbreakers-9780199394609?cc=us&lang=en&), *Groundbreakers*)governs: [A9.1 developing-leaders] [A2.5 transformational-vs-transactional] [A7.1 building-and-using-power] [A1.2 enabling-vs-doing]
 
 **Autonomy, ownership, and voice are the motivators.** Distributing the work hands people a voice, real ownership, and objectives they're responsible for — and those map directly onto what intrinsically motivates humans (Pink: autonomy, mastery, purpose). It holds because internal motivation outlasts external reward on non-routine work; remove voice and autonomy and you demotivate the very people the model depends on.
 flagship example: Pink's case that volunteer-built Wikipedia outpaced Microsoft's funded MSN Encarta — intrinsic motivators beating money on interesting work — which the guide reads straight onto a volunteer campaign.
-source: Howey — *Distributed Organizing Guide*, §4.1 (citing Pink, *Drive*)
-governs: [A3.1 intrinsic-motivation] [A3.2 ownership-and-voice] [A7.3 autonomy-vs-direction]
+source: Howey — *Distributed Organizing Guide*, §4.1 (citing [Pink](https://www.danpink.com/books/drive/), *Drive*)governs: [A3.1 intrinsic-motivation] [A3.2 ownership-and-voice] [A7.3 autonomy-vs-direction]
 
 **You can't rush trust.** Trust is the glue that bonds people and makes the work hold; building it takes deliberate time and cannot be compressed by urgency or tooling. It holds because the structure's value *is* the relationships inside it — a fast-assembled group with no trust is a list, not a team.
 flagship example: The guide is blunt — *"You can't rush trust"* — and tells campaigns to plan months (ideally a year) for relationship-building, treating it as load-bearing infrastructure rather than a warm-up.
-source: Howey — *Distributed Organizing Guide*, §3.3.5, §5.5.2
-governs: [A4.3 trust-building] [A4.1 relationships-are-strategy] [A2.3 values-as-glue]
+source: [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3.3.5, §5.5.2governs: [A4.3 trust-building] [A4.1 relationships-are-strategy] [A2.3 values-as-glue]
 
 **Cede control within clear boundaries (the catalyst who fades).** Distributed work runs on relationships, communication, and trust, not on sign-off; the leader sets clear redlines and then lets go, initiating the group and stepping back rather than directing it. It holds because hierarchical approval is a bottleneck that kills the ownership the model runs on — so hold only as much hierarchy as coordination genuinely requires.
 flagship example: Brafman & Beckstrom's catalyst — a leader *"who initiates a circle and then fades away into the background"* — which the guide names as the posture distributed leadership requires.
-source: Howey — *Distributed Organizing Guide*, §3.3.4, §4.2 (citing Brafman & Beckstrom, *The Starfish and the Spider*)
-governs: [A1.2 enabling-vs-doing] [A9.4 succession-and-ceding-control] [A7.3 autonomy-vs-direction] [A7.6 hierarchy-just-enough]
+source: [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3.3.4, §4.2 (citing Brafman & Beckstrom, *The Starfish and the Spider*)governs: [A1.2 enabling-vs-doing] [A9.4 succession-and-ceding-control] [A7.3 autonomy-vs-direction] [A7.6 hierarchy-just-enough]
 
 ---
 
@@ -83,8 +77,7 @@ concepts:   [A2.5 transformational-vs-transactional] [A3.3 transactional-vs-rela
 situations: [S:group-feels-transactional]
 handoff:
 anchors to: Blend the broad and the deep · Power comes from developing people
-source:     Howey — *Distributed Organizing Guide*, §3 (citing Han)
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3 (citing Han)
 - **Claim / recommendation:** Understand that *mobilizing* (getting people who already agree to take coordinated action, at scale) and *organizing* (building leaders and relationships that grow agency and change minds) are different activities, and that distributed organizing deliberately blends them. As a group leader, don't treat your group as only a source of volunteer hours; that's mobilizing alone. The deeper value is the relationships and leadership your group builds [A4.1].
 - **Reasoning / mechanism:** The two reinforce each other: organizing transforms participants and pulls in new people, who then become available to mobilize, which surfaces more potential leaders to organize. Han's formulation is to *"go broad in their mobilizing and deep in their organizing."* A group that only mobilizes scales a number and then evaporates; one that also organizes compounds.
 - **Example in context:** The guide draws the line through its two models — Sanders' "Big Organizing" leans mobilizing (fast scale on a tight budget, but harder to build agency or sustain momentum once urgency passes), while Obama's snowflake leans organizing (slower, but sustains).
@@ -97,8 +90,7 @@ concepts:   [A7.1 building-and-using-power] [A2.5 transformational-vs-transactio
 situations: [S:group-lost-its-why]
 handoff:    [H:org-level]
 anchors to: Power comes from developing people
-source:     Howey — *Distributed Organizing Guide*, §2, §4
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §2, §4
 - **Claim / recommendation:** A first-time leader should grasp *why* the model they're inside is powerful, even though the program around it is the organization's to design. The power isn't volunteer hours; it's that a distributed program self-scales cheaply, reaches into communities no staff or ad can, brings each participant's full creativity and judgment, and roots the campaign in people so it's harder to discredit.
 - **Reasoning / mechanism:** Power here is built, not bought — *"they build power by developing the leadership capacities of individuals"* (Han & McKenna), then joining them in collective action. A developed person recruits and develops others, so capacity grows from within rather than scaling only with money. A campaign rooted in a community can answer attacks with a chorus of real supporters, not a lone politician.
 - **Example in context:** The guide cites Obama, Sanders, Fetterman, Warren, and groups like the ACLU's People Power and 350.org as cases where distributed organizing powered results beyond expectations — and frames the soccer-field conversation between parents as reaching where a press briefing cannot.
@@ -111,8 +103,7 @@ concepts:   [A3.1 intrinsic-motivation] [A3.2 ownership-and-voice]
 situations: [S:no-one-takes-initiative] [S:group-feels-transactional]
 handoff:
 anchors to: Autonomy, ownership, and voice are the motivators
-source:     Howey — *Distributed Organizing Guide*, §4.1 (citing Pink, *Drive*)
-
+source:     Howey — *Distributed Organizing Guide*, §4.1 (citing [Pink](https://www.danpink.com/books/drive/), *Drive*)
 - **Claim / recommendation:** Build voice, ownership, and autonomy into how your group works — let people shape strategy and own outcomes they're responsible for — and protect them. The warning is sharp: stripping voice, ownership, and autonomy back out (issuing top-down marching orders) demotivates and can alienate the very supporters the model needs.
 - **Reasoning / mechanism:** These map onto Pink's three intrinsic drivers — autonomy, mastery, purpose — which outlast extrinsic reward on non-routine, interesting work. The practical move the guide pulls from Pink: leave the "how-to" of reaching a goal for the group to develop itself [A7.3]; prescribing the how removes the autonomy that does the motivating.
 - **Example in context:** Pink's contrast of volunteer-built Wikipedia outperforming the funded MSN Encarta — the guide reads this as evidence that the right intrinsic motivators beat money for a volunteer effort.
@@ -125,8 +116,7 @@ concepts:   [A1.2 enabling-vs-doing]
 situations: [S:doing-everything-myself]
 handoff:
 anchors to: Cede control within clear boundaries
-source:     Howey — *Distributed Organizing Guide*, §4.2 (citing Brafman & Beckstrom)
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §4.2 (citing Brafman & Beckstrom)
 - **Claim / recommendation:** Lead by setting the group up and then stepping back, not by remaining its engine. The model the guide borrows is the *catalyst*: a leader *"who initiates a circle and then fades away into the background."* Your success is the group running without you at the center, not your own visible effort.
 - **Reasoning / mechanism:** Decentralized groups (the Starfish & Spider's "circles") are bound by trusting relationships and led by example rather than coercion. A catalyst who stays central recreates the bottleneck distribution is meant to remove; fading back is what lets others' ownership and leadership surface.
 - **Example in context:** The guide extends the metaphor to candidates — over time, as community ownership builds, the candidate should center the community more than themselves — the same fade-back move at campaign scale.
@@ -139,8 +129,7 @@ concepts:   [A2.3 values-as-glue]
 situations: [S:group-lost-its-why]
 handoff:
 anchors to: You can't rush trust · Cede control within clear boundaries
-source:     Howey — *Distributed Organizing Guide*, §4.2 (citing Brafman & Beckstrom)
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §4.2 (citing Brafman & Beckstrom)
 - **Claim / recommendation:** Make shared values and purpose explicit and keep them alive in the group, because in a structure without much hierarchy, shared ideology is what holds people together and aligned. When values are genuinely shared, you can safely give people far more latitude in *how* they act and speak.
 - **Reasoning / mechanism:** The Starfish & Spider names ideology *"the glue that holds decentralized organizations together"* — it's what drives people to join and to commit when their values match the group's. With strong alignment, you don't need to approve every action; the values do the coordinating that hierarchy otherwise would.
 - **Example in context:** The guide applies this directly to the "off-message" worry: rather than controlling output, it argues that building values-alignment lets messaging be variable and still safe — *"so long as values are aligned, the messaging can be more safely variable."*
@@ -153,8 +142,7 @@ concepts:   [A7.3 autonomy-vs-direction]
 situations: [S:no-one-takes-initiative] [S:cant-make-decisions]
 handoff:
 anchors to: Autonomy, ownership, and voice are the motivators
-source:     Howey — *Distributed Organizing Guide*, §4.1, §4.3
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §4.1, §4.3
 - **Claim / recommendation:** Hold the group to a clear shared goal and the redlines it can't cross, but leave the strategy and tactics — the *how* — to the group. Set the boundaries explicitly so people know where they can decide and where they must defer, and then keep those boundaries consistent rather than expanding or contracting them on the fly.
 - **Reasoning / mechanism:** Autonomy on the how is what produces the ownership and local knowledge that make distributed work outperform top-down direction; over-directing removes the motivation. The guide also warns that *fluctuating* the level of autonomy ("dipping a toe" then pulling back) breeds confusion and frustration — consistency matters as much as the level.
 - **Example in context:** Pink's lesson the guide highlights — leave the "how-to" of the goal for the group to develop — and the broader point that just signing people up and then issuing marching orders forfeits the whole value of distribution.
@@ -167,8 +155,7 @@ concepts:   [A9.4 succession-and-ceding-control] [A1.5 fear-of-asking-or-delegat
 situations: [S:i-cant-let-go]
 handoff:
 anchors to: Cede control within clear boundaries
-source:     Howey — *Distributed Organizing Guide*, §3.3.4, §5.1.3
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3.3.4, §5.1.3
 - **Claim / recommendation:** Accept that distributing leadership means accepting some loss of control and some risk — you will not be able to sign off on every conversation or piece of writing, and unexpected things will happen as people further from the center make decisions. The work is to mitigate that risk through relationships, clear communication, and shared materials, not to eliminate it by clawing control back.
 - **Reasoning / mechanism:** Hierarchical sign-off has only a limited place in distributed work; the rest runs on relationships, communication, and trust. The discomfort is real but is the price of the model's power — *"risk is essential to accomplishing big things."* Refusing the risk collapses distribution back into a centralized program.
 - **Example in context:** The guide's gate question for whether DO even fits: "Are you willing to cede power and take risks?" — naming risk-aversion as a disqualifier rather than a detail.
@@ -181,8 +168,7 @@ concepts:   [A4.3 trust-building] [A4.1 relationships-are-strategy]
 situations: [S:group-feels-transactional] [S:low-attendance]
 handoff:
 anchors to: You can't rush trust
-source:     Howey — *Distributed Organizing Guide*, §3.3.2, §3.3.5, §5.5.2
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3.3.2, §3.3.5, §5.5.2
 - **Claim / recommendation:** Treat relationship-building as core work, not a warm-up — give explicit time for people to get to know each other, share stories, and find common values, at every level of the group. *"You can't rush trust."* Relationships aren't a nice-to-have in distributed organizing; relationships are the strategy.
 - **Reasoning / mechanism:** Trust is the glue that bonds people and underwrites the ownership, accountability, and risk-tolerance the model needs. Because the structure's whole value is the relationships inside it, skipping the slow trust-building leaves you with a roster that won't hold under pressure.
 - **Example in context:** The guide tells campaigns to budget many months — ideally a year or more — to build the relationships that make the work powerful, and to prioritize a healthy culture and time for connection over rushing to activity.
@@ -195,8 +181,7 @@ concepts:   [A9.1 developing-leaders] [A5.1 composition-and-skills]
 situations: [S:no-one-takes-initiative]
 handoff:
 anchors to: Power comes from developing people
-source:     Howey — *Distributed Organizing Guide*, §5.2.4
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §5.2.4
 - **Claim / recommendation:** Identify leaders deliberately rather than just taking whoever puts their hand up. Those quickest to volunteer for leadership are often not those best suited to it, and people whose leadership identity was reinforced by social privilege are more likely to step forward when asked. Look actively — ask about people's interests, notice who already holds their community's trust — with conscious awareness of bias.
 - **Reasoning / mechanism:** Leadership shows up differently across cultures and communities, and societal bias skews who *reads* as a leader and who self-nominates. If you select only on who volunteers, you reproduce that bias and miss capable people; intentional, representative identification is what makes a group both more diverse and more powerful (it reaches communities a narrower leadership can't).
 - **Example in context:** No specific in-context case given; the guide states the pattern as practitioner guidance rather than illustrating it with a named example.
@@ -209,8 +194,7 @@ concepts:   [A6.1 how-norms-form-and-become-culture]
 situations: [S:group-lost-its-why]
 handoff:
 anchors to: You can't rush trust
-source:     Howey — *Distributed Organizing Guide*, §5.3.3
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §5.3.3
 - **Claim / recommendation:** Set and name your group's culture intentionally from the start, because if you don't, a culture will form anyway — just not one you chose. Articulate how the group operates (meetings, communication, how you treat each other) and live it through the work, treating it as a living practice rather than a written policy.
 - **Reasoning / mechanism:** Human collectivity is always mediated by culture; the only question is whether it's deliberate. Good roles, processes, and people can't compensate for a bad culture, so it's foundational, not decorative. The guide ties intentional culture to collective care, celebrating wins, making room to grieve, and attending to how privilege and oppression play out.
 - **Example in context:** No single illustrative case; the guide notes that how you run training is itself a culture cue, as much as the training content.
@@ -223,8 +207,7 @@ concepts:   [A6.3 cohesion-and-belonging] [A10.3 celebration-and-recognition] [A
 situations: [S:low-attendance] [S:lost-momentum-after-launch]
 handoff:
 anchors to: You can't rush trust
-source:     Howey — *Distributed Organizing Guide*, §5.5.2
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §5.5.2
 - **Claim / recommendation:** Keep a group healthy through ongoing maintenance, not one-time setup: build in personal connection and fun, celebrate commitment and wins regularly, run meetings on a regular, consistent rhythm with work well divided across people, and actively watch group health so you can intervene when attendance or commitment slips.
 - **Reasoning / mechanism:** Cohesion and belonging are produced by repeated cooperation and recognition, not declared; a steady rhythm and shared load keep people engaged and surface stalls early. Celebration affirms the value of participation, which is part of what keeps volunteers in it. Charting health turns a vague "momentum is slipping" into something a leader can act on.
 - **Example in context:** The guide points to PowerLabs' practice of improving volunteer performance and wellbeing by giving autonomy, and lists prioritizing social time and fun among the factors for high-functioning groups.
@@ -237,8 +220,7 @@ concepts:   [A9.2 delegating-outcomes-not-tasks] [A6.6 learning-together]
 situations: [S:work-is-all-on-a-few-people] [S:no-one-takes-initiative]
 handoff:
 anchors to: Autonomy, ownership, and voice are the motivators · Power comes from developing people
-source:     Howey — *Distributed Organizing Guide*, §5.5.2 (citing PowerLabs)
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §5.5.2 (citing PowerLabs)
 - **Claim / recommendation:** Hand people responsibility for *outcomes*, not just one-off tasks — and build the supporting conditions: a team purpose statement and goals set together [A2.1], clearly defined roles, a coaching (not commanding) management style [A9.6], involving volunteers in real decisions like endorsements [A7.2], regular debriefs that learn together, and protected social time.
 - **Reasoning / mechanism:** Ownership of an outcome turns a chore into something a person identifies with, which is what sustains real effort; a list of tasks does not. Coaching and shared decisions extend that ownership; debriefs (including pre-mortems that surface fears and feelings) turn experience into the group's learning, the engine of its effectiveness [A6.6].
 - **Example in context:** PowerLabs' stated factors for high-functioning groups — outcome-responsibility, joint purpose statement, defined roles, the GROW coaching model, engaging volunteers in critical decisions, debriefs/pre-mortems, and social time/fun.
@@ -251,8 +233,7 @@ concepts:   [A8.4 the-dominating-or-toxic-member] [A8.3 peer-accountability-with
 situations: [S:one-person-dominates]
 handoff:
 anchors to: Cede control within clear boundaries
-source:     Howey — *Distributed Organizing Guide*, §5.5.3
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §5.5.3
 - **Claim / recommendation:** Reliable people matter more than maximum headcount. If someone is creating a toxic environment or a reputational hazard and won't change after feedback, it's right to part ways — try first to name the problem behavior and work with them, but if it persists, thank them and let them go. Because relationships are central, this is delicate, but a strong, clearly-bounded culture makes such decisions defensible.
 - **Reasoning / mechanism:** A clear positive culture with explicit behavioral boundaries gives the leader the legitimacy to act without appearing arbitrary or upsetting other members — the boundaries do the justifying. The guide pairs this with having a rapid-response plan for actions that misrepresent the group.
 - **Example in context:** No named case; the guide frames it as a judgment call ("don't be afraid to thank people for their time") grounded in pre-set cultural boundaries.
@@ -265,8 +246,7 @@ concepts:   [A2.1 shared-purpose] [A3.4 commitment-over-time]
 situations: [S:lost-momentum-after-launch] [S:unclear-what-were-doing]
 handoff:
 anchors to: Blend the broad and the deep
-source:     Howey — *Distributed Organizing Guide*, §3.3.1, §3.3.6
-
+source:     [Howey — *Distributed Organizing Guide*](https://www.tectonica.co/the_definitive_distributed_organizing_guide), §3.3.1, §3.3.6
 - **Claim / recommendation:** Understand that distributed work needs a sense of time-bound urgency and one clear, unifying goal a large number of people can rally behind — and that, once built, the work can continue past the immediate deadline. People step into intense volunteer leadership when there's a near-term goal motivating them; without built momentum, voluntary leaders tend to disengage once urgency fades.
 - **Reasoning / mechanism:** Urgency supplies the activation energy for people to take on demanding roles; a clear popular goal supplies the shared "why" that coordinates effort across an otherwise loose structure. Commitment that isn't carried by ongoing momentum decays — so the deadline motivates, but the relationships and structure are what let it persist.
 - **Example in context:** The guide notes that "Big Organizing" can struggle to sustain leaders outside a period of immediate, contentious urgency — the cost of leaning on the deadline without building the deeper structure.

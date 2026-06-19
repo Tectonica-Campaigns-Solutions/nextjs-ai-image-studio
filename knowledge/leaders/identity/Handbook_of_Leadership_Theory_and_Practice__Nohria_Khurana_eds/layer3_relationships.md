@@ -1,7 +1,6 @@
 ---
 title: "Handbook of Leadership Theory"
-source: "Nohria Khurana — Handbook of Leadership Theory"
-domains: [A1, A6, A7, A9]
+source: "[Nohria Khurana](https://store.hbr.org/product/handbook-of-leadership-theory-and-practice/12326) — Handbook of Leadership Theory"domains: [A1, A6, A7, A9]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10

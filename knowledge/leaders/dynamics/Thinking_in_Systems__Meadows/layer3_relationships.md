@@ -1,7 +1,6 @@
 ---
 title: "Thinking in Systems"
-source: "Meadows — Thinking in Systems"
-domains: [A5, A6, A9]
+source: "[Meadows](https://donellameadows.org/systems-thinking-resources/) — Thinking in Systems"domains: [A5, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10

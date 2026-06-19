@@ -34,18 +34,15 @@ The load-bearing claims this slice rests on. Each is individually retrievable an
 
 **Strategic capacity beats resources.** The underdog wins not by acquiring the giant's resources but by being more *resourceful* with what it already has — and resourcefulness is not luck or charisma, it is a *capacity* a leadership team can be understood to have more or less of. Ganz's whole comparison is designed to rule out the easy answers (favorable times, a good message, a clever boycott, a charismatic founder) by asking why, of three organizations facing the *same* conditions, only the poorest one used them well.
 flagship example: David doesn't beat Goliath with courage alone — he tries on the king's sword and armor, finds he can't use weapons he hasn't "proved," puts them off, and instead picks five smooth stones from a creek and a sling he has mastered. He wins because he reframes the fight around resources he can actually use, not the ones convention says he needs. (Biblical-scale; the *principle* — turn what you have into what you need — is what scales down.)
-source:  Ganz — *Why David Sometimes Wins*, ch.1
-governs: [A7.1] [A5.1] [A3.1]
+source:  [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1governs: [A7.1] [A5.1] [A3.1]
 
 **Strategy comes from who is in the room and how they talk.** Strategy is the output of a *leadership team*, not a lone genius, far more often than organizational myth admits. Its quality depends on the *composition* of that team — the range of identities, networks, and tactical repertoires around the table — and on whether the team's *deliberation* actually lets those differences shape the decision rather than collapsing them.
 flagship example: Ganz likens a strategizing team to a jazz ensemble — strategy, like good jazz, is an ongoing creative process of synthesizing skills no single member commands alone, by interacting and adapting in real time. The founding farm-worker team spanned the farm-worker community (Chávez, Huerta, Padilla, out of the Alinsky-trained CSO), the church world (Drake and Hartmire of the Migrant Ministry), and student/civil-rights networks — so it could carry a tactic from one world into another.
-source:  Ganz — *Why David Sometimes Wins*, ch.1
-governs: [A5.1] [A6.6] [A7.2]
+source:  [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1governs: [A5.1] [A6.6] [A7.2]
 
 **Motivation and accountability sit upstream of good strategy.** Two structural facts decide how motivated a team is — and motivation, in turn, drives the creativity that good strategy requires. The facts: who the team is *accountable to* (real constituents you must answer to, vs. distant superiors who only need the bills paid), and where its *resources* come from (the people you serve, vs. outside money). Teams answerable to the people whose lives they affect are more motivated, better informed, and forced to keep learning; teams insulated from that feedback can "keep doing the same things wrong."
 flagship example: AWOC (the AFL-CIO's effort) was funded entirely from headquarters, used paid staff, and answered up a chain of command insulated from farm workers — so it had little reason to build a base or recruit volunteers. The FWA, near-broke, drew on members' dues, a death-benefit plan, a credit union, and a newspaper, and answered to the workers themselves. Same fields, same years; opposite incentives to learn.
-source:  Ganz — *Why David Sometimes Wins*, ch.1, ch.3
-governs: [A3.1] [A1.1] [A7.1]
+source:  [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1, ch.3governs: [A3.1] [A1.1] [A7.1]
 
 ---
 
@@ -82,8 +79,7 @@ concepts:    [A7.1]
 situations:
 handoff:     [H:org-level]
 anchors to:  Strategic capacity beats resources
-source:      Ganz — *Why David Sometimes Wins*, ch.1, epilogue
-
+source:      [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1, epilogue
 - **Claim / recommendation:** When a group is smaller and poorer than its opponent, the lever is not "get more resources" but "build the capacity to use what you have well." Ganz names this *strategic capacity* — a team's standing ability to generate a *stream* of effective strategy, not one good idea. Treat it as something you can deliberately build (through who you recruit and how you deliberate), not a trait you either have or lack. Do **not** read it as a guarantee: it raises the odds, it does not fix them.
 - **Reasoning / mechanism:** Capacity rests on three creativity factors drawn from social psychology — depth of **motivation**, breadth of **salient knowledge** (skills + on-the-ground information), and robustness of **reflective practice** (learning from what just happened) [A3.1] [A6.6]. Strategy, in this view, is "a verb—something you do, not something you have": an ongoing loop of acting, reading the reaction, and adapting. Because so much is unknown until you act, no single tactic decides much; a *capacity* that keeps producing good tactics does.
 - **Example in context:** Three organizations chased the same prize in the same years. The well-funded AFL-CIO and Teamsters lost; the near-broke NFWA won the Schenley contract in 1966 and went on to a 50,000-member union and the only state farm-labor bargaining law in the continental U.S. Same environment, opposite outcomes — the difference Ganz traces to capacity, not cash.
@@ -96,8 +92,7 @@ concepts:    [A5.1]
 situations:  [S:everyone-just-agrees]
 handoff:
 anchors to:  Strategy comes from who is in the room and how they talk
-source:      Ganz — *Why David Sometimes Wins*, ch.1, ch.3
-
+source:      [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1, ch.3
 - **Claim / recommendation:** The single most controllable input to strategic capacity is *who you put on your core team*. Compose it for **diversity along three lines**: identities (different life stories and constituencies), social networks (different people each person can reach), and tactical repertoires (different ways each person knows how to get things done). Aim especially for people who are *insiders* to your own constituency and *outsiders* to others — they bring both an insider's commitment and an outsider's ability to see the problem freshly. Do **not** build your inner circle out of people just like you; comfort here is the enemy of options. *(Recruiting these people is tactical → route the "how" to `H:recruitment`.)*
 - **Reasoning / mechanism:** Diversity multiplies capacity on all three creativity factors at once. More identities → wider relevant knowledge and more deeply committed members who feel called to the work. More networks → faster, broader information and feedback. More repertoires → *bricolage*: combining familiar moves in new ways, and transporting a tactic from one world into another. Strategy is then a team synthesis no single member could produce alone, generating more ideas — and the more ideas generated, the better the odds a great one is among them.
 - **Example in context:** The founding farm-worker team was deliberately cross-world. Chávez, Dolores Huerta, and Gilbert Padilla came out of the Alinsky-trained Community Service Organization with deep farm-worker and Mexican-American community ties; Huerta also carried political/lobbying networks in Sacramento. Jim Drake and Chris Hartmire came from the California Migrant Ministry, bringing church and clergy networks and funding. Civil-rights and student volunteers added another world. So when the moment came, the group could reach for a religious pilgrimage, a civil-rights-style march, *and* a consumer boycott — a repertoire no single-world rival had.
@@ -109,8 +104,7 @@ concepts:    [A3.1] [A3.4]
 situations:  [S:no-one-takes-initiative]
 handoff:
 anchors to:  Motivation and accountability sit upstream of good strategy
-source:      Ganz — *Why David Sometimes Wins*, ch.1
-
+source:      [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1
 - **Claim / recommendation:** Treat your group's *motivation* as a strategic asset, not a morale nicety. Deeply committed people generate better strategy, because commitment is what drives the creative, persistent search for a way through. Build for **intrinsic** motivation — work people find meaningful, tied to who they are — rather than leaning on rewards. Do **not** assume strategy comes first and motivation follows; Ganz argues the order often runs the other way.
 - **Reasoning / mechanism:** Motivation enhances creativity by feeding concentration, risk-taking, persistence, and learning — we think harder when we care intensely, are dissatisfied with the status quo, or hit a breach in our expectations. David is more resourceful than the seasoned soldiers partly because he is *more motivated*: he commits to act before he knows how, and that commitment is what *moves him to invent* a feasible plan. For organizers, the work is a "vocation," whose intrinsic rewards are far more motivating — and so more generative — than extrinsic ones [A3.3]. *(This is the deep mechanism behind Pink's autonomy-mastery-purpose; cross-ref the Pink entry.)*
 - **Example in context:** Ganz contrasts the depth of *collective commitment* across the three teams as a key difference in resourcefulness. The farm-worker leaders were organizing their own people, for a cause framed as a moral calling (the daily Mass, the pilgrimage, *La Causa*); AWOC's paid staff were doing a job for a distant employer. The motivated team kept inventing under pressure; the paid one did not.
@@ -122,8 +116,7 @@ concepts:    [A1.1] [A7.1]
 situations:  [S:group-feels-transactional]
 handoff:     [H:org-level]
 anchors to:  Motivation and accountability sit upstream of good strategy
-source:      Ganz — *Why David Sometimes Wins*, ch.1, ch.3
-
+source:      [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1, ch.3
 - **Claim / recommendation:** *Who you answer to* shapes how well you strategize. Leaders accountable to the actual people they serve — who must keep earning their consent and depend on them for resources — stay motivated, informed, and forced to learn. Leaders accountable *upward* to distant superiors, funded from outside, are insulated from exactly the feedback that keeps strategy honest. For a volunteer leader: stay genuinely answerable to your group; don't let your real audience become someone above or outside it.
 - **Reasoning / mechanism:** The structural driver is the *resource flow*. Groups funded by their own constituency (members' dues, contributions of the people served) must devise strategies those people respond to, or the support dries up — a built-in learning pressure. Groups funded from outside can drift, because "as long as the bills keep getting paid," leaders face no pressure to stop repeating their mistakes. The most capacity comes from drawing on *multiple* real constituencies — room to maneuver *plus* feedback from several directions. Accountability mechanism matters too: self-selected or elected leaders tend to be more motivated and better informed than bureaucratically appointed ones. *(The org-level design of funding structures routes to `H:org-level`; the leader-level lesson — stay answerable to your group — stays here.)*
 - **Example in context:** AWOC was wholly funded by the AFL-CIO (which impounded its dues in year one) and answered up an insulated chain of command, so it had little need to build a base among workers. The FWA built its resource base *from* farm workers — dues, a death-benefit plan, a credit union, a newspaper — supplemented but never outweighed by outside gifts. The first structure rewarded compliance; the second rewarded responsiveness.
@@ -135,8 +128,7 @@ concepts:    [A6.6] [A7.2]
 situations:  [S:cant-make-decisions] [S:everyone-just-agrees]
 handoff:
 anchors to:  Strategy comes from who is in the room and how they talk
-source:      Ganz — *Why David Sometimes Wins*, ch.1
-
+source:      [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.1
 - **Claim / recommendation:** Diversity on the team only becomes strategy if your *deliberation* lets the differences speak and still reach a decision. Hold **regular, open, authoritative** strategy talk — a real venue where the team decides, not a "lone ranger" deciding alone. Actively protect contrary, dissenting views, because a group's natural drift is toward agreement. And design for *both* divergent thinking (generate options) *and* convergent thinking (commit). Do **not** rely on pure consensus or pure fiat.
 - **Reasoning / mechanism:** Open deliberation among members tied to different constituencies lets a team read changing conditions fast and recognize novel problems early. But minorities conform to majorities and the less-powerful conform to the more-powerful, so diversity *erodes over time* unless practices preserve it. Ganz's specific recommendation: resolve conflict by **negotiation accompanied by voting**, which is preferable to fiat *or* consensus — it makes collective action possible while *preserving* the differences that make deliberation useful [A8.2]. Motivation rises too, because people act on choices they helped make [A3.2].
 - **Example in context:** In the NFWA, the famous Friday-night mass meetings were for storytelling and sustaining commitment — *not* strategy. The actual strategic and tactical deliberation happened in regular working meetings among picket captains, organizers, and leaders. Ganz draws the line deliberately: the group separated the venue that built motivation from the venue that made decisions, and kept the second one a real, recurring, deciding body.
@@ -148,8 +140,7 @@ concepts:    [A7.1]
 situations:
 handoff:     [H:org-level]
 anchors to:  Strategic capacity beats resources
-source:      Ganz — *Why David Sometimes Wins*, ch.3, ch.6, epilogue
-
+source:      [Ganz — *Why David Sometimes Wins*](https://global.oup.com/academic/product/why-david-sometimes-wins-9780195162011?cc=us&lang=en&), ch.3, ch.6, epilogue
 - **Claim / recommendation:** Resources without strategic capacity lose. This entry is the *cautionary mirror* of the others: it names the anti-pattern a leader should avoid building — homogeneous leadership, accountability pointed away from the people, suppressed dissent, no learning loop — and shows it failing *despite* superior resources. The lesson: do not envy the better-funded group; ask whether it can actually learn.
 - **Reasoning / mechanism:** Each rival lacked a different leg of capacity. AWOC's first director was chosen as a political compromise from outside the labor movement — he had no Spanish and no connection to the farm-worker world — so the team was detached and homogeneous, funded from headquarters, accountable up a chain insulated from workers: low motivation, thin salient knowledge, no learning pressure. The Teamsters had money, position in the industry, and persistence, and even tried to copy the UFW's strategy — but, in Ganz's words, "never understood it and could not replicate the underlying strategic capacity" that produced and sustained it. Strategy is not a thing you copy; it is the output of a capacity you have or lack.
 - **Example in context:** When the rival AWOC's strike forced a crisis, the NFWA *transformed* — turning an association into a movement, deepening motivation, widening its information, multiplying chances to learn. The AFL-CIO's committee could not change and was ultimately absorbed into the UFW; the Teamsters were eventually driven from the fields. The poorest, most adaptive organization out-learned two giants.

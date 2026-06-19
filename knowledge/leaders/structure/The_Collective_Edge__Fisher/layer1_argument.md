@@ -1,7 +1,6 @@
 ---
 title: "The Collective Edge"
-source: "Fisher — The Collective Edge"
-domains: [A5, A6, A7]
+source: "[Fisher](https://colinmfisher.com/) — The Collective Edge"domains: [A5, A6, A7]
 primary_folder: "/structure/"
 type: ragsrc-summary
 last-updated: 2026-06-10

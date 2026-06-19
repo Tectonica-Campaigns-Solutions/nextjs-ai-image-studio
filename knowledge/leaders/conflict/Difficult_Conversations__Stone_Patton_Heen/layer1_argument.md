@@ -1,7 +1,6 @@
 ---
 title: "Difficult Conversations"
-source: "Stone Patton Heen — Difficult Conversations"
-domains: [A8, A1, A6]
+source: "[Stone Patton Heen](https://www.stoneandheen.com/difficult-conversations) — Difficult Conversations"domains: [A8, A1, A6]
 primary_folder: "/conflict/"
 type: ragsrc-summary
 last-updated: 2026-06-10

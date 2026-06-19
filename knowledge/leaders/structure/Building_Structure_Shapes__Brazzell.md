@@ -1,7 +1,6 @@
 ---
 title: "Building Structure Shapes"
-source: "Brazzell — Building Structure Shapes"
-domains: [A2, A5, A6]
+source: "[Brazzell](https://www.p3researchlab.org/building_structure_shapes) — Building Structure Shapes"domains: [A2, A5, A6]
 primary_folder: "/structure/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -25,23 +24,19 @@ last-updated: 2026-06-10
 
 **Structure is a living process ("structuring capacity").** A group's structure is something you keep *doing*, not a chart you set once — and the ability to re-tune it is itself a developable skill. Because the conditions a group faces (its people, its moment, its goals) keep shifting, a structure that fit last season quietly stops fitting, and the leaders who thrive are the ones who can feel that and re-shape rather than defend the old form.
 flagship example: Sunrise built a "boat" for a single climate moment, then had to invent new staff-to-hub structures every few months as it grew — and is now re-frontloading its founding "DNA" for a new political era rather than treating its original design as fixed.
-source:  Brazzell — *Building Structure Shapes*, Understanding Structure (pp.8–9); Conclusion (p.68)
-governs: [A5.7] [A5.3] [A6.2]   *(structure-before-process lens)*
+source:  [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Understanding Structure (pp.8–9); Conclusion (p.68)governs: [A5.7] [A5.3] [A6.2]   *(structure-before-process lens)*
 
 **Structure serves relationship.** The real substance of any structure is the relationships it scaffolds; design that forgets this scaffolds nothing. Roles, decision rules, and meeting rhythms are not the point — they are the means by which authentic, accountable relationships between people can form and hold under strain.
 flagship example: Across all six cases the through-line is the same — orgs were building "authentic, accountable relationships between people building power together," and robust participation was read as the *sign* that a structure was scaffolding those relationships well.
-source:  Brazzell — *Building Structure Shapes*, Member Participation + Accountability (p.50)
-governs: [A4.1] [A6.1] [A5.5] [A2.4]
+source:  [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Member Participation + Accountability (p.50)governs: [A4.1] [A6.1] [A5.5] [A2.4]
 
 **Structure without culture goes bureaucratic.** A skeleton needs a beating heart; process without a culture of accountable relationship calcifies into proceduralism. Formal structures — voting rules, org charts, role definitions — can look fair and complete on the surface while the group goes dead underneath, because rules over relationships permit hierarchy and quiet power plays to continue out of sight.
 flagship example: ISAIAH had classic, solid membership structures in place in the early 2010s, yet member participation was weak — it only came alive after a twinned culture-and-structure pivot in 2015.
-source:  Brazzell — *Building Structure Shapes*, Member Participation + Accountability (pp.51, 53)
-governs: [A6.1] [A5.5] [A6.3]
+source:  [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Member Participation + Accountability (pp.51, 53)governs: [A6.1] [A5.5] [A6.3]
 
 **Every structure trades off; none resolves the tension.** Brazzell's shapes are valuable precisely because each one *embodies a contradiction it manages but never solves*. For a small-group leader the two live tensions are scale vs depth (wide and shallow, or narrow and deep) and direction vs autonomy (how much you steer vs how much members choose). The work is calibrating the trade-off for this moment, not finding the structure that escapes it.
 flagship example: Sunrise's boat hybridizes mass mobilizing (scale) and deep relational organizing (depth) on purpose — the failure mode the report names is letting that be split into an "either/or" instead of held as a "both/and."
-source:  Brazzell — *Building Structure Shapes*, What Are Structure Shapes? (p.15); The Boat (p.23)
-governs: [A2.5] [A7.3] [A5.2]   *(mobilizing-vs-organizing lens)*
+source:  [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, What Are Structure Shapes? (p.15); The Boat (p.23)governs: [A2.5] [A7.3] [A5.2]   *(mobilizing-vs-organizing lens)*
 
 ---
 
@@ -77,8 +72,7 @@ concepts:    [A5.7 launch-and-relaunch]
 situations:  [S:unclear-what-were-doing]
 handoff:
 anchors to:  Structure is a living process
-source:      Brazzell — *Building Structure Shapes*, Understanding Structure (pp.8–9); Structure-Strategy Pivots (p.11)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Understanding Structure (pp.8–9); Structure-Strategy Pivots (p.11)
 - **Claim / recommendation:** Treat your group's structure as something you keep re-shaping, not a thing you set up once and protect. The structure that fit your launch will quietly stop fitting as your people, goals, and moment change; expect to relaunch parts of it. Don't read the need to re-structure as a sign you got it wrong the first time — it's the normal life of a group.
 - **Reasoning / mechanism:** Brazzell reframes "structure" (a noun, a chart) as "structuring" (a verb, a process), borrowing Ganz's move from "what is the ideal strategy?" to "how do leaders develop winning strategies?" The parallel concept she names is *structuring capacity*: the developable ability to re-tune your flows of work, decisions, and accountability to meet new conditions [A6.2]. Founding choices "imprint" and become path-dependent (Stinchcombe), which is exactly why active re-structuring matters — left alone, the early form ossifies.
 - **Example in context:** Sunrise caught its "political whirlwind" after the 2018 occupation of Pelosi's office, grew explosively, and "had to innovate new structures every few months to keep up" — then entered a leadership transition to deliberately re-frontload its founding design for a new era.
@@ -91,8 +85,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A5.2 group-size-and-nesti
 situations:  [S:group-too-big-or-chaotic] [S:group-feels-transactional]
 handoff:
 anchors to:  Every structure trades off
-source:      Brazzell — *Building Structure Shapes*, The Boat / Sunrise (pp.20–24)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, The Boat / Sunrise (pp.20–24)
 - **Claim / recommendation:** Notice whether your group is built for *scale* (many people, light touch, big visible moments) or *depth* (fewer people, strong relationships, real ownership) — and that you usually can't max both at once. The move is not to pick a side but to shift between them as the moment calls: mobilize wide when energy is high, organize deep when it's quiet. Watch for the trap of letting your group frame this as "either/or."
 - **Reasoning / mechanism:** This is the mobilizing-vs-organizing lens [A3.3] made concrete. Sunrise was designed on Momentum's hybrid model to "frontload" a shared DNA (structure, strategy, story, culture) and give it away at scale, while keeping depth through local hubs. The structural tension is real: scale concentrates strategy in the center and risks "disalignment" and structurelessness; depth builds committed leaders but is hard to grow fast.
 - **Example in context:** Brazzell's metaphor is "a small staff hull with large movement sails" — sails up to catch momentum (mobilize), oars out in low-momentum times (organize). After Sunrise's whirlwind, internal conversation hardened into a binary (national/scale/mobilizing vs local/depth/organizing); the report's prescription is to "both/and" what was framed as "either/or."
@@ -105,8 +98,7 @@ concepts:    [A6.1 how-norms-form-and-become-culture] [A5.5 norms-and-operating-
 situations:  [S:decisions-keep-getting-relitigated] [S:group-feels-transactional]
 handoff:
 anchors to:  Structure without culture goes bureaucratic
-source:      Brazzell — *Building Structure Shapes*, Member Participation + Accountability (pp.51, 53)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Member Participation + Accountability (pp.51, 53)
 - **Claim / recommendation:** You can set up every process correctly — clear roles, fair decision rules, a real agenda — and the group can still go dead. Structure is necessary but not sufficient; it has to be "enlivened" by a culture of accountable, authentic relationship. If participation is weak despite good structure, look at the culture, not the org chart.
 - **Reasoning / mechanism:** Brazzell's framing image: strategy is the brain, culture the beating heart, structure the skeleton. Formal rules without that culture risk becoming "bureaucratic and proceduralist" — and worse, "rules over relationships may seem equitable on the surface" while letting hierarchy and "sharp-elbowed power plays" continue underneath [A6.5]. Culture also does coordinating work that structure can't: Ben Chin's line in the report is that shared culture is the "best decentralized command and control."
 - **Example in context:** ISAIAH in the early 2010s had classic, solid membership structures and yet weak participation; only the 2015 twinned culture-and-structure pivot brought it alive. Brazzell's conclusion: the skeleton must be "enlivened by the beating heart of a healthy culture" where participating is a positive experience.
@@ -119,8 +111,7 @@ concepts:    [A3.4 commitment-over-time] [A9.1 developing-leaders]
 situations:  [S:newcomers-dont-stick]
 handoff:
 anchors to:  Structure serves relationship
-source:      Brazzell — *Building Structure Shapes*, The Big Tent / Color Of Change (pp.25–28); Distributed membership (p.55)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, The Big Tent / Color Of Change (pp.25–28); Distributed membership (p.55)
 - **Claim / recommendation:** When you think about how members deepen their involvement, consider a *matrix* of many co-existing on-ramps and modes of engagement rather than a single *ladder* everyone must climb in order. Many valid lanes — showing up, hosting, donating, bringing food, creating — let people enter where they are and stay engaged in their own way, instead of feeling they've failed to "level up."
 - **Reasoning / mechanism:** Color Of Change tracks members across a matrix of engagement "rather than a ladder of engagement", to *recognize* rather than *hierarchize* modes of participation. The mechanism is that a ladder presumes one ascent and one definition of "good member," which can quietly devalue real contributions; a matrix keeps more doors open and reads more forms of engagement as legitimate. It pairs with a deliberate online→offline pipeline so light digital contact can convert to deeper face-to-face ties.
 - **Example in context:** After George Floyd's murder, a single petition-signer at COC might be reached digitally for a donation while also being contacted by the field team — multiple simultaneous on-ramps, not one sequence. COC built "squads" for members who wanted to go deeper, without forcing everyone onto that path.
@@ -133,8 +124,7 @@ concepts:    [A3.3 transactional-vs-relational-ask] [A2.4 group-identity-and-bel
 situations:  [S:group-feels-transactional] [S:newcomers-dont-stick]
 handoff:
 anchors to:  Structure serves relationship
-source:      Brazzell — *Building Structure Shapes*, Resourcing Multiracial Political Homes (pp.59–60)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Resourcing Multiracial Political Homes (pp.59–60)
 - **Claim / recommendation:** Don't let a person's first experience of your group be that you need something from them. Especially for people with less time, money, or social capital, build entry experiences that *give* (welcome, food, care, ease) before they ask. Removing the barriers and the implicit "you're here to work" message is itself a structural choice that shapes who can belong.
 - **Reasoning / mechanism:** This is the relational-vs-transactional ask [A3.3] applied to first contact. Brazzell describes Color Of Change resourcing Black women's participation — childcare, food, parking at no cost — with a design litmus test: "Could my mother do this?" The mechanism is that an extractive first touch reads as transactional and filters out exactly the people a group most wants; a resourced, welcoming first touch builds belonging [A2.4] and signals the group is a home, not a job.
 - **Example in context:** COC's first offline programming after 2016 was a Black Women's Brunch — a curated "luxurious experience," not a work shift. The organizer's framing in the report: they didn't want newcomers' first introduction "being that they need to work."
@@ -149,8 +139,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A3.3 transactional-vs-relation
 situations:  [S:group-lost-its-why] [S:group-feels-transactional]
 handoff:
 anchors to:  Structure serves relationship
-source:      Brazzell — *Building Structure Shapes*, Multiracial Membership (p.57); Political Power (p.64)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Multiracial Membership (p.57); Political Power (p.64)
 - **Claim / recommendation:** Ask what your group *is* to its members: a **home** they belong to, or a **vehicle** they use to get something done. Both are real, but a group that is only an instrument tends to empty out when the immediate task ends, while a group that is also a home holds people through lulls and losses. Leaders can deliberately tilt toward home — shared identity, belonging, a felt "we" — without abandoning the work.
 - **Reasoning / mechanism:** Brazzell recurs to "political home" as the structure that can withstand "the tumult of conflict and contradiction" by holding bonds of solidarity and trust. The contrast case: NY WFP strengthened its culture by reframing the party as "a political home, rather than an instrumental electoral coalition". The mechanism is identity and belonging [A2.4] — when people identify *with* the group, commitment survives the transactional logic of any single campaign [A3.3].
 - **Example in context:** SWAG, by contrast, is largely instrumental — affiliates' members find their home in their own orgs and treat the alignment as a tool — which Brazzell notes makes it harder to be transparent and accountable to members. Two different choices, two different durabilities.
@@ -163,8 +152,7 @@ concepts:    [A9.1 developing-leaders] [A4.2 the-1:1-relational-meeting]
 situations:  [S:doing-everything-myself] [S:work-is-all-on-a-few-people]
 handoff:
 anchors to:  Structure serves relationship
-source:      Brazzell — *Building Structure Shapes*, The House / ISAIAH (pp.53–54)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, The House / ISAIAH (pp.53–54)
 - **Claim / recommendation:** The deepest way to grow a group's capacity is to develop its people into leaders who then develop others — not to do more yourself or to rely only on light digital touches. This is time- and skill-intensive and doesn't scale fast, which is exactly the trade-off to go in with eyes open.
 - **Reasoning / mechanism:** In the community-organizing tradition Brazzell describes, professional organizers invest heavily in members' leadership and strategic capacity through relationship [A4.2]; members then replicate that process — the "snowflake model" — building agency in their own circles [A9.5]. The cost is real: the report notes intensive 1:1 development is hard to scale and "could potentially limit" a structure's growth beyond regional scope. The contrast is distributed/digital membership (lighter, faster, but recenters power on staff and works "additively, not exponentially").
 - **Example in context:** ISAIAH's 2018 faith-caucus strategy required each member leader to organize a squad of supporters to show up and vote them forward as delegates — a demanding ask that pulled members into high-level strategy and taught them to organize their own base.
@@ -177,8 +165,7 @@ concepts:    [A7.6 hierarchy-just-enough] [A5.5 norms-and-operating-agreements]
 situations:  [S:no-one-takes-initiative] [S:one-person-dominates]
 handoff:
 anchors to:  Every structure trades off
-source:      Brazzell — *Building Structure Shapes*, The Boat / Sunrise (pp.22–23)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, The Boat / Sunrise (pp.22–23)
 - **Claim / recommendation:** Too little structure isn't freedom — it lets informal, unaccountable power quietly take over. A small amount of clear, explicit structure (who decides what, how people opt in) protects against that without smothering initiative. Calibrate: enough to keep power visible and accountable, not so much that it kills autonomy.
 - **Reasoning / mechanism:** Sunrise deliberately wanted "clear structures of rank and leadership" to avoid the *tyranny of structurelessness* — where, with no explicit structure, privilege reasserts itself through informal and therefore unaccountable leadership. Its calibration was staff "command and control" of national campaigns that hubs could opt into or out of by choosing to "vote with their feet" — a concrete dial on the direction-vs-autonomy trade-off [A7.3].
 - **Example in context:** Hubs' "vote with your feet" autonomy produced contradictory pulls — some wanted more staff support to run national campaigns, others wanted more freedom for local strategy — illustrating that even a deliberately light structure has to be actively tuned.
@@ -191,8 +178,7 @@ concepts:    [A4.6 cross-cutting-ties-before-conflict] [A8.2 productive-dissent]
 situations:  [S:two-members-clashing]
 handoff:
 anchors to:  Structure serves relationship
-source:      Brazzell — *Building Structure Shapes*, Structuring Cross-racial Collaboration (pp.60–61)
-
+source:      [Brazzell](https://www.p3researchlab.org/building_structure_shapes) — *Building Structure Shapes*, Structuring Cross-racial Collaboration (pp.60–61)
 - **Claim / recommendation:** In a group spanning real differences (background, identity, experience), structure can hold *both* separate spaces — where people who share a situation can build trust and name hard things — *and* shared spaces where the whole comes together. And you can distribute the work of difference so that no single person or sub-group has to "be all things to all" — carry the burden of representing or translating for everyone.
 - **Reasoning / mechanism:** Brazzell shows the house and big tent holding separate + cross-racial spaces under one roof, while the stool and fractal hold them across affiliated groups. ISAIAH ran separate leadership-development spaces (room for people to "grapple with the victimhood… but to not leave room to use it as an excuse") alongside a shared "commons." The fractal's division of labor "removes the burden on affiliate organizations to be all things to all… constituencies." The mechanism: structured separation can *strengthen* cross-cutting ties [A4.6] and protect honest dissent [A8.2] rather than fragmenting the group — provided a genuine shared space exists too.
 - **Example in context:** ISAIAH's ED frames the integrating idea: "We all share a political destiny, though how we experience it is different." Separate rooms, one house.

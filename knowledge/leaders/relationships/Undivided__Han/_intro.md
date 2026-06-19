@@ -46,28 +46,23 @@ last-updated: 2026-06-10
 
 **Belonging before belief.** People commit to hard collective work through relationship and a felt sense of "us" *before* cognitive conviction, not after it. Because self-examination triggers defensiveness when people feel isolated, the relationship is the thing that lets them stay long enough to change; you build the felt "we" first, and understanding follows. Crossroads ran on the motto that membership precedes agreement — newcomers belong before they're asked to believe anything.
 flagship example: Jess kept returning to a six-week group where she was deeply uncomfortable — confessing a felony and her drug history to strangers — only because her prior loyalty to the church carried her. Han's gloss: connection produced commitment, not the reverse.
-source: Han — *Undivided*, Introduction & ch.5–6
-governs: [A2.4] [A6.5] [A2.1] [A4.3]
+source: [Han — *Undivided*](https://www.hahriehan.com/), Introduction & ch.5–6governs: [A2.4] [A6.5] [A2.1] [A4.3]
 
 **The spark is not the journey.** A single galvanizing experience only *catalyzes*; durable commitment requires a sustained vehicle that converts inspiration into repeated action, or it decays back into stasis. Because most surges of activism falter once the moment passes — scale and attention are not power — a leader's real work is building the structure that holds people in motion after the spark fades.
 flagship example: An organizer on the team insisted the six-week program needed a "long-term vehicle for change" or people's commitments would turn performative; the Justice Team was created so the energy had somewhere to go, and 250 people sustained volunteering for months afterward.
-source: Han — *Undivided*, ch.10
-governs: [A3.4] [A2.5] [A6.4] [A5.7]
+source: [Han — *Undivided*](https://www.hahriehan.com/), ch.10governs: [A3.4] [A2.5] [A6.4] [A5.7]
 
 **Relationships across difference are the engine, not the decoration.** Ties built deliberately across lines of difference are what move people to act and what hold them in it when the work gets costly — they are the single factor that separates the people who persist from the people who quit. Because backlash works by raising the personal cost until people back away, the relationships are the counterweight that keeps the cost bearable.
 flagship example: Sociologist Mark Warren found that such relationships were the key differentiating factor between those who continued the hard work and those who faltered. In the book, a monthly potluck ("Second Saturdays") is what kept one member in the work when he faced sustained hostility at his job.
-source: Han — *Undivided*, ch.14 (citing Mark Warren)
-governs: [A4.1] [A4.6] [A10.5] [A4.3]
+source: [Han — *Undivided*](https://www.hahriehan.com/), ch.14 (citing Mark Warren)governs: [A4.1] [A4.6] [A10.5] [A4.3]
 
 **Trust is built in small reciprocal risks, slowly.** Trust accrues through the accumulation of minute reactions and reciprocated vulnerability — a nod, a returned text, a confession met without judgment — not through a declaration that the group is now safe. Because you cannot force people into relationship, the leader's job is to engineer conditions where small, low-stakes risks get rewarded, converting vulnerability into trust rather than shame.
 flagship example: One member almost didn't return after an early session; he came back partly because of another member's barely perceptible nod when he spoke. Trust in the group accrued through exactly that kind of small, accumulated reaction over four weeks.
-source: Han — *Undivided*, ch.5–6
-governs: [A4.3] [A6.3] [A6.5]
+source: [Han — *Undivided*](https://www.hahriehan.com/), ch.5–6governs: [A4.3] [A6.3] [A6.5]
 
 **Make it theirs (extrinsic → intrinsic; freedom over compliance).** Lasting action comes only when people choose the work as their own; a leader designs for free choice even though that means some people will opt out — because compliance was never commitment in the first place. Motivation has to migrate from external pressure to internal ownership, or it does not survive the first hard moment.
 flagship example: Unlike box-checking corporate trainings that hand people a menu of safe actions, the program deliberately freed participants to decide for themselves what, if anything, to do — accepting that some would do nothing — because only self-chosen action would last.
-source: Han — *Undivided*, ch.5 & ch.20
-governs: [A3.1] [A3.2] [A7.3]
+source: [Han — *Undivided*](https://www.hahriehan.com/), ch.5 & ch.20governs: [A3.1] [A3.2] [A7.3]
 
 ---
 

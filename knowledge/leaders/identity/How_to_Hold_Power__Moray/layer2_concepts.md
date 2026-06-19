@@ -1,7 +1,6 @@
 ---
 title: "How to Hold Power"
-source: "Moray — How to Hold Power"
-domains: [A1, A7, A8, A10]
+source: "[Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — How to Hold Power"domains: [A1, A7, A8, A10]
 primary_folder: "/identity/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -15,8 +14,7 @@ concepts: [A1.4 stepping-into-the-role] [A1.1 leading-by-earned-authority-and-co
 situations: [S:i-feel-like-an-imposter]
 handoff:
 anchors to: Leadership is somatic, not positional
-source: Moray — *How to Hold Power*, Intro & ch.5
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, Intro & ch.5
 - **Claim / recommendation:** Your leadership does not arrive with a role; it arrives when you become someone people choose to follow. Stop waiting to *feel* qualified and start practicing the qualities people actually read — groundedness, presence, the ability to listen and decide. Do not mistake a position (or a delegated mandate) for influence; the mandate gets you the seat, not the followership.
 - **Reasoning / mechanism:** Moray distinguishes the authority a role confers from the influence that moves people, and locates the latter in the body. A group continuously, unconsciously tracks the leader's state to gauge safety, so presence and regulation do the persuading [A7.1]. For a volunteer leader this is the whole game: with no contract or paycheck, only earned legitimacy moves anyone [A1.1].
 - **Example in context:** At a mindful-eating retreat, a disruptive newcomer had participants gathering their things to leave. The facilitator Nil — a daily somatic practitioner — set a clear, warm boundary that gave the man dignity and a choice; the room relaxed instantly. Asked later, Nil barely remembered it: practiced presence had simply shown up.
@@ -29,8 +27,7 @@ concepts: [A1.4 stepping-into-the-role]
 situations:
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.2
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.2
 - **Claim / recommendation:** Treat your body as a data source you consult, not noise you override. Learn to feel sensation (tightness, heat, a dropping gut) and emotion as information about what's right, what's off, and what you need — then factor it into decisions. Don't romanticize this as magic, and don't expect to feel everything at once; capacity is built slowly.
 - **Reasoning / mechanism:** Moray's term is the *felt sense*: the body perceives information the conscious mind hasn't registered, so a tuned-in leader gets an early-warning signal. The book separates "feelings" into *emotions* (which, per Pema Chödrön, complete a neurochemical cycle in ~90 seconds unless fed by thought) and *sensations* (physical: hunger, pressure, tingling). Naming the two precisely is what makes the data usable.
 - **Example in context:** Weeks before an employee quit in a blistering outburst, Moray's "Spidey sense" told her something was wrong; with no outward red flags she overrode it, and later wished she'd listened to what her body had been saying.
@@ -43,8 +40,7 @@ concepts: [A10.2 leader-self-care]
 situations: [S:burning-out]
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.4
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.4
 - **Claim / recommendation:** Learn to *operate* your nervous system rather than be run by it. Notice whether you're upregulated (activated) or downregulated (calm), and use simple regulation — chiefly a longer exhale — to return to a workable range. Don't aim for permanent calm; the goal is to move fluidly and come back to center, not to never get activated.
 - **Reasoning / mechanism:** Drawing on Stephen Porges's polyvagal theory and Dan Siegel's *window of tolerance*, Moray explains that a regulated system moves between sympathetic (fight/flight) and parasympathetic (rest) states; outside the window you go hyperaroused (panic, irritability) or hypoaroused (numb, collapsed) and can't decide well. Lengthening the exhale triggers the parasympathetic branch — which is why "take a deep breath" (an inhale focus) can worsen anxiety. The book's portable tool is **B.B.O.D.Y.** (Breathe; Bring it down to the ground; Observe your inner state; Dimensions and center; Yawn/stretch/wiggle) — captured here as principle, not walkthrough.
 - **Example in context:** An ER doctor convinced she couldn't spare five minutes took a single short grounding break per shift for a week; her stress symptoms lessened and the work felt easier.
@@ -57,8 +53,7 @@ concepts: [A10.2 leader-self-care] [A1.6 failure-as-learning]
 situations:
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.3
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.3
 - **Claim / recommendation:** Don't fight your own tension — chronic muscle contractions (and the resistance you feel to new practices) are protective strategies, not flaws. The counterintuitive move is to *support the contraction*: allow what's already happening, which is what lets it shift, rather than forcing relaxation, which makes it persist.
 - **Reasoning / mechanism:** Moray frames contractions (echoing Wilhelm Reich's "armoring") as the body's safety system; pushing against a safety system without a replacement leaves you exposed, so you work *with* it. Resistance to a practice is the same mechanism — it front-loads failure ("if I don't try, I can't fail") and can also be wise discernment that a practice is wrong or ill-timed. The instruction is gentle curiosity: "What is this protecting?"
 - **Example in context:** Moray's chronically raised shoulder wouldn't relax no matter how she forced it; only when her partner held it *into* its contracted position nightly for a year did the muscle learn to release — and it now functions as an early-warning signal that something feels unsafe.
@@ -71,8 +66,7 @@ concepts: [A1.4 stepping-into-the-role] [A1.6 failure-as-learning]
 situations: [S:i-feel-like-an-imposter]
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.1, ch.6
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.1, ch.6
 - **Claim / recommendation:** Surface the "shoulds" you've internalized about who a leader is supposed to be, then consciously choose the narratives you want to embody (e.g., "I am a leader who listens"). Adopt a growth mindset — be willing to be a beginner in public — because you can only embody what you believe is possible. Don't try to think your way into change; pair each new narrative with a small practice.
 - **Reasoning / mechanism:** Moray's change formula is *new narrative + why it matters + new practice + a new way to live in the body*. Narratives are beliefs held as if they were objective truth; left unexamined, they drive behavior ("at their mercy"). Becoming aware of them is the first of four steps — awareness, choice, practice, integration. As Strozzi-Heckler's epigraph puts it, We are what we practice. And we are always practicing something.
 - **Example in context:** Moray had absorbed "interrupting is rude" so deeply she let clients run past their session end and let bigoted talk pass unchallenged; she had to build a new narrative — "interrupting can be helpful; not interrupting can be harmful" — and practice it until it integrated.
@@ -85,8 +79,7 @@ concepts: [A1.6 failure-as-learning] [A10.2 leader-self-care]
 situations: [S:i-feel-like-an-imposter]
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.4
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.4
 - **Claim / recommendation:** Build *internal* safety, not just external — because if the inside of you is hostile, you won't want to feel yourself, and the whole somatic practice collapses. Treat the harsh, self-critical parts as misguided protectors to be heard and integrated, not silenced. The working definition to aim for: safety as having the agency to act on your own behalf — not the same as comfort.
 - **Reasoning / mechanism:** Moray draws on Internal Family Systems: a wise "Self" (compassion, curiosity, calm, courage…) can parent the scared and critical parts without letting them run the show. Self-compassion isn't softness; it's what gives a leader the resilience to make mistakes without spiraling — to "roll with making mistakes without being unkind to myself."
 - **Example in context:** Reading a list of "twenty-six mistakes new bosses make," Moray recognized herself in every one — and instead of self-hatred concluded "being a boss is hard," honoring her own humanity. That self-compassion, she says, is what embodiment bought her.
@@ -99,8 +92,7 @@ concepts: [A1.4 stepping-into-the-role] [A7.1 building-and-using-power]
 situations:
 handoff:
 anchors to: Leadership is somatic, not positional
-source: Moray — *How to Hold Power*, ch.6
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.6
 - **Claim / recommendation:** Cultivate presence — being here, now, attention on what's in front of you — because it is the felt quality people follow and the way you honor someone's personhood. Don't try to "be more present" in the abstract; produce presence through concrete small acts (widen your gaze, breathe into your belly, sit back, drink water) practiced where you actually lead.
 - **Reasoning / mechanism:** Members read the leader's state constantly to know how to be around them; they will respond to how you are more than to what you say. So presence isn't decoration — it's the signal. And because under stress the body defaults to its level of practice, presence has to be rehearsed in the real environment (a meeting, a hard conversation), not in a retreat.
 - **Example in context:** Finn, a miserable tech manager, took two five-minute embodiment breaks a day at the office; over months he learned to "feel me inside of myself," moved into a more creative role, and his team's work and feedback improved — presence trained on the job.
@@ -113,8 +105,7 @@ concepts: [A7.1 building-and-using-power] [A1.1 leading-by-earned-authority-and-
 situations:
 handoff:
 anchors to: Power is neutral; how you hold it is everything
-source: Moray — *How to Hold Power*, ch.5
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.5
 - **Claim / recommendation:** Understand power before you try to hold it well. A title gives *formal* power (position) but not followership; real influence runs on *informal* power. Of the four informal types, two are *earned* — relational and experiential — and those are the ones a volunteer leader can build. Don't assume your mandate makes you influential; it doesn't.
 - **Reasoning / mechanism:** Moray uses Kashtan's definition — power as access to resources to meet needs — and splits informal power into *majority* (shared identity, situational), *systemic* (laws/customs benefiting a group, e.g. whiteness as norm), *relational* (who you know), and *experiential* (expertise/lived knowledge). Relational and experiential are earned and feed "power-within." This is the diagnostic frame for "why don't people follow me?"
 - **Example in context:** New to leadership, Moray "still felt like me" and didn't register her new power — until an employee's anger made clear they expected her to *use* it like a leader. The mismatch between holding power and feeling it is the core trap.
@@ -127,8 +118,7 @@ concepts: [A7.1 building-and-using-power]
 situations: [S:group-feels-transactional]
 handoff:
 anchors to: Power is neutral; how you hold it is everything
-source: Moray — *How to Hold Power*, ch.5
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.5
 - **Claim / recommendation:** Choose consciously which power you base your leadership in. *Power-over* (domination via fear/coercion) breeds *power-under* (gossip, covert sabotage) as a counter-response; aim instead for *power-with* (shared influence, multidirectional) and *power-within* (self-mastery and self-respect). Power-with does *not* mean everything goes to a vote — someone still steers; it means decisions are made acknowledging the power differential and everyone's contribution counts.
 - **Reasoning / mechanism:** Drawing on Starhawk, Moray defines Power-over relies on taking and lack of consent, while power-with is the power of a strong individual in a group of equals. The mechanism is buy-in: when members have real power they own the work; when power is taken, they resist underground. Power-within (presence, responsiveness over reactivity) is what others observe and decide to follow.
 - **Example in context:** Two contrasts — Mike the brewery manager docks pay and silences a whistleblower (power-over); Devaughn runs a weekly round where each of eight people gets equal airtime on four standing questions and follows up individually (power-with).
@@ -141,8 +131,7 @@ concepts: [A7.1 building-and-using-power] [A7.3 autonomy-vs-direction] [A1.5 fea
 situations: [S:i-cant-let-go]
 handoff:
 anchors to: Power is neutral; how you hold it is everything
-source: Moray — *How to Hold Power*, ch.5
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.5
 - **Claim / recommendation:** Don't pretend your power away. *Flattening* is the well-intentioned mistake of treating power as a fixed pie to be split equally — so you defer to a member's weaker idea to seem fair, or insist "we're all peers" while still holding the real authority. It backfires: it confuses the group, erodes faith in your judgment, and can leave members exploited under a veneer of equality. Own the power you have *and* share it deliberately.
 - **Reasoning / mechanism:** Moray distinguishes sharing power (power-with, which still steers) from flattening it (abdicating judgment to look egalitarian). Flattening usually springs from guilt about holding power or a wish to reject hierarchy; but unacknowledged power doesn't vanish — it just operates dishonestly, and the differential keeps shaping outcomes whether named or not.
 - **Example in context:** A contractor's reflection: a boss who "rejected traditional power dynamics" and called the team peers still absorbed all the profits — "I can't perform with the passion of a co-owner… your attempts to reject the role just made an exploitative situation."
@@ -155,8 +144,7 @@ concepts: [A7.1 building-and-using-power] [A1.4 stepping-into-the-role]
 situations:
 handoff:
 anchors to: Power is neutral; how you hold it is everything
-source: Moray — *How to Hold Power*, ch.5
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.5
 - **Claim / recommendation:** Notice when you *leak* power and stop the habits that drain it. Power leaks are practices that give away your agency: blaming, denial, minimizing, dismissing, fighting with reality, making others responsible for your feelings, acting out of alignment with your values. When you catch a leak, return to center with an embodiment practice rather than analyzing it to death.
 - **Reasoning / mechanism:** These habits move attention away from your own needs and choices, usually to dodge discomfort — and the cost is felt influence. Because you can *hold* a lot of power yet not *feel* it (slumping, shallow breath, creeping self-doubt), the remedy is somatic: reclaim posture and breath, which restores the felt sense of agency and sharpens decisions.
 - **Example in context:** Moray notes she still "forgets to feel" her power — slumps, breath shallows, self-doubt creeps in — and uses a three-second posture-and-breath reset ("up, out, deep") to come back online. (Captured as principle; the reset is a self-practice, not a sibling-coach handoff.)
@@ -169,8 +157,7 @@ concepts: [A1.1 leading-by-earned-authority-and-consent] [A7.1 building-and-usin
 situations:
 handoff:
 anchors to: Power is neutral; how you hold it is everything
-source: Moray — *How to Hold Power*, ch.5
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.5
 - **Claim / recommendation:** Learn to feel the difference between power you *earned* and power *bestowed* on you by identity — because Privilege can be defined as access to unearned power, and the two are held differently. Earned power lets you rest in your authority; unearned power, unexamined, breeds arrogance and entitlement. Don't pretend identity-based power differentials between you and members aren't real; you can't lead respectfully if you do.
 - **Reasoning / mechanism:** Moray argues the two register differently in the body (one is "yours," one isn't), and that discerning them is what lets a leader empathize with members' differing access to power and lead with power-with. Ignoring the differential is itself an exercise of power-over by default.
 - **Example in context:** Needing a last-minute EKG before surgery, Moray — the only white-presenting person in a full waiting room — was quietly squeezed in ahead of ~35 people of color. She felt the unearned power viscerally, distinct from the earned power of finishing her dissertation.
@@ -183,8 +170,7 @@ concepts: [A10.2 leader-self-care] [A1.6 failure-as-learning]
 situations: [S:burning-out]
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.7
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.7
 - **Claim / recommendation:** Expect to get triggered and make it your job to handle it — don't try to never be triggered (that shrinks your life) and don't act from the triggered state. Recognize a trigger by a reaction out of proportion to the situation; then acknowledge it, take a break, regulate, and only *then* choose a response. Know your own default survival response (fight/flight/freeze/appease) and tell your group about it in advance.
 - **Reasoning / mechanism:** Moray (via Peter Levine) frames a trigger as a stored, incomplete survival response — a body memory treating the past as present, hijacking the amygdala and taking the thinking brain offline. Slowing down reopens choice; she invokes Frankl — Between stimulus and response there is a space. Because the leader's reaction is *amplified by the power differential*, an unmanaged fight/flight response does outsized harm.
 - **Example in context:** At a school event, a colleague had quietly scrapped a ritual Moray had planned; she was "triggered 1,000 percent," faked composure through the night, and at home realized she was actually grieving the school she'd left — the trigger pointed to an unmourned loss.
@@ -197,8 +183,7 @@ concepts: [A8.1 task-vs-relationship-conflict] [A6.5 psychological-safety] [A10.
 situations: [S:one-person-dominates] [S:two-members-clashing]
 handoff:
 anchors to: Leadership is somatic, not positional
-source: Moray — *How to Hold Power*, ch.7, ch.8
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.7, ch.8
 - **Claim / recommendation:** Part of the leader's job is to be the bigger nervous system in the room — your capacity to stay grounded sets the group's tone and helps others settle. When you sense someone is triggered, don't confront it in the moment; create a low-stakes one-on-one, ask what they need, and regulate yourself first so you don't co-trigger.
 - **Reasoning / mechanism:** Nervous systems are contagious — triggers "co-trigger," each person's survival response setting off the other's, until no one is centered and nothing productive happens. Because the group entrains to the calmest regulated system present, a regulated leader is a stabilizing field; a dysregulated one spreads activation. The skill is reading nonverbal "tells" and offering a regulated presence rather than a reaction.
 - **Example in context:** Moray noticed Rowen falling silent and folding her lips after presenting ideas; rather than confront it live, she raised it gently at a review, learned Rowen heard her questions as criticism, and changed how she responded (a pause, writing the idea down, asking consent before questioning) — transforming the working relationship.
@@ -211,8 +196,7 @@ concepts: [A10.2 leader-self-care] [A6.5 psychological-safety]
 situations: [S:burning-out] [S:scared-to-ask-people]
 handoff:
 anchors to: Boundaries, consent, listening — the three-legged stool
-source: Moray — *How to Hold Power*, ch.8
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.8
 - **Claim / recommendation:** Set and honor boundaries — they prevent burnout and resentment, and they're learnable. Watch for four boundary problems: can't say no (appeasement), can't hear no (control/nonconsent), can't say yes (reflexive "insta-no"), can't hear yes (can't receive). Take responsibility for upholding your own limits rather than making them someone else's job — and treat a member's clear "no" as a gift, not a rejection.
 - **Reasoning / mechanism:** Boundaries are how you discern what's yours, felt first as body cues — anger, tightness, the "uh-oh." Moray ties them to needs (via NVC's needs list): under an irritation sits an unmet need (consideration, respect), and naming the need lets you set a clean boundary instead of stewing. The hard half is *hearing* no: You can ask for anything if you are okay with hearing no, and a clear no signals honesty and trust, not problem.
 - **Example in context:** Naila shows up five minutes late to every one-on-one; Moray's model leader feels the irritation, finds the unmet need for consideration, and proposes a mutual five-minute rule — a boundary that protects both, instead of silent resentment.
@@ -224,8 +208,7 @@ concepts: [A6.5 psychological-safety] [A7.2 decisions-as-shared-process] [A3.2 o
 situations: [S:everyone-just-agrees] [S:volunteers-flaky]
 handoff:
 anchors to: Boundaries, consent, listening — the three-legged stool
-source: Moray — *How to Hold Power*, ch.9
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.9
 - **Claim / recommendation:** Build a culture where it is genuinely safe to say no to you. Consent means people *can* say no and *choose* yes; you don't ask consent for someone's core responsibilities, but you *do* for anything beyond them. Repeat "it's okay to say no to me" many times — people won't believe it at first — and when someone does say no, trust it without demanding justification: "No" is a complete sentence.
 - **Reasoning / mechanism:** Consent is a practice of power-with: it tells members their needs count, which produces buy-in and honesty. The power differential makes saying no to a leader genuinely hard (fear of looking like "not a team player"), so the leader has to actively, repeatedly lower that cost. The first few nos you receive are precious evidence the trust is real.
 - **Example in context:** Boss Maggie asks Max to work overtime all week; Max reluctantly agrees, but she catches the hesitation — "I hear you say yes, but I'm registering some hesitation… it's okay to say no" — and they find the two nights he actually can't.
@@ -237,8 +220,7 @@ concepts: [A8.2 productive-dissent] [A6.5 psychological-safety]
 situations: [S:everyone-just-agrees] [S:cant-make-decisions]
 handoff:
 anchors to: Conflict is generative; repair builds the trust
-source: Moray — *How to Hold Power*, ch.9
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.9
 - **Claim / recommendation:** Don't wait for clean nos — actively *draw out* the disagreement people are holding back. Getting to consent is first about drawing out dissent. When you sense a yes that's really a no (a bitten lip, a tone that's off), get curious: "You're saying yes, but something feels up — what's going on?" If trust is thin, make a gentle guess and invite them to help solve the problem.
 - **Reasoning / mechanism:** Under the leader's "dragon tail," and absent fully developed power-within, members will cross their own boundaries rather than refuse. So real consent can't rely on them volunteering dissent; the leader has to create the opening. Inviting someone to co-solve restores their agency and turns a suppressed no into usable information. You can only reach consent when everything is on the table.
 - **Example in context:** A clinic forced two medical assistants to keep working weekends rather than open the problem to the team; one resigned, worsening the staffing crisis. Moray's counterfactual: bring it to the group, surface what each person needs, and craft a solution that meets the mission *and* the people.
@@ -251,8 +233,7 @@ concepts: [A1.5 fear-of-asking-or-delegating] [A9.2 delegating-outcomes-not-task
 situations: [S:scared-to-ask-people] [S:doing-everything-myself]
 handoff:
 anchors to: Boundaries, consent, listening — the three-legged stool
-source: Moray — *How to Hold Power*, ch.9
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.9
 - **Claim / recommendation:** When you need something beyond someone's normal role, make a *request*, not a *demand*. A demand is an unwillingness to hear no (power-over); a request is genuinely open to no (power-with). Use the NVC shape — feeling + need + request — and the magic phrase "Would you be willing to…?" Be willing to negotiate the *strategy* while holding the *need*.
 - **Reasoning / mechanism:** Naming your feeling and need gives the other person access to your inner world and to *why* the ask matters, which invites collaboration rather than compliance. Crucially, your request is only one strategy for your need — so a "no" to the request can still meet the need another way, which is what makes the ask non-coercive.
 - **Example in context:** "I'm feeling concerned about meeting the deadline. Would you be willing to work late this week?" The member counters: "I can't stay late, but I'll make sure my part is done by the deadline — does that address your concern?" The need is met; no domination required.
@@ -265,8 +246,7 @@ concepts: [A9.6 coaching-group-members] [A6.5 psychological-safety]
 situations:
 handoff:
 anchors to: Boundaries, consent, listening — the three-legged stool
-source: Moray — *How to Hold Power*, ch.10
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.10
 - **Claim / recommendation:** Listen first, and listen for *meaning*, not just words — then follow up and act, or listening is hollow. When actively listening, talk no more than ~20%: reflect back, ask clarifying questions, and resist problem-solving, defending, or planning your reply. A powerful practice is *allowability of feeling*: reflect someone's feeling ("I hear you're upset with me about X") without agreeing or defending, which lets the feeling move and de-escalates. Then "Tell me more."
 - **Reasoning / mechanism:** Hearing is passive; listening is active interpretation that requires embodied presence (grounded, open, attention recalled when it drifts). Reflecting feeling works like "supporting the contraction" — acknowledgment is what lets a feeling pass, where pushback entrenches it. Beware *mansplaining*: explaining along lines of privilege without checking what the listener already knows; ask first, gain consent before informing.
 - **Example in context:** Lan told Moray the meetings were laborious; Moray privately judged it as whiny and didn't follow up. Months later Lan quit, the exit interview revealing they hadn't felt valued. The lesson: what seems small to you isn't small to them — listen *and* act.
@@ -278,8 +258,7 @@ concepts: [A6.3 cohesion-and-belonging] [A2.4 group-identity-and-belonging] [A10
 situations: [S:newcomers-dont-stick] [S:low-attendance]
 handoff:
 anchors to: Boundaries, consent, listening — the three-legged stool
-source: Moray — *How to Hold Power*, ch.10
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.10
 - **Claim / recommendation:** Treat belonging as core work, not a soft extra — people aren't cogs furthering a mission; they're seeking the same thing everyone wants, to belong. Create it concretely: be available when members are ready to talk (even off your schedule), give every idea a fair hearing, and explain your reasoning when you don't take one.
 - **Reasoning / mechanism:** Being listened to and having ideas taken seriously is what makes people feel they matter; that felt mattering *is* belonging, and belonging is what makes people put in full effort and stay. Availability is the catch — people share on their timetable (Moray's "chatty hour" with her teens), so a leader who's only available on their own schedule misses the gold.
 - **Example in context:** Moray's best boss, Joseph, stood to welcome her each day, asked about her life, named his own bodily reactions ("when you said that, my heart started to pound"), and frequently took her suggestions; she felt heard and that she belonged — the lived picture of an embodied, belonging-rich workplace.
@@ -292,8 +271,7 @@ concepts: [A1.6 failure-as-learning] [A9.6 coaching-group-members]
 situations:
 handoff:
 anchors to: The body is information; change is bottom-up
-source: Moray — *How to Hold Power*, ch.10
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.10
 - **Claim / recommendation:** Receive hard feedback as a gift — Feedback is a gift — even when it stings and even when part of it is unfair. Don't react in the moment; feel the bodily impact, separate any projection from the genuine "nugget of truth," and respond later from center. Acknowledging blind spots is the price of growth.
 - **Reasoning / mechanism:** Feedback often mixes a real signal with the giver's projection (displacing their own feelings onto you). Disbelief is a normal first response, but it's likely the person observed something true you haven't admitted. Because feedback lands *somatically*, regulating first (feel the impact, don't act) is what lets you parse signal from projection rather than defending or collapsing.
 - **Example in context:** Kadyn, a clinic manager, got a stinging review; one barb ("embarrassed by how you represent us") hit old childhood shame ("Did your mother dress you like that?"). After feeling the impact in a session, she could keep the reasonable feedback and set down the part that was the giver's, not hers.
@@ -306,8 +284,7 @@ concepts: [A8.1 task-vs-relationship-conflict] [A8.2 productive-dissent]
 situations: [S:two-members-clashing] [S:conflict-got-personal]
 handoff:
 anchors to: Conflict is generative; repair builds the trust
-source: Moray — *How to Hold Power*, ch.11
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.11
 - **Claim / recommendation:** Reframe conflict as *generative* — it names hard truths, surfaces resentments, and shows what needs attention — and decide in advance who you want to *be* in it. Adopt rules of engagement like a professional fighter: maintain body awareness, slow down, take breaks, get curious, "Tell me more," listen before you seek to be understood, and name what's happening. Keep the disagreement on the issue, off the person.
 - **Reasoning / mechanism:** Conflict needs two people, a disputable issue, and negative emotion; most people get triggered and slide into black-and-white "I'm right" thinking and family-of-origin patterns. The ethical-fighter frame works because, like martial-arts sparring, it treats the other as a training partner whose humanity you protect even while disagreeing — keeping the fight task-focused [A8.1] rather than personal.
 - **Example in context:** From Moray's aikido training: you bow in gratitude to your opponent, transform their attacking energy, and bring them to the mat without harm — "the human in front of you wants what you want: dignity, connection, belonging."
@@ -320,8 +297,7 @@ concepts: [A8.1 task-vs-relationship-conflict] [A7.1 building-and-using-power]
 situations: [S:conflict-got-personal]
 handoff:
 anchors to: Power is neutral; how you hold it is everything
-source: Moray — *How to Hold Power*, ch.11
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.11
 - **Claim / recommendation:** Don't retaliate. Revenge is an attempt to avoid feeling grief, and as a leader it's a use of power-over that always costs your integrity and the relationship. Freedom is having the aggressive impulse and *not* acting on it — staying with your hurt instead of externalizing it.
 - **Reasoning / mechanism:** Moray uses Resmaa Menakem's distinction: *clean pain* is staying with your hurt; *dirty pain* is discharging it onto someone via revenge, which feels better briefly but generates consequences and shame. Retaliation is about regaining control when you feel victimized — but the leader's amplified power means retaliation wounds disproportionately.
 - **Example in context:** Framed against the aikido ethic of respecting your training partner: you can feel the impulse to "punch the guy," recognize it as dirty pain, and choose to be gentle with your own hurt without lashing out — "serious adulting," in Moray's words.
@@ -334,8 +310,7 @@ concepts: [A8.1 task-vs-relationship-conflict] [A10.2 leader-self-care]
 situations: [S:conflict-got-personal] [S:two-members-clashing]
 handoff:
 anchors to: Conflict is generative; repair builds the trust
-source: Moray — *How to Hold Power*, ch.11
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.11
 - **Claim / recommendation:** Catch escalation early and call a time-out — a 20–30 minute break to return to center. A time-out is about *you* ("I've lost my center and won't respond skillfully"), never a verdict that the other person needs one. Name the heat first ("this is starting to feel heated"), say you're taking a break and when you'll return, then actually regulate — don't rehearse comebacks or vent to a third party.
 - **Reasoning / mechanism:** It's easier to stop a thing than fix a thing; de-escalation interrupts the co-trigger spiral before harm accumulates. The reassurance ("I'll be back in twenty minutes") matters because abruptly disappearing triggers abandonment; and the break only works if you genuinely down-regulate rather than perseverate, which would keep you triggered.
 - **Example in context:** Moray's five-step structure — use words, reassure where/when you'll return, move to another space, calm the nervous system (not the fight), then return and check in — captured here as principle. The "don'ts" (ruminate, plan your rebuttal, gossip) are what sabotage it.
@@ -348,8 +323,7 @@ concepts: [A8.5 repair-and-mutual-accountability] [A8.1 task-vs-relationship-con
 situations: [S:two-members-clashing] [S:conflict-got-personal]
 handoff:
 anchors to: Conflict is generative; repair builds the trust
-source: Moray — *How to Hold Power*, ch.11
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.11
 - **Claim / recommendation:** Learn to repair — most people never did. Repair only begins once harm has stopped (stop fighting, regulate, *then* repair), and it never returns things to "before"; it builds something new on the break. As the one with more power, you go first. The repertoire: own your contributions, acknowledge impact, do-over, apology *or* acknowledgy, reparations, reconciliation.
 - **Reasoning / mechanism:** *Owning contributions* (from the Harvard Negotiation Project) means naming your part without rushing to intentions — modeling accountability. *Acknowledging impact* validates their experience ("I hear you felt scared… that makes sense") without conceding it was your intent; intention doesn't erase impact. A *do-over* (replaying a moment more skillfully) lays "a second track" in memory. People who think they want an *apology* often want an *acknowledgy* — a plain "Yep, I did that," validating that it happened — especially those whose experiences have been denied. *Reparations* must be offered and checked with the person, never imposed (or it becomes about you).
 - **Example in context:** Lena, a micromanaging design lead, invited each of her eight reports to a private conversation, listened, asked each what concrete act would help them feel trusted, then read a statement naming the impact and her changes. Months later her team reported feeling trusted and more cohesive.
@@ -362,8 +336,7 @@ concepts: [A6.1 how-norms-form-and-become-culture] [A6.5 psychological-safety] [
 situations: [S:group-feels-transactional]
 handoff: [H:org-level]
 anchors to: Leadership is somatic, not positional
-source: Moray — *How to Hold Power*, ch.12
-
+source: [Moray](https://www.pavinimoray.com/booksbypavinimoray.html) — *How to Hold Power*, ch.12
 - **Claim / recommendation:** The leader's practiced inner work compounds into the group's culture — the small, repeated ways you show up (welcoming people, naming your own state, honoring boundaries, repairing) become "how we do things here." You don't install a culture by decree; you embody it until it spreads, holding the whole spectrum from trauma-awareness to joy and pleasure.
 - **Reasoning / mechanism:** Because members entrain to the leader's regulated nervous system and read behavior over words, culture forms bottom-up from modeled practice [A1.3] far more than from stated values. Set norms harden into culture over time (A6.1); a leader who consistently practices consent, listening, and repair makes safety (A6.5) the felt default.
 - **Example in context:** Joseph's daily welcome, shared breaths, openly named bodily reactions, and next-day returns to disagreements added up — for the people around him — to a recognizable culture of embodied humanity, not a policy.

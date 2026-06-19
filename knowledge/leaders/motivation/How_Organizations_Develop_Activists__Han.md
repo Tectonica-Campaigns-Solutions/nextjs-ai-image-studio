@@ -1,7 +1,6 @@
 ---
 title: "How Organizations Develop Activists"
-source: "Han — How Organizations Develop Activists"
-domains: [A2, A3, A9]
+source: "[Han — How Organizations Develop Activists](https://www.hahriehan.com/)"domains: [A2, A3, A9]
 primary_folder: "/motivation/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -22,23 +21,19 @@ last-updated: 2026-06-10
 
 **Practice beats predisposition.** Whether ordinary members become activists is explained mostly by what the local chapter *does*, not by who joined or how political the area is. It holds because Han held the usual excuses constant: she matched high- and low-engagement chapters in the same national associations, working similar issues in similar communities, drawing demographically similar members — and the engagement gap survived. That isolates the leader's practice as the live variable.
 flagship example: New members entering high- vs. low-engagement chapters were statistically indistinguishable on political interest, efficacy, and prior activity — yet after one year the high-engagement chapters had far higher rates of offline action (e.g., ~59% vs. ~22% taking offline action in the doctors' association). Same raw material, different result.
-source:  Han — How Organizations Develop Activists, Introduction & ch.2
-governs: [A9.1] [A3.4] [A2.5] [A6.4]
+source:  [Han — How Organizations Develop Activists](https://www.hahriehan.com/), Introduction & ch.2governs: [A9.1] [A3.4] [A2.5] [A6.4]
 
 **Three models, not two.** A leader engages members one of three ways: as a *lone wolf* (does the work alone), a *mobilizer* (activates many people shallowly), or an *organizer* (develops others into leaders). The split holds because each starts from a different bet about where power comes from — information, numbers, or developed people — and that bet then dictates every downstream choice about asks, structure, and support.
 flagship example: Joy Cushman's compression of the typology — the organizer makes two choices (engage others, *and* invest in their development); "The mobilizer only makes the first choice. And the lone wolf makes neither."
-source:  Han — How Organizations Develop Activists, Introduction (Cushman, pers. comm.)
-governs: [A1.2] [A9.5] [A2.5] [A3.3]
+source:  [Han — How Organizations Develop Activists](https://www.hahriehan.com/), Introduction (Cushman, pers. comm.)governs: [A1.2] [A9.5] [A2.5] [A3.3]
 
 **Organizing usually starts under pressure, not inspiration.** Leaders turn to developing others when they hit a wall they can't get over alone — turf too big, too little time, a sudden flood of recruits. Necessity is what forces the hand; but necessity *plus* the story the leader tells about it ("our power is our people") is what converts a one-off scramble into a durable practice that outlives them.
 flagship example: In four of six high-engagement sites, an external squeeze (a battleground-state campaign, an un-coverable geographic area) made solo work impossible, so leaders recruited and trained others — and that improvised structure then made future organizing the path of least resistance.
-source:  Han — How Organizations Develop Activists, ch.3
-governs: [A1.5] [A9.2] [A9.3] [A6.1]
+source:  [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.3governs: [A1.5] [A9.2] [A9.3] [A6.1]
 
 **Blend, don't choose: mobilize *and* organize.** The strongest chapters did not pick relationships over numbers. They mobilized at scale *and* organized for depth, and they ran their transactional asks intentionally enough that each one built future capacity. This corrects the naive reading of the lens — transactional is not the enemy; *thoughtless* transactional is. Mobilizing builds the prospect pool organizers draw leaders from; organizing builds the leaders who can then mobilize at scale.
 flagship example: A get-out-the-vote phone bank can treat callers as interchangeable, or it can be structured so the callers build skills and relationships — same transactional output, but the second version leaves leadership capacity behind ("downstream effects").
-source:  Han — How Organizations Develop Activists, ch.4–5
-governs: [A2.5] [A3.5] [A3.3]
+source:  [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.4–5governs: [A2.5] [A3.5] [A3.3]
 
 ---
 
@@ -71,8 +66,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A1.2 enabling-vs-doing] [
 situations:  [S:doing-everything-myself] [S:group-feels-transactional]
 handoff:
 anchors to:  Three models, not two
-source:      Han — How Organizations Develop Activists, Introduction (incl. table 1-1)
-
+source:      [Han — How Organizations Develop Activists](https://www.hahriehan.com/), Introduction (incl. table 1-1)
 - **Claim / recommendation:** A leader engages people in one of three modes. The *lone wolf* builds power through their own expertise and does the work alone. The *mobilizer* builds power through numbers — activating as many people as possible without growing anyone's capacity. The *organizer* builds power by developing other people into leaders who can engage still others. These are not personality types; they are strategic choices any leader can shift between. The takeaway for a first-timer: notice which one you're defaulting to, because the mode you pick silently dictates everything else.
 - **Reasoning / mechanism:** Each model starts from a different bet about where power comes from, and that bet drives every downstream choice [A7.1]. Believe power comes from information, and you'll choose advocacy you can do alone. Believe it comes from numbers, and you'll cast a wide net with quick, solo asks and keep responsibility centralized. Believe it comes from developed people, and you'll make interdependent asks, distribute responsibility, and invest heavily in training [A9.2]. Han's cleanest formulation comes from organizer Joy Cushman: the organizer makes two choices — to engage others *and* to invest in their development — while "The mobilizer only makes the first choice. And the lone wolf makes neither."
 - **Example in context:** Three real leaders. Peggy, a "star volunteer," became her chapter's sole expert on forest policy and, asked what she'd done to recruit others, admitted she'd never tried — a lone wolf. David ran a doctors' chapter by amassing a big email list and blasting asks; one petition drew hundreds of signatures, one event drew two people he never spoke to. Phil, given a turf too big to cover, split it into three, recruited and weekly-coached a leader for each, and grew a 100-person conference team from that base — an organizer.
@@ -84,8 +78,7 @@ concepts:    [A9.1 developing-leaders] [A3.4 commitment-over-time]
 situations:  [S:low-attendance] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Practice beats predisposition
-source:      Han — How Organizations Develop Activists, ch.2
-
+source:      [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.2
 - **Claim / recommendation:** Do not explain away your group's low engagement by blaming your members ("they're just not the activist type") or your area ("people here don't show up"). Han's study was built to test exactly that excuse and found it doesn't hold: chapters drawing the same kinds of people in the same kinds of places still differed sharply in engagement, because of what their leaders *did*. The recommendation is to treat engagement as something you produce, not something you're handed.
 - **Reasoning / mechanism:** Han selected six matched pairs of high- and low-engagement chapters inside two national associations (disguised as "People for the Environment" and the "National Association of Doctors"), matching each pair on community traits and on the demographics and political motivation of new joiners. A new-member survey confirmed the match: across ~13 of 15 prior-activity measures, and on political interest and efficacy, high- and low-engagement joiners were statistically indistinguishable — in the environmental association the small demographic differences even ran *opposite* to what predicts activism. With inputs held constant, the divergence after one year had to come from organizational practice [A9.1].
 - **Example in context:** Two doctors, same association, same era. Danielle got "hooked" entering 700 names into a database, started emailing the people behind the names, and realized "behind each name was a real person" — she became a national leader. Donna, equally capable and motivated, only ever got emails; she said she'd have loved to do more but wished there were local events where she could meet people. The chapter gave Danielle a community and Donna only information — and their trajectories split accordingly.
@@ -98,8 +91,7 @@ concepts:    [A1.5 fear-of-asking-or-delegating] [A9.2 delegating-outcomes-not-t
 situations:  [S:doing-everything-myself] [S:burning-out]
 handoff:
 anchors to:  Organizing usually starts under pressure
-source:      Han — How Organizations Develop Activists, ch.3
-
+source:      [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.3
 - **Claim / recommendation:** Most leaders don't distribute leadership because they decided it was virtuous; they do it because they hit a wall they physically cannot get over alone. If you're drowning, that pressure is not just pain to endure — it's the natural trigger to start handing real responsibility to others. But the squeeze alone won't make you an organizer: how you read it matters. Read "I'm overloaded" as "I need to develop people," not "I need to work harder" or "I need to find one more superstar."
 - **Reasoning / mechanism:** In four of six high-engagement sites, an exogenous challenge (a presidential campaign demanding more, a geographic turf one person couldn't cover, leaders stretched across local and national roles) created a resource squeeze that made solo work impossible. But identical squeezes produced *different* responses elsewhere — one geographically stretched chapter organized, its matched pair devolved work to lone wolves. The deciding factor was interpretation: the leaders who organized asked themselves "Where do we draw our power?" and answered *people*, so investing in others became the obvious move [A2.1]. Once they built a distributed structure, it became "sticky" — the structure created incentives to keep developing leaders, and the practice passed to the next generation [A6.1].
 - **Example in context:** Priscilla, handed five new areas she'd "never gotten to before," recruited and supported a volunteer leader who in turn supported others; she describes the shift as moving from "organizing events" to organizing organizers. Across town, a leader facing the same geographic problem just spread the work to people who each then worked alone — same constraint, lone-wolf answer.
@@ -112,8 +104,7 @@ concepts:    [A2.5 transformational-vs-transactional] [A3.5 the-ask / escalating
 situations:  [S:group-feels-transactional]
 handoff:     [H:recruitment]
 anchors to:  Blend, don't choose
-source:      Han — How Organizations Develop Activists, ch.4–5
-
+source:      [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.4–5
 - **Claim / recommendation:** Don't treat transactional, numbers-focused asks as the enemy of "real" relational organizing. The high-engagement chapters did both — and the trick was running their transactional mobilizing *intentionally*, so that each quick ask also built something lasting. A petition drive or a phone bank can be pure extraction, or it can be structured so the people doing it grow as leaders and the people receiving it get pulled into a relationship. Same action; very different residue. (The how-to of list-building and channels routes to recruitment — keep the *why* here.)
 - **Reasoning / mechanism:** Han borrows Tufekci's term "network internalities" for these downstream effects: the capacity a mobilizing activity builds *beyond* its immediate output. Mobilizing and organizing are mutually reinforcing — mobilizing builds the prospect pool from which organizers recruit leaders; organizing builds the cadre of leaders who can then mobilize at scale [A9.5]. Skip the downstream thinking and you get the failure Tufekci describes in mass digital movements: they grew huge on low coordination costs but, never forced to build leadership structure, tended to fizzle when it came time to negotiate or sustain.
 - **Example in context:** A get-out-the-vote phone bank run on transactional logic treats callers as interchangeable dialers. Run with downstream effects in mind, the same phone bank gives callers some strategic autonomy, maximizes real interaction, and makes clear how their piece fits the whole — so it leaves behind more capable leaders. Han's high-engagement chapters consistently chose the second version; low-engagement ones did the first and wondered why it never compounded.
@@ -126,8 +117,7 @@ concepts:    [A3.5 the-ask / escalating-commitment] [A2.4 group-identity-and-bel
 situations:  [S:cant-recruit] [S:group-feels-transactional]
 handoff:     [H:recruitment]
 anchors to:  Blend, don't choose
-source:      Han — How Organizations Develop Activists, ch.5
-
+source:      [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.5
 - **Claim / recommendation:** How you ask matters as much as what you ask. Asks that reflect a person's *identity* — "you're the kind of person who does this" — and that come through a relationship pull far harder than impersonal blasts that just describe an opportunity and wait. For a small-group leader: stop relying on the broadcast (the all-list email, the sign-up sheet on the website) and reach individuals in ways that name who they are and connect them to other people. (Channel mechanics and scripts route to recruitment — the principle stays here.)
 - **Reasoning / mechanism:** People act consistently with identities they hold, so an ask that activates an identity ("activist," "the reliable one," "a member of this community") recruits the self, not just the hand [A2.4]. Relationship adds a second lever — solidary motivation: people show up partly so they don't let specific others down. Passive "marketing" asks (website, Facebook, mass mail) engage neither; they only catch people whose latent interest happens to be high that day.
 - **Example in context:** In three field experiments, the associations emailed some recruits standard opportunity messages and others identity-reinforcing ones — "I know you're the kind of person who cares" — and asked them to sign a petition, register for a conference, or recruit others. The identity group was at least twice as likely to act. The human version: a doctor stayed committed because, on volunteer calls between patients, a busy peer's "sorry, I'm with a patient" made her think "if she can do it, I can too"; a disengaged member, anchored to no one, kept wondering whether they really needed him, and drifted away.
@@ -140,8 +130,7 @@ concepts:    [A9.6 coaching-group-members] [A6.6 learning-together]
 situations:  [S:no-one-takes-initiative] [S:newcomers-dont-stick]
 handoff:
 anchors to:  Three models, not two
-source:      Han — How Organizations Develop Activists, ch.4
-
+source:      [Han — How Organizations Develop Activists](https://www.hahriehan.com/), ch.4
 - **Claim / recommendation:** Supporting your people means more than giving them the tools and the information. Organizers support on three levels — *practical* (skills, resources), *emotional* (encouragement, courage to ask, managing setbacks), and *cognitive* (helping people see why their work matters and how it fits the whole). The single highest-leverage practice is the recurring one-to-one coaching check-in built around *reflection*: review last week's goals, debrief what happened, set next week's. Don't just dispatch tasks and disappear.
 - **Reasoning / mechanism:** Reflection is where action turns into learning and into identity. Walking someone back through what they did — what worked, what they'd change — builds their sense of agency (they see their actions have consequences) and ties the work to who they are becoming [A1.6]. Low-engagement leaders provide only practical support and make work costless; high-engagement leaders provide all three dimensions, systematically, through standing coaching relationships rather than ad hoc help. Even a single reflective conversation has measurable pull.
 - **Example in context:** Paulina ran weekly calls with each team member. One call log: she opens with genuine chit-chat (logged, so she remembers to follow up — signaling she sees the whole person), checks progress against last week's goals, walks Porter through a meeting that went poorly ("how could it have run smoother?"), coaches him to use his own story to persuade, talks through his fear that an event might flop, and sets next steps. Practical, emotional, and cognitive support in one hour. Contrast a low-engagement leader who recruited people by "pestering," lectured them on professional duty via slides, and couldn't say whether any stayed.

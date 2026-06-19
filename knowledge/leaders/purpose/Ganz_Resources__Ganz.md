@@ -1,7 +1,6 @@
 ---
 title: "Ganz Resources"
-source: "Ganz Resources"
-domains: [A2, A3, A7]
+source: "[Ganz Resources](https://commonslibrary.org/organizing-people-power-change/)"domains: [A2, A3, A7]
 primary_folder: "/purpose/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -36,8 +35,7 @@ concepts:    [A3.1 intrinsic-motivation]
 situations:  [S:low-attendance] [S:no-one-takes-initiative] [S:i-feel-like-an-imposter]
 handoff:
 anchors to:  Narrative is how a leader moves people (PPC)
-source:      Ganz — *Leading Change* (Handbook ch.19), "Values, Emotion, and Action"
-
+source:      [Ganz — *Leading Change*](https://commonslibrary.org/organizing-people-power-change/) (Handbook ch.19), "Values, Emotion, and Action"
 - **Claim / recommendation:** Ganz maps five paired emotions — each an *action barrier* with a matching *action catalyst*: inertia↔urgency, apathy↔anger, fear↔hope, isolation↔solidarity, self-doubt↔YCMAD ("you can make a difference"). The leader's motivational job is to move people from the left column to the right. Don't try to make people fearless — supply the catalyst (hope, efficacy, solidarity) *alongside* the fear.
 - **Reasoning / mechanism:** Via George Marcus's neurophysiology, Ganz separates a *surveillance* system (flags anomalies as anxiety — "pay attention, there's a bear in the door") from a *disposition* system (running despair→hope). Anxiety joined to despair triggers fear and freeze; anxiety joined to hope triggers curiosity, learning, and action. Organizers call the productive version *agitation* [A1.6] — the tension between the "world as it is" and the "world as it should be" that only action resolves. Constructive anger is outrage at *injustice* (the gap between ought and is), not rage.
 - **Example in context:** YCMAD has a hard design corollary: a leader who tells each new volunteer to recruit a hundred people, with no leads, training, or coaching, just *amplifies* self-doubt. Efficacy grows from real accomplishment and accountability, not flattery — there is no real recognition without accountability [A8.3].
@@ -52,8 +50,7 @@ concepts:    [A7.6 hierarchy-just-enough]
 situations:  [S:cant-make-decisions] [S:decisions-keep-getting-relitigated] [S:one-person-dominates]
 handoff:
 anchors to:  The bounded, stable, diverse leadership team (PPC)
-source:      Ganz — *Leading Change* (Handbook ch.19), "Leadership Development"
-
+source:      [Ganz — *Leading Change*](https://commonslibrary.org/organizing-people-power-change/) (Handbook ch.19), "Leadership Development"
 - **Claim / recommendation:** A group can fail in two opposite directions. Too much *command-and-control* alienates volunteers and kills local adaptation and learning. Too little — "antipathy to structure" — produces what Jo Freeman called the *tyranny of structurelessness*, where authority still operates but invisibly, off the books, with no accountability. The leader's target is the middle: enough structure to coordinate, not so much it commands.
 - **Reasoning / mechanism:** "We're all leaders / we don't need structure" doesn't abolish power — it hides it. Informal cliques and whoever-talks-most fill the vacuum, and because that authority is unnamed, no one can hold it to account [A8.3]. Explicit, bounded structure (clear roles, norms, who decides what) is what makes power *visible* and therefore accountable. This is the structural twin of PPC's "norms only exist in practice" and right-sized hierarchy [A7.3].
 - **Example in context:** *[No small-group case in the source — Ganz states this at movement scale, citing Freeman and the decline of three-tiered civic associations.]*
@@ -68,8 +65,7 @@ concepts:    [A1.5 fear-of-asking-or-delegating]
 situations:  [S:scared-to-ask-people]
 handoff:
 anchors to:  The valuable ask, not the easy ask (PPC)
-source:      Ganz — *Leading Change* (Handbook ch.19), "Catalyzing Action"
-
+source:      [Ganz — *Leading Change*](https://commonslibrary.org/organizing-people-power-change/) (Handbook ch.19), "Catalyzing Action"
 - **Claim / recommendation:** People systematically *under-ask* — softening a request so it can't get a clean yes or no. Ganz, via Goffman's "face work," explains why and prescribes the fix: make a specific, dated ask, and don't let "I'll try" pass unclarified.
 - **Reasoning / mechanism:** Face-work is the small social choreography by which we collude to avoid awkwardness — I pretend not to see the soup on your shirt; you pretend not to see that I see. Around commitments this becomes a habit of accepting non-answers, protecting the asker from rejection *and* from the reciprocal obligation a "yes" creates. But a real commitment is exactly what calls forth matching behavior, so dodging the clear ask forfeits the resource you needed.
 - **Example in context:** "Can we count on you to be at the meeting at 7:00?" is a real ask; "could you maybe help out sometime?" invites the dodge.
@@ -95,8 +91,7 @@ concepts:    [A5.3 goal-design]
 situations:  [S:unclear-what-were-doing] [S:group-too-big-or-chaotic]
 handoff:
 anchors to:  (PPC) Measurement as learning
-source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "What does an Organizing Sentence look like?"
-
+source:      [Gibbs & Sinnott / LCN](https://commonslibrary.org/organising-start-here/) — *Organizing Guide*, "What does an Organizing Sentence look like?"
 - **Claim / recommendation:** A one-line focusing tool: **"We are organizing [WHO] to [WHAT OUTCOME] through [HOW] by [WHEN]."** Every team — core and local — writes its own. It forces clarity on people, goal, tactics, and timeline in a single breath and surfaces the moment any of the four is vague.
 - **Reasoning / mechanism:** Vagueness hides inside good intentions ("our goal is to stop the dam"). The sentence makes a group commit to a measurable outcome, named people, concrete tactics, and a deadline — turning a wish into something actionable and evaluable. It's the compact cousin of PPC's strategic-goal and measurable-action work.
 - **Example in context:** the guide's worked case — *organizing [our members and supporters] to [identify 4,920 pledged voters] through [door-to-door and phone canvassing] by [a fixed date].*
@@ -109,8 +104,7 @@ concepts:    [A2.1 shared-purpose / why-before-what]
 situations:  [S:group-feels-transactional] [S:group-lost-its-why]
 handoff:
 anchors to:  (PPC) Mobilizing vs. organizing; constituency, not clients
-source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "People"
-
+source:      [Gibbs & Sinnott / LCN](https://commonslibrary.org/organising-start-here/) — *Organizing Guide*, "People"
 - **Claim / recommendation:** A *community* is people who share values or interests; a *constituency* is people who have committed to act together for a common purpose. The organizer's job is the transformation between them — and the line is crossed by a **commitment to take action**, not by agreement alone.
 - **Reasoning / mechanism:** Sharing a concern moves nothing; "residents who oppose the dam" become a constituency only when they sign and commit to the work. The distinction tells a leader where their group actually *is* — lots of sympathy is not a constituency — and the gap closes with asks and commitments, not more awareness-raising [A3.4]. It also seats the first organizer question: "Who are my people?" before "What is my issue?"
 - **Example in context:** the dam case — townspeople against a dam (community) vs. townspeople who've signed and pledged to act (constituency).
@@ -124,8 +118,7 @@ concepts:    [A9.5 functional-shared-leadership] [A9.3 avoiding-founder-bottlene
 situations:  [S:doing-everything-myself] [S:i-cant-let-go]
 handoff:
 anchors to:  (PPC) Letting go: the founder bottleneck and ceding control
-source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "Organizing Your Constituency" / "Snowflake Model"
-
+source:      [Gibbs & Sinnott / LCN](https://commonslibrary.org/organising-start-here/) — *Organizing Guide*, "Organizing Your Constituency" / "Snowflake Model"
 - **Claim / recommendation:** The guide draws three pictures. (1) **The dot in the middle** — every arrow points to one leader; ask how it feels to *be* the dot, to be an arrow that can't get through, and what happens if the dot disappears. (2) **"We're all leaders"** — arrows point outward with no coordination; ask who holds the whole and where the buck stops. (3) **The snowflake** — leaders develop leaders who develop leaders; you may be the center, but your success depends on developing others. The snowflake is the answer to both bad pictures.
 - **Reasoning / mechanism:** The two failure pictures are the *visual* form of the command-and-control / structurelessness pair (§A). The snowflake resolves them — distributed but coordinated, with leadership development as the organizing principle rather than an afterthought.
 - **Example in context:** the three diagrams themselves (inward arrows to one dot; outward arrows with no center; a branching snowflake).
@@ -136,8 +129,7 @@ source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "Organizing Your Cons
 concepts:    [A2.1 shared-purpose / why-before-what]
 situations:  [S:lost-momentum-after-launch] [S:group-lost-its-why]
 handoff:
-source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "Five Organizing Practices"
-
+source:      [Gibbs & Sinnott / LCN](https://commonslibrary.org/organising-start-here/) — *Organizing Guide*, "Five Organizing Practices"
 - **Claim / recommendation:** The guide tabulates each of the five practices as the leadership move that converts a disordered state into an organized one — a quick diagnostic the coach can run on a stuck group:
 
   | Disorganization | Leadership move | Organization |
@@ -155,8 +147,7 @@ source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "Five Organizing Prac
 ### Note on the coaching section (primary source; cross-ref, do not restate)
 concepts:    [A9.6 coaching-group-members]
 situations:  [S:no-one-takes-initiative]
-source:      Gibbs & Sinnott / LCN — *Organizing Guide*, "Coaching"
-
+source:      [Gibbs & Sinnott / LCN](https://commonslibrary.org/organising-start-here/) — *Organizing Guide*, "Coaching"
 The guide's coaching section is the **free, plain-language primary source** of the coaching model already summarized at depth in PPC ("Coaching: the five-step developmental process"). It adds, beyond PPC's wording: the alternate 5-step labeling **Observe → Diagnose → Plan → Support → Challenge**; the **four methods** (ask questions; listen with head and heart; support; challenge); the **corrective vs. developmental** distinction; the heart/hands/head (**motivational / educational / strategic**) diagnosis; and an **"effective coaching is / is not"** contrast — coaching is *not* false praise, *not* solving it before you've heard them, *not* telling them what to do. Because PPC carries this at depth, **cross-reference; do not restate.** Recommend value: this is the citable free handout for a leader who wants the coaching method in plain language. It is also the canonical articulation of *the eCoach's own method* — relevant when the coach is being asked to model coaching for a leader.
 
 > verbatim: sometimes we are *"fish in our own water"* and cannot see the challenges we swim in. — *Organizing Guide* (why a coach's outside eyes help)

@@ -1,7 +1,6 @@
 ---
 title: "Thinking in Systems"
-source: "Meadows — Thinking in Systems"
-domains: [A5, A6, A9]
+source: "[Meadows](https://donellameadows.org/systems-thinking-resources/) — Thinking in Systems"domains: [A5, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -35,33 +34,27 @@ The load-bearing claims the whole source rests on. A coach returns to these for 
 
 **Structure produces behavior.** A system's persistent behavior comes from its structure — how its parts and feedback loops are wired — far more than from the individuals in it; swap the people, keep the structure, and you get the same behavior. Because the structure is producing the pattern, blaming or replacing a person rarely fixes a recurring problem; you have to change the wiring. This is the backbone of the coach's *structure-before-process* lens and its first diagnostic move.
 flagship example: Meadows perches a Slinky on her palm, holds the top, drops the lower hand — it bounces. The hand didn't make it bounce; the bounce was latent in the spring's structure. Same release on the empty box: nothing. The behavior lives in the structure, not the trigger.
-source: Meadows — *Thinking in Systems*, Intro & ch.1
-governs: [A5.1] [A5.3] [A5.5] [A6.1] [A6.4] [A8.1]
+source: [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, Intro & ch.1governs: [A5.1] [A5.3] [A5.5] [A6.1] [A6.4] [A8.1]
 
 **A stock changes slowly; flows change it.** The things a leader cares most about — trust, commitment, momentum, cohesion, members' confidence — are *stocks*: accumulations that build up or drain over time. You can turn the *flows* on or off abruptly (one good meeting, one broken promise), but the *stock* can only move at the speed flows fill or empty it. So these things can't be flipped overnight; in Meadows' words, a leader who understands stocks won't "give up too soon" and won't expect things to "happen faster than they can happen."
 flagship example: A bathtub. You can yank the drain open or the faucet full-on instantly, but the water level still takes time to fall or rise — "a stock takes time to change, because flows take time to flow." Trust works the same way: one warm 1:1 doesn't refill a drained group, and one missed commitment doesn't empty it.
-source: Meadows — *Thinking in Systems*, ch.1
-governs: [A3.4] [A4.3] [A6.3] [A10.6]
+source: [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.1governs: [A3.4] [A4.3] [A6.3] [A10.6]
 
 **Feedback loops drive the cycle — vicious or virtuous.** Two loop types generate almost all group dynamics. *Reinforcing* loops amplify: the more X, the more X (snowballs — momentum that feeds on itself, or a founder bottleneck that deepens itself). *Balancing* loops stabilize toward a goal and hold a group at an equilibrium — including a bad one it keeps returning to. Naming which loop is running tells the leader whether a problem will compound on its own or quietly self-correct.
 flagship example: The founder who does everything: the more the leader picks up, the less others step in, so the leader has more to pick up — a reinforcing loop running downhill. Nothing about the volunteers changed; the loop is doing the work.
-source: Meadows — *Thinking in Systems*, ch.1, ch.5
-governs: [A6.3] [A6.4] [A9.3]
+source: [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.1, ch.5governs: [A6.3] [A6.4] [A9.3]
 
 **People act rationally from where they sit (bounded rationality).** Behavior that looks like laziness, flakiness, or bad faith is usually a sensible response to the information and incentives visible from someone's *position* in the system. Herbert Simon's point: we are not perfect optimizers but "satisficers" working with partial, delayed information from our own vantage. The leader's lever is therefore not the person but the structure: change what someone can see and what they're rewarded for, and the behavior changes — "blaming the individual rarely helps create a more desirable outcome."
 flagship example: Meadows' thought experiment — drop yourself into the position of someone whose behavior you've never understood (manager, laborer, financier) and you will, within the bounds of what that seat lets you see, behave much as they do. "Putting new actors into the same system will not improve the system's performance."
-source: Meadows — *Thinking in Systems*, ch.4
-governs: [A3.2] [A6.4] [A8.1]
+source: [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.4governs: [A3.2] [A6.4] [A8.1]
 
 **Intervene high, not low (leverage points).** Systems have places to push, and they are not equally powerful. Low-leverage pushes (one more reminder email, one more nudge — "numbers") absorb almost all our effort and move almost nothing. High-leverage pushes — who can see what (information), the group's norms (rules), its goal (purpose), and how members see themselves (paradigm) — are small efforts that shift the whole pattern. The cruel twist: people instinctively push the low ones, and often in the wrong direction.
 flagship example: Meadows' ordered list runs from least powerful (12, numbers/parameters — "diddling with the details, arranging the deck chairs on the Titanic") up through information flows (6), rules (5), self-organization (4), goals (3), to paradigm (2) — the mind-set the whole system arises from.
-source: Meadows — *Thinking in Systems*, ch.6
-governs: [A2.1] [A5.3] [A5.5] [A6.1]
+source: [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.6governs: [A2.1] [A5.3] [A5.5] [A6.1]
 
 **Resilience and self-organization are the precious properties — over-control destroys them.** Resilience (the capacity to bounce back) comes from *redundant* feedback loops, not from optimization; self-organization is a system's capacity "to create new structure, to learn, diversify, and complexify." A group optimized so everything routes through one leader is efficient and brittle — it has no redundancy and no room to grow its own structure. Both properties get sacrificed for short-term productivity and control, and a leader who over-controls quietly kills the very capacities that would let the group survive setbacks and develop new leaders. (This is the systems theory under Tectonica's *Friction by Design*: designed friction protects the group's own capacity rather than substituting for it.)
 flagship example: Meadows notes resilience is often invisible until you exceed its limits — a system "paying much more attention to its play than to its playing space" does what it has done a hundred times before, and crashes. The over-controlled group looks fine until the leader is gone.
-source: Meadows — *Thinking in Systems*, ch.3
-governs: [A3.2] [A7.3] [A9.3] [A9.5] [A10.5]
+source: [Meadows](https://donellameadows.org/systems-thinking-resources/) — *Thinking in Systems*, ch.3governs: [A3.2] [A7.3] [A9.3] [A9.5] [A10.5]
 
 > *MARK: principles 1 and 3 (structure / loops) are tightly linked but kept distinct — #1 is the general claim, #3 names the specific machinery. Collapse only if a future prune wants Layer 0 at five.*
 

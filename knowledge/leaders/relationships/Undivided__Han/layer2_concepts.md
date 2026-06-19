@@ -15,8 +15,7 @@ concepts:    [A2.4 group-identity-and-belonging] [A2.1 shared-purpose]
 situations:  [S:group-lost-its-why] [S:group-feels-transactional]
 handoff:
 anchors to:  Belonging before belief
-source:      Han — *Undivided*, Introduction, ch.1 & ch.5–6
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), Introduction, ch.1 & ch.5–6
 - **Claim / recommendation:** Don't lead with the argument and expect commitment to follow. People join and stay because they feel they belong and because something moves them emotionally — conviction comes later, if at all. For a first-time leader this inverts the instinct to "explain why this matters" until people agree; instead, build the felt "us" first and let understanding grow inside it. What *not* to do: gate belonging on prior agreement, or treat a member's lack of fluency as a reason to exclude them.
 - **Reasoning / mechanism:** Self-examination and hard asks trigger defensiveness when people feel isolated; relationship is the antidote that lets them tolerate the discomfort long enough to change. The pull is affective before it is cognitive — people are reached through the heart, then the head. As Han puts it after watching one member return week after week despite her discomfort, "Connection cultivated commitment" — the connection came first and produced the commitment, not the reverse.
 - **Example in context:** Crossroads adopted a motto that put belonging before belief, and replaced any purity test with what it called radical hospitality — welcoming people because of their flaws, not in spite of them. One member, newly out of prison and on parole, kept coming back to a group where she felt deeply exposed, carried by loyalty to the community before she had any settled views about the work itself.
@@ -28,8 +27,7 @@ concepts:    [A6.6 learning-together] [A2.4 group-identity-and-belonging]
 situations:  [S:everyone-just-agrees]
 handoff:
 anchors to:  Belonging before belief
-source:      Han — *Undivided*, ch.5 & ch.20
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5 & ch.20
 - **Claim / recommendation:** If you want people to actually change how they see and act, don't rely on delivering facts — design for direct experience and process it together. A leader's lever is not the quality of the information but the quality of the experience and the relationships in which people make sense of it. What *not* to do: assume a good explanation or a compelling reading will move anyone; on its own it rarely does.
 - **Reasoning / mechanism:** Information-transfer programs largely fail because changing people's hearts by telling them things doesn't work; what works is a *context* that prompts repeated practice and lets people see something firsthand. But experience alone isn't enough — people "needed others to make meaning of what they saw." Learning is a social act: the experience plus the group's joint sense-making is what shifts behavior.
 - **Example in context:** Han notes that in a landscape plagued by disinformation, researchers found nothing more effective than personal experience for getting people to see old things with new eyes. One member realized the program's real impact was never as a training that imparted information — it was a *learning experience that inspired action*, and it only took hold when she carried it into her own relationships and worked it through with others.
@@ -42,8 +40,7 @@ concepts:    [A6.5 psychological-safety] [A8.2 productive-dissent]
 situations:  [S:everyone-just-agrees] [S:two-members-clashing]
 handoff:
 anchors to:  Trust is built in small reciprocal risks
-source:      Han — *Undivided*, ch.5
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5
 - **Claim / recommendation:** Psychological safety is not the absence of discomfort — it's the assurance that taking a risk won't get you rejected. A leader should make the group safe *enough* that people will say hard or clumsy things, while keeping it uncomfortable enough that real growth happens. What *not* to do: confuse a warm, conflict-free group with a healthy one, or sand down every hard moment to keep the peace.
 - **Reasoning / mechanism:** Growth requires people to expose themselves; exposure only happens when the downside of a misstep is bounded. Crossroads framed this as a place that was safe but, in its own words, "safe doesn't mean comfortable." The pairing matters: safety without challenge produces stasis; challenge without safety produces flight. The leader holds both.
 - **Example in context:** One member blurted out a stereotype she immediately regretted — she'd always assumed Black people were poor — and the group laughed *with* her rather than at her, giving her latitude. That moment of bounded risk, met with acceptance instead of condemnation, was exactly what let her keep engaging instead of shutting down.
@@ -55,8 +52,7 @@ concepts:    [A4.1 relationships-are-strategy] [A10.5 resilience-through-setback
 situations:  [S:burning-out] [S:volunteers-flaky]
 handoff:
 anchors to:  Relationships across difference are the engine
-source:      Han — *Undivided*, ch.14 (citing sociologist Mark Warren)
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.14 (citing sociologist Mark Warren)
 - **Claim / recommendation:** When the work gets costly and people start facing real friction, the thing that keeps them in it is not conviction or willpower — it's their relationships inside the group. A leader who wants retention through hard stretches should invest in the ties between members, not just in motivation or messaging. What *not* to do: treat relationship-building as a soft extra you do once the "real work" is done; it *is* the retention strategy.
 - **Reasoning / mechanism:** Costly commitment triggers backlash from the people around someone — and backlash works by raising the personal price until the person backs away. Relationships counterbalance that price: not wanting to let down people you're accountable to keeps you showing up. Sociologist Mark Warren found that relationships were the single key factor separating the people who continued in hard work from those who faltered [A4.6].
 - **Example in context:** One member faced sustained hostility at his job for the stance he'd taken. What held him was a monthly potluck he and his wife hosted — eighty-plus people, food, music, kids underfoot — that became a community he didn't want to disappoint. The relationships, Han writes, were what kept him in the work when the costs mounted.
@@ -69,8 +65,7 @@ concepts:    [A4.6 cross-cutting-ties-before-conflict] [A4.1 relationships-are-s
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Relationships across difference are the engine
-source:      Han — *Undivided*, ch.5–7 (throughout)
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5–7 (throughout)
 - **Claim / recommendation:** The high-leverage ties are the ones built *across* lines of difference, deliberately, not the easy bonds within a like-minded in-group. A leader should intentionally compose and connect across the differences in the group rather than letting people cluster with those most like them. What *not* to do: assume a warm, homogeneous clique is a strong group — it may simply be insular.
 - **Reasoning / mechanism:** Bonds within similarity form on their own; bridges across difference have to be made on purpose, and they are what give a group both reach and resilience. Crossing difference forces people to take real social risks and to encounter perspectives that change them — which is precisely why it builds the kind of trust that holds under strain, rather than the brittle comfort of an echo chamber.
 - **Example in context:** A white member and a Black member who started out wary of each other — she privately scornful, he obliviously confident — became, through weeks of small exchanges (a question about his adopted brother's haircut, a returned text), genuine friends whose relationship anchored both of them in the work for years. Neither bond would have formed inside a group sorted by sameness.
@@ -83,8 +78,7 @@ concepts:    [A4.3 trust-building] [A6.3 cohesion-and-belonging]
 situations:  [S:newcomers-dont-stick]
 handoff:
 anchors to:  Trust is built in small reciprocal risks
-source:      Han — *Undivided*, ch.5–6
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5–6
 - **Claim / recommendation:** You can't declare a group trusting or force people into relationship; you build trust as a slow accumulation of small, reciprocated risks. A leader's move is to create occasions for low-stakes vulnerability and make sure it gets met well — turning exposure into trust rather than shame. What *not* to do: try to fast-track intimacy with a big forced "bonding" exercise, or announce that "this is a safe space" and expect that to do the work.
 - **Reasoning / mechanism:** A relationship differs from an interaction because both people expect it to continue — that presumed future is what gives the small exchanges meaning. Trust then accrues "through the slow accumulation of minute reactions": a nod, a returned text, a confession met without judgment. The leader engineers the conditions for these micro-risks; the members supply the reciprocation.
 - **Example in context:** A member nearly didn't return to his group after a hard first session; he came back partly because of another member's almost imperceptible nod when he spoke. Neither knew at the time how much that tiny reaction mattered. Over four weeks of such moments — culminating in an impromptu group dinner nobody wanted to leave — the group crossed from cordial interactions into genuine belonging.
@@ -96,8 +90,7 @@ concepts:    [A3.3 transactional-vs-relational-ask] [A4.1 relationships-are-stra
 situations:  [S:group-feels-transactional]
 handoff:
 anchors to:  Belonging before belief
-source:      Han — *Undivided*, ch.6
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.6
 - **Claim / recommendation:** Aim for relationships in your group where people give with regard for each other's needs and *without keeping score*, not relationships where everyone protects their own self-interest. A leader should notice when the group has slid into transaction — favors tracked, participation conditional — and rebuild the relational mode. What *not* to do: run the group like a mandated program where people show up to check a box; that locks in transaction.
 - **Reasoning / mechanism:** Han draws the psychologists' distinction between transactional relationships (both parties guarding their own interest, common in mandated trainings) and what psychologists call social relationships, in which people give "without knowing what they might get in return." The latter are marked by acceptance, exchange, and growth, and they are what create belonging — and belonging is what builds trust. The gift, not the trade, is what binds.
 - **Example in context:** The program's groups cultivated exactly this: members brought food to each other's homes, watched each other's kids, traded stories of addiction and recovery — giving without tallying. The box-checking corporate trainings Han contrasts them with stayed transactional and never moved anyone, because protecting yourself and building trust are incompatible.
@@ -109,8 +102,7 @@ concepts:    [A4.2 the-1:1-relational-meeting]
 situations:  [S:cant-recruit] [S:low-attendance]
 handoff:     [H:recruitment]
 anchors to:  Relationships across difference are the engine
-source:      Han — *Undivided*, ch.10
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.10
 - **Claim / recommendation:** Build the group one relationship at a time through individual meetings — sit down with people one-on-one to understand what moves them and to invite them in. This is the foundational organizing practice and it is *why* recruitment works when it works; a leader should treat the 1:1 as relationship-building, not a sales call. (The tactics of *running* a recruitment drive route to the recruitment coach — keep only the why here.)
 - **Reasoning / mechanism:** Drawing others into action is, in Han's words, "the ability to draw others into action is the mark of a good organizer" — and that ability runs on individual meetings, not broadcasts. The 1:1 surfaces a person's real interests so the leader can connect the work to what that person already cares about, which is what turns a contact into a committed participant.
 - **Example in context:** When two members took on building the Justice Team, the organizer had them set up individual meetings with a wide range of people to recruit them — not blast a sign-up sheet. Those one-on-ones were how a list of names became a committed team of people who knew why they were there.
@@ -123,8 +115,7 @@ concepts:    [A3.1 intrinsic-motivation] [A3.2 ownership-and-voice]
 situations:  [S:no-one-takes-initiative] [S:volunteers-flaky]
 handoff:
 anchors to:  Make it theirs
-source:      Han — *Undivided*, ch.5
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5
 - **Claim / recommendation:** Design so that people come to *want* the work, rather than doing it because they were told to or rewarded for it. A leader should treat external compliance as a weak, temporary state and aim to move people toward owning the work themselves. What *not* to do: rely on pressure, obligation, or rewards to drive participation — those evaporate the moment they stop.
 - **Reasoning / mechanism:** Han states the shift directly: motivation "had to shift from being what psychologists call extrinsic motivation to becoming intrinsic — people had to want to do the work." Extrinsic motivation moves people only while the external force is applied; intrinsic motivation (people acting because the work is theirs) is what survives hard moments and absent supervision. Crucially, motivation to act also depends on people believing their social circumstances support the action — so the group context is part of what makes the internal shift possible.
 - **Example in context:** The program deliberately avoided spoon-feeding people a menu of safe, mandated actions (the corporate-training approach) and instead created conditions where participants would, over time, claim the work as their own — even though that freedom meant some never would.
@@ -137,8 +128,7 @@ concepts:    [A3.2 ownership-and-voice] [A7.3 autonomy-vs-direction]
 situations:  [S:no-one-takes-initiative] [S:i-cant-let-go]
 handoff:
 anchors to:  Make it theirs
-source:      Han — *Undivided*, ch.5 & ch.20
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5 & ch.20
 - **Claim / recommendation:** Give people genuine freedom to decide what they'll do — and accept that real freedom means some will choose to do little or nothing. Engineered compliance produces motion without commitment; freely chosen action produces commitment. A leader should resist the urge to mandate participation or prescribe everyone's contribution. What *not* to do: convert the group into a checklist of required actions to guarantee everyone "does something."
 - **Reasoning / mechanism:** Freedom is the price of ownership: people only own what they freely chose. Han describes the program freeing people to choose, on their own terms, what they would do as the deliberate strategy — even though offering that freedom "meant some people would not comply." The trade is intentional: you accept lower short-term compliance to get higher, durable, self-owned commitment.
 - **Example in context:** Rather than assigning everyone an identical task, the program left people free to find their own way to act (or not). Some did nothing; others, like the members who built the Justice Team, took on far more than any mandate would have produced — precisely because it was theirs to choose.
@@ -150,8 +140,7 @@ concepts:    [A6.4 common-stall-patterns] [A2.5 transformational-vs-transactiona
 situations:  [S:lost-momentum-after-launch] [S:group-lost-its-why]
 handoff:
 anchors to:  The spark is not the journey
-source:      Han — *Undivided*, ch.10 & ch.13
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.10 & ch.13
 - **Claim / recommendation:** Treat any galvanizing moment — a great launch, a surge of enthusiasm, a crisis that mobilizes people — as a *spark*, not the work itself. Without a durable structure to channel the energy into repeated action, it dissipates and people drift back to where they were. A leader should build the "vehicle" (regular meetings, roles, rituals, a next concrete thing to do) *before* the spark fades. What *not* to do: mistake a big turnout or a wave of feeling for momentum that will sustain itself.
 - **Reasoning / mechanism:** Most surges of activism falter once the moment passes, because attention and scale are not power — scale and power are not the same thing. A durable group needs what one organizer called a long-term vehicle for change with conventional functions; Han quotes the observation that media and social-media-only efforts are "the snack foods of politics," far less effective than building institutions with structured meetings, ongoing rituals, and planned campaigns. The vehicle converts a feeling into a practice.
 - **Example in context:** After the six-week program ended, an organizer warned that without a structure, people's commitments could become performative. The team built the Justice Team as the vehicle; it gave the post-program energy somewhere to go, and 250 people sustained months of volunteering. Contrast the cautionary history in the book of a movement that won attention but built no ground game and faded.
@@ -164,8 +153,7 @@ concepts:    [A5.1 composition-and-skills] [A5.2 group-size-and-nesting] [A5.7 l
 situations:  [S:group-too-big-or-chaotic] [S:lost-momentum-after-launch]
 handoff:     [H:events]
 anchors to:  Trust is built in small reciprocal risks
-source:      Han — *Undivided*, ch.5
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.5
 - **Claim / recommendation:** The conditions for trust are *designed up front*: a small working circle (here, six to eight), a deliberately balanced composition across the differences that matter, shared facilitation, and a first session built to surface vulnerability safely. A leader should compose and size their own group on purpose rather than letting it form by accident. What *not* to do: let the group grow too large to hold a real conversation, or let it sort itself into sameness.
 - **Reasoning / mechanism:** The program's effect came, in Han's framing, "not because of the information they imparted" but because of the context the design created — and that context was structural. Small size keeps real discussion possible; balanced composition forces the cross-difference encounters that build durable trust; a well-designed first session sets the tone before habits harden. Structure precedes process: get the setup right and the dynamics follow.
 - **Example in context:** Each circle was capped at roughly six to eight, paired two facilitators, and was built to be balanced across the group's key difference. Han writes that in carefully constructing the small groups, the team stumbled onto a truth it enacted before it could fully articulate it — that the design, not the curriculum, did the work.
@@ -178,8 +166,7 @@ concepts:    [A5.4 work-and-task-design] [A9.1 developing-leaders] [A3.2 ownersh
 situations:  [S:work-is-all-on-a-few-people] [S:no-one-takes-initiative]
 handoff:
 anchors to:  Make it theirs
-source:      Han — *Undivided*, ch.10
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.10
 - **Claim / recommendation:** When someone hangs back or balks at the obvious tasks, don't push them into the role you imagined — build a role around what they're actually good at and care about. A leader grows participation by fitting real, meaningful work to the person, not the person to a generic slot. What *not* to do: assume everyone should contribute the same way, or write off someone who declines one kind of task as uncommitted.
 - **Reasoning / mechanism:** People own and sustain work that draws on their strengths and matters to them; a well-designed role supplies identity, significance, and a reason to stay. Matching the task to the person converts reluctance into ownership and turns a passive member into a contributor with a stake.
 - **Example in context:** One member was deeply committed but hated cold-calling and door-knocking. Rather than lose her or force her, the leaders "crafted a role for her that played to her strengths" — she wrote the prayers and reflections that opened every meeting, march, and training. She loved the role, and it became a genuine, valued contribution that anchored her to the team for years.
@@ -191,8 +178,7 @@ concepts:    [A1.4 stepping-into-the-role] [A1.3 lead-by-example]
 situations:  [S:i-feel-like-an-imposter]
 handoff:
 anchors to:
-source:      Han — *Undivided*, ch.11
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.11
 - **Claim / recommendation:** A leader's willingness to be fully and authentically themselves — including showing the emotion and conviction they'd normally manage away — can be the very thing that moves a group, even when it's risky. Leading by reflecting back what people already think is safer but inert; standing in your own truth is what gives others permission to do the same. What *not* to do: perform a sanded-down, conflict-avoidant version of yourself in the belief that it's "more professional" leadership.
 - **Reasoning / mechanism:** When a leader models authentic risk-taking, they license it for everyone else and they earn a different kind of trust — the group sees a real person, not a role. The cost is real (backlash, exposure), but the alternative, leading as a mirror of the group's existing comfort, can't take a group anywhere new.
 - **Example in context:** A pastor who had spent years carefully managing how he showed up finally delivered a talk where he let himself be angry and unguarded — what people came to call his lament. He drew immediate blowback from some, but reflected afterward that people "saw me for who I was. And I survived it," and it let him lead from a place that felt true rather than performed.
@@ -205,8 +191,7 @@ concepts:    [A1.6 failure-as-learning] [A6.4 common-stall-patterns]
 situations:  [S:lost-momentum-after-launch] [S:i-feel-like-an-imposter]
 handoff:
 anchors to:  The spark is not the journey
-source:      Han — *Undivided*, Epilogue & ch.13
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), Epilogue & ch.13
 - **Claim / recommendation:** Expect the work to be non-linear — progress, backslide, false starts, stretches where nothing seems to add up. That is the normal shape of real change, not evidence the leader is failing. A leader should hold the group (and themselves) to a standard of *persisting through the mess*, not of following a clean upward line. What *not* to do: read every stall or relapse as proof the effort is broken.
 - **Reasoning / mechanism:** Change in anything complex proceeds by "revolution by trial and error" — there's no clear path, so people learn their way forward through attempts and corrections. Treating setbacks as information (rather than verdicts) is what keeps people in motion; insisting on linearity guarantees disappointment and dropout.
 - **Example in context:** Han closes by noting that none of the people she followed moved in a straight line — they switched jobs, broke and repaired relationships, got discouraged and renewed their courage again and again. She borrows a friend's image for living at the edge of change — sometimes our sentences just trail off — and that incompleteness is the honest shape of the work, not a failure of it.
@@ -218,8 +203,7 @@ concepts:    [A8.3 peer-accountability-without-authority] [A6.1 how-norms-form-a
 situations:  [S:volunteers-flaky] [S:burning-out]
 handoff:
 anchors to:  Relationships across difference are the engine
-source:      Han — *Undivided*, ch.14
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.14
 - **Claim / recommendation:** Among peers with no boss, accountability comes from relationship and ritual, not authority — people keep commitments because they don't want to let down a group they belong to. A leader builds this by creating recurring shared rituals (a standing gathering, a regular meal) that turn loose individuals into a community with felt obligations to each other. What *not* to do: try to enforce commitment top-down when you have no positional power, or treat recurring social rituals as frivolous.
 - **Reasoning / mechanism:** Belonging to a community you value creates a gentle, durable accountability: the prospect of disappointing people you're in relationship with keeps you showing up, especially when external pressure pushes the other way. Recurring rituals are how a set of relationships hardens into a culture with shared expectations — and that culture is what holds members against backlash.
 - **Example in context:** A couple started a monthly open-house potluck they called Second Saturdays. It grew into a standing ritual — dozens of people, food on a table they commissioned specifically for it, kids running around. An early attempt to organize a game flopped: "Forced fun is not fun," the host realized; people came to *be with one another*. That community was what kept members accountable to the work and resilient when they faced hostility elsewhere.
@@ -231,8 +215,7 @@ concepts:    [A10.4 collective-care] [A6.5 psychological-safety]
 situations:
 handoff:
 anchors to:  Relationships across difference are the engine
-source:      Han — *Undivided*, ch.7 (citing Arlie Russell Hochschild)
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), ch.7 (citing Arlie Russell Hochschild)
 - **Claim / recommendation:** In a group built across difference, the cost of doing the work is *not* shared equally — the members from the minority or less-powerful position usually carry a heavier, often invisible burden (educating others, exposing their own pain, managing others' reactions). A leader must see this and actively design to relieve it, rather than letting the group lean on its most exposed members. What *not* to do: assume goodwill makes the burden equal, or quietly rely on one member to "explain" the group's hard differences to everyone else.
 - **Reasoning / mechanism:** Sociologist Arlie Russell Hochschild's term "emotional labor" names the work — managing feelings for others' benefit — that those with less power often undertake. In a mixed group, the consequences of a hard exchange are not symmetric: the same conversation costs the exposed member far more. Unaddressed, this burns out exactly the members whose presence makes the group work, and it quietly corrodes the trust the group depends on.
 - **Example in context:** The team was unsure how to handle the inevitably disproportionate burden that minority members bore, and built in protections — including separate space for less-powerful members so they weren't always responsible for educating the majority. One member was grateful her counterpart was kind rather than scornful while she taught him, but the program treated *not* obligating her to carry his learning as a design responsibility, not her personal favor.
@@ -245,8 +228,7 @@ concepts:    [A7.1 building-and-using-power] [A1.3 lead-by-example] [A2.1 shared
 situations:  [S:cant-make-decisions]
 handoff:
 anchors to:
-source:      Han — *Undivided*, Introduction & ch.11
-
+source:      [Han — *Undivided*](https://www.hahriehan.com/), Introduction & ch.11
 - **Claim / recommendation:** A leader repeatedly faces a choice between *leading* the group toward something — taking a stance, naming a direction — and *mirroring* it, reflecting back whatever members already think so everyone stays comfortable. Mirroring keeps the peace but can't take a group anywhere new; leading means accepting you'll draw fire, often from more than one side at once. What *not* to do: default to mirroring because it avoids conflict, or expect to lead on anything contested without making someone unhappy.
 - **Reasoning / mechanism:** Using earned authority to move people means *spending* some of it — pointing somewhere they haven't all agreed to go. A leader who only reflects the group's existing center of gravity holds authority but exerts no force with it. The structural bind: lead and you can't please everyone; mirror and nothing changes. Naming that bind out loud frees a leader from chasing universal approval.
 - **Example in context:** A head pastor once backed a colleague's controversial stance from the main stage rather than placate the objectors — choosing to lead. Yet the same institution often retreated to the safe middle, in Han's words "merely acting as a mirror for people's existing views." A leader there later summed up the price of leading on anything contested: no matter what they did, they heard it from both sides.

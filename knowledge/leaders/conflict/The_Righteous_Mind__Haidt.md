@@ -1,7 +1,6 @@
 ---
 title: "The Righteous Mind"
-source: "Haidt — The Righteous Mind"
-domains: [A3, A8]
+source: "[Haidt](https://righteousmind.com/) — The Righteous Mind"domains: [A3, A8]
 primary_folder: "/conflict/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -30,8 +29,7 @@ concepts:    [A8.1 task-vs-relationship-conflict] [A8.2 productive-dissent]
 situations:  [S:two-members-clashing] [S:everyone-just-agrees]
 handoff:
 anchors to:
-source:      Haidt — The Righteous Mind, "Why Do They Vote That Way?"
-
+source:      [Haidt](https://righteousmind.com/) — The Righteous Mind, "Why Do They Vote That Way?"
 - **Claim / recommendation:** Don't assume the people in your group share your moral wiring. People weight different moral intuitions — some are moved most by care and equality, others by loyalty, fairness-as-desert, or respect for how things are done. An appeal pitched to *your* intuition lands flat on someone tuned to a different one. The trap for a leader: when your framing doesn't move someone, you read it as obtuseness or weak commitment, when it may just be a genuine difference in what they find morally weighty.
 - **Reasoning / mechanism:** Haidt's social intuitionist model holds that the gut reaction comes before the reasoning: "Intuitions come first, strategic reasoning second." Moral judgment runs on several distinct intuitive systems, and individuals weight them differently, so a values appeal only catches if it touches the intuition that person actually carries [A3.1]. The divergence is fast and pre-rational — in EEG work, brains of people with different moral profiles reacted differently within roughly half a second of hearing a value-laden sentence, before any argument could form. The implication is not "out-argue them"; it's that argument across a moral-intuition gap rarely moves anyone.
 - **Example in context:** In one study, people were asked which traits made a dog breed appealing. Those tuned to care and equality wanted a gentle dog that related to its owner as an equal; those tuned to loyalty and authority wanted a dog that was devoted to the household and easily trained to obey. The same trait that reads as a virtue to one person reads as a flaw to another — a clean, low-stakes illustration that people prefer what fits their own moral wiring.
@@ -43,8 +41,7 @@ concepts:    [A8.3 peer-accountability-without-authority] [A3.4 commitment-over-
 situations:  [S:volunteers-flaky] [S:work-is-all-on-a-few-people]
 handoff:
 anchors to:
-source:      Haidt — The Righteous Mind, "Why Do They Vote That Way?"
-
+source:      [Haidt](https://righteousmind.com/) — The Righteous Mind, "Why Do They Vote That Way?"
 - **Claim / recommendation:** People carry two different senses of fairness — *equality* (everyone gets the same) and *proportionality* (you get out in proportion to what you put in). When contributions are unequal, equal rewards feel *unfair*: when a few people did little or nothing, "most adults do not want to see the benefits distributed equally." For a leader, the lesson is twofold. First, the committed members' irritation at the flaky ones isn't pettiness — it's the proportionality intuition firing, and it deserves to be taken seriously. Second, don't let free-riding run unaddressed, because doing so corrodes the reliable members' willingness to keep carrying the load.
 - **Reasoning / mechanism:** Proportionality is the felt sense that people should reap what they sow. What actually sustains cooperation in a group is the willingness of members to sanction free-riders. Fehr & Gächter's public-goods experiment shows the mechanism: when there was no way to penalize a non-contributor, contributions decayed round after round; the moment players could pay (at cost to themselves) to dock a free-rider, cooperation climbed and kept climbing — about 84% paid to punish at least once, and contribution roughly doubled by the end. People sanctioned cheaters because it felt right to do so. The boundary for a leader: "punish" in the lab means a withheld reward or a sanction; in a volunteer group it means *surfacing and addressing* the imbalance, never retribution [A8.5].
 - **Example in context:** Swiss students played rounds of a game where each could keep tokens or put them in a common pot that the experimenters multiplied and split. Holding back paid best individually, so cooperation eroded. Then a rule was added: you could spend your own tokens to take tokens from a specific free-rider. Cooperation jumped on the very first round it was allowed and rose from there — the ability to hold non-contributors accountable, not generosity, was what kept the group pulling together.

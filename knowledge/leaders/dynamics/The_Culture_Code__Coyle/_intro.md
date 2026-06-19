@@ -1,7 +1,6 @@
 ---
 title: "The Culture Code"
-source: "Coyle — The Culture Code"
-domains: [A2, A6, A9]
+source: "[Coyle](https://danielcoyle.com/the-culture-code/) — The Culture Code"domains: [A2, A6, A9]
 primary_folder: "/dynamics/"
 type: ragsrc-summary
 last-updated: 2026-06-10
@@ -29,28 +28,23 @@ The load-bearing claims the book rests on — the baselines a coach returns to a
 
 **Culture is something you do, not something you are.** Group culture is not a fixed trait that some groups are blessed with and others lack; it is a set of learnable skills that produce a specific pattern of small interactions. Because the cause of high performance lives in *the interaction between people* rather than in the talent of individuals, a leader can build culture deliberately instead of waiting for "chemistry" to strike. Coyle's whole project is to make culture an engineering problem, not a matter of fate.
 flagship example: Peter Skillman's spaghetti-marshmallow contest. Teams of kindergartners built towers averaging 26 inches, beating business-school students (under 10 inches), lawyers (15), and CEOs (22). The MBAs lost not for lack of skill but because they spent their time on status management — *who's in charge, is it safe to criticize* — while the kindergartners stood shoulder to shoulder and simply tried things together. As Coyle puts it, culture "is not something you are. It's something you do."
-source:  Coyle — *The Culture Code*, Introduction, ch.1
-governs: [A1.2] [A6.1] [A1.3] [A6.3]
+source:  [Coyle](https://danielcoyle.com/the-culture-code/) — *The Culture Code*, Introduction, ch.1governs: [A1.2] [A6.1] [A1.3] [A6.3]
 
 **Safety comes first, and it is built from belonging cues.** Before a group can do anything well, its members' brains must register that they are safe and connected; that signal is delivered through a steady stream of small behaviors Coyle calls *belonging cues* (proximity, eye contact, energy, turn-taking, attention). The cues work because the amygdala — our ancient threat detector — flips into a social-bonding mode the moment it receives them, reconfiguring motivation around the group. Crucially, safety is never sent once: it decays, so it has to be refreshed continually.
 flagship example: Will Felps's "bad apple" study. A planted actor playing a jerk, slacker, or downer dragged 40 four-person groups' performance down 30–40% — *except* one group, "saved" by a member (Jonathan) who did almost nothing visible: he leaned in, smiled, deflected the negativity, and drew everyone out with questions. He was, in Coyle's phrase, a wellspring of cues that said *you are safe here*.
-source:  Coyle — *The Culture Code*, ch.1, ch.2
-governs: [A6.5] [A2.4] [A6.3] [A6.1]
+source:  [Coyle](https://danielcoyle.com/the-culture-code/) — *The Culture Code*, ch.1, ch.2governs: [A6.5] [A2.4] [A6.3] [A6.1]
 
 **Vulnerability precedes trust — and the leader goes first.** We assume trust must be built before people will take risks together; the science is the reverse. A shared, often uncomfortable exchange of weakness — *the vulnerability loop* — is what *creates* trust, and the highest-leverage version is a leader admitting they don't have the answer. The admission is not weakness; it is the signal that makes it safe for everyone else to be honest, ask for help, and cooperate.
 flagship example: United Flight 232 (1989). With all hydraulics gone — a one-in-a-billion failure that crashed all 28 NTSB simulations — Captain Al Haynes abandoned command-and-control and asked his crew four words, "Anybody have any ideas?"; pilot-trainer Denny Fitch knelt between the seats and offered, "Tell me what you want, and I'll help you." That clunky, vulnerable, 60-notifications-per-minute teamwork landed a plane no one had ever flown without controls, saving 185 of 296.
-source:  Coyle — *The Culture Code*, ch.7, ch.8
-governs: [A4.3] [A1.3] [A8.5] [A4.1]
+source:  [Coyle](https://danielcoyle.com/the-culture-code/) — *The Culture Code*, ch.7, ch.8governs: [A4.3] [A1.3] [A8.5] [A4.1]
 
 **Purpose is built by flooding the zone with signals that link *now* to a *future ideal*.** Purpose is not an inner flame people either have or lack; it is created externally, by relentlessly seeding the environment with clear, repeated signals — stories, mottos, priorities, artifacts — that connect *here is where we are* to *here is where we're going*. What looks like redundant repetition is actually navigation. Stories in particular don't decorate reality, they create it, because the brain processes a narrative as a model for behavior.
 flagship example: Johnson & Johnson's Credo, a 311-word document. After James Burke spent years running "Credo challenges," the 1982 Tylenol cyanide crisis (7 dead) produced thousands of fast, consistent decisions — including a $100M national recall against FBI advice — that Burke described as easy, almost reflexive, because everyone was attuned to the same signal: *our first responsibility is to the people who use our products.*
-source:  Coyle — *The Culture Code*, ch.13
-governs: [A2.1] [A2.3] [A5.3] [A6.6]
+source:  [Coyle](https://danielcoyle.com/the-culture-code/) — *The Culture Code*, ch.13governs: [A2.1] [A2.3] [A5.3] [A6.6]
 
 **The leader's job is to architect the greenhouse, not to be the plant.** Across every successful culture Coyle visited, the leader's role was to *set conditions* for others to perform rather than to direct, motivate, or star. They build the room, model the behavior, ask the questions, then fade back — and often deliberately disappear so the group learns to run without them. This is leadership as cultivation: you prepare the soil; you can't command the growth.
 flagship example: Tony Hsieh of Zappos, who measures "collisions" (serendipitous encounters), once physically dragged a couch across a room to fix the flow at a party, and recruits people with a two-line note — *meet these people, then ask who else you should meet.* "My job is to architect the greenhouse," he says. The same stance appears in Catmull (the ship's engineer, not its captain) and Popovich (who runs the occasional time-out where he never walks over, forcing the players to lead themselves).
-source:  Coyle — *The Culture Code*, ch.5, ch.12, ch.16
-governs: [A1.2] [A9.5] [A9.3] [A1.3]
+source:  [Coyle](https://danielcoyle.com/the-culture-code/) — *The Culture Code*, ch.5, ch.12, ch.16governs: [A1.2] [A9.5] [A9.3] [A1.3]
 
 ---
 
