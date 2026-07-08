@@ -7,6 +7,13 @@ import type {
 import { DEFAULT_LOGO_ASSETS } from "../constants/editor-constants";
 import { createClient } from "@/lib/supabase/server";
 
+type EditorAssetsResult = {
+  logoAssets: LogoAsset[];
+  fontAssets: FontAsset[];
+  frameAssets: FrameAsset[];
+  allowCustomLogo: boolean;
+};
+
 function getDefaultLogoAssets(): LogoAsset[] {
   return DEFAULT_LOGO_ASSETS.map((logo) => ({
     ...logo,
@@ -14,19 +21,141 @@ function getDefaultLogoAssets(): LogoAsset[] {
   }));
 }
 
-async function fetchEditorAssetsForUser(caUserId: string | undefined): Promise<{
-  logoAssets: LogoAsset[];
-  fontAssets: FontAsset[];
-  frameAssets: FrameAsset[];
-  allowCustomLogo: boolean;
-}> {
-  if (!caUserId?.trim()) {
+function getDefaultEditorAssets(): EditorAssetsResult {
+  return {
+    logoAssets: getDefaultLogoAssets(),
+    fontAssets: [],
+    frameAssets: [],
+    allowCustomLogo: true,
+  };
+}
+
+async function fetchEditorAssetsForClientQueryId(
+  clientQueryId: string | undefined,
+): Promise<EditorAssetsResult> {
+  const trimmedClientQueryId = clientQueryId?.trim();
+  if (!trimmedClientQueryId) {
+    return getDefaultEditorAssets();
+  }
+
+  try {
+    const supabase = await createClient();
+
+    const { data: clientRecord, error: clientError } = await supabase
+      .from("clients")
+      .select("id, allow_custom_logo")
+      .eq("ca_user_id", trimmedClientQueryId)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (clientError) {
+      console.error("Error fetching client by query client_id:", clientError);
+      return getDefaultEditorAssets();
+    }
+
+    if (!clientRecord?.id) {
+      return getDefaultEditorAssets();
+    }
+
+    const clientId = clientRecord.id;
+    const allowCustomLogo = clientRecord.allow_custom_logo ?? true;
+
+    let logoAssets: LogoAsset[] = getDefaultLogoAssets();
+    let fontAssets: FontAsset[] = [];
+    let frameAssets: FrameAsset[] = [];
+
+    const { data: directLogos, error: logosError } = await supabase
+      .from("client_assets")
+      .select("file_url, display_name, variant")
+      .eq("client_id", clientId)
+      .eq("asset_type", "logo")
+      .is("deleted_at", null)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (!logosError && directLogos && directLogos.length > 0) {
+      logoAssets = directLogos
+        .map((logo) => ({
+          url: logo.file_url,
+          display_name: logo.display_name,
+          variant: logo.variant ?? null,
+        }))
+        .filter((logo) => logo.url);
+    } else if (logosError) {
+      console.error("Error fetching client assets by query client_id:", logosError);
+    }
+
+    const { data: directFonts, error: fontsError } = await supabase
+      .from("client_fonts")
+      .select("font_source, font_family, font_weights, file_url, is_brand")
+      .eq("client_id", clientId)
+      .is("deleted_at", null)
+      .order("is_brand", { ascending: false })
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (!fontsError && directFonts && directFonts.length > 0) {
+      fontAssets = (
+        directFonts as Array<{
+          font_source: string;
+          font_family: string;
+          font_weights: string[] | null;
+          file_url: string | null;
+          is_brand?: boolean;
+        }>
+      ).map((font) => ({
+        font_source: font.font_source as "google" | "custom",
+        font_family: font.font_family,
+        font_weights: font.font_weights ?? ["400"],
+        file_url: font.file_url ?? undefined,
+        is_brand: Boolean(font.is_brand),
+      }));
+    } else if (fontsError) {
+      console.error("Error fetching client fonts by query client_id:", fontsError);
+    }
+
+    const { data: directFrames, error: framesError } = await supabase
+      .from("client_assets")
+      .select("file_url, display_name, variant")
+      .eq("client_id", clientId)
+      .eq("asset_type", "frame")
+      .is("deleted_at", null)
+      .order("is_primary", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (!framesError && directFrames && directFrames.length > 0) {
+      frameAssets = directFrames
+        .map((frame) => ({
+          url: frame.file_url,
+          display_name: frame.display_name,
+          variant: frame.variant ?? null,
+        }))
+        .filter((frame) => frame.url);
+    } else if (framesError) {
+      console.error("Error fetching client frames by query client_id:", framesError);
+    }
+
     return {
-      logoAssets: getDefaultLogoAssets(),
-      fontAssets: [],
-      frameAssets: [],
-      allowCustomLogo: true,
+      logoAssets,
+      fontAssets,
+      frameAssets,
+      allowCustomLogo,
     };
+  } catch (error) {
+    console.error("Error in getEditorAssetsForClientQueryId:", error);
+    return getDefaultEditorAssets();
+  }
+}
+
+async function fetchEditorAssetsForUser(
+  caUserId: string | undefined,
+): Promise<EditorAssetsResult> {
+  if (!caUserId?.trim()) {
+    return getDefaultEditorAssets();
   }
 
   try {
@@ -264,13 +393,19 @@ async function fetchEditorAssetsForUser(caUserId: string | undefined): Promise<{
     };
   } catch (error) {
     console.error("Error in getEditorAssetsForUser:", error);
-    return {
-      logoAssets: getDefaultLogoAssets(),
-      fontAssets: [],
-      frameAssets: [],
-      allowCustomLogo: true,
-    };
+    return getDefaultEditorAssets();
   }
 }
 
-export const getEditorAssetsForUser = cache(fetchEditorAssetsForUser);
+async function fetchEditorAssets(
+  clientQueryId: string | undefined,
+  caUserId: string | undefined,
+): Promise<EditorAssetsResult> {
+  if (clientQueryId?.trim()) {
+    return fetchEditorAssetsForClientQueryId(clientQueryId);
+  }
+
+  return fetchEditorAssetsForUser(caUserId);
+}
+
+export const getEditorAssets = cache(fetchEditorAssets);

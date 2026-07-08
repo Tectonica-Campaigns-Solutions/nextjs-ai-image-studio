@@ -130,6 +130,7 @@ type StudioPageProps = {
   searchParams: Promise<{
     imageUrl?: string;
     user_id?: string;
+    client_id?: string;
     session_id?: string;
     /**
      * Optional initial text to auto-insert as editable text blocks.
@@ -155,13 +156,17 @@ export default function StudioPage({ searchParams }: StudioPageProps) {
 - Resolves `searchParams` and prepares the props for `ImageEditorStandalone`.
 - Handles loading:
   - Initial background image (`imageUrl` query param).
-  - User identity (e.g. `user_id`, `user_email`, `client_id`).
+  - Asset identity:
+    - `client_id` (preferred): value must match `clients.ca_user_id`.
+    - `user_id` (fallback for backward compatibility when `client_id` is not provided).
+  - User identity for sessions/logging (`user_id`, `user_email`).
   - An existing `session_id` (to restore a saved canvas session).
   - Optional auto text insertion (`text` / `text_delim`) when opening a new session.
 
 Example:
 
 - `...?imageUrl=...&user_id=...&text=Titulo%20||%20Subtitulo%20||%20CTA`
+- `...?imageUrl=...&client_id=tectonica&text=Titulo%20||%20Subtitulo%20||%20CTA`
 
 ---
 
@@ -510,7 +515,8 @@ npm run dev
   - `http://localhost:3000/standalone/studio`
   - Optional query parameters:
     - `imageUrl=<public-url>` – initial background image.
-    - `user_id=<id>` – identifies the current user for session saving.
+    - `client_id=<ca_user_id>` – preferred parameter for loading logos/fonts/frames. The value must match `clients.ca_user_id`.
+    - `user_id=<id>` – backward-compatible fallback for asset loading when `client_id` is absent; also used for session saving/logging.
     - `session_id=<id>` – preload an existing saved session.
 
 Note: Actual base paths may be wrapped by additional segment layouts (e.g. marketing or auth segments). Always confirm by checking `app/` routing.
@@ -549,7 +555,9 @@ window.parent.postMessage(
     `type === "tectonica-studio-editing-done"`.
   - Consuming `imageUrl` (e.g., posting it back into a chat).
 
-When embedding, make sure to pass appropriate query params for `user_id` and `client_id` so sessions and analytics can be recorded correctly.
+When embedding, prefer passing both `client_id` and `user_id`:
+- `client_id` is used first for asset loading (mapped to `clients.ca_user_id`).
+- `user_id` remains useful for session persistence and analytics.
 
 ---
 

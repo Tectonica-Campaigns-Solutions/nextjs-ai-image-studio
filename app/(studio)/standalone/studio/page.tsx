@@ -6,6 +6,7 @@ type StudioPageProps = {
   searchParams: Promise<{
     imageUrl?: string;
     user_id?: string;
+    client_id?: string;
     session_id?: string;
     text?: string;
     text_delim?: string;

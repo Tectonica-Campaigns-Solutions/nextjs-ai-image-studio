@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { getEditorAssetsForUser } from "./lib/get-editor-assets";
+import { getEditorAssets } from "./lib/get-editor-assets";
 import { getCanvasSession } from "./lib/get-canvas-session";
 import { StudioLoading } from "./studio-loading";
 import { getClientStatusByUserId } from "./lib/get-client-status";
@@ -13,6 +13,7 @@ type StudioEditorLoaderProps = {
   searchParams: Promise<{
     imageUrl?: string;
     user_id?: string;
+    client_id?: string;
     session_id?: string;
     text?: string;
     text_delim?: string;
@@ -49,7 +50,7 @@ export default async function StudioEditorLoader({
     { logoAssets, fontAssets, frameAssets, allowCustomLogo },
     sessionData,
   ] = await Promise.all([
-    getEditorAssetsForUser(params.user_id),
+    getEditorAssets(params.client_id, params.user_id),
     params.session_id
       ? getCanvasSession(params.session_id)
       : Promise.resolve(null),
