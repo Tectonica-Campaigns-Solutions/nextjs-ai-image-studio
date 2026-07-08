@@ -65,78 +65,175 @@ async function fetchEditorAssetsForClientQueryId(
     let fontAssets: FontAsset[] = [];
     let frameAssets: FrameAsset[] = [];
 
-    const { data: directLogos, error: logosError } = await supabase
-      .from("client_assets")
-      .select("file_url, display_name, variant")
-      .eq("client_id", clientId)
-      .eq("asset_type", "logo")
-      .is("deleted_at", null)
-      .order("is_primary", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
+    const { data: logos, error: logosRpcError } = await supabase.rpc(
+      "get_client_assets_by_ca_user_id",
+      {
+        p_ca_user_id: trimmedClientQueryId,
+        p_asset_type: "logo",
+        p_variant: null,
+      },
+    );
 
-    if (!logosError && directLogos && directLogos.length > 0) {
-      logoAssets = directLogos
+    if (!logosRpcError && logos && Array.isArray(logos) && logos.length > 0) {
+      logoAssets = (
+        logos as {
+          file_url: string;
+          display_name: string;
+          variant: string | null;
+        }[]
+      )
         .map((logo) => ({
           url: logo.file_url,
           display_name: logo.display_name,
           variant: logo.variant ?? null,
         }))
         .filter((logo) => logo.url);
-    } else if (logosError) {
-      console.error("Error fetching client assets by query client_id:", logosError);
+    } else if (logosRpcError) {
+      console.warn(
+        "RPC function failed for client_id logos, trying direct query:",
+        logosRpcError,
+      );
+
+      const { data: directLogos, error: directLogosError } = await supabase
+        .from("client_assets")
+        .select("file_url, display_name, variant")
+        .eq("client_id", clientId)
+        .eq("asset_type", "logo")
+        .is("deleted_at", null)
+        .order("is_primary", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (!directLogosError && directLogos && directLogos.length > 0) {
+        logoAssets = directLogos
+          .map((logo) => ({
+            url: logo.file_url,
+            display_name: logo.display_name,
+            variant: logo.variant ?? null,
+          }))
+          .filter((logo) => logo.url);
+      } else if (directLogosError) {
+        console.error(
+          "Error fetching client assets by query client_id:",
+          directLogosError,
+        );
+      }
     }
 
-    const { data: directFonts, error: fontsError } = await supabase
-      .from("client_fonts")
-      .select("font_source, font_family, font_weights, file_url, is_brand")
-      .eq("client_id", clientId)
-      .is("deleted_at", null)
-      .order("is_brand", { ascending: false })
-      .order("is_primary", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
+    const { data: fonts, error: fontsRpcError } = await supabase.rpc(
+      "get_client_fonts_by_ca_user_id",
+      { p_ca_user_id: trimmedClientQueryId },
+    );
 
-    if (!fontsError && directFonts && directFonts.length > 0) {
+    if (!fontsRpcError && fonts && Array.isArray(fonts) && fonts.length > 0) {
       fontAssets = (
-        directFonts as Array<{
-          font_source: string;
+        fonts as {
+          font_source: "google" | "custom";
           font_family: string;
           font_weights: string[] | null;
           file_url: string | null;
           is_brand?: boolean;
-        }>
+        }[]
       ).map((font) => ({
-        font_source: font.font_source as "google" | "custom",
+        font_source: font.font_source,
         font_family: font.font_family,
         font_weights: font.font_weights ?? ["400"],
         file_url: font.file_url ?? undefined,
         is_brand: Boolean(font.is_brand),
       }));
-    } else if (fontsError) {
-      console.error("Error fetching client fonts by query client_id:", fontsError);
+    } else if (fontsRpcError) {
+      console.warn(
+        "RPC function failed for client_id fonts, trying direct query:",
+        fontsRpcError,
+      );
+
+      const { data: directFonts, error: directFontsError } = await supabase
+        .from("client_fonts")
+        .select("font_source, font_family, font_weights, file_url, is_brand")
+        .eq("client_id", clientId)
+        .is("deleted_at", null)
+        .order("is_brand", { ascending: false })
+        .order("is_primary", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (!directFontsError && directFonts && directFonts.length > 0) {
+        fontAssets = (
+          directFonts as Array<{
+            font_source: string;
+            font_family: string;
+            font_weights: string[] | null;
+            file_url: string | null;
+            is_brand?: boolean;
+          }>
+        ).map((font) => ({
+          font_source: font.font_source as "google" | "custom",
+          font_family: font.font_family,
+          font_weights: font.font_weights ?? ["400"],
+          file_url: font.file_url ?? undefined,
+          is_brand: Boolean(font.is_brand),
+        }));
+      } else if (directFontsError) {
+        console.error(
+          "Error fetching client fonts by query client_id:",
+          directFontsError,
+        );
+      }
     }
 
-    const { data: directFrames, error: framesError } = await supabase
-      .from("client_assets")
-      .select("file_url, display_name, variant")
-      .eq("client_id", clientId)
-      .eq("asset_type", "frame")
-      .is("deleted_at", null)
-      .order("is_primary", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
+    const { data: frames, error: framesRpcError } = await supabase.rpc(
+      "get_client_assets_by_ca_user_id",
+      {
+        p_ca_user_id: trimmedClientQueryId,
+        p_asset_type: "frame",
+        p_variant: null,
+      },
+    );
 
-    if (!framesError && directFrames && directFrames.length > 0) {
-      frameAssets = directFrames
+    if (!framesRpcError && frames && Array.isArray(frames) && frames.length > 0) {
+      frameAssets = (
+        frames as {
+          file_url: string;
+          display_name: string;
+          variant: string | null;
+        }[]
+      )
         .map((frame) => ({
           url: frame.file_url,
           display_name: frame.display_name,
           variant: frame.variant ?? null,
         }))
         .filter((frame) => frame.url);
-    } else if (framesError) {
-      console.error("Error fetching client frames by query client_id:", framesError);
+    } else if (framesRpcError) {
+      console.warn(
+        "RPC function failed for client_id frames, trying direct query:",
+        framesRpcError,
+      );
+
+      const { data: directFrames, error: directFramesError } = await supabase
+        .from("client_assets")
+        .select("file_url, display_name, variant")
+        .eq("client_id", clientId)
+        .eq("asset_type", "frame")
+        .is("deleted_at", null)
+        .order("is_primary", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (!directFramesError && directFrames && directFrames.length > 0) {
+        frameAssets = directFrames
+          .map((frame) => ({
+            url: frame.file_url,
+            display_name: frame.display_name,
+            variant: frame.variant ?? null,
+          }))
+          .filter((frame) => frame.url);
+      } else if (directFramesError) {
+        console.error(
+          "Error fetching client frames by query client_id:",
+          directFramesError,
+        );
+      }
     }
 
     return {
