@@ -88,11 +88,13 @@ async function fetchEditorAssetsForClientQueryId(
           variant: logo.variant ?? null,
         }))
         .filter((logo) => logo.url);
-    } else if (logosRpcError) {
-      console.warn(
-        "RPC function failed for client_id logos, trying direct query:",
-        logosRpcError,
-      );
+    } else {
+      if (logosRpcError) {
+        console.warn(
+          "RPC function failed for client_id logos, trying direct query:",
+          logosRpcError,
+        );
+      }
 
       const { data: directLogos, error: directLogosError } = await supabase
         .from("client_assets")
@@ -141,11 +143,13 @@ async function fetchEditorAssetsForClientQueryId(
         file_url: font.file_url ?? undefined,
         is_brand: Boolean(font.is_brand),
       }));
-    } else if (fontsRpcError) {
-      console.warn(
-        "RPC function failed for client_id fonts, trying direct query:",
-        fontsRpcError,
-      );
+    } else {
+      if (fontsRpcError) {
+        console.warn(
+          "RPC function failed for client_id fonts, trying direct query:",
+          fontsRpcError,
+        );
+      }
 
       const { data: directFonts, error: directFontsError } = await supabase
         .from("client_fonts")
@@ -204,11 +208,13 @@ async function fetchEditorAssetsForClientQueryId(
           variant: frame.variant ?? null,
         }))
         .filter((frame) => frame.url);
-    } else if (framesRpcError) {
-      console.warn(
-        "RPC function failed for client_id frames, trying direct query:",
-        framesRpcError,
-      );
+    } else {
+      if (framesRpcError) {
+        console.warn(
+          "RPC function failed for client_id frames, trying direct query:",
+          framesRpcError,
+        );
+      }
 
       const { data: directFrames, error: directFramesError } = await supabase
         .from("client_assets")
