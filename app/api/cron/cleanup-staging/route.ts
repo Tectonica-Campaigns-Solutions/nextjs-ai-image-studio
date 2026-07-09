@@ -7,19 +7,19 @@ export const maxDuration = 300
 const LOG_PREFIX = "[CRON cleanup-staging]"
 const STAGING_BUCKET = "bfl-staging"
 const STAGING_PREFIX = "bfl-input"
-const MAX_AGE_HOURS = 6
+const MAX_AGE_HOURS = 48
 const LIST_PAGE_SIZE = 100
 
 /**
  * GET /api/cron/cleanup-staging
  *
  * Deletes files in bfl-staging/bfl-input/ older than MAX_AGE_HOURS.
- * Intended to be called by a Railway Cron Job every 6 hours.
+ * Intended to be called by a Railway Cron Job every 48 hours.
  *
  * Authentication: Authorization: Bearer <CRON_SECRET>
  *
  * Railway Cron Job settings:
- *   Schedule : 0 *\/6 * * *
+ *   Schedule : 0 0 *\/2 * *
  *   URL      : https://<your-railway-url>/api/cron/cleanup-staging
  *   Headers  : Authorization: Bearer <CRON_SECRET>
  */
