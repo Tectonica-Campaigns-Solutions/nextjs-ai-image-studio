@@ -64,7 +64,7 @@ async function fetchEditorAssetsForClientQueryId(
     }
 
     const clientId = clientRecord?.id ?? null;
-    const allowCustomLogo = clientRecord.allow_custom_logo ?? true;
+    const allowCustomLogo = clientRecord?.allow_custom_logo ?? true;
 
     let logoAssets: LogoAsset[] = getDefaultLogoAssets();
     let fontAssets: FontAsset[] = [];
