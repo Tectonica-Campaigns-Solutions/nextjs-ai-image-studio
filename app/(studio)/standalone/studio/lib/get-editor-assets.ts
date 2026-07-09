@@ -50,15 +50,20 @@ async function fetchEditorAssetsForClientQueryId(
       .maybeSingle();
 
     if (clientError) {
-      console.error("Error fetching client by query client_id:", clientError);
-      return getDefaultEditorAssets();
+      console.warn(
+        "Error fetching client by query client_id (continuing with RPC path):",
+        clientError,
+      );
     }
 
     if (!clientRecord?.id) {
-      return getDefaultEditorAssets();
+      console.warn(
+        "No active client found by query client_id; continuing with RPC path",
+        { clientQueryId: trimmedClientQueryId },
+      );
     }
 
-    const clientId = clientRecord.id;
+    const clientId = clientRecord?.id ?? null;
     const allowCustomLogo = clientRecord.allow_custom_logo ?? true;
 
     let logoAssets: LogoAsset[] = getDefaultLogoAssets();
@@ -96,29 +101,36 @@ async function fetchEditorAssetsForClientQueryId(
         );
       }
 
-      const { data: directLogos, error: directLogosError } = await supabase
-        .from("client_assets")
-        .select("file_url, display_name, variant")
-        .eq("client_id", clientId)
-        .eq("asset_type", "logo")
-        .is("deleted_at", null)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true });
-
-      if (!directLogosError && directLogos && directLogos.length > 0) {
-        logoAssets = directLogos
-          .map((logo) => ({
-            url: logo.file_url,
-            display_name: logo.display_name,
-            variant: logo.variant ?? null,
-          }))
-          .filter((logo) => logo.url);
-      } else if (directLogosError) {
-        console.error(
-          "Error fetching client assets by query client_id:",
-          directLogosError,
+      if (!clientId) {
+        console.warn(
+          "Skipping direct logo query because client_id was not resolved from clients table",
         );
+      } else {
+
+        const { data: directLogos, error: directLogosError } = await supabase
+          .from("client_assets")
+          .select("file_url, display_name, variant")
+          .eq("client_id", clientId)
+          .eq("asset_type", "logo")
+          .is("deleted_at", null)
+          .order("is_primary", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (!directLogosError && directLogos && directLogos.length > 0) {
+          logoAssets = directLogos
+            .map((logo) => ({
+              url: logo.file_url,
+              display_name: logo.display_name,
+              variant: logo.variant ?? null,
+            }))
+            .filter((logo) => logo.url);
+        } else if (directLogosError) {
+          console.error(
+            "Error fetching client assets by query client_id:",
+            directLogosError,
+          );
+        }
       }
     }
 
@@ -151,37 +163,44 @@ async function fetchEditorAssetsForClientQueryId(
         );
       }
 
-      const { data: directFonts, error: directFontsError } = await supabase
-        .from("client_fonts")
-        .select("font_source, font_family, font_weights, file_url, is_brand")
-        .eq("client_id", clientId)
-        .is("deleted_at", null)
-        .order("is_brand", { ascending: false })
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true });
-
-      if (!directFontsError && directFonts && directFonts.length > 0) {
-        fontAssets = (
-          directFonts as Array<{
-            font_source: string;
-            font_family: string;
-            font_weights: string[] | null;
-            file_url: string | null;
-            is_brand?: boolean;
-          }>
-        ).map((font) => ({
-          font_source: font.font_source as "google" | "custom",
-          font_family: font.font_family,
-          font_weights: font.font_weights ?? ["400"],
-          file_url: font.file_url ?? undefined,
-          is_brand: Boolean(font.is_brand),
-        }));
-      } else if (directFontsError) {
-        console.error(
-          "Error fetching client fonts by query client_id:",
-          directFontsError,
+      if (!clientId) {
+        console.warn(
+          "Skipping direct fonts query because client_id was not resolved from clients table",
         );
+      } else {
+
+        const { data: directFonts, error: directFontsError } = await supabase
+          .from("client_fonts")
+          .select("font_source, font_family, font_weights, file_url, is_brand")
+          .eq("client_id", clientId)
+          .is("deleted_at", null)
+          .order("is_brand", { ascending: false })
+          .order("is_primary", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (!directFontsError && directFonts && directFonts.length > 0) {
+          fontAssets = (
+            directFonts as Array<{
+              font_source: string;
+              font_family: string;
+              font_weights: string[] | null;
+              file_url: string | null;
+              is_brand?: boolean;
+            }>
+          ).map((font) => ({
+            font_source: font.font_source as "google" | "custom",
+            font_family: font.font_family,
+            font_weights: font.font_weights ?? ["400"],
+            file_url: font.file_url ?? undefined,
+            is_brand: Boolean(font.is_brand),
+          }));
+        } else if (directFontsError) {
+          console.error(
+            "Error fetching client fonts by query client_id:",
+            directFontsError,
+          );
+        }
       }
     }
 
@@ -216,29 +235,36 @@ async function fetchEditorAssetsForClientQueryId(
         );
       }
 
-      const { data: directFrames, error: directFramesError } = await supabase
-        .from("client_assets")
-        .select("file_url, display_name, variant")
-        .eq("client_id", clientId)
-        .eq("asset_type", "frame")
-        .is("deleted_at", null)
-        .order("is_primary", { ascending: false })
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true });
-
-      if (!directFramesError && directFrames && directFrames.length > 0) {
-        frameAssets = directFrames
-          .map((frame) => ({
-            url: frame.file_url,
-            display_name: frame.display_name,
-            variant: frame.variant ?? null,
-          }))
-          .filter((frame) => frame.url);
-      } else if (directFramesError) {
-        console.error(
-          "Error fetching client frames by query client_id:",
-          directFramesError,
+      if (!clientId) {
+        console.warn(
+          "Skipping direct frames query because client_id was not resolved from clients table",
         );
+      } else {
+
+        const { data: directFrames, error: directFramesError } = await supabase
+          .from("client_assets")
+          .select("file_url, display_name, variant")
+          .eq("client_id", clientId)
+          .eq("asset_type", "frame")
+          .is("deleted_at", null)
+          .order("is_primary", { ascending: false })
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
+
+        if (!directFramesError && directFrames && directFrames.length > 0) {
+          frameAssets = directFrames
+            .map((frame) => ({
+              url: frame.file_url,
+              display_name: frame.display_name,
+              variant: frame.variant ?? null,
+            }))
+            .filter((frame) => frame.url);
+        } else if (directFramesError) {
+          console.error(
+            "Error fetching client frames by query client_id:",
+            directFramesError,
+          );
+        }
       }
     }
 
