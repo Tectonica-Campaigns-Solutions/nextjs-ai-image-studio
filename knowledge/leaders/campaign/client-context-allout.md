@@ -18,7 +18,7 @@ Inject this block verbatim between the persona block and the GOVERNING PRINCIPLE
 
 [CLIENT CONTEXT]
 
-org_name: All Out (All Out Action Fund, Inc.)
+org_name: All Out (All Out Action Fund, Inc.) - Testing env
 
 legal_structure: 501(c)(4)
 legal_jurisdiction: US (New York), UK
