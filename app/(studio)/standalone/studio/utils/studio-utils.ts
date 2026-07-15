@@ -250,9 +250,12 @@ const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
 export function sendToChat(message: string) {
   if (typeof window === "undefined") return;
 
+  const chatId = new URLSearchParams(window.location.search).get("chat_id") ?? null;
+
   const payload = {
     type: INPUT_PROMPT_SUBMIT_TYPE,
     text: message,
+    chatId,
   };
 
   console.log(
