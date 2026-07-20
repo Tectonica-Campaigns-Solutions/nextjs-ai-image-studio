@@ -76,6 +76,11 @@ export async function editImage(
     },
     ...(imageUrls?.length ? { imageUrls } : {}),
     ...(base64Images?.length ? { base64Images } : {}),
+    settings: {
+      safety_tolerance: '1',
+      enable_safety_checker: true,
+      output_format: 'jpeg',
+    }
   };
 
   const res = await fetch(EDIT_IMAGE_API_URL, {
