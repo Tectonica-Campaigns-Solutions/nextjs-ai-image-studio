@@ -52,8 +52,10 @@ export async function POST(request: NextRequest) {
 
   // ── Quota enforcement (lifetime) ───────────────────────────────────────────
   const caUserId =
-    typeof (body as any)?.clientInfo?.user_id === "string"
-      ? String((body as any).clientInfo.user_id)
+    typeof (body as any)?.clientInfo?.client_id === "string"
+      ? String((body as any).clientInfo.client_id)
+      : typeof (body as any)?.clientInfo?.user_id === "string"
+        ? String((body as any).clientInfo.user_id)
       : "";
   const quota = await getClientQuotaStatusByCaUserId(caUserId);
   if (quota && !quota.ok && quota.reason === "quota_exceeded") {

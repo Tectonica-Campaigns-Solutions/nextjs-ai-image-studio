@@ -1438,9 +1438,9 @@ function ImageEditorStandaloneInner({
         const result = await editImage({
           prompt,
           ...payload,
-          orgType: params.user_id ?? "",
+          orgType: params.client_id ?? params.user_id ?? "",
           clientInfo: {
-            client_id: params.user_id ?? "",
+            client_id: params.client_id ?? params.user_id ?? "",
             user_id: params.user_id ?? "",
             user_email: params.user_email ?? "",
           },

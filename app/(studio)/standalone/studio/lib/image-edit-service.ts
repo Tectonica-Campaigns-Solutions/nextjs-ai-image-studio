@@ -70,7 +70,7 @@ export async function editImage(
     disclaimer: false,
     orgType,
     clientInfo: {
-      client_id: clientInfo.user_id ?? "",
+      client_id: clientInfo.client_id ?? clientInfo.user_id ?? "",
       user_email: clientInfo.user_email ?? "",
       user_id: clientInfo.user_id ?? "",
     },
