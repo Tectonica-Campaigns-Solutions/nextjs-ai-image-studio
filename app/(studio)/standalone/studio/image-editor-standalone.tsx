@@ -837,6 +837,15 @@ function ImageEditorStandaloneInner({
 
   // Handle export click
   const handleExportClick = () => {
+    if (!FEATURE_FLAGS.enableExportDisclaimer) {
+      // Disclaimer temporarily disabled — export directly with defaults, skip the modal.
+      void exportImage({
+        position: disclaimerPosition,
+        format: EXPORT.DEFAULT_FORMAT,
+        filename: EXPORT.DEFAULT_FILENAME_BASE,
+      });
+      return;
+    }
     setShowDisclaimerModal(true);
   };
 
