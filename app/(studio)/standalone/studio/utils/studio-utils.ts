@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import { DASHBOARD_FEATURE_FLAGS } from "@/app/(studio)/dashboard/config/feature-flags";
+import { STUDIO_IFRAME_MESSAGE } from "../constants/editor-constants";
 
 // Brand utils
 export const GOOGLE_FONTS = [
@@ -247,19 +248,16 @@ export async function logVisualStudioAccess(params: {
 // Iframe connection
 const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
 
-export function sendToChat(message: string) {
+/**
+ * Broadcasts a postMessage payload to parent, grandparent (ChangeAgent sometimes
+ * embeds an artifact iframe which embeds our iframe), and top — whichever are
+ * reachable and distinct from the current window.
+ */
+function broadcastToHost(payload: Record<string, unknown>, logLabel: string) {
   if (typeof window === "undefined") return;
 
-  const chatId = new URLSearchParams(window.location.search).get("chat_id") ?? null;
-
-  const payload = {
-    type: INPUT_PROMPT_SUBMIT_TYPE,
-    text: message,
-    chatId,
-  };
-
   console.log(
-    "[sendToChat] Sending message to parent window:",
+    `[${logLabel}] Sending message to parent window:`,
     JSON.stringify(payload, null, 2),
   );
 
@@ -292,12 +290,10 @@ export function sendToChat(message: string) {
     const topWin = window.top && window.top !== window ? window.top : null;
 
     if (!parentWin && !grandParentWin && !topWin) {
-      console.warn("[sendToChat] No parent/grandparent/top window available.");
+      console.warn(`[${logLabel}] No parent/grandparent/top window available.`);
       return;
     }
 
-    // Broadcast: ChangeAgent sometimes embeds an artifact iframe (srcdoc) which embeds our iframe.
-    // In that case, ChangeAgent listens on the artifact's parent, so we need to reach grandparent.
     const targets: Array<{
       label: "parent" | "grandparent" | "top";
       win: Window;
@@ -319,16 +315,41 @@ export function sendToChat(message: string) {
         sentTo[t.label] = true;
       } catch (e) {
         sentTo[t.label] = false;
-        console.warn(`[sendToChat] postMessage failed for ${t.label}`, e);
+        console.warn(`[${logLabel}] postMessage failed for ${t.label}`, e);
       }
     }
 
-    console.log("[sendToChat] postMessage sent successfully.", {
+    console.log(`[${logLabel}] postMessage sent successfully.`, {
       sentTo,
       targetOrigin,
       hintedBaseUrl,
     });
   } catch (err) {
-    console.error("[sendToChat] Failed to send postMessage:", err);
+    console.error(`[${logLabel}] Failed to send postMessage:`, err);
   }
+}
+
+export function sendToChat(message: string) {
+  const chatId = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("chat_id") ?? null
+    : null;
+
+  broadcastToHost(
+    { type: INPUT_PROMPT_SUBMIT_TYPE, text: message, chatId },
+    "sendToChat",
+  );
+}
+
+/**
+ * Asks the embedding host to exit full-screen mode — the same action triggered
+ * by the host's "Cerrar" button (aria-label="Exit full screen"). The host app
+ * must listen for `type === "tectonica-studio-exit-fullscreen"` and call its
+ * own exit-fullscreen logic; the Studio iframe cannot reach across origins to
+ * do this directly.
+ */
+export function requestExitFullscreen() {
+  broadcastToHost(
+    { type: STUDIO_IFRAME_MESSAGE.EXIT_FULLSCREEN_TYPE },
+    "requestExitFullscreen",
+  );
 }

@@ -64,7 +64,7 @@ import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
-import { getCanvasFontFamily, logVisualStudioAccess, sendToChat } from "./utils/studio-utils";
+import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
@@ -938,6 +938,9 @@ function ImageEditorStandaloneInner({
 
       sendToChat(imageUrl);
       console.log("Sent to chat:", imageUrl);
+      // Exit full screen so the user can see the image landed in the conversation —
+      // same action as the host's "Cerrar" (Exit full screen) button.
+      requestExitFullscreen();
 
       toast({
         title: "Sent to conversation",
