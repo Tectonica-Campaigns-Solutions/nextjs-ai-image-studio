@@ -237,6 +237,8 @@ export const FEATURE_FLAGS = {
   showEditWithAI: true,
   showLayersPanel: true,
   showGuidesAndGrid: true,
+  enableDisclaimerCropPreprocess: false,
+  enableExportDisclaimer: false,
 } as const;
 
 // Iframe communication from Studio → parent (ChangeAgent/Open WebUI)

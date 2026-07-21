@@ -220,6 +220,7 @@ function ImageEditorStandaloneInner({
   // Determine image URL
   const rawImageUrl = imageUrlFromParams || uploadedImageUrl;
   const requiresPreprocess =
+    FEATURE_FLAGS.enableDisclaimerCropPreprocess &&
     !!rawImageUrl &&
     /^https:\/\//i.test(rawImageUrl) &&
     !rawImageUrl.startsWith("blob:") &&
@@ -963,115 +964,117 @@ function ImageEditorStandaloneInner({
     let disclaimerGroup: Group | null = null;
     try {
       // Add temporary disclaimer before export
-      const margin = Math.max(
-        EXPORT.DISCLAIMER_MIN_MARGIN,
-        Math.round(canvasEditor.canvas.width * EXPORT.DISCLAIMER_MARGIN_MULTIPLIER)
-      );
-      const padding = Math.max(
-        EXPORT.DISCLAIMER_MIN_PADDING,
-        Math.round(canvasEditor.canvas.width * EXPORT.DISCLAIMER_PADDING_MULTIPLIER)
-      );
-      const lineGap = Math.max(
-        EXPORT.DISCLAIMER_MIN_LINE_GAP,
-        Math.round(canvasEditor.canvas.width * EXPORT.DISCLAIMER_LINE_GAP_MULTIPLIER)
-      );
-      const fontSize = EXPORT.DISCLAIMER_FONT_SIZE;
+      if (FEATURE_FLAGS.enableExportDisclaimer) {
+        const margin = Math.max(
+          EXPORT.DISCLAIMER_MIN_MARGIN,
+          Math.round(canvasEditor.canvas.width * EXPORT.DISCLAIMER_MARGIN_MULTIPLIER)
+        );
+        const padding = Math.max(
+          EXPORT.DISCLAIMER_MIN_PADDING,
+          Math.round(canvasEditor.canvas.width * EXPORT.DISCLAIMER_PADDING_MULTIPLIER)
+        );
+        const lineGap = Math.max(
+          EXPORT.DISCLAIMER_MIN_LINE_GAP,
+          Math.round(canvasEditor.canvas.width * EXPORT.DISCLAIMER_LINE_GAP_MULTIPLIER)
+        );
+        const fontSize = EXPORT.DISCLAIMER_FONT_SIZE;
 
-      const textFill = EXPORT.DISCLAIMER_TEXT_COLOR;
-      const textShadow = new Shadow({
-        color: EXPORT.DISCLAIMER_SHADOW_COLOR,
-        blur: 2,
-        offsetX: 1,
-        offsetY: 1,
-      });
+        const textFill = EXPORT.DISCLAIMER_TEXT_COLOR;
+        const textShadow = new Shadow({
+          color: EXPORT.DISCLAIMER_SHADOW_COLOR,
+          blur: 2,
+          offsetX: 1,
+          offsetY: 1,
+        });
 
-      const line1 = new Text(EXPORT.DISCLAIMER_TEXT_1, {
-        left: padding,
-        top: padding,
-        fontSize,
-        fontFamily: DEFAULT_FONTS.SECONDARY,
-        fill: textFill,
-        shadow: textShadow,
-        selectable: false,
-        evented: false,
-      });
+        const line1 = new Text(EXPORT.DISCLAIMER_TEXT_1, {
+          left: padding,
+          top: padding,
+          fontSize,
+          fontFamily: DEFAULT_FONTS.SECONDARY,
+          fill: textFill,
+          shadow: textShadow,
+          selectable: false,
+          evented: false,
+        });
 
-      const line2Prefix = new Text(EXPORT.DISCLAIMER_TEXT_2_PREFIX, {
-        left: padding,
-        top: padding + (line1.height ?? fontSize) + lineGap,
-        fontSize,
-        fontFamily: DEFAULT_FONTS.SECONDARY,
-        fill: textFill,
-        shadow: textShadow,
-        selectable: false,
-        evented: false,
-      });
+        const line2Prefix = new Text(EXPORT.DISCLAIMER_TEXT_2_PREFIX, {
+          left: padding,
+          top: padding + (line1.height ?? fontSize) + lineGap,
+          fontSize,
+          fontFamily: DEFAULT_FONTS.SECONDARY,
+          fill: textFill,
+          shadow: textShadow,
+          selectable: false,
+          evented: false,
+        });
 
-      const line2Brand = new Text(EXPORT.DISCLAIMER_TEXT_2_BRAND, {
-        left: padding + (line2Prefix.width ?? 0),
-        top: padding + (line1.height ?? fontSize) + lineGap,
-        fontSize,
-        fontFamily: DEFAULT_FONTS.SECONDARY,
-        fill: textFill,
-        shadow: textShadow,
-        underline: true,
-        selectable: false,
-        evented: false,
-      });
+        const line2Brand = new Text(EXPORT.DISCLAIMER_TEXT_2_BRAND, {
+          left: padding + (line2Prefix.width ?? 0),
+          top: padding + (line1.height ?? fontSize) + lineGap,
+          fontSize,
+          fontFamily: DEFAULT_FONTS.SECONDARY,
+          fill: textFill,
+          shadow: textShadow,
+          underline: true,
+          selectable: false,
+          evented: false,
+        });
 
-      const contentWidth = Math.max(
-        line1.width ?? 0,
-        (line2Prefix.width ?? 0) + (line2Brand.width ?? 0)
-      );
-      const line2Height = Math.max(
-        line2Prefix.height ?? fontSize,
-        line2Brand.height ?? fontSize
-      );
-      const contentHeight = (line1.height ?? fontSize) + lineGap + line2Height;
+        const contentWidth = Math.max(
+          line1.width ?? 0,
+          (line2Prefix.width ?? 0) + (line2Brand.width ?? 0)
+        );
+        const line2Height = Math.max(
+          line2Prefix.height ?? fontSize,
+          line2Brand.height ?? fontSize
+        );
+        const contentHeight = (line1.height ?? fontSize) + lineGap + line2Height;
 
-      const bg = new Rect({
-        left: 0,
-        top: 0,
-        width: contentWidth + padding * 2,
-        height: contentHeight + padding * 2,
-        fill: EXPORT.DISCLAIMER_BG_COLOR,
-        opacity: EXPORT.DISCLAIMER_BG_OPACITY,
-        selectable: false,
-        evented: false,
-      });
+        const bg = new Rect({
+          left: 0,
+          top: 0,
+          width: contentWidth + padding * 2,
+          height: contentHeight + padding * 2,
+          fill: EXPORT.DISCLAIMER_BG_COLOR,
+          opacity: EXPORT.DISCLAIMER_BG_OPACITY,
+          selectable: false,
+          evented: false,
+        });
 
-      // Calculate position based on selected option
-      let groupLeft = 0;
-      let groupTop = 0;
+        // Calculate position based on selected option
+        let groupLeft = 0;
+        let groupTop = 0;
 
-      switch (position) {
-        case "top-right":
-          groupLeft = canvasEditor.canvas.width - margin - (bg.width ?? 0);
-          groupTop = margin;
-          break;
-        case "top-left":
-          groupLeft = margin;
-          groupTop = margin;
-          break;
-        case "bottom-left":
-          groupLeft = margin;
-          groupTop = canvasEditor.canvas.height - margin - (bg.height ?? 0);
-          break;
-        case "bottom-right":
-        default:
-          groupLeft = canvasEditor.canvas.width - margin - (bg.width ?? 0);
-          groupTop = canvasEditor.canvas.height - margin - (bg.height ?? 0);
-          break;
+        switch (position) {
+          case "top-right":
+            groupLeft = canvasEditor.canvas.width - margin - (bg.width ?? 0);
+            groupTop = margin;
+            break;
+          case "top-left":
+            groupLeft = margin;
+            groupTop = margin;
+            break;
+          case "bottom-left":
+            groupLeft = margin;
+            groupTop = canvasEditor.canvas.height - margin - (bg.height ?? 0);
+            break;
+          case "bottom-right":
+          default:
+            groupLeft = canvasEditor.canvas.width - margin - (bg.width ?? 0);
+            groupTop = canvasEditor.canvas.height - margin - (bg.height ?? 0);
+            break;
+        }
+
+        disclaimerGroup = new Group([bg, line1, line2Prefix, line2Brand], {
+          left: groupLeft,
+          top: groupTop,
+          selectable: false,
+          evented: false,
+        });
+        canvasEditor.canvas.add(disclaimerGroup);
+        canvasEditor.canvas.renderAll();
       }
-
-      disclaimerGroup = new Group([bg, line1, line2Prefix, line2Brand], {
-        left: groupLeft,
-        top: groupTop,
-        selectable: false,
-        evented: false,
-      });
-      canvasEditor.canvas.add(disclaimerGroup);
-      canvasEditor.canvas.renderAll();
 
       const currentWidth = canvasEditor.canvas.width;
       const multiplier = canvasEditor.originalImageDimensions.width / currentWidth;
