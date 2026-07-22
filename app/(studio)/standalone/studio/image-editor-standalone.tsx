@@ -945,6 +945,7 @@ function ImageEditorStandaloneInner({
       toast({
         title: "Sent to conversation",
         description: "Posted the image URL to the conversation.",
+        className: "bg-white border-[#e5e5e5] text-black",
       });
     } catch (error) {
       console.error("Failed to send image URL to chat:", error);
