@@ -323,7 +323,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
         </div>
       </div>
       <div className="w-full h-[1px] bg-[#2D2D2D]" />
-      <div className="grid grid-cols-2 gap-4 items-center">
+      <div className="grid grid-cols-1 gap-4 items-center">
         {/* Alignment */}
         <div className="min-w-0 flex shrink-0">
           <div className="grid grid-cols-3 gap-[5px] w-fit">
@@ -369,7 +369,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
           </div>
         </div>
         {/* Colors */}
-        <div className="flex gap-4 justify-end items-center min-w-0">
+        <div className="flex gap-4 items-center min-w-0">
           {/* Text Color */}
           <Popover>
               <PopoverTrigger asChild>
