@@ -323,7 +323,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
         </div>
       </div>
       <div className="w-full h-[1px] bg-[#2D2D2D]" />
-      <div className="grid grid-cols-1 gap-4 items-center">
+      <div className="grid grid-cols-2 gap-4 items-center">
         {/* Alignment */}
         <div className="min-w-0 flex shrink-0">
           <div className="grid grid-cols-3 gap-[5px] w-fit">
@@ -369,7 +369,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
           </div>
         </div>
         {/* Colors */}
-        <div className="flex gap-4 items-center min-w-0">
+        <div className="flex gap-4 justify-end items-center min-w-0">
           {/* Text Color */}
           <Popover>
               <PopoverTrigger asChild>
@@ -383,7 +383,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
                   )}
                 >
                   <div
-                    className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
+                    className="w-4 h-4 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
                     style={{ backgroundColor: rgbaToString(textColor) }}
                   />
                   <div className="flex flex-col gap-[2px] items-center justify-center">
@@ -425,7 +425,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
                   )}
                 >
                   <div
-                    className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
+                    className="w-4 h-4 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
                     style={{ backgroundColor: rgbaToString(backgroundColor) }}
                   />
                   <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center shrink-0">
