@@ -7,7 +7,7 @@ priority: critical
 inject: system-prompt-prepend
 version: 1
 last-updated: July 2026
-tags: [client_context, session-init, group-coach]
+tags: [client_context, session-init, group-coach, client:allout]
 ---
 
 # All Out — Group Coach Client Context

@@ -7,7 +7,7 @@ priority: critical
 inject: system-prompt-prepend
 version: 1
 last-updated: July 2026
-tags: [client_context, session-init, writing-coach]
+tags: [client_context, session-init, writing-coach, client:allout]
 ---
 
 # All Out — Writing Coach Client Context

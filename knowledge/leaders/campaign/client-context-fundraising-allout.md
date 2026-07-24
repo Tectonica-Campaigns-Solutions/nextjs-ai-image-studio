@@ -7,7 +7,7 @@ priority: critical
 inject: system-prompt-prepend
 version: 1.0
 last-updated: July 2026
-tags: [client_context, session-init, fundraising]
+tags: [client_context, session-init, fundraising, client:allout]
 ---
 
 # All Out — Client Context
