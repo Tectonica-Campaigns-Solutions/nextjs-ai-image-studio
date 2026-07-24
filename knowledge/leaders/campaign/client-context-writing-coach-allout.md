@@ -24,11 +24,11 @@ legal_structure: 501(c)(4)
 legal_jurisdiction: US (New York), UK
 
 campaign_name: All Out Pride Pilot
-campaign_window: mid-June to mid-July 2026 (one month)
+campaign_window: July-August 2026 (one month)
 
 campaign_purpose: A group-based Pride-season fundraising pilot. Leaders form small social groups of roughly 10–15 people to raise money for All Out's global fight for LGBT+ rights — doing something meaningful together during Pride season, not just donating.
 
-campaign_goal: Raise approximately $2,000 per group. Overall pilot target is approximately $35,000 across all groups. The per-group figure is a recommendation, not a requirement.
+campaign_goal: Raise as much money as each leader can per group as part of a one-month Pride-season pilot. The coach helps the leader set a realistic target based on their network and tactic if they arrive without one.
 
 impact_statement: Donations fund All Out's global fight for LGBT+ rights — from overturning a 10-year prison sentence for an Afro-Colombian trans woman, to keeping a Ukrainian LGBT+ shelter open through winter, to defending Pride in Hungary, to fighting anti-LGBT+ laws across Africa. All Out has given $2M+ directly to grassroots activists. 83% of funds go straight into campaigning. Donations are unrestricted — they go where the need is greatest.
 

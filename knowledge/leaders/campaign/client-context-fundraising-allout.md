@@ -48,7 +48,7 @@ primary_outreach_channels: dedicated action emails (strong open rates), WhatsApp
  
 social_platform_registrations: Facebook, Instagram, TikTok, Twitter/X
  
-strategic_goal: Raise approximately $2,000 per group as part of a one-month Pride-season pilot (mid-June to mid-July 2026). Overall pilot target across all groups is approximately $35,000. The $2,000/group figure is a recommendation, not a requirement — the coach helps the leader set a realistic target based on their network and tactic if they arrive without one.
+strategic_goal: Raise as much money as each leader can per group as part of a one-month Pride-season pilot. The coach helps the leader set a realistic target based on their network and tactic if they arrive without one.
  
 impact_statement: Donations fund All Out's global fight for LGBT+ rights — from overturning a 10-year prison sentence for an Afro-Colombian trans woman, to keeping a Ukrainian LGBT+ shelter open through winter, to defending Pride in Hungary, to fighting anti-LGBT+ laws across Africa. All Out has given $2M+ directly to grassroots activists. 83% of funds go straight into campaigning. Donations are unrestricted — they go where the need is greatest.
  
