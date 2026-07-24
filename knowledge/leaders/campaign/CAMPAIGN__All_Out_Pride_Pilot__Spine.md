@@ -21,7 +21,7 @@ last-updated: 2026-06-15
 
 ## **What this is**
 
-A one-month, group-based fundraising pilot for All Out — the global movement fighting for LGBT+ rights, for love and equality, everywhere. Thirty members across the U.S. and UK are each founding a small fundraising group in their own community: naming it, recruiting it, deciding together how it raises, and running a fundraiser during Pride season. The pilot runs from mid-June through **July 15**. All money raised must be in by then.
+A one-month, group-based fundraising pilot for All Out — the global movement fighting for LGBT+ rights, for love and equality, everywhere. Thirty members across the U.S. and UK are each founding a small fundraising group in their own community: naming it, recruiting it, deciding together how it raises, and running a fundraiser during Pride season. The pilot runs during July and August. All money raised must be in by then.
 
 Every group leader in this campaign is one of those thirty. They answered an invitation to do something different this Pride — not just march, not just post, not just donate, but build something with other people. Most have never organized or fundraised before. That is by design, and it is fine. The promise made to them was: *you only need to know how to type*. The coach's job is to keep that promise.
 
@@ -37,13 +37,13 @@ A useful truth that governs the whole arc: **most of a group's outcome is decide
 
 ## **The goal**
 
-**Each group aims to raise at least $2,000 (or £2,000).** This is a steer, not a contract — but it is a serious number worth taking seriously, because of what it represents: in many of the places All Out works, £2,000 can keep an LGBT+ shelter open for a month. Everything raised is unrestricted and goes directly to All Out's global fight — overturning unjust sentences, keeping shelters open, defending Pride where it is banned, fighting anti-LGBT+ laws — wherever the need is greatest.
+**Each group aims to raise as much money as it can.** This is a steer, not a contract. Everything raised is unrestricted and goes directly to All Out's global fight — overturning unjust sentences, keeping shelters open, defending Pride where it is banned, fighting anti-LGBT+ laws — wherever the need is greatest.
 
 The money matters because the moment is hard: more countries than ever criminalise being LGBT+, trans rights are being rolled back in the U.S. and UK, "propaganda" laws are spreading across Eastern Europe, and funding cuts have left frontline groups facing impossible choices. All Out itself is a team of just 13 people. The strength of this movement has never come from big institutions. It comes from members.
 
 ## **The goal behind the goal**
 
-This campaign has a second objective that is just as real: **give people a chance to stand up for one another, together.** The frame is *we are one* — one community around the world, made of many communities, that sticks together and fights for each other. A group that organizes, raises money, and holds each other accountable generates a kind of power that a thousand individuals acting alone cannot. If a group ends the month with $2,000 raised *and* a set of relationships that didn't exist in May — people who now know they can do things together — the pilot has done its real work.
+This campaign has a second objective that is just as real: **give people a chance to stand up for one another, together.** The frame is *we are one* — one community around the world, made of many communities, that sticks together and fights for each other. A group that organizes, raises money, and holds each other accountable generates a kind of power that a thousand individuals acting alone cannot. If a group ends the month with some money raised *and* a set of relationships that didn't exist before July — people who now know they can do things together — the pilot has done its real work.
 
 So the coach never treats the group as merely a fundraising machine. The group itself is the point.
 
@@ -119,7 +119,7 @@ An invitation exists now: *join my group, raise money with me for the global fig
 
 ### **What you actually do**
 
-* Draft your appeal. It should answer, in plain words: **why this group exists** (the fight, this moment, why you personally are doing this), **what you'll do together** (form a group, run a fundraiser you design together, one month), and **what the group's hopes are** (at least $2,000 for All Out's global work — and a community that outlasts the month).  
+* Draft your appeal. It should answer, in plain words: **why this group exists** (the fight, this moment, why you personally are doing this), **what you'll do together** (form a group, run a fundraiser you design together, one month), and **what the group's hopes are** (raise as much money as it can for All Out's global work — and a community that outlasts the month).  
 * Make it personal. The strongest version says why *you* said yes. "I signed up to lead one of thirty groups this Pride because…" is worth more than any statistic.  
 * Be concrete about the commitment: about a month, a few hours a week, ends July 15, and it will be genuinely fun and genuinely matter.  
 * Choose your channel per person — a call, a coffee, a voice note, a text. The leader knows their people; the more personal the channel, the stronger the yes.  
@@ -130,7 +130,7 @@ An invitation exists now: *join my group, raise money with me for the global fig
 * **The ask is yours; how to invite is up to you.** The coach can help draft, sharpen, and rehearse — but the words should sound like the leader, because the people receiving it know the leader, not the platform.  
 * **A serious ask signals serious work.** Don't shrink the invitation to make it easier to say ("it's nothing really, super low commitment, no pressure at all…"). People are drawn to things that matter. Name the moment honestly: rights are under attack, frontline groups are losing funding, and this is a real way to push back.  
 * **Asking big does not scare people off** — it tells them the work is worth their time. The leader is offering something, not begging for something: a way to turn Pride-month feeling into Pride-month power, with other people, with support behind it.  
-* **Use All Out's "why" freely.** The stakes (criminalisation, trans rights under attack, Pride bans, shelters at risk), the impact (£2,000 ≈ a shelter's month), the frame (*we are one*). Always in radically inclusive language; never imply donations are tax-deductible.  
+* **Use All Out's "why" freely.** The stakes (criminalisation, trans rights under attack, Pride bans, shelters at risk), the impact, the frame (*we are one*). Always in radically inclusive language; never imply donations are tax-deductible.  
 * **Expect to follow up.** Silence usually means busy, not no. One warm nudge after a few days is friendship, not pestering.
 
 ### **Where leaders get stuck here**
@@ -235,9 +235,9 @@ This is the meeting where a collection of people who each said yes to *the leade
 A working shape for 60–90 minutes:
 
 1. **Open with people, not logistics.** A round: name, how you know the leader, and why you said yes. Hearing each other's reasons is the fastest belonging-builder there is — and it puts the purpose in the group's own words from minute five.  
-2. **Share the frame, then open it.** The leader briefly holds up the campaign: Pride season, All Out's global fight, one month, at least $2,000, one of thirty groups. Then the genuinely open question: *what do we want this to be?* The campaign sets the container; the group fills it.  
+2. **Share the frame, then open it.** The leader briefly holds up the campaign: Pride season, All Out's global fight, one month, one of thirty groups. Then the genuinely open question: *what do we want this to be?* The campaign sets the container; the group fills it.  
 3. **Name the group.** Yes, really, at meeting one. Naming is a small act with outsized effect — it's the moment "your project" becomes "our group." Let it be playful; Pride names tend to be excellent. The group decides, not the leader.  
-4. **Set the goal in the group's own mouth.** $2,000 (or £2,000) is the campaign's floor; the group can own it, raise it, or stretch it. A goal the group chose out loud is a goal the group will chase.  
+4. **Set the goal in the group's own mouth.** the group can own it, raise it, or stretch it. A goal the group chose out loud is a goal the group will chase.  
 5. **Sketch the fundraiser.** Not the full plan (that's Stage 6\) — the direction. Surface ideas, gauge energy, maybe land on a front-runner. What sounds fun? What fits *these* people and *this* community? Energy in the room is data: the best tactic is the one the group is excited to actually do.  
 6. **Agree how you'll work.** Lightly, but explicitly: How often do we meet, and when? (A consistent slot — same day, same time — beats a perfect one. Steady rhythm builds culture faster than full attendance.) Where do we talk between meetings — one channel, named now? How do we make decisions — talk-until-agreed, leader-calls-it-after-input, quick votes? Match the formality to the people; what matters is that it's *said*, because unspoken assumptions are where later conflict lives.  
 7. **Make safety explicit.** One sentence from the leader does it: "Everything's sayable here — including no." A group where people can decline a task, disagree with the plan, and admit they're behind is a group that tells the truth all month. A group where they can't goes quiet and then goes missing.  
@@ -290,7 +290,7 @@ Direction becomes a plan: *this* fundraiser, on *this* date, with *these* tasks,
 
 * **Energy beats optimization.** A "pretty good" tactic the group is excited about will outraise the "optimal" tactic they're lukewarm on, every time. Fun is a strategy: this is Pride.  
 * **The ask is the fundraiser.** Whatever the tactic, the money comes from people being directly, personally asked by someone they know. The event is the occasion; the ask is the engine. Build the plan around making asks easy and natural for every member — each person bringing their own people is how a group of 8 reaches hundreds.  
-* **Aim the plan at the goal, concretely.** $2,000 \= 40 people giving $50, or 20 giving $100, or 60 giving $33 at the door of a great party. Run the group's own math out loud at the planning meeting — it turns an abstract number into "okay, we each bring 8 people."  
+* **Aim the plan at the goal, concretely.** Run the group's own math out loud at the planning meeting — it turns an abstract number into "okay, we each bring 8 people."  
 * **Agreements without consent aren't agreements.** A member nodded into a task they never chose will ghost it — and feel bad, and drift. Slower sign-ups with real yeses beat a fast plan full of soft ones.  
 * **The leader's name should not be next to half the tasks.** If it is, stop and redistribute before the plan is locked. Facilitator, not pack mule.
 
