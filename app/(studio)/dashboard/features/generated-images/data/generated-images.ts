@@ -7,6 +7,7 @@ export type GeneratedImageRow = {
   cost: number | null;
   prompt: string | null;
   created_at: string;
+  user_id: string | null;
 };
 
 export type GeneratedImageListItem = GeneratedImageRow & {
@@ -61,7 +62,7 @@ export async function getGeneratedImagesPageData(
 
   let query = supabaseAdmin
     .from("generated_images")
-    .select("id, client_id, cost, prompt, created_at", { count: "exact" })
+    .select("id, client_id, cost, prompt, created_at, user_id", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (clientCaUserId) {

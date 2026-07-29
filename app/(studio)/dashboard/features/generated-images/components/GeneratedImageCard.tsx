@@ -12,6 +12,7 @@ export type GeneratedImageCardItem = {
   created_at: string;
   client_name?: string;
   client_id: string;
+  user_id: string | null;
 };
 
 export type GeneratedImageCardProps = Readonly<{
@@ -29,7 +30,8 @@ function formatCost(cost: number | null): string {
 export function GeneratedImageCard({ item, onView, onDownload, className }: GeneratedImageCardProps) {
   const prompt = item.prompt?.trim() || "—";
   const subtitle = `Cost • ${formatCost(item.cost)}`;
-  const label = item.client_name ? item.client_name : item.client_id;
+  const baseLabel = item.client_name ? item.client_name : item.client_id;
+  const label = item.user_id ? `${baseLabel} · ${item.user_id}` : baseLabel;
   const [expanded, setExpanded] = React.useState(false);
 
   const isExpandable =

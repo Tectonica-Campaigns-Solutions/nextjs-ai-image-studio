@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
     let removeInputDisclaimer = true
     let applyDisclaimer = true
     let clientId = "Tectonica"
+    let userEmail = ""
 
     if (isJSON) {
       console.log(`${LOG_PREFIX} Processing JSON payload`)
@@ -127,6 +128,7 @@ export async function POST(request: NextRequest) {
         user_email: clientInfo.user_email || "",
       })
       clientId = (clientInfo.client_id || "").trim() || "Tectonica"
+      userEmail = (clientInfo.user_email || "").trim()
 
       settings = body.settings || {}
       if (body.removeInputDisclaimer === false) removeInputDisclaimer = false
@@ -161,6 +163,7 @@ export async function POST(request: NextRequest) {
               user_email: clientInfo.user_email || "",
             })
             clientId = (clientInfo.client_id || "").trim() || "Tectonica"
+            userEmail = (clientInfo.user_email || "").trim()
           } catch {
             console.warn(`${LOG_PREFIX} Failed to parse clientInfo JSON`)
           }
@@ -444,7 +447,7 @@ export async function POST(request: NextRequest) {
       const metadata = await sharp(finalBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt)).proxyUrl
+      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt, userEmail)).proxyUrl
       console.log(`${LOG_PREFIX} ✅ Result stored privately: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)

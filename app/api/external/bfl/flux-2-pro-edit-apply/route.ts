@@ -226,6 +226,7 @@ export async function POST(request: NextRequest) {
 
     // ── Quota enforcement (lifetime) ─────────────────────────────────────────
     const client_id = (clientInfo.client_id || "").trim() || "Tectonica"
+    const user_email = (clientInfo.user_email || "").trim()
     const caUserId = client_id === "Tectonica" ? "" : client_id
     const quota = await getClientQuotaStatusByCaUserId(caUserId)
     if (quota && !quota.ok && quota.reason === "quota_exceeded") {
@@ -470,7 +471,7 @@ export async function POST(request: NextRequest) {
       const metadata = await sharp(finalBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt)).proxyUrl
+      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt, user_email)).proxyUrl
       console.log(`${LOG_PREFIX} ✅ Result stored privately: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)

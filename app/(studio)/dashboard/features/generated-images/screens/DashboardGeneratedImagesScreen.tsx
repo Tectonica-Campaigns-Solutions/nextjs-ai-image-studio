@@ -129,7 +129,8 @@ export function DashboardGeneratedImagesScreen({
   };
 
   const handleView = (item: GeneratedImageCardItem) => {
-    const label = item.client_name ? item.client_name : item.client_id;
+    const baseLabel = item.client_name ? item.client_name : item.client_id;
+    const label = item.user_id ? `${baseLabel} · ${item.user_id}` : baseLabel;
     setLightbox({
       file_url: item.image_url,
       name: item.id,
