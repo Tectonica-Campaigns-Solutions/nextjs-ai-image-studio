@@ -7,6 +7,7 @@ campaign: pride-pilot-2026
 priority: above-corpus
 folder: /campaign/
 last-updated: 2026-06-15
+tags: ['campaign_spine', client:allout]
 ---
 
 # ***CAMPAIGN***\*\*\_ All Out Pride Pilot — Campaign Spine (v2)\*\*
