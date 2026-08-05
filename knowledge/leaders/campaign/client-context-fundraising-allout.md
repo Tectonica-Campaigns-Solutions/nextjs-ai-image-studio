@@ -26,6 +26,8 @@ legal_jurisdiction: US (New York), UK
  
 donation_page_url: {{DONATION_PAGE_URL}}
  
+cash_donations_expected: false — this pilot runs entirely through online donation pages, so cash collection is not part of any expected tactic. Do not ask the leader whether they plan to accept cash donations; the question does not apply here. If the leader raises cash themselves, apply cash_handling_process above and continue.
+
 cash_handling_process: All donations are processed through All Out's Megaphone donation pages with ActionKit forms. If a supporter spontaneously offers cash, the leader may collect it on the donor's behalf and deposit it as a personal donation through the All Out donation page. Do not flag cash collection as incompatible with this campaign — redirect to the donation page as the processing mechanism.
  
 approval_required: false
@@ -42,11 +44,13 @@ email_capture_automatic: true
  
 p2p_page_support: true
  
-donation_page_type: static — All Out's donation page does not display a running total or donor count visible to visitors. Do not use "a page with zero donations looks abandoned" advice — this applies only to live-counter crowdfunding pages. For page promotion, use standard social media and personal outreach advice instead of crowdfunding momentum mechanics.
+donation_page_type: static — the donation page shows visitors no running total, no donor count and no progress bar. Nobody arriving at the page can tell how many people have given. No advice may therefore rest on donation visibility in any form: do not suggest that early gifts make the page look active, that an empty page looks abandoned or neglected, that visible momentum encourages others to give, or any rewording of those ideas. Seed donors are still worth recruiting here, but the reason is that they give the leader confidence and a warm first wave to build on — never that they make the page look better. For page promotion use standard personal outreach and social media advice, not crowdfunding momentum mechanics.
  
 primary_outreach_channels: dedicated action emails (strong open rates), WhatsApp community, SMS, social media (Facebook, Instagram, TikTok, Twitter/X)
  
 social_platform_registrations: Facebook, Instagram, TikTok, Twitter/X
+
+org_visual_assets: available — All Out provides campaign imagery, photographs and graphics that group leaders may use in their posts, messages and donation page. Available at {{VISUAL_ASSETS_URL}}. Tell the leader this material exists and point them to it rather than asking whether the org has assets they can use — most leaders will not know off hand. Still ask whether they have personal photos or video of their own, since that is leader-specific and often stronger; treat org imagery as the reliable fallback when they do not. Beneficiary images remain subject to the clearance guardrail below.
  
 strategic_goal: Raise as much money as each leader can per group as part of a one-month Pride-season pilot. The coach helps the leader set a realistic target based on their network and tactic if they arrive without one.
  
@@ -94,8 +98,8 @@ tactic_settings:
   giving_days: encouraged
  
 tactic_notes:
-  call_banking: discouraged for org lists; leaders may call people from their own personal network
-  email_appeals: to the leader's own list only — not to All Out's list
+  call_banking: discouraged as a primary tactic, and never over All Out's lists — leaders have no CRM access in any case. The phone itself is not restricted: a leader may call, or send voice messages to, people in their own personal network, and should be encouraged to where that is how they'd naturally reach them. Discouraged means do not build the drive around calling; it does not mean avoid the phone.
+  email_appeals: discouraged as a primary tactic, and only ever to the leader's own list — never to All Out's list. Email itself is not restricted: include it as one outreach channel among several whenever the leader has email addresses for their own contacts. Discouraged means do not build the drive around an email appeal; it does not mean avoid email.
   raffle_sweepstakes: discouraged due to varying US state and UK regulations; apply jurisdiction-specific compliance flag when raised
  
 absolute_guardrails:
@@ -119,8 +123,10 @@ This section documents each field for whoever maintains or updates this document
 | legal_structure | text | Governs tax-deductibility claims and political fundraising disclaimers automatically |
 | legal_jurisdiction | text | Applies tactic-specific legal flags (raffles, GDPR, SMS consent) automatically |
 | donation_page_url | text / placeholder | Used directly in all scripts and CTAs — never asked of the leader |
-| donation_page_type | text | Routes seed donor advice — static pages get social/outreach advice, not crowdfunding momentum mechanics |
+| donation_page_type | text | Routes seed donor advice — static pages get social/outreach advice, not crowdfunding momentum mechanics. Prohibition covers the concept of donation visibility and any paraphrase of it |
+| cash_donations_expected | boolean | If false, the cash question is not asked at all — makes the skip deliberate rather than left to inference |
 | cash_handling_process | text | Tells leader the process rather than asking; removes cash handling as a hard stop |
+| org_visual_assets | text | Model tells the leader what org imagery exists and where, instead of asking whether they have access; leader-specific photos are still asked about separately |
 | approval_required | boolean | If false, approval questions are skipped entirely; if true, turnaround is noted in the brief |
 | user_role_description | text | Calibrates what questions the model skips based on the leader's role |
 | leader_experience_default | enum | Sets vocabulary calibration before the first turn: first_timer / community_practitioner / organised_informal / experienced / mixed |
