@@ -4,7 +4,7 @@ export const ALLOWED_EMBED_ORIGINS = [
   "https://tectonica.up.railway.app",
   "https://allout.tectonica.ai",
   "https://handinhand.tectonica.ai",
-  "https://demo.tectonica.ai/",
+  "https://demo.tectonica.ai",
   "http://localhost:3001",
   "http://localhost:3000",
 ] as const;
