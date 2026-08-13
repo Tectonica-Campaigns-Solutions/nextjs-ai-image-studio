@@ -9,13 +9,14 @@ import {
   resizeImageForBfl,
   storeOutputImage,
   generateSignedUrlForBfl,
+  fetchCleanInputBuffer,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
   type BflInput,
 } from "@/lib/bfl-client"
 import { getBflApiKey } from "@/lib/api-keys"
 import { getClientQuotaStatusByCaUserId } from "@/lib/plans/quota"
-import { restoreDisclaimerZone, addDisclaimerToBuffer } from "@/lib/image-disclaimer"
+import { restoreDisclaimerZone, addDisclaimerToBuffer, NON_DESTRUCTIVE_DISCLAIMER } from "@/lib/image-disclaimer"
 import sharp from "sharp"
 import fs from "fs/promises"
 import path from "path"
@@ -365,10 +366,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Invalid image URL format", details: imageUrl }, { status: 400 })
       }
       try {
-        const res = await fetch(imageUrl)
-        const arrayBuffer = await res.arrayBuffer()
-        const rawBuffer = Buffer.from(arrayBuffer)
-        const restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+        let restoredBuffer: Buffer | null = NON_DESTRUCTIVE_DISCLAIMER
+          ? await fetchCleanInputBuffer(imageUrl)
+          : null
+        if (restoredBuffer) {
+          console.log(`${LOG_PREFIX} ✅ Resolved clean twin via DB lookup — skipping destructive restore`)
+        } else {
+          const res = await fetch(imageUrl)
+          const arrayBuffer = await res.arrayBuffer()
+          const rawBuffer = Buffer.from(arrayBuffer)
+          restoredBuffer = await restoreDisclaimerZone(rawBuffer)
+        }
         const resizedBuffer = await resizeImageForBfl(restoredBuffer)
         const fileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-img0-restored.jpeg`
         const uploadedUrl = await uploadImageToSupabase(resizedBuffer, fileName, "image/jpeg")
@@ -467,11 +475,21 @@ export async function POST(request: NextRequest) {
 
     try {
       const resultBuffer = await downloadBflImage(bflResult.imageUrl)
-      const finalBuffer = await addDisclaimerToBuffer(resultBuffer)
+
+      // Non-destructive pipeline: store the clean buffer and let the proxy
+      // compose the disclaimer overlay on every read (legacy fallback when off).
+      let finalBuffer = resultBuffer
+      let needsDisclaimerOverlay = false
+      if (NON_DESTRUCTIVE_DISCLAIMER) {
+        needsDisclaimerOverlay = true
+      } else {
+        finalBuffer = await addDisclaimerToBuffer(resultBuffer)
+      }
+
       const metadata = await sharp(finalBuffer).metadata()
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
-      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt, user_email)).proxyUrl
+      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt, user_email, needsDisclaimerOverlay)).proxyUrl
       console.log(`${LOG_PREFIX} ✅ Result stored privately: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)

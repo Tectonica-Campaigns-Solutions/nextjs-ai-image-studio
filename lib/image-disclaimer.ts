@@ -1,5 +1,19 @@
 import sharp from 'sharp'
 
+/**
+ * Master switch for the non-destructive disclaimer pipeline: store the clean
+ * (pre-disclaimer) buffer as the canonical asset and compose the overlay only
+ * when serving it, instead of baking it in at generation time and trying to
+ * reconstruct the original later.
+ *
+ * Set env var DISCLAIMER_NON_DESTRUCTIVE=false to roll back to the legacy
+ * bake-then-restore method (addDisclaimerToBuffer at write time,
+ * restoreDisclaimerZone at read time) without any code changes, if this
+ * produces unexpected results.
+ */
+export const NON_DESTRUCTIVE_DISCLAIMER =
+  (process.env.DISCLAIMER_NON_DESTRUCTIVE ?? 'true') !== 'false'
+
 // Disclaimer rect geometry — must stay in sync with addDisclaimerToImage's SVG
 const DISCLAIMER_RECT = {
   offsetFromRight: 4,   // px gap between rect right edge and image right edge

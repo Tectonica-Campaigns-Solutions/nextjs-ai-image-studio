@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server"
+import { addDisclaimerToBuffer } from "@/lib/image-disclaimer"
 
 const SUPABASE_OUTPUT_BUCKET = "User images"
 /** Signed URL lifespan in seconds (15 minutes). */
@@ -50,7 +51,7 @@ export async function GET(
 
   const { data: record, error: dbError } = await supabase
     .from("generated_images")
-    .select("supabase_path")
+    .select("supabase_path, needs_disclaimer_overlay")
     .eq("id", id)
     .single()
 
@@ -80,6 +81,21 @@ export async function GET(
   }
 
   const contentType = imageRes.headers.get("content-type") ?? "image/jpeg"
+
+  // Non-destructive disclaimer pipeline: this record holds the clean image —
+  // compose the overlay on every read instead of baking it in at generation time.
+  if (record.needs_disclaimer_overlay) {
+    const rawBuffer = Buffer.from(await imageRes.arrayBuffer())
+    const withDisclaimer = await addDisclaimerToBuffer(rawBuffer)
+    return new Response(new Uint8Array(withDisclaimer), {
+      status: 200,
+      headers: {
+        ...CORS_HEADERS,
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "private, max-age=300",
+      },
+    })
+  }
 
   return new Response(imageRes.body, {
     status: 200,

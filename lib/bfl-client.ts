@@ -528,6 +528,11 @@ export async function deleteSupabaseImages(paths: string[]): Promise<void> {
  * @param cost    — BFL credits consumed for this generation (optional)
  * @param prompt  — Final prompt used for this generation (optional)
  * @param userId  — user_email received in clientInfo (optional)
+ * @param needsDisclaimerOverlay — when true, `buffer` is the clean (pre-disclaimer)
+ *   image and the proxy must compose the disclaimer overlay on every read.
+ *   When false (default), the buffer is served as-is — either it already has
+ *   the disclaimer baked in (legacy method), or it was never meant to have
+ *   one (e.g. Studio uploads).
  */
 export async function storeOutputImage(
   buffer: Buffer,
@@ -535,7 +540,8 @@ export async function storeOutputImage(
   format: "jpeg" | "png" = "jpeg",
   cost?: number,
   prompt?: string,
-  userId?: string
+  userId?: string,
+  needsDisclaimerOverlay = false
 ): Promise<{ proxyUrl: string; path: string }> {
   const supabase = createAdminClient()
   const random = Math.random().toString(36).slice(2)
@@ -552,7 +558,11 @@ export async function storeOutputImage(
     throw new Error(`Output upload failed for "${storagePath}": ${uploadError.message}`)
   }
 
-  const record_data: Record<string, unknown> = { client_id: orgType, supabase_path: storagePath }
+  const record_data: Record<string, unknown> = {
+    client_id: orgType,
+    supabase_path: storagePath,
+    needs_disclaimer_overlay: needsDisclaimerOverlay,
+  }
   if (cost !== undefined) record_data.cost = cost
   if (prompt !== undefined) record_data.prompt = prompt
   if (userId) record_data.user_id = userId
@@ -625,6 +635,54 @@ export async function generateSignedUrlForBfl(url: string): Promise<string> {
   }
 
   return url // external URL — pass through unchanged
+}
+
+/**
+ * Attempts to recover the pristine (pre-disclaimer) buffer for an image this
+ * pipeline generated previously, identified by its proxy URL.
+ *
+ * This is the non-destructive alternative to restoreDisclaimerZone: instead
+ * of guessing the disclaimer's position and inverting the alpha-blend (fragile
+ * — breaks on resized/re-compressed images), it looks up the exact clean file
+ * we already have stored for that UUID.
+ *
+ * Returns null whenever the fast path doesn't apply, so callers can fall back
+ * to the destructive restore method:
+ *  - url is not one of our own proxy URLs (external image — nothing to look up)
+ *  - no matching record, or the record predates the non-destructive pipeline
+ *    (needs_disclaimer_overlay = false — the stored file is already branded,
+ *    there is no clean twin to recover)
+ *  - any lookup/download failure
+ */
+export async function fetchCleanInputBuffer(url: string): Promise<Buffer | null> {
+  const appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "")
+  if (!appUrl || !url.startsWith(`${appUrl}/api/images/`)) return null
+
+  const id = url.slice(`${appUrl}/api/images/`.length).split(/[?#]/)[0]
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null
+
+  try {
+    const supabase = createAdminClient()
+    const { data: record, error } = await supabase
+      .from("generated_images")
+      .select("supabase_path, needs_disclaimer_overlay")
+      .eq("id", id)
+      .single()
+
+    if (error || !record?.supabase_path || !record.needs_disclaimer_overlay) return null
+
+    const { data: signed, error: signError } = await supabase.storage
+      .from(SUPABASE_OUTPUT_BUCKET)
+      .createSignedUrl(record.supabase_path, 300)
+    if (signError || !signed) return null
+
+    const res = await fetch(signed.signedUrl)
+    if (!res.ok) return null
+    return Buffer.from(await res.arrayBuffer())
+  } catch (err) {
+    console.warn(`[BFL Client] fetchCleanInputBuffer: lookup failed for "${url}":`, err)
+    return null
+  }
 }
 
 // ─── Main Generation Flow ─────────────────────────────────────────────────────

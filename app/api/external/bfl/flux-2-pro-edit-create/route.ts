@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ContentModerationService } from "@/lib/content-moderation"
-import { addDisclaimerToBuffer, restoreDisclaimerZone } from "@/lib/image-disclaimer"
+import { addDisclaimerToBuffer, restoreDisclaimerZone, NON_DESTRUCTIVE_DISCLAIMER } from "@/lib/image-disclaimer"
 import { requireExternalAuth } from '@/lib/api-auth'
 import {
   generateWithBfl,
@@ -11,6 +11,7 @@ import {
   deleteSupabaseImages,
   storeOutputImage,
   generateSignedUrlForBfl,
+  fetchCleanInputBuffer,
   BFL_ENDPOINT_FLUX2_PRO,
   BflApiError,
   type BflInput,
@@ -420,10 +421,17 @@ export async function POST(request: NextRequest) {
 
       if (removeInputDisclaimer) {
         try {
-          const dlRes = await fetch(imageUrl)
-          if (!dlRes.ok) throw new Error(`HTTP ${dlRes.status}`)
-          const dlBuffer = Buffer.from(await dlRes.arrayBuffer())
-          const restoredBuffer = Buffer.from(await restoreDisclaimerZone(dlBuffer))
+          let restoredBuffer: Buffer | null = NON_DESTRUCTIVE_DISCLAIMER
+            ? await fetchCleanInputBuffer(imageUrl)
+            : null
+          if (restoredBuffer) {
+            console.log(`${LOG_PREFIX} ✅ Resolved clean twin via DB lookup — skipping destructive restore`)
+          } else {
+            const dlRes = await fetch(imageUrl)
+            if (!dlRes.ok) throw new Error(`HTTP ${dlRes.status}`)
+            const dlBuffer = Buffer.from(await dlRes.arrayBuffer())
+            restoredBuffer = Buffer.from(await restoreDisclaimerZone(dlBuffer))
+          }
           const restoredFileName = `bfl-input/${Date.now()}-${Math.random().toString(36).slice(2)}-user-restored.jpeg`
           const restoredUrl = await uploadImageToSupabase(restoredBuffer, restoredFileName, 'image/jpeg')
           tempPaths.push(restoredFileName)
@@ -553,16 +561,24 @@ export async function POST(request: NextRequest) {
       resultWidth = metadata.width ?? resultWidth
       resultHeight = metadata.height ?? resultHeight
 
-      // Apply disclaimer overlay directly to the buffer before uploading to Supabase
+      // Non-destructive pipeline: store the clean buffer and let the proxy
+      // compose the disclaimer overlay on every read (see needs_disclaimer_overlay).
+      // Legacy fallback (flag off): bake the overlay in now, as before.
       let finalBuffer = resultBuffer
-      try {
-        finalBuffer = await addDisclaimerToBuffer(resultBuffer)
-        console.log(`${LOG_PREFIX} ✅ Disclaimer overlay applied`)
-      } catch (disclaimerError) {
-        console.warn(`${LOG_PREFIX} ⚠️  Disclaimer failed, uploading original:`, disclaimerError)
+      let needsDisclaimerOverlay = false
+      if (NON_DESTRUCTIVE_DISCLAIMER) {
+        needsDisclaimerOverlay = true
+        console.log(`${LOG_PREFIX} Storing clean image — disclaimer will be composed on serve`)
+      } else {
+        try {
+          finalBuffer = await addDisclaimerToBuffer(resultBuffer)
+          console.log(`${LOG_PREFIX} ✅ Disclaimer overlay applied`)
+        } catch (disclaimerError) {
+          console.warn(`${LOG_PREFIX} ⚠️  Disclaimer failed, uploading original:`, disclaimerError)
+        }
       }
 
-      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt, user_email)).proxyUrl
+      resultUrl = (await storeOutputImage(finalBuffer, orgType, "jpeg", bflResult.cost, finalPrompt, user_email, needsDisclaimerOverlay)).proxyUrl
       console.log(`${LOG_PREFIX} ✅ Result stored privately: ${resultWidth}x${resultHeight} → ${resultUrl}`)
     } catch (downloadError) {
       console.error(`${LOG_PREFIX} Failed to process BFL result:`, downloadError)
