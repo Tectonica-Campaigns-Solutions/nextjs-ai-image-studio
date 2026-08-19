@@ -24,14 +24,13 @@ export function StudioLoading() {
       </div>
 
       <div
-        className="flex shrink-0 items-center gap-3 px-4 pb-1.5 pt-3 md:hidden"
+        className="flex shrink-0 px-4 pb-1.5 pt-3 md:hidden"
         style={{ background: UI_COLORS.CANVAS_MAT }}
       >
-        <div className="flex-1 space-y-2">
+        <div className="space-y-2">
           <div className="h-3.5 w-28 animate-pulse rounded bg-white/10" />
           <div className="h-2.5 w-20 animate-pulse rounded bg-white/10" />
         </div>
-        <div className="size-9 animate-pulse rounded-[10px] bg-white/10" />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
