@@ -140,19 +140,6 @@ export const AI_EDIT_RANGES = {
   MAX_ADDED_TEXT_WORDS: 8,
 } as const;
 
-// Keywords (English/Spanish) that indicate the prompt asks to add text to the image
-export const AI_EDIT_ADD_TEXT_KEYWORDS = [
-  "add text",
-  "add the text",
-  "insert text",
-  "write text",
-  "agregar texto",
-  "agrega el texto",
-  "añadir texto",
-  "insertar texto",
-  "escribe el texto",
-] as const;
-
 // Export/Disclaimer Configuration
 export const EXPORT_FORMATS = [
   { value: "png" as const, label: "PNG" },
