@@ -39,7 +39,6 @@ import {
 import {
   StudioMobileCanvasControls,
   StudioMobileHeader,
-  StudioMobileHomeSpacer,
   StudioMobileSessionBar,
   StudioMobileTabBar,
   StudioMobileToolSheet,
@@ -2205,9 +2204,9 @@ function ImageEditorStandaloneInner({
           <StudioLoading />
         </div>
       )}
-      <div className={editorReady ? "" : "invisible"}>
+      <div className={`flex h-full min-h-0 flex-col ${editorReady ? "" : "invisible"}`}>
         <div
-          className="studio-root flex h-dvh flex-col overflow-hidden md:min-h-screen md:h-dvh md:overflow-hidden"
+          className="studio-root flex min-h-0 flex-1 flex-col overflow-hidden md:min-h-screen md:h-dvh md:flex-none md:overflow-hidden"
           style={{ backgroundColor: UI_COLORS.PRIMARY_BG, color: UI_COLORS.TEXT_PRIMARY }}
         >
           <div ref={headerRef} className="hidden md:block">
@@ -2248,35 +2247,31 @@ function ImageEditorStandaloneInner({
                       }
                     }}
                     onClose={() => setShowSaveToast(false)}
-                    className={
-                      mobileFloatChromeMode
-                        ? "bottom-[120px] md:bottom-[18px]"
-                        : "bottom-44 md:bottom-[18px]"
-                    }
+                    className="bottom-[158px] md:bottom-[18px]"
+                  />
+                ) : null}
+
+                {isMobileStudio ? (
+                  <StudioMobileCanvasControls
+                    undo={history.undo}
+                    redo={history.redo}
+                    deleteSelected={deleteSelected}
+                    onAlign={handleAlign}
+                    historyState={history.historyState}
+                    selectedObject={selection.selectedObject}
+                    onHistoryClick={params.user_id ? handleMobileHistoryClick : undefined}
+                    historyBadge={sessionsForImage.length > 0}
                   />
                 ) : null}
 
                 <div
                   id="canvas-area"
-                  className={`themed-scrollbar relative z-[1] flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-4 md:overflow-auto md:m-7 md:p-0 ${
-                    mobileFloatChromeMode ? "pt-[52px] pb-[74px]" : "py-2"
-                  }`}
+                  className="themed-scrollbar relative z-[1] flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-4 py-2 md:overflow-auto md:m-7 md:p-0"
                 >
                   <div
                     ref={canvasWrapperRef}
                     className="relative inline-flex max-h-full max-w-full"
                   >
-                    <StudioMobileCanvasControls
-                      undo={history.undo}
-                      redo={history.redo}
-                      deleteSelected={deleteSelected}
-                      onAlign={handleAlign}
-                      historyState={history.historyState}
-                      selectedObject={selection.selectedObject}
-                      onHistoryClick={params.user_id ? handleMobileHistoryClick : undefined}
-                      historyBadge={sessionsForImage.length > 0}
-                    />
-
                     <div className="pointer-events-none absolute top-3 right-3 z-[3] hidden md:top-[18px] md:right-[18px] md:block">
                       <div className="pointer-events-auto">
                         <EditorToolbar
@@ -2443,105 +2438,118 @@ function ImageEditorStandaloneInner({
                   ) : null}
                 </div>
 
-                {mobileFloatChromeMode ? (
-                  <>
-                    {canvasEditor.canvas ? (
-                      <StudioMobileFloatControls
-                        toolMode={mobileFloatToolMode}
-                        hasSelection={mobileFloatHasSelection}
-                        fontAssets={fontAssets}
-                        onAddText={textTools.addText}
-                        addTextDisabled={!fontsReady}
-                        textTools={{
-                          fontFamily: textTools.fontFamily,
-                          setFontFamily: textTools.setFontFamily,
-                          fontSize: textTools.fontSize,
-                          setFontSize: textTools.setFontSize,
-                          isBold: textTools.isBold,
-                          setIsBold: textTools.setIsBold,
-                          isItalic: textTools.isItalic,
-                          setIsItalic: textTools.setIsItalic,
-                          isUnderline: textTools.isUnderline,
-                          setIsUnderline: textTools.setIsUnderline,
-                          textAlign: textTools.textAlign,
-                          setTextAlign: textTools.setTextAlign,
-                          textColor: textTools.textColor,
-                          setTextColor: textTools.setTextColor,
-                          backgroundColor: textTools.backgroundColor,
-                          setBackgroundColor: textTools.setBackgroundColor,
-                          lineHeight: textTools.lineHeight,
-                          setLineHeight: textTools.setLineHeight,
-                          googleCatalogFonts: googleFontCatalog,
-                          googleCatalogLoading,
-                        }}
-                        logoTools={{
-                          filteredLogoAssets: logoTools.filteredLogoAssets,
-                          logoSize: logoTools.logoSize,
-                          setLogoSize: logoTools.setLogoSize,
-                          logoOpacity: logoTools.logoOpacity,
-                          setLogoOpacity: logoTools.setLogoOpacity,
-                          onSelectLogo: logoTools.replaceSelectedLogo,
-                          onInsertLogo: logoTools.handleInsertDefaultLogo,
-                          selectedLogoUrl,
-                          allowCustomLogo,
-                          onUploadLogo: logoTools.handleLogoFileUpload,
-                        }}
-                        qrTools={{
-                          qrSize: qrTools.qrSize,
-                          setQrSize: qrTools.setQrSize,
-                          qrOpacity: qrTools.qrOpacity,
-                          setQrOpacity: qrTools.setQrOpacity,
-                          onEditLink: handleMobileQrEditLink,
-                        }}
-                        shapeTools={{
-                          shapeFillColor: shapeTools.shapeFillColor,
-                          setShapeFillColor: shapeTools.setShapeFillColor,
-                          shapeStrokeColor: shapeTools.shapeStrokeColor,
-                          setShapeStrokeColor: shapeTools.setShapeStrokeColor,
-                          shapeStrokeWidth: shapeTools.shapeStrokeWidth,
-                          setShapeStrokeWidth: shapeTools.setShapeStrokeWidth,
-                          shapeOpacity: shapeTools.shapeOpacity,
-                          setShapeOpacity: shapeTools.setShapeOpacity,
-                          onAddShape: handleMobileAddShape,
-                        }}
-                        frameTools={{
-                          filteredFrameAssets: frameTools.filteredFrameAssets,
-                          frameOpacity: frameTools.frameOpacity,
-                          setFrameOpacity: frameTools.setFrameOpacity,
-                          onSelectFrame: handleMobileInsertFrame,
-                          onInsertFrame: handleMobileInsertFrame,
-                          selectedFrameUrl,
-                        }}
+                {isMobileStudio ? (
+                  <div
+                    className="relative flex shrink-0 flex-col justify-end overflow-visible md:hidden"
+                    style={{ minHeight: STUDIO_LAYOUT.MOBILE_BOTTOM_CHROME_H }}
+                  >
+                    <div
+                      className={`absolute inset-x-0 bottom-0 z-[2] flex flex-col overflow-visible ${
+                        mobileFloatChromeMode ? "" : "pointer-events-none invisible"
+                      }`}
+                      aria-hidden={!mobileFloatChromeMode}
+                    >
+                      {canvasEditor.canvas ? (
+                        <StudioMobileFloatControls
+                          toolMode={mobileFloatToolMode}
+                          hasSelection={mobileFloatHasSelection}
+                          fontAssets={fontAssets}
+                          onAddText={textTools.addText}
+                          addTextDisabled={!fontsReady}
+                          textTools={{
+                            fontFamily: textTools.fontFamily,
+                            setFontFamily: textTools.setFontFamily,
+                            fontSize: textTools.fontSize,
+                            setFontSize: textTools.setFontSize,
+                            isBold: textTools.isBold,
+                            setIsBold: textTools.setIsBold,
+                            isItalic: textTools.isItalic,
+                            setIsItalic: textTools.setIsItalic,
+                            isUnderline: textTools.isUnderline,
+                            setIsUnderline: textTools.setIsUnderline,
+                            textAlign: textTools.textAlign,
+                            setTextAlign: textTools.setTextAlign,
+                            textColor: textTools.textColor,
+                            setTextColor: textTools.setTextColor,
+                            backgroundColor: textTools.backgroundColor,
+                            setBackgroundColor: textTools.setBackgroundColor,
+                            lineHeight: textTools.lineHeight,
+                            setLineHeight: textTools.setLineHeight,
+                            googleCatalogFonts: googleFontCatalog,
+                            googleCatalogLoading,
+                          }}
+                          logoTools={{
+                            filteredLogoAssets: logoTools.filteredLogoAssets,
+                            logoSize: logoTools.logoSize,
+                            setLogoSize: logoTools.setLogoSize,
+                            logoOpacity: logoTools.logoOpacity,
+                            setLogoOpacity: logoTools.setLogoOpacity,
+                            onSelectLogo: logoTools.replaceSelectedLogo,
+                            onInsertLogo: logoTools.handleInsertDefaultLogo,
+                            selectedLogoUrl,
+                            allowCustomLogo,
+                            onUploadLogo: logoTools.handleLogoFileUpload,
+                          }}
+                          qrTools={{
+                            qrSize: qrTools.qrSize,
+                            setQrSize: qrTools.setQrSize,
+                            qrOpacity: qrTools.qrOpacity,
+                            setQrOpacity: qrTools.setQrOpacity,
+                            onEditLink: handleMobileQrEditLink,
+                          }}
+                          shapeTools={{
+                            shapeFillColor: shapeTools.shapeFillColor,
+                            setShapeFillColor: shapeTools.setShapeFillColor,
+                            shapeStrokeColor: shapeTools.shapeStrokeColor,
+                            setShapeStrokeColor: shapeTools.setShapeStrokeColor,
+                            shapeStrokeWidth: shapeTools.shapeStrokeWidth,
+                            setShapeStrokeWidth: shapeTools.setShapeStrokeWidth,
+                            shapeOpacity: shapeTools.shapeOpacity,
+                            setShapeOpacity: shapeTools.setShapeOpacity,
+                            onAddShape: handleMobileAddShape,
+                          }}
+                          frameTools={{
+                            filteredFrameAssets: frameTools.filteredFrameAssets,
+                            frameOpacity: frameTools.frameOpacity,
+                            setFrameOpacity: frameTools.setFrameOpacity,
+                            onSelectFrame: handleMobileInsertFrame,
+                            onInsertFrame: handleMobileInsertFrame,
+                            selectedFrameUrl,
+                          }}
+                        />
+                      ) : null}
+                      <StudioMobileDoneBar onDone={handleMobileDone} />
+                    </div>
+
+                    <div
+                      className={`absolute inset-x-0 bottom-0 z-[2] flex flex-col ${
+                        mobileFloatChromeMode ? "pointer-events-none invisible" : ""
+                      }`}
+                      aria-hidden={mobileFloatChromeMode}
+                    >
+                      <StudioMobileTabBar
+                        activeTab={mobilePanel.activeTab}
+                        onTabClick={handleMobileTabClick}
+                        availableTools={mobileAvailableTools}
                       />
-                    ) : null}
-                    <StudioMobileDoneBar onDone={handleMobileDone} />
-                  </>
-                ) : (
-                  <>
-                    <StudioMobileTabBar
-                      activeTab={mobilePanel.activeTab}
-                      onTabClick={handleMobileTabClick}
-                      availableTools={mobileAvailableTools}
-                    />
 
-                    <StudioMobileSessionBar
-                      handleExportClick={handleExportClick}
-                      isExporting={isExporting}
-                      showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
-                      onSaveClick={() => setShowSaveModal(true)}
-                      isSaving={isSaving}
-                      onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
-                      isSendingUrl={isSendingUrlToChat}
-                      onFeedbackPress={
-                        FEATURE_FLAGS.showFeedbackButton ? handleMobileFeedbackPress : undefined
-                      }
-                      isFetchingFeedback={isFetchingFeedback}
-                      feedbackOpen={mobileFeedbackOpen}
-                    />
-
-                    <StudioMobileHomeSpacer />
-                  </>
-                )}
+                      <StudioMobileSessionBar
+                        handleExportClick={handleExportClick}
+                        isExporting={isExporting}
+                        showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+                        onSaveClick={() => setShowSaveModal(true)}
+                        isSaving={isSaving}
+                        onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
+                        isSendingUrl={isSendingUrlToChat}
+                        onFeedbackPress={
+                          FEATURE_FLAGS.showFeedbackButton ? handleMobileFeedbackPress : undefined
+                        }
+                        isFetchingFeedback={isFetchingFeedback}
+                        feedbackOpen={mobileFeedbackOpen}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

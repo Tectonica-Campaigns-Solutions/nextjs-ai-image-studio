@@ -33,7 +33,7 @@ export default function StudioLayout({
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
       <div
-        className={`studio-root font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable} ${dmSans.variable}`}
+        className={`studio-root font-sans flex h-full min-h-0 flex-col ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable} ${dmSans.variable}`}
       >
         {children}
       </div>

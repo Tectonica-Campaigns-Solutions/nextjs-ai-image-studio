@@ -7,7 +7,7 @@ import { UI_COLORS } from "./constants/editor-constants";
 export function StudioLoading() {
   return (
     <div
-      className="flex h-dvh flex-col overflow-hidden md:min-h-dvh md:h-dvh md:overflow-hidden"
+      className="flex h-full min-h-0 flex-col overflow-hidden md:min-h-dvh md:h-dvh md:overflow-hidden"
       style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
       aria-busy="true"
       aria-label="Loading editor"

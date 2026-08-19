@@ -435,6 +435,14 @@ body:not(:has(.studio-root)) #sidebar [data-slot="input"] {
   -webkit-font-smoothing: antialiased;
 }
 
+html:has(.studio-root),
+body:has(.studio-root) {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: #141220;
+}
+
 @keyframes vs-slide-in {
   from { transform: translateX(-14px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }

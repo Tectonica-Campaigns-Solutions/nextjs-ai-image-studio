@@ -233,6 +233,10 @@ export const STUDIO_LAYOUT = {
   ACTION_BTN_H: 44,
   COMPACT_BREAKPOINT: 1340,
   MOBILE_BREAKPOINT: 880,
+  /** Fixed row for undo/redo/align/history/delete — keeps canvas-area height stable. */
+  MOBILE_CANVAS_TOOLBAR_H: 48,
+  /** Fixed slot for tab bar + session bar OR float controls + Done (whichever is active). */
+  MOBILE_BOTTOM_CHROME_H: 142,
 } as const;
 
 export const STUDIO_DESKTOP_TOOLS = [

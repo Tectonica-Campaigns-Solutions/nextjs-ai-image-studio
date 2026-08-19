@@ -17,7 +17,7 @@ export function StudioStateScreen({
 }) {
   return (
     <div
-      className="studio-root flex h-dvh flex-col overflow-hidden md:min-h-dvh md:h-dvh md:overflow-hidden"
+      className="studio-root flex h-full min-h-0 flex-col overflow-hidden md:min-h-dvh md:h-dvh md:overflow-hidden"
       style={{ backgroundColor: UI_COLORS.PRIMARY_BG, color: UI_COLORS.TEXT_PRIMARY }}
     >
       <div className="hidden md:block">

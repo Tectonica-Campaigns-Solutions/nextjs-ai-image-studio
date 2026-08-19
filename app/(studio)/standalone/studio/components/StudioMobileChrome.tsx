@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  STUDIO_LAYOUT,
   STUDIO_MOBILE_TOOLS,
   UI_COLORS,
   type StudioMobileToolId,
@@ -154,37 +155,45 @@ export function StudioMobileCanvasControls({
 
   return (
     <div
-      className="absolute bottom-[calc(100%+8px)] left-1/2 z-[4] flex -translate-x-1/2 items-center gap-[3px] rounded-xl border border-white/[0.09] p-[5px] backdrop-blur-md md:hidden"
-      style={{ background: "rgba(14,13,24,0.72)" }}
+      className="flex shrink-0 items-center justify-center px-4 md:hidden"
+      style={{
+        background: UI_COLORS.CANVAS_MAT,
+        minHeight: STUDIO_LAYOUT.MOBILE_CANVAS_TOOLBAR_H,
+      }}
     >
-      <MobileIconBtn label="Undo" onClick={undo} disabled={undoDisabled}>
-        <UndoIcon />
-      </MobileIconBtn>
-      <MobileIconBtn label="Redo" onClick={redo} disabled={redoDisabled}>
-        <RedoIcon />
-      </MobileIconBtn>
-      {onAlign ? (
-        <AlignmentPopover
-          onAlign={onAlign}
-          selectedObject={selectedObject}
-          variant="mobile"
-          compact
-        />
-      ) : null}
-      {onHistoryClick ? (
-        <MobileIconBtn label="Saved versions" onClick={onHistoryClick} badge={historyBadge}>
-          <History className="size-[17px]" strokeWidth={2} />
-        </MobileIconBtn>
-      ) : null}
-      <span className="mx-1.5 h-4 w-px bg-white/[0.17]" />
-      <MobileIconBtn
-        label="Delete selection"
-        onClick={deleteSelected}
-        disabled={!selectedObject}
-        danger
+      <div
+        className="flex items-center gap-[3px] rounded-xl border border-white/[0.09] p-[5px] backdrop-blur-md"
+        style={{ background: "rgba(14,13,24,0.72)" }}
       >
-        <Trash2 className="size-[17px]" strokeWidth={2} />
-      </MobileIconBtn>
+        <MobileIconBtn label="Undo" onClick={undo} disabled={undoDisabled}>
+          <UndoIcon />
+        </MobileIconBtn>
+        <MobileIconBtn label="Redo" onClick={redo} disabled={redoDisabled}>
+          <RedoIcon />
+        </MobileIconBtn>
+        {onAlign ? (
+          <AlignmentPopover
+            onAlign={onAlign}
+            selectedObject={selectedObject}
+            variant="mobile"
+            compact
+          />
+        ) : null}
+        {onHistoryClick ? (
+          <MobileIconBtn label="Saved versions" onClick={onHistoryClick} badge={historyBadge}>
+            <History className="size-[17px]" strokeWidth={2} />
+          </MobileIconBtn>
+        ) : null}
+        <span className="mx-1.5 h-4 w-px bg-white/[0.17]" />
+        <MobileIconBtn
+          label="Delete selection"
+          onClick={deleteSelected}
+          disabled={!selectedObject}
+          danger
+        >
+          <Trash2 className="size-[17px]" strokeWidth={2} />
+        </MobileIconBtn>
+      </div>
     </div>
   );
 }

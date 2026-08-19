@@ -16,8 +16,10 @@ type StudioPageProps = {
 
 export default function StudioPage({ searchParams }: StudioPageProps) {
   return (
-    <Suspense fallback={<StudioLoading />}>
-      <StudioEditorLoader searchParams={searchParams} />
-    </Suspense>
+    <div className="flex h-full min-h-0 flex-col">
+      <Suspense fallback={<StudioLoading />}>
+        <StudioEditorLoader searchParams={searchParams} />
+      </Suspense>
+    </div>
   );
 }
