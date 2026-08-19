@@ -3,6 +3,9 @@
 import React from "react";
 import { Loader2, WandSparkles } from "lucide-react";
 import { StudioCheckboxRow, studioForm } from "./studio-ui";
+import { studioToast } from "../utils/studio-toast";
+import { getOversizedAddedText } from "../utils/ai-edit-validation";
+import { AI_EDIT_RANGES } from "../constants/editor-constants";
 
 export interface AIEditPanelProps {
   onEdit: (prompt: string, includeLayers?: boolean) => Promise<void>;
@@ -20,6 +23,16 @@ export const AIEditPanel = React.memo(function AIEditPanel({
     e.preventDefault();
     const trimmed = prompt.trim();
     if (!trimmed || isLoading) return;
+
+    const oversized = getOversizedAddedText(trimmed);
+    if (oversized) {
+      studioToast.error({
+        title: "Text is too long",
+        description: `The text to add has ${oversized.wordCount} words. It must be ${AI_EDIT_RANGES.MAX_ADDED_TEXT_WORDS} words or fewer. Please update it.`,
+      });
+      return;
+    }
+
     await onEdit(trimmed, includeLayers);
   };
 
