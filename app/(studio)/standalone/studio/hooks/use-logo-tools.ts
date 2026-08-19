@@ -100,6 +100,7 @@ export function useLogoTools(options: UseLogoToolsOptions) {
         });
         (img as any).isLogo = true;
         (img as any).isEditable = true;
+        (img as any).logoAssetUrl = path;
         canvas.add(img);
         canvas.setActiveObject(img);
         canvas.renderAll();
@@ -134,6 +135,35 @@ export function useLogoTools(options: UseLogoToolsOptions) {
     canvas.renderAll();
   }, [canvasRef, logoSize, logoOpacity]);
 
+  const replaceSelectedLogo = useCallback(
+    async (path: string) => {
+      const canvas = canvasRef.current;
+      const saveState = saveStateRef.current;
+      if (!canvas) return;
+      const active = canvas.getActiveObject();
+      if (!active || !(active as any).isLogo) return;
+
+      try {
+        const base64Url = await urlToBase64(path);
+        const logoImage = await loadImageWithCORS(base64Url);
+        const imgEl = logoImage.getElement();
+        const fabricImg = active as FabricImage;
+        fabricImg.setElement(imgEl);
+        fabricImg.set({
+          width: logoImage.width,
+          height: logoImage.height,
+        });
+        (fabricImg as any).logoAssetUrl = path;
+        fabricImg.setCoords();
+        canvas.renderAll();
+        saveState(true);
+      } catch (error) {
+        console.error("Error replacing logo overlay:", error);
+      }
+    },
+    [canvasRef, saveStateRef],
+  );
+
   const handleLogoFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -159,6 +189,7 @@ export function useLogoTools(options: UseLogoToolsOptions) {
     addLogoOverlay,
     handleInsertDefaultLogo,
     handleLogoFileUpload,
+    replaceSelectedLogo,
     updateLogo,
   };
 }

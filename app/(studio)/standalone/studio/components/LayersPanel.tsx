@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Eye, EyeOff, Lock, Unlock, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StudioPanelHint, studioForm } from "./studio-ui";
 import type { ActiveSelection } from "fabric";
 
 type FabricObject = {
@@ -169,16 +170,14 @@ export const LayersPanel = React.memo(function LayersPanel({
   if (!canvas) return null;
 
   return (
-    <div className="space-y-2" data-layer-version={layerVersion}>
-      <p className="text-[13px] text-white/70 font-(family-name:--font-manrope) mb-2">
+    <div className={studioForm.section} data-layer-version={layerVersion}>
+      <StudioPanelHint>
         Click a layer to select. Use buttons to reorder, show/hide, or lock.
-      </p>
+      </StudioPanelHint>
       {layers.length === 0 ? (
-        <p className="text-[13px] text-white/50 font-(family-name:--font-manrope) py-4">
-          No layers yet. Add text, logos, shapes, or frames.
-        </p>
+        <StudioPanelHint>No layers yet. Add text, logos, shapes, or frames.</StudioPanelHint>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-2">
           {layers.map((obj) => {
             const selected = isSelected(obj);
             const visible = obj.visible !== false;
@@ -192,15 +191,13 @@ export const LayersPanel = React.memo(function LayersPanel({
               <li
                 key={(obj as any).__objectId ?? obj.toString()}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors",
-                  selected
-                    ? "border-[#5C38F3] bg-[#5C38F3]/20"
-                    : "border-[#2D2D2D] bg-[#1F1F1F] hover:bg-[#252525]"
+                  studioForm.layerItem,
+                  selected && studioForm.layerItemSelected,
                 )}
               >
                 <button
                   type="button"
-                  className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
                   onClick={() => {
                     canvasRef.current?.setActiveObject(obj);
                     canvasRef.current?.renderAll();
@@ -208,22 +205,20 @@ export const LayersPanel = React.memo(function LayersPanel({
                   }}
                   aria-label={`Select ${name}`}
                 >
-                  <span className="text-[13px] font-medium text-white truncate font-(family-name:--font-manrope)">
-                    {name}
-                  </span>
+                  <span className="truncate text-[13.5px] font-bold text-[#F5F4FB]">{name}</span>
                 </button>
-                <div className="flex items-center gap-0.5 shrink-0">
+                <div className="flex shrink-0 items-center gap-0.5">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleVisibilityToggle(obj);
                     }}
-                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10"
+                    className={studioForm.iconAction}
                     aria-label={visible ? "Hide layer" : "Show layer"}
                     title={visible ? "Hide" : "Show"}
                   >
-                    {visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                    {visible ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                   </button>
                   <button
                     type="button"
@@ -232,13 +227,13 @@ export const LayersPanel = React.memo(function LayersPanel({
                       handleLockToggle(obj);
                     }}
                     className={cn(
-                      "p-1.5 rounded hover:bg-white/10",
-                      locked ? "text-amber-400" : "text-white/70 hover:text-white"
+                      studioForm.iconAction,
+                      locked && "text-amber-400 hover:text-amber-300",
                     )}
                     aria-label={locked ? "Unlock layer" : "Lock layer"}
                     title={locked ? "Unlock" : "Lock"}
                   >
-                    {locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                    {locked ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
                   </button>
                   <button
                     type="button"
@@ -246,11 +241,11 @@ export const LayersPanel = React.memo(function LayersPanel({
                       e.stopPropagation();
                       handleBringToFront(obj);
                     }}
-                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10"
+                    className={studioForm.iconAction}
                     aria-label="Bring to front"
                     title="Bring to front"
                   >
-                    <ChevronUp className="w-3.5 h-3.5" />
+                    <ChevronUp className="size-3.5" />
                   </button>
                   <button
                     type="button"
@@ -258,11 +253,11 @@ export const LayersPanel = React.memo(function LayersPanel({
                       e.stopPropagation();
                       handleSendToBack(obj);
                     }}
-                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10"
+                    className={studioForm.iconAction}
                     aria-label="Send to back"
                     title="Send to back"
                   >
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    <ChevronDown className="size-3.5" />
                   </button>
                 </div>
               </li>

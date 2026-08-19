@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -11,6 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { studioDialog, studioForm } from "./studio-ui";
 
 export interface SaveSessionModalProps {
   open: boolean;
@@ -39,44 +40,41 @@ export function SaveSessionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#191919] border-[#2D2D2D] text-white sm:max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden">
+      <DialogContent className={studioDialog.content}>
         <DialogHeader>
-          <DialogTitle className="text-white font-(family-name:--font-manrope) text-[18px] font-semibold">
-            Save session
-          </DialogTitle>
-          <DialogDescription className="text-[#929292] font-(family-name:--font-manrope) text-[14px]">
+          <DialogTitle className={studioDialog.title}>Save session</DialogTitle>
+          <DialogDescription className={studioDialog.description}>
             Enter a name for this version. You can load it later from Saved versions.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4 flex-1 overflow-y-auto pr-1">
+        <div className="flex-1 overflow-y-auto py-4 pr-1">
           <Input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Session name"
-            className="rounded-[10px] border-[#2D2D2D] bg-[#1F1F1F] text-white font-(family-name:--font-manrope) placeholder:text-white/40"
+            className={studioForm.input}
             aria-label="Session name"
             onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
           />
         </div>
-        <DialogFooter className="flex-row gap-2 sm:justify-end border-t border-[#2D2D2D] pt-4 bg-[#191919]">
-          <Button
+        <DialogFooter className={studioDialog.footer}>
+          <button
             type="button"
-            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
-            className="border-[#2D2D2D] bg-transparent text-white hover:bg-white/10"
+            className={cn(studioForm.secondaryButton, "min-w-[96px]")}
           >
             Cancel
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
             onClick={handleConfirm}
             disabled={!name.trim() || isSaving}
-            className="bg-[#5C38F3] text-white hover:bg-[#4A2DD1]"
+            className={cn(studioForm.primaryButton, "min-w-[96px] w-auto px-4")}
           >
             {isSaving ? "Saving…" : "Save"}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

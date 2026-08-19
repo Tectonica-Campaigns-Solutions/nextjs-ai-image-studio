@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export function useMobilePanel() {
   const [activeTab, setActiveTab] = useState<string | null>(null);
@@ -32,19 +32,24 @@ export function useMobilePanel() {
     setDragStartY(0);
   };
 
-  const handleTabClick = (tabId: string) => {
-    if (activeTab === tabId) {
-      setIsPanelVisible(!isPanelVisible);
-      setCurrentTranslateY(isPanelVisible ? 400 : 0);
-      setActiveTab(null);
-    } else {
-      setActiveTab(tabId);
-      if (!isPanelVisible) {
-        setIsPanelVisible(true);
-        setCurrentTranslateY(0);
+  const closePanel = useCallback(() => {
+    setIsPanelVisible(false);
+    setCurrentTranslateY(400);
+    setActiveTab(null);
+  }, []);
+
+  const handleTabClick = useCallback((tabId: string) => {
+    setActiveTab((activeTab) => {
+      if (activeTab === tabId) {
+        setIsPanelVisible(false);
+        setCurrentTranslateY(400);
+        return null;
       }
-    }
-  };
+      setIsPanelVisible(true);
+      setCurrentTranslateY(0);
+      return tabId;
+    });
+  }, []);
 
   return {
     activeTab,
@@ -59,5 +64,6 @@ export function useMobilePanel() {
     handleDragMove,
     handleDragEnd,
     handleTabClick,
+    closePanel,
   };
 }

@@ -114,6 +114,33 @@ export function useQRTools(options: UseQRToolsOptions) {
     canvas.renderAll();
   }, [canvasRef, qrSize, qrOpacity]);
 
+  const replaceSelectedQRFromUrl = useCallback(async () => {
+    const canvas = canvasRef.current;
+    const saveState = saveStateRef.current;
+    if (!canvas || !qrUrl.trim()) return;
+    const active = canvas.getActiveObject();
+    if (!active || !(active as any).isQR) return;
+
+    try {
+      const qrApiUrl = await generateQR(qrUrl);
+      if (!qrApiUrl) return;
+      const base64Url = await urlToBase64(qrApiUrl);
+      const qrImage = await loadImageWithCORS(base64Url);
+      const imgEl = qrImage.getElement();
+      const fabricImg = active as FabricImage;
+      fabricImg.setElement(imgEl);
+      fabricImg.set({
+        width: qrImage.width,
+        height: qrImage.height,
+      });
+      fabricImg.setCoords();
+      canvas.renderAll();
+      saveState(true);
+    } catch (error) {
+      console.error("Error replacing QR code:", error);
+    }
+  }, [canvasRef, saveStateRef, qrUrl]);
+
   const handleQRFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -135,6 +162,7 @@ export function useQRTools(options: UseQRToolsOptions) {
     addQRFromUrl,
     addCustomQR,
     updateQRCode,
+    replaceSelectedQRFromUrl,
     handleQRFileUpload,
   };
 }

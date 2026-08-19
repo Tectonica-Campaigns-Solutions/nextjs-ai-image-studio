@@ -1,9 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Check, MessageSquareShare } from "lucide-react";
+import { Download, History, Loader2, MessageSquareShare, Trash2 } from "lucide-react";
 import type { HistoryState } from "../types/image-editor-types";
+import type { AlignOption } from "../hooks/use-alignment-tools";
+import { AlignmentPopover } from "./AlignmentPopover";
 import { FeedbackButtonInline } from "./FeedbackButton";
+import { StudioIconButton, StudioToolbarDivider } from "./studio-ui";
 
 export interface EditorToolbarProps {
   undo: () => void;
@@ -26,8 +29,7 @@ export interface EditorToolbarProps {
   variant: "mobile" | "desktop";
   /** When false, hide the Save canvas button. Default true. */
   showSaveButton?: boolean;
-  /** Optional alignment popover (e.g. <AlignmentPopover ... />) to show when selection exists */
-  alignmentSlot?: React.ReactNode;
+  onAlign?: (option: AlignOption) => void;
   /** When provided, Save button opens this callback (e.g. to show save modal) instead of calling handleSave directly */
   onSaveClick?: () => void;
   /** Optional callback to upload and send URL-only message back to chat (when embedded as iframe). */
@@ -36,17 +38,20 @@ export interface EditorToolbarProps {
   isEmbedded?: boolean;
   /** Loading state while sending the edited image to the chat conversation. */
   isSendingUrl?: boolean;
+  onHistoryClick?: () => void;
+  historyBadge?: boolean;
+  historyActive?: boolean;
 }
 
-const UndoIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M1.62115 11.25C2.63914 14.4439 5.55463 16.75 8.99242 16.75C13.2768 16.75 16.75 13.1683 16.75 8.75C16.75 4.33172 13.2768 0.75 8.99242 0.75C6.12103 0.75 3.61399 2.35879 2.27267 4.75M4.62879 5.75H0.75V1.75" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+const UndoIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" className={className} aria-hidden>
+    <path d="M1.62115 11.25C2.63914 14.4439 5.55463 16.75 8.99242 16.75C13.2768 16.75 16.75 13.1683 16.75 8.75C16.75 4.33172 13.2768 0.75 8.99242 0.75C6.12103 0.75 3.61399 2.35879 2.27267 4.75M4.62879 5.75H0.75V1.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-const RedoIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M15.8788 11.25C14.8609 14.4439 11.9454 16.75 8.50758 16.75C4.22318 16.75 0.75 13.1683 0.75 8.75C0.75 4.33172 4.22318 0.75 8.50758 0.75C11.379 0.75 13.886 2.35879 15.2273 4.75M12.8712 5.75H16.75V1.75" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+const RedoIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" className={className} aria-hidden>
+    <path d="M15.8788 11.25C14.8609 14.4439 11.9454 16.75 8.50758 16.75C4.22318 16.75 0.75 13.1683 0.75 8.75C0.75 4.33172 4.22318 0.75 8.50758 0.75C11.379 0.75 13.886 2.35879 15.2273 4.75M12.8712 5.75H16.75V1.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -83,11 +88,14 @@ export function EditorToolbar({
   selectedObject,
   variant,
   showSaveButton = true,
-  alignmentSlot,
+  onAlign,
   onSaveClick,
   onSendUrlToChat,
   isEmbedded = false,
   isSendingUrl = false,
+  onHistoryClick,
+  historyBadge,
+  historyActive,
 }: EditorToolbarProps) {
   const undoDisabled = historyState.currentIndex <= 0;
   const redoDisabled =
@@ -125,7 +133,9 @@ export function EditorToolbar({
         >
           <DeleteIcon size={22} />
         </Button>
-        {alignmentSlot}
+        {onAlign ? (
+          <AlignmentPopover onAlign={onAlign} selectedObject={selectedObject} variant="mobile" />
+        ) : null}
         {showSaveButton && (
           <Button
             onClick={onSaveClick ?? handleSave}
@@ -179,68 +189,35 @@ export function EditorToolbar({
   }
 
   return (
-    <div className="hidden md:flex flex-col gap-[10px] shrink-0 md:self-start md:sticky md:top-4 lg:top-5 xl:static z-10">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={undo}
-        disabled={undoDisabled}
-        className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
-      >
-        <UndoIcon />
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={redo}
-        disabled={redoDisabled}
-        className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
-      >
-        <RedoIcon />
-      </Button>
-      <Button
-        onClick={handleExportClick}
-        disabled={isExporting}
-        className="bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] flex items-center justify-center gap-[5px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#5C38F3] disabled:hover:scale-100 h-[44px] w-[54px] px-[15px] py-[10px]"
-      >
-        <Download className="w-4 h-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
+    <div className="hidden md:flex items-center gap-[2px]">
+      <StudioIconButton label="Undo last change" onClick={undo} disabled={undoDisabled}>
+        <UndoIcon className="size-[18px]" />
+      </StudioIconButton>
+      <StudioIconButton label="Redo last change" onClick={redo} disabled={redoDisabled}>
+        <RedoIcon className="size-[18px]" />
+      </StudioIconButton>
+      {onAlign ? (
+        <AlignmentPopover onAlign={onAlign} selectedObject={selectedObject} variant="desktop" />
+      ) : null}
+      {onHistoryClick ? (
+        <StudioIconButton
+          label="View saved versions"
+          badge={historyBadge}
+          active={historyActive}
+          onClick={onHistoryClick}
+        >
+          <History className="size-[18px]" strokeWidth={2} />
+        </StudioIconButton>
+      ) : null}
+      <StudioToolbarDivider />
+      <StudioIconButton
+        label="Delete selection"
+        danger
         onClick={deleteSelected}
         disabled={!selectedObject}
-        className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#FFC9D3] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#FFC9D3]/80 disabled:hover:bg-[#FFC9D3] disabled:hover:scale-100"
       >
-        <DeleteIcon size={17} />
-      </Button>
-      {alignmentSlot}
-      {showSaveButton && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSaveClick ?? handleSave}
-          disabled={isSaving}
-          className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] rounded-[10px] border-0 bg-[#ffffff1a] text-white text-[15px]! font-semibold leading-[160%] font-(family-name:--font-manrope) cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:hover:scale-100"
-        >
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon size={17} />}
-        </Button>
-      )}
-      {isEmbedded && onSendUrlToChat && (
-        <Button
-          onClick={onSendUrlToChat}
-          disabled={isSendingUrl}
-          className="bg-sky-500 text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center gap-[5px] transition-all hover:bg-sky-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-sky-500 disabled:hover:scale-100"
-          aria-label="Send edited image to the chat conversation"
-          title="Send edited image to the chat conversation"
-        >
-          {isSendingUrl ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <MessageSquareShare className="w-4 h-4 shrink-0" />
-          )}
-        </Button>
-      )}
+        <Trash2 className="size-[18px]" strokeWidth={2} />
+      </StudioIconButton>
     </div>
   );
 }

@@ -2,20 +2,14 @@
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { HexColorPicker } from "react-colorful";
-import { Pipette } from "lucide-react";
+import { Paintbrush, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import type { RgbaColor, ShapeType } from "../types/image-editor-types";
 import type { EyedropperTarget } from "../hooks/use-eyedropper";
 import { rgbaToString } from "../utils/image-editor-utils";
-import { SHAPE_RANGES } from "../constants/editor-constants";
+import { SHAPE_RANGES, UI_COLORS } from "../constants/editor-constants";
+import { StudioColorControl, StudioSliderRow, studioForm } from "./studio-ui";
 
 function rgbaToHex(color: RgbaColor): string {
   const toHex = (n: number) => n.toString(16).padStart(2, "0");
@@ -45,24 +39,13 @@ export interface ShapeToolsPanelProps {
   onStartEyedropper?: (target: EyedropperTarget) => void;
 }
 
-const sliderClassName = cn(
-  "w-full",
-  "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-  "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-  "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-);
-
-const labelClassName =
-  "text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block";
-
-const valueBoxClassName =
-  "p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]";
+const labelClassName = studioForm.label;
 
 // SVG previews for each shape type
 const ShapeSVGPreview: React.FC<{ type: ShapeType }> = ({ type }) => {
-  const size = 40;
-  const stroke = "#9BFFCA";
-  const fill = "rgba(155,255,202,0.15)";
+  const size = 32;
+  const stroke = UI_COLORS.ACCENT;
+  const fill = UI_COLORS.ACCENT_SOFT;
   const sw = 1.5;
 
   switch (type) {
@@ -222,10 +205,10 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
   };
 
   return (
-    <div className="space-y-5 w-full">
+    <div className={cn(studioForm.section, "w-full")}>
       {/* Shape carousel */}
       <div>
-        <Label className={cn(labelClassName, "mb-3")}>Add Shape</Label>
+        <Label className={cn(labelClassName, "mb-2")}>Add Shape</Label>
         <div className="relative">
           {/* Left fade + arrow */}
           <div
@@ -234,10 +217,10 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
               canScrollLeft ? "opacity-100" : "opacity-0"
             )}
           >
-            <div className="w-8 h-full bg-gradient-to-r from-[#0D0D0D] to-transparent" />
+            <div className="h-full w-8 bg-gradient-to-r from-[#141220] to-transparent" />
             <button
               onClick={() => scroll("left")}
-              className="pointer-events-auto absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#2A2A2A] border border-[#3D3D3D] text-[#9BFFCA] hover:bg-[#333] transition-colors cursor-pointer"
+              className="pointer-events-auto absolute left-0 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/[0.09] bg-[#211E30] text-[#8069FF] transition-colors hover:bg-[#2C2942] cursor-pointer"
               aria-label="Scroll left"
             >
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -257,15 +240,14 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
                 key={type}
                 onClick={() => addShape(type)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1.5 py-3 rounded-[8px] border transition-all cursor-pointer flex-shrink-0",
-                  "bg-[#1A1A1A] border-[#2D2D2D]",
-                  "hover:border-[#9BFFCA] hover:bg-[#1F2B24]",
+                  "flex w-[60px] flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border py-2 transition-all",
+                  "border-white/[0.09] bg-[#211E30]",
+                  "hover:border-[#8069FF] hover:bg-[rgba(128,105,255,0.08)]",
                   "active:scale-[0.96]",
-                  "w-[72px]"
                 )}
               >
                 <ShapeSVGPreview type={type} />
-                <span className="text-[10px] font-medium text-[#929292] font-(family-name:--font-manrope) leading-none text-center px-1">
+                <span className="px-0.5 text-center text-[9px] font-medium leading-none text-[#726F86]">
                   {label}
                 </span>
               </button>
@@ -279,10 +261,10 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
               canScrollRight ? "opacity-100" : "opacity-0"
             )}
           >
-            <div className="w-8 h-full bg-gradient-to-l from-[#0D0D0D] to-transparent" />
+            <div className="h-full w-8 bg-gradient-to-l from-[#141220] to-transparent" />
             <button
               onClick={() => scroll("right")}
-              className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#2A2A2A] border border-[#3D3D3D] text-[#9BFFCA] hover:bg-[#333] transition-colors cursor-pointer"
+              className="pointer-events-auto absolute right-0 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/[0.09] bg-[#211E30] text-[#8069FF] transition-colors hover:bg-[#2C2942] cursor-pointer"
               aria-label="Scroll right"
             >
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -293,137 +275,154 @@ export const ShapeToolsPanel = React.memo(function ShapeToolsPanel({
         </div>
       </div>
 
-      <div className="w-full h-[1px] bg-[#2D2D2D]" />
+      <div className={studioForm.divider} />
 
       {/* Color pickers */}
-      <div className="flex gap-[50px]">
-        {/* Fill Color */}
-        <div className="flex flex-col items-center gap-1">
-          <Label className={cn(labelClassName, "mb-1")}>Fill Color</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                disabled={!isShapeSelected}
-                aria-label="Change fill color"
-                className={cn(
-                  "flex items-center gap-[14px] px-0 cursor-pointer bg-transparent border-none group",
-                  !isShapeSelected && "opacity-50 pointer-events-none",
-                )}
-              >
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: rgbaToString(shapeFillColor) }}
-                />
-                <div className="flex flex-col gap-[2px] items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <div className="h-[2px] w-[20px] bg-[#E5E5EF]" />
-                </div>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
-              <HexColorPicker
-                color={rgbaToHex(shapeFillColor)}
-                onChange={(hex) => setShapeFillColor(hexToRgba(hex, 1))}
-              />
-              {onStartEyedropper && (
-                <button
-                  type="button"
-                  onClick={() => onStartEyedropper("shapeFill")}
-                  className={cn(
-                    "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
-                    "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
-                    eyedropperTarget === "shapeFill" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
-                  )}
-                >
-                  <Pipette className="w-3.5 h-3.5" />
-                  Pick from canvas
-                </button>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Stroke Color */}
-        <div className="flex flex-col items-center gap-1">
-          <Label className={cn(labelClassName, "mb-1")}>Border Color</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                disabled={!isShapeSelected}
-                aria-label="Change border color"
-                className={cn(
-                  "flex items-center gap-[14px] px-0 cursor-pointer bg-transparent border-none group",
-                  !isShapeSelected && "opacity-50 pointer-events-none",
-                )}
-              >
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: rgbaToString(shapeStrokeColor) }}
-                />
-                <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="#191919" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
-              <HexColorPicker
-                color={rgbaToHex(shapeStrokeColor)}
-                onChange={(hex) => setShapeStrokeColor(hexToRgba(hex, 1))}
-              />
-              {onStartEyedropper && (
-                <button
-                  type="button"
-                  onClick={() => onStartEyedropper("shapeStroke")}
-                  className={cn(
-                    "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
-                    "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
-                    eyedropperTarget === "shapeStroke" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
-                  )}
-                >
-                  <Pipette className="w-3.5 h-3.5" />
-                  Pick from canvas
-                </button>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
+      <div className={studioForm.colorControlGroup}>
+        <StudioColorControl
+          label="Fill color"
+          color={rgbaToString(shapeFillColor)}
+          disabled={!isShapeSelected}
+          icon={<Paintbrush className="size-[18px]" strokeWidth={2} />}
+          eyedropperActive={eyedropperTarget === "shapeFill"}
+          onStartEyedropper={
+            onStartEyedropper ? () => onStartEyedropper("shapeFill") : undefined
+          }
+        >
+          <HexColorPicker
+            color={rgbaToHex(shapeFillColor)}
+            onChange={(hex) => setShapeFillColor(hexToRgba(hex, shapeFillColor.a))}
+          />
+        </StudioColorControl>
+        <StudioColorControl
+          label="Border color"
+          color={rgbaToString(shapeStrokeColor)}
+          disabled={!isShapeSelected}
+          icon={<Square className="size-[18px]" strokeWidth={2} />}
+          eyedropperActive={eyedropperTarget === "shapeStroke"}
+          onStartEyedropper={
+            onStartEyedropper ? () => onStartEyedropper("shapeStroke") : undefined
+          }
+        >
+          <HexColorPicker
+            color={rgbaToHex(shapeStrokeColor)}
+            onChange={(hex) => setShapeStrokeColor(hexToRgba(hex, shapeStrokeColor.a))}
+          />
+        </StudioColorControl>
       </div>
 
       {/* Border Width */}
-      <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center">
-        <Label className={labelClassName}>Border Width</Label>
-        <Slider
-          value={[shapeStrokeWidth]}
-          onValueChange={([value]) => setShapeStrokeWidth(value)}
-          min={SHAPE_RANGES.STROKE_WIDTH_MIN}
-          max={SHAPE_RANGES.STROKE_WIDTH_MAX}
-          step={1}
-          disabled={!isShapeSelected}
-          className={sliderClassName}
-        />
-        <div className={valueBoxClassName}>{shapeStrokeWidth}px</div>
-      </div>
+      <StudioSliderRow
+        label="Border Width"
+        value={shapeStrokeWidth}
+        displayValue={`${shapeStrokeWidth}px`}
+        min={SHAPE_RANGES.STROKE_WIDTH_MIN}
+        max={SHAPE_RANGES.STROKE_WIDTH_MAX}
+        step={1}
+        onChange={setShapeStrokeWidth}
+        disabled={!isShapeSelected}
+      />
 
       {/* Opacity */}
-      <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center">
-        <Label className={labelClassName}>Opacity</Label>
-        <Slider
-          value={[shapeOpacity]}
-          onValueChange={([value]) => setShapeOpacity(value)}
-          min={SHAPE_RANGES.OPACITY_MIN}
-          max={SHAPE_RANGES.OPACITY_MAX}
-          step={1}
-          disabled={!isShapeSelected}
-          className={sliderClassName}
-        />
-        <div className={valueBoxClassName}>{shapeOpacity}%</div>
-      </div>
+      <StudioSliderRow
+        label="Opacity"
+        value={shapeOpacity}
+        displayValue={`${shapeOpacity}%`}
+        min={SHAPE_RANGES.OPACITY_MIN}
+        max={SHAPE_RANGES.OPACITY_MAX}
+        step={1}
+        onChange={setShapeOpacity}
+        disabled={!isShapeSelected}
+      />
     </div>
   );
 });
+
+export function ShapeMobilePicker({
+  onAddShape,
+  compact,
+}: {
+  onAddShape: (type: ShapeType) => void;
+  compact?: boolean;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { canScrollLeft, canScrollRight } = useScrollState(scrollRef);
+
+  const scroll = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({ left: dir === "right" ? 120 : -120, behavior: "smooth" });
+  };
+
+  return (
+    <div className={cn("w-full", compact ? "" : studioForm.section)}>
+      {!compact ? (
+        <p className="mb-2.5 text-[12.5px] font-semibold text-[#726F86]">
+          Tap a shape to add it to the canvas.
+        </p>
+      ) : null}
+      <div className="relative">
+        <div
+          className={cn(
+            "absolute left-0 top-0 bottom-0 z-10 flex items-center pointer-events-none transition-opacity duration-200",
+            canScrollLeft ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <div className="h-full w-6 bg-gradient-to-r from-[rgba(33,30,48,0.94)] to-transparent" />
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            className="pointer-events-auto absolute left-0 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/[0.09] bg-[#211E30] text-[#8069FF] cursor-pointer"
+            aria-label="Scroll left"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M6.5 2L3.5 5L6.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-2 overflow-x-auto scroll-smooth pb-0.5"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {SHAPES.map(({ type, label }) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => onAddShape(type)}
+                className={cn(
+                  "flex w-[56px] flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border py-2 transition-all",
+                  "border-white/[0.09] bg-[#211E30]",
+                  "hover:border-[#8069FF] hover:bg-[rgba(128,105,255,0.08)]",
+                  "active:scale-[0.96]",
+                )}
+            >
+              <ShapeSVGPreview type={type} />
+              <span className="px-0.5 text-center text-[9px] font-medium leading-none text-[#726F86]">
+                {label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div
+          className={cn(
+            "absolute right-0 top-0 bottom-0 z-10 flex items-center pointer-events-none transition-opacity duration-200",
+            canScrollRight ? "opacity-100" : "opacity-0",
+          )}
+        >
+          <div className="h-full w-6 bg-gradient-to-l from-[rgba(33,30,48,0.94)] to-transparent" />
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            className="pointer-events-auto absolute right-0 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/[0.09] bg-[#211E30] text-[#8069FF] cursor-pointer"
+            aria-label="Scroll right"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M3.5 2L6.5 5L3.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

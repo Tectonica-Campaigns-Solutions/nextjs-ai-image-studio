@@ -2,8 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -14,6 +12,7 @@ import {
 import type { FrameAsset } from "../types/image-editor-types";
 import { FRAME_SHOW_BY_SIZE_OPTIONS } from "@/lib/aspect-ratios";
 import { cn } from "@/lib/utils";
+import { StudioPanelHint, StudioSliderRow, studioForm } from "./studio-ui";
 
 export interface FrameToolsPanelProps {
   frameAssets: FrameAsset[];
@@ -24,7 +23,7 @@ export interface FrameToolsPanelProps {
   isFrameSelected: boolean;
 }
 
-function filterFramesBySize(frames: FrameAsset[], size: string): FrameAsset[] {
+export function filterFramesBySize(frames: FrameAsset[], size: string): FrameAsset[] {
   if (size === "all") return frames;
   return frames.filter((asset) => {
     const v = asset.variant;
@@ -57,22 +56,16 @@ export const FrameToolsPanel = React.memo(function FrameToolsPanel({
   );
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label className="text-[13px] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope)">
-          Show by size
-        </Label>
+    <div className={studioForm.section}>
+      <div className="flex flex-col gap-2">
+        <span className={studioForm.label}>Show by size</span>
         <Select value={showBySize} onValueChange={setShowBySize}>
-          <SelectTrigger className="w-full border-[#2D2D2D] bg-[#0D0D0D] text-[#F4F4F4] font-(family-name:--font-manrope)">
+          <SelectTrigger className={studioForm.selectTriggerLarge}>
             <SelectValue placeholder="Select size" />
           </SelectTrigger>
-          <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
+          <SelectContent className={studioForm.selectContent}>
             {FRAME_SHOW_BY_SIZE_OPTIONS.map(({ value, label }) => (
-              <SelectItem
-                key={value}
-                value={value}
-                className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-              >
+              <SelectItem key={value} value={value} className={studioForm.selectItem}>
                 {label}
               </SelectItem>
             ))}
@@ -81,28 +74,19 @@ export const FrameToolsPanel = React.memo(function FrameToolsPanel({
       </div>
 
       {!hasAnyFrames ? (
-        <div className="py-6 text-center">
-          <p className="text-[13px] text-[#929292] font-(family-name:--font-manrope)">
-            No frames available
-          </p>
-        </div>
+        <StudioPanelHint>No frames available</StudioPanelHint>
       ) : filteredFrames.length === 0 ? (
-        <div className="py-6 text-center">
-          <p className="text-[13px] text-[#929292] font-(family-name:--font-manrope)">
-            No frames for this size. Try &quot;All&quot; or another option.
-          </p>
-        </div>
+        <StudioPanelHint>No frames for this size. Try &quot;All&quot; or another option.</StudioPanelHint>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {filteredFrames.map((asset) => (
             <button
               key={asset.url}
               type="button"
               onClick={() => insertFrame(asset.url)}
-              className="group relative aspect-square rounded-[8px] overflow-hidden border border-[#2D2D2D] bg-[#0D0D0D] transition-all hover:border-[#5C38F3] hover:shadow-[0_0_0_1px_#5C38F3] focus:outline-none focus:ring-2 focus:ring-[#5C38F3]/40 cursor-pointer"
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-[10px] border border-white/[0.09] bg-[#0E0D18] transition-all hover:border-[#8069FF] hover:shadow-[0_0_0_1px_#8069FF] focus:outline-none focus:ring-2 focus:ring-[#8069FF]/40"
               title={asset.display_name}
             >
-              {/* Checkerboard background to show transparency */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -119,8 +103,8 @@ export const FrameToolsPanel = React.memo(function FrameToolsPanel({
                 sizes="(max-width: 400px) 50vw, 200px"
                 className="object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-white text-[10px] font-medium leading-tight truncate font-(family-name:--font-manrope)">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <p className="truncate text-[10px] font-medium leading-tight text-white">
                   {asset.display_name}
                 </p>
               </div>
@@ -129,33 +113,106 @@ export const FrameToolsPanel = React.memo(function FrameToolsPanel({
         </div>
       )}
 
-      <div
-        className={cn(
-          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
-          !isFrameSelected && "opacity-50 pointer-events-none"
-        )}
-      >
-        <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
-          Opacity
-        </Label>
-        <Slider
-          value={[frameOpacity]}
-          onValueChange={([value]) => setFrameOpacity(value)}
+      <div className={cn(!isFrameSelected && "pointer-events-none opacity-50")}>
+        <StudioSliderRow
+          label="Opacity"
+          value={frameOpacity}
+          displayValue={`${frameOpacity}%`}
           min={10}
           max={100}
           step={5}
+          onChange={setFrameOpacity}
           disabled={!isFrameSelected}
-          className={cn(
-            "w-full",
-            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-          )}
         />
-        <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
-          {frameOpacity}%
-        </div>
       </div>
     </div>
   );
 });
+
+export function FrameMobilePicker({
+  frameAssets,
+  aspectRatio,
+  onInsertFrame,
+  compact,
+}: {
+  frameAssets: FrameAsset[];
+  aspectRatio: string | null;
+  onInsertFrame: (url: string) => void;
+  compact?: boolean;
+}) {
+  const [showBySize, setShowBySize] = useState<string>(() => {
+    if (aspectRatio && FRAME_SHOW_BY_SIZE_OPTIONS.some((o) => o.value === aspectRatio)) {
+      return aspectRatio;
+    }
+    return "all";
+  });
+
+  const filteredFrames = useMemo(
+    () => filterFramesBySize(frameAssets, showBySize),
+    [frameAssets, showBySize],
+  );
+
+  return (
+    <div className={cn("w-full", compact ? "" : studioForm.section)}>
+      {!compact ? (
+        <p className="mb-2.5 text-[12.5px] font-semibold text-[#726F86]">
+          Tap a frame to add it to the canvas.
+        </p>
+      ) : null}
+      <div className="mb-3 flex flex-col gap-2">
+        <span className={studioForm.label}>Show by size</span>
+        <select
+          value={showBySize}
+          onChange={(e) => setShowBySize(e.target.value)}
+          className={cn(studioForm.selectTrigger, "h-11 w-full")}
+        >
+          {FRAME_SHOW_BY_SIZE_OPTIONS.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {frameAssets.length === 0 ? (
+        <StudioPanelHint>No frames available</StudioPanelHint>
+      ) : filteredFrames.length === 0 ? (
+        <StudioPanelHint>No frames for this size. Try &quot;All&quot; or another option.</StudioPanelHint>
+      ) : (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {filteredFrames.map((asset) => (
+            <button
+              key={asset.url}
+              type="button"
+              onClick={() => onInsertFrame(asset.url)}
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-[10px] border border-white/[0.09] bg-[#0E0D18] transition-all hover:border-[#8069FF] hover:shadow-[0_0_0_1px_#8069FF] active:scale-[0.98]"
+              title={asset.display_name}
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(45deg, #2a2a2a 25%, transparent 25%), linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2a2a2a 75%), linear-gradient(-45deg, transparent 75%, #2a2a2a 75%)",
+                  backgroundSize: "10px 10px",
+                  backgroundPosition: "0 0, 0 5px, 5px -5px, -5px 0px",
+                }}
+              />
+              <Image
+                src={asset.url}
+                alt={asset.display_name}
+                fill
+                sizes="(max-width: 400px) 50vw, 200px"
+                className="object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                <p className="truncate text-[10px] font-medium leading-tight text-white">
+                  {asset.display_name}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

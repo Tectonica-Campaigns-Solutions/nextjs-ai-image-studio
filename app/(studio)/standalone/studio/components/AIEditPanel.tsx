@@ -1,11 +1,8 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, WandSparkles } from "lucide-react";
+import { StudioCheckboxRow, studioForm } from "./studio-ui";
 
 export interface AIEditPanelProps {
   onEdit: (prompt: string, includeLayers?: boolean) => Promise<void>;
@@ -27,50 +24,38 @@ export const AIEditPanel = React.memo(function AIEditPanel({
   };
 
   return (
-    <div className="space-y-4 w-full">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex flex-col gap-[10px]">
-          <Textarea
-            id="ai-edit-prompt"
-            placeholder="Enter prompt to edit image (e.g. Change the background to a bright outdoor park scene)"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={isLoading}
-            className="min-h-[88px] w-full !border-[#2D2D2D] !bg-[#1F1F1F] text-sm !text-white placeholder:text-white/40 rounded-[10px] px-[16px] py-[10px] resize-y transition-all focus:ring-2 focus:ring-[#5C38F3]/20 focus:border-[#5C38F3] !font-(family-name:--font-manrope)"
-            rows={3}
-          />
-          <label
-            className={cn(
-              "flex items-center gap-2 cursor-pointer select-none",
-              isLoading && "opacity-50 pointer-events-none"
-            )}
-          >
-            <Checkbox
-              checked={includeLayers}
-              onCheckedChange={(checked) => setIncludeLayers(checked === true)}
-              disabled={isLoading}
-              className="border-[#2D2D2D] data-[state=checked]:bg-[#5C38F3] data-[state=checked]:border-[#5C38F3]"
-            />
-            <span className="text-[13px] text-white/90 font-(family-name:--font-manrope) leading-[135%]">
-              Include layers (text, QR, frames, etc.) in the image sent for editing
-            </span>
-          </label>
-          <Button
-            type="submit"
-            disabled={!prompt.trim() || isLoading}
-            className="w-full h-[44px] bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) border-none rounded-[10px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#5C38F3] disabled:active:scale-100"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                Editing…
-              </>
-            ) : (
-              "Edit with AI"
-            )}
-          </Button>
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} className={studioForm.section}>
+      <textarea
+        id="ai-edit-prompt"
+        rows={5}
+        placeholder="Enter prompt to edit image (e.g. Change the background to a bright outdoor park scene)"
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        disabled={isLoading}
+        className={`${studioForm.input} min-h-[120px] resize-y py-3 leading-normal`}
+      />
+      <StudioCheckboxRow
+        checked={includeLayers}
+        onChange={setIncludeLayers}
+        label="Include layers (text, QR, frames, etc.) in the image sent for editing"
+      />
+      <button
+        type="submit"
+        disabled={!prompt.trim() || isLoading}
+        className={studioForm.primaryButton}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="size-[19px] animate-spin" aria-hidden />
+            Editing…
+          </>
+        ) : (
+          <>
+            <WandSparkles className="size-[19px]" strokeWidth={2.2} aria-hidden />
+            Edit with AI
+          </>
+        )}
+      </button>
+    </form>
   );
 });

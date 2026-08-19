@@ -52,7 +52,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
   const moveSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveState = useCallback(
-    (immediate = false) => {
+    (immediate = false, force = false) => {
       const canvas = canvasRef.current;
       if (!canvas || isRestoringState.current) return;
 
@@ -95,6 +95,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
           const newEntries = prev.entries.slice(0, prev.currentIndex + 1);
           const last = newEntries[newEntries.length - 1];
           if (
+            !force &&
             last &&
             last.overlayJSON === overlayJSON &&
             last.backgroundUrl === (originalImageUrlRef.current ?? undefined)

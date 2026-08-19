@@ -428,3 +428,80 @@ body:not(:has(.studio-root)) #sidebar [data-slot="input"] {
   background: #0D0D0D !important;
   color: #FFF !important;
 }
+
+/* Visual Studio desktop chrome (Claude Design) */
+.studio-root {
+  font-family: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes vs-slide-in {
+  from { transform: translateX(-14px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes vs-pop {
+  from { transform: translateY(-6px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.vs-slide-in {
+  animation: vs-slide-in 240ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.vs-pop {
+  animation: vs-pop 160ms cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes vs-sheet-up {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.vs-sheet-up {
+  animation: vs-sheet-up 260ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.vs-noscroll::-webkit-scrollbar { width: 0; height: 0; }
+.vs-noscroll { scrollbar-width: none; }
+
+/* Mobile float slider — native range with filled track (logo opacity/size) */
+.mobile-float-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+}
+
+.mobile-float-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #d3d0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.mobile-float-range::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: #211e30;
+}
+
+.mobile-float-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 9999px;
+  background: #8069ff;
+}
+
+.mobile-float-range::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border: 0;
+  border-radius: 50%;
+  background: #d3d0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}

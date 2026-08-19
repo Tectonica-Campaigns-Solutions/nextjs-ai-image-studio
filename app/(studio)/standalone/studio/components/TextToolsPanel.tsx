@@ -1,9 +1,6 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   Command,
   CommandEmpty,
@@ -12,7 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Bold, ChevronDown, Italic, Underline, Loader2, Pipette } from "lucide-react";
+import { Bold, ChevronDown, Italic, Underline, Loader2, Baseline, Highlighter } from "lucide-react";
 import { RgbaColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import type { EyedropperTarget } from "../hooks/use-eyedropper";
@@ -26,6 +23,7 @@ import type { FontAsset, RgbaColor } from "../types/image-editor-types";
 import type { GoogleFontCatalogEntry } from "../types/google-font-catalog";
 import { normalizeFontCatalogKey } from "../utils/build-google-font-css2-url";
 import { TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextToolIcon } from "./editor-icons";
+import { StudioColorControl, StudioSliderRow, StudioSquareButton, studioForm } from "./studio-ui";
 
 export interface TextToolsPanelProps {
   selectedObject: any;
@@ -130,15 +128,16 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
   }, [fontAssets, googleCatalogFonts]);
 
   return (
-    <div className="space-y-5 w-full">
-      <Button
+    <div className={studioForm.section}>
+      <button
+        type="button"
         onClick={addText}
         disabled={isAddTextDisabled}
-        className="w-full h-[44px] bg-[#5C38F3] text-white shadow-md cursor-pointer text-[15px] leading-[160%] font-semibold font-(family-name:--font-manrope) rounded-[10px] transition-all hover:bg-[#4A2DD1] hover:shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-[#5C38F3]"
+        className={studioForm.primaryButton}
       >
         {isAddTextDisabled ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden />
+            <Loader2 className="size-[19px] animate-spin shrink-0" aria-hidden />
             Loading fonts...
           </>
         ) : (
@@ -147,74 +146,64 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
             Add a text box
           </>
         )}
-      </Button>
-      <div className="w-full  h-[1px] bg-[#2D2D2D]"></div>
-      <div className="grid grid-cols-2 gap-[20px]">
-        <div className="w-full">
+      </button>
+
+      <div className={studioForm.divider} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-[130px] flex-1">
           <Popover open={fontPickerOpen} onOpenChange={setFontPickerOpen}>
             <PopoverTrigger asChild>
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 disabled={!selectedObject}
                 aria-expanded={fontPickerOpen}
                 aria-haspopup="listbox"
                 className={cn(
-                  "w-full justify-between bg-[#0D0D0D] py-[10px] px-[16px] border-[#2D2D2D] text-[13px] font-medium leading-[135%] text-white font-(family-name:--font-manrope) h-[44px]! rounded-[10px] transition-all",
-                  "hover:border-[#444] hover:bg-[#161616] hover:!text-white dark:hover:bg-[#161616] dark:hover:!text-white",
-                  "focus-visible:!text-white focus-visible:ring-2 focus-visible:ring-[#5C38F3]/30 focus-visible:ring-offset-0 focus-visible:ring-offset-transparent",
-                  "[&_svg]:shrink-0 [&_svg]:text-white/80 [&_svg]:opacity-90 hover:[&_svg]:text-white/90",
+                  studioForm.selectTrigger,
+                  "flex w-full items-center justify-between gap-2 text-left",
                   !selectedObject && "opacity-50 pointer-events-none",
                 )}
               >
-                <span className="truncate text-left text-inherit">{fontFamily}</span>
+                <span className="truncate">{fontFamily}</span>
                 {googleCatalogLoading ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-inherit opacity-80" aria-hidden />
+                  <Loader2 className="size-4 shrink-0 animate-spin opacity-80" aria-hidden />
                 ) : (
-                  <ChevronDown className="h-4 w-4 shrink-0 text-inherit opacity-80" aria-hidden />
+                  <ChevronDown
+                    className={cn("size-4 shrink-0 opacity-80 transition-transform", fontPickerOpen && "rotate-180")}
+                    aria-hidden
+                  />
                 )}
-              </Button>
+              </button>
             </PopoverTrigger>
             <PopoverContent
               align="start"
-              className="w-[min(100vw-1.5rem,22rem)] p-0 bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md rounded-[10px] overflow-hidden"
+              className="w-[min(100vw-1.5rem,22rem)] overflow-hidden rounded-[10px] border border-white/[0.17] bg-[#211E30] p-0 text-[#F5F4FB] shadow-[0_18px_40px_-16px_rgba(0,0,0,0.7)]"
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <Command
-                className={cn(
-                  "studio-font-picker-command bg-[#0D0D0D] text-[#F4F4F4]",
-                  "[&_[cmdk-input-wrapper]]:border-[#2D2D2D] [&_[cmdk-input-wrapper]]:border-b [&_[cmdk-input-wrapper]]:ring-0 [&_[cmdk-input-wrapper]]:shadow-none",
-                  "[&_[data-slot=command-input]]:border-0 [&_[data-slot=command-input]]:shadow-none",
-                  "[&_[data-slot=command-input]]:outline-none [&_[data-slot=command-input]]:ring-0",
-                  "[&_[data-slot=command-input]]:focus:outline-none [&_[data-slot=command-input]]:focus-visible:outline-none",
-                  "[&_[data-slot=command-input]]:focus:ring-0 [&_[data-slot=command-input]]:focus-visible:ring-0",
-                  "[&_[data-slot=command-input]]:focus-visible:ring-offset-0",
-                )}
+                className="bg-[#211E30] text-[#F5F4FB] [&_[cmdk-input-wrapper]]:border-white/[0.09] [&_[cmdk-input-wrapper]]:border-b"
                 shouldFilter
                 filter={(value, search) => {
                   if (!search.trim()) return 1;
-                  return value.toLowerCase().includes(search.toLowerCase().trim())
-                    ? 1
-                    : 0;
+                  return value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0;
                 }}
               >
                 <CommandInput
                   placeholder="Search fonts…"
-                  className="h-10 border-0 border-b border-[#2D2D2D] bg-transparent text-[13px] text-white placeholder:text-[#929292] shadow-none outline-none ring-0 ring-offset-0 focus:shadow-none focus:outline-none focus:ring-0 focus-visible:shadow-none focus-visible:outline-none focus-visible:ring-0"
+                  className="h-10 border-0 bg-transparent text-[13.5px] text-[#F5F4FB] placeholder:text-[#726F86]"
                 />
                 <CommandList className="max-h-[min(60vh,320px)]">
                   {googleCatalogError && (
-                    <p className="px-3 py-2 text-[12px] text-[#929292] font-(family-name:--font-manrope)">
+                    <p className="px-3 py-2 text-[12px] text-[#ADAAC0]">
                       Could not load the full font list. Brand and custom fonts are still available.
                     </p>
                   )}
-                  <CommandEmpty className="py-6 text-[13px] text-[#929292]">
-                    No fonts match.
-                  </CommandEmpty>
+                  <CommandEmpty className="py-6 text-[13px] text-[#ADAAC0]">No fonts match.</CommandEmpty>
                   {brandFonts.length > 0 && (
                     <CommandGroup
                       heading="Brand fonts"
-                      className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[#929292] [&_[cmdk-group-heading]]:font-(family-name:--font-manrope)"
+                      className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[#726F86]"
                     >
                       {brandFonts.map((font) => (
                         <CommandItem
@@ -225,7 +214,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
                             setFontPickerOpen(false);
                           }}
                           style={{ fontFamily: font.font_family }}
-                          className="text-[13px] leading-[135%] text-[#F4F4F4] aria-selected:bg-[#1F1F1F] data-[selected=true]:bg-[#1F1F1F]"
+                          className="text-[13.5px] text-[#F5F4FB] aria-selected:bg-[rgba(128,105,255,0.16)] data-[selected=true]:bg-[rgba(128,105,255,0.16)]"
                         >
                           {font.font_family}
                         </CommandItem>
@@ -235,7 +224,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
                   {otherFontRows.length > 0 && (
                     <CommandGroup
                       heading="Other fonts"
-                      className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[#929292] [&_[cmdk-group-heading]]:font-(family-name:--font-manrope)"
+                      className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[#726F86]"
                     >
                       {otherFontRows.map((row) => {
                         if (row.kind === "custom") {
@@ -249,7 +238,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
                                 setFontPickerOpen(false);
                               }}
                               style={{ fontFamily: asset.font_family }}
-                              className="text-[13px] leading-[135%] text-[#F4F4F4] aria-selected:bg-[#1F1F1F] data-[selected=true]:bg-[#1F1F1F]"
+                              className="text-[13.5px] text-[#F5F4FB] aria-selected:bg-[rgba(128,105,255,0.16)] data-[selected=true]:bg-[rgba(128,105,255,0.16)]"
                             >
                               {asset.font_family}
                             </CommandItem>
@@ -265,7 +254,7 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
                               setFontPickerOpen(false);
                             }}
                             style={{ fontFamily: name }}
-                            className="text-[13px] leading-[135%] text-[#F4F4F4] aria-selected:bg-[#1F1F1F] data-[selected=true]:bg-[#1F1F1F]"
+                            className="text-[13.5px] text-[#F5F4FB] aria-selected:bg-[rgba(128,105,255,0.16)] data-[selected=true]:bg-[rgba(128,105,255,0.16)]"
                           >
                             {name}
                           </CommandItem>
@@ -278,235 +267,86 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
             </PopoverContent>
           </Popover>
         </div>
-        <div>
-          <div className="grid grid-cols-3 gap-[5px] h-full">
-            <Button
-              variant={isBold ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsBold(!isBold)}
-              disabled={!selectedObject}
-              aria-label={isBold ? "Remove bold" : "Bold"}
-              className={cn(
-                "h-full cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
-                isBold && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
-              )}
-            >
-              <Bold className="w-4 h-4 text-white" />
-            </Button>
-            <Button
-              variant={isItalic ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsItalic(!isItalic)}
-              disabled={!selectedObject}
-              aria-label={isItalic ? "Remove italic" : "Italic"}
-              className={cn(
-                "h-full cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
-                isItalic && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
-              )}
-            >
-              <Italic className="w-4 h-4 text-white" />
-            </Button>
-            <Button
-              variant={isUnderline ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsUnderline(!isUnderline)}
-              disabled={!selectedObject}
-              aria-label={isUnderline ? "Remove underline" : "Underline"}
-              className={cn(
-                "h-full cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95",
-                isUnderline && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
-              )}
-            >
-              <Underline className="w-4 h-4 text-white" />
-            </Button>
-          </div>
+        <div className="flex shrink-0 gap-1.5">
+          <StudioSquareButton label="Bold" active={isBold} disabled={!selectedObject} onClick={() => setIsBold(!isBold)}>
+            <Bold className="size-[18px]" />
+          </StudioSquareButton>
+          <StudioSquareButton label="Italic" active={isItalic} disabled={!selectedObject} onClick={() => setIsItalic(!isItalic)}>
+            <Italic className="size-[18px]" />
+          </StudioSquareButton>
+          <StudioSquareButton label="Underline" active={isUnderline} disabled={!selectedObject} onClick={() => setIsUnderline(!isUnderline)}>
+            <Underline className="size-[18px]" />
+          </StudioSquareButton>
         </div>
       </div>
-      <div className="w-full h-[1px] bg-[#2D2D2D]" />
-      <div className="grid grid-cols-2 gap-4 items-center">
-        {/* Alignment */}
-        <div className="min-w-0 flex shrink-0">
-          <div className="grid grid-cols-3 gap-[5px] w-fit">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTextAlign("left")}
-              disabled={!selectedObject}
-              aria-label="Align text left"
-              className={cn(
-                "!py-[10px] !px-[16px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 h-auto",
-                textAlign === "left" && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
-              )}
-            >
-              <TextAlignLeftIcon />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTextAlign("center")}
-              disabled={!selectedObject}
-              aria-label="Align text center"
-              className={cn(
-                "!py-[10px] !px-[16px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 h-auto",
-                textAlign === "center" && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
-              )}
-            >
-              <TextAlignCenterIcon />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTextAlign("right")}
-              disabled={!selectedObject}
-              aria-label="Align text right"
-              className={cn(
-                "!py-[10px] !px-[16px] cursor-pointer bg-[#191919] rounded-[10px] border border-[#2D2D2D] transition-all hover:bg-[#252525] hover:border-[#444] active:scale-95 h-auto",
-                textAlign === "right" && "bg-[#0D0D0D] border-[#5C38F3] shadow-sm"
-              )}
-            >
-              <TextAlignRightIcon />
-            </Button>
-          </div>
+
+      <div className={studioForm.divider} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex gap-1.5">
+          <StudioSquareButton label="Align left" active={textAlign === "left"} disabled={!selectedObject} onClick={() => setTextAlign("left")}>
+            <TextAlignLeftIcon />
+          </StudioSquareButton>
+          <StudioSquareButton label="Align center" active={textAlign === "center"} disabled={!selectedObject} onClick={() => setTextAlign("center")}>
+            <TextAlignCenterIcon />
+          </StudioSquareButton>
+          <StudioSquareButton label="Align right" active={textAlign === "right"} disabled={!selectedObject} onClick={() => setTextAlign("right")}>
+            <TextAlignRightIcon />
+          </StudioSquareButton>
         </div>
-        {/* Colors */}
-        <div className="flex gap-4 justify-end items-center min-w-0">
-          {/* Text Color */}
-          <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  disabled={!selectedObject}
-                  aria-label="Change text color"
-                  className={cn(
-                    "flex items-center gap-2 px-0 cursor-pointer bg-transparent border-none shrink-0 group",
-                    !selectedObject && "opacity-50 pointer-events-none",
-                  )}
-                >
-                  <div
-                    className="w-4 h-4 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
-                    style={{ backgroundColor: rgbaToString(textColor) }}
-                  />
-                  <div className="flex flex-col gap-[2px] items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <div className="h-[2px] w-[20px] bg-[#E5E5EF]" />
-                  </div>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
-                <RgbaColorPicker color={textColor} onChange={setTextColor} />
-                {onStartEyedropper && (
-                  <button
-                    type="button"
-                    onClick={() => onStartEyedropper("textColor")}
-                    className={cn(
-                      "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
-                      "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
-                      eyedropperTarget === "textColor" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
-                    )}
-                  >
-                    <Pipette className="w-3.5 h-3.5" />
-                    Pick from canvas
-                  </button>
-                )}
-              </PopoverContent>
-          </Popover>
-          {/* Background Color */}
-          <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  disabled={!selectedObject}
-                  aria-label="Change text background color"
-                  className={cn(
-                    "flex items-center gap-2 px-0 cursor-pointer bg-transparent border-none shrink-0 group",
-                    !selectedObject && "opacity-50 pointer-events-none",
-                  )}
-                >
-                  <div
-                    className="w-4 h-4 rounded-full border-2 border-[#C5CAD9] shadow-sm transition-transform group-hover:scale-105 shrink-0"
-                    style={{ backgroundColor: rgbaToString(backgroundColor) }}
-                  />
-                  <div className="rounded-[3px] bg-white p-[4px] h-[28px] w-[28px] flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M2 17.0588H4.82353M11.4118 17.0588H18M4.72941 12.3529H11.2235M7.83529 4.16471L13.2941 17.0588M2.94118 17.0588L8.58823 2H10.4706L17.0588 17.0588" stroke="#191919" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-4 bg-[#0D0D0D] border border-[#2D2D2D] rounded-[10px]">
-                <RgbaColorPicker color={backgroundColor} onChange={setBackgroundColor} />
-                {onStartEyedropper && (
-                  <button
-                    type="button"
-                    onClick={() => onStartEyedropper("backgroundColor")}
-                    className={cn(
-                      "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-[#2D2D2D] bg-[#141414] py-1.5 cursor-pointer transition-all text-[12px] font-medium text-[#929292] font-(family-name:--font-manrope)",
-                      "hover:border-[#444] hover:bg-[#1A1A1A] hover:text-white",
-                      eyedropperTarget === "backgroundColor" && "border-[#5C38F3] bg-[#5C38F3]/10 text-white"
-                    )}
-                  >
-                    <Pipette className="w-3.5 h-3.5" />
-                    Pick from canvas
-                  </button>
-                )}
-              </PopoverContent>
-          </Popover>
+        <div className="flex-1" />
+        <div className={studioForm.colorControlGroup}>
+          <StudioColorControl
+            label="Text color"
+            color={rgbaToString(textColor)}
+            disabled={!selectedObject}
+            icon={<Baseline className="size-[18px]" strokeWidth={2} />}
+            eyedropperActive={eyedropperTarget === "textColor"}
+            onStartEyedropper={
+              onStartEyedropper ? () => onStartEyedropper("textColor") : undefined
+            }
+          >
+            <RgbaColorPicker color={textColor} onChange={setTextColor} />
+          </StudioColorControl>
+          <StudioColorControl
+            label="Highlight color"
+            color={rgbaToString(backgroundColor)}
+            disabled={!selectedObject}
+            icon={<Highlighter className="size-[18px]" strokeWidth={2} />}
+            eyedropperActive={eyedropperTarget === "backgroundColor"}
+            onStartEyedropper={
+              onStartEyedropper ? () => onStartEyedropper("backgroundColor") : undefined
+            }
+          >
+            <RgbaColorPicker color={backgroundColor} onChange={setBackgroundColor} />
+          </StudioColorControl>
         </div>
       </div>
-      <div className="w-full h-[1px] bg-[#2D2D2D]" />
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center min-w-0">
-          <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block shrink-0">
-            Size
-          </Label>
-          <div className="min-w-0">
-            <Slider
-              value={[fontSize]}
-              onValueChange={([value]) => setFontSize(value)}
-              min={12}
-              max={72}
-              step={1}
-              disabled={!selectedObject}
-              className={cn(
-                "w-full",
-                "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-                "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-                "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-              )}
-            />
-          </div>
-          <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[12px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444] shrink-0 tabular-nums">
-            {fontSize}px
-          </div>
-        </div>
-        <div className="grid grid-cols-[auto_1fr_40px] gap-[11px] items-center min-w-0">
-          <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block shrink-0">
-            Line
-          </Label>
-          <div className="min-w-0">
-            <Slider
-              value={[lineHeight]}
-              onValueChange={([value]) => setLineHeight(value)}
-              min={0.8}
-              max={3.0}
-              step={0.1}
-              disabled={!selectedObject}
-              className={cn(
-                "w-full",
-                "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-                "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-                "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-              )}
-            />
-          </div>
-          <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[12px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444] shrink-0 tabular-nums">
-            <span>{lineHeight.toFixed(1)}</span>
-          </div>
-        </div>
-      </div>
-      <div className="w-full h-[1px] bg-[#2D2D2D]" />
+
+      <div className={studioForm.divider} />
+
+      <StudioSliderRow
+        label="Size"
+        labelClassName={studioForm.labelNarrow}
+        value={fontSize}
+        displayValue={`${fontSize}px`}
+        min={12}
+        max={72}
+        step={1}
+        onChange={setFontSize}
+        disabled={!selectedObject}
+      />
+      <StudioSliderRow
+        label="Line"
+        labelClassName={studioForm.labelNarrow}
+        value={lineHeight}
+        displayValue={lineHeight.toFixed(1)}
+        min={0.8}
+        max={3.0}
+        step={0.1}
+        onChange={setLineHeight}
+        disabled={!selectedObject}
+      />
     </div>
   );
 });

@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { StudioIconButton } from "./studio-ui";
 import {
   AlignLeft,
   AlignCenter,
@@ -24,6 +25,8 @@ export interface AlignmentPopoverProps {
   selectedObject: any;
   /** When true, show mobile-friendly layout */
   variant?: "mobile" | "desktop";
+  /** Compact 36px trigger for floating canvas controls */
+  compact?: boolean;
 }
 
 const alignToCanvasOptions: { option: AlignOption; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -44,6 +47,7 @@ export function AlignmentPopover({
   onAlign,
   selectedObject,
   variant = "desktop",
+  compact = false,
 }: AlignmentPopoverProps) {
   const hasSelection = !!selectedObject;
   const isMultiSelection =
@@ -56,45 +60,69 @@ export function AlignmentPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!hasSelection}
-          className="h-[44px] w-[54px] px-[15px] py-[10px] flex items-center justify-center rounded-[10px] border-0 bg-[#ffffff1a] text-white font-semibold cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-[#ffffff2a] disabled:hover:bg-[#ffffff1a] disabled:opacity-50"
-          aria-label="Alignment options"
-        >
-          <AlignCenter className="w-4 h-4" />
-        </Button>
+        {compact ? (
+          <button
+            type="button"
+            title="Align to canvas"
+            aria-label="Align to canvas"
+            disabled={!hasSelection}
+            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-white/[0.09] bg-[#211E30] text-[#F5F4FB] transition-colors duration-160 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <AlignLeft className="size-[17px]" />
+          </button>
+        ) : (
+          <StudioIconButton label="Align to canvas" disabled={!hasSelection}>
+            <AlignLeft className="size-[18px]" />
+          </StudioIconButton>
+        )}
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto p-2 bg-[#191919] border-[#2D2D2D] rounded-[10px]"
-        align={variant === "desktop" ? "start" : "center"}
+        className="vs-pop w-[218px] p-3.5 bg-[#211E30] border-white/[0.17] rounded-[14px] shadow-[0_24px_48px_-18px_rgba(0,0,0,0.75)]"
+        align={variant === "desktop" ? "end" : "center"}
+        side={compact ? "top" : undefined}
       >
-        <p className="text-[10px] uppercase tracking-wider text-white/40 px-1 mb-1.5 font-(family-name:--font-manrope)">
+        <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#726F86]">
           Align to canvas
         </p>
-        <div className="grid grid-cols-3 gap-1">
-          {alignToCanvasOptions.map(({ option, label, Icon }) => (
-            <Button
-              key={option}
-              variant="ghost"
-              size="sm"
-              onClick={() => onAlign(option)}
-              className="h-9 w-9 p-0 text-white hover:bg-white/10"
-              title={label}
-              aria-label={label}
-            >
-              <Icon className="w-4 h-4" />
-            </Button>
-          ))}
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between">
+            {alignToCanvasOptions.slice(3, 6).map(({ option, label, Icon }) => (
+              <Button
+                key={option}
+                variant="ghost"
+                size="sm"
+                onClick={() => onAlign(option)}
+                className="size-10 p-0 rounded-[10px] border border-white/[0.09] text-[#ADAAC0] hover:bg-[#2C2942]"
+                title={label}
+                aria-label={label}
+              >
+                <Icon className="size-[18px]" />
+              </Button>
+            ))}
+          </div>
+          <div className="flex justify-between">
+            {alignToCanvasOptions.slice(0, 3).map(({ option, label, Icon }) => (
+              <Button
+                key={option}
+                variant="ghost"
+                size="sm"
+                onClick={() => onAlign(option)}
+                className="size-10 p-0 rounded-[10px] border border-white/[0.09] text-[#ADAAC0] hover:bg-[#2C2942]"
+                title={label}
+                aria-label={label}
+              >
+                <Icon className="size-[18px]" />
+              </Button>
+            ))}
+          </div>
         </div>
 
-        <div className="border-t border-[#2D2D2D] my-2" />
+        <div className="my-3 h-px bg-white/[0.09]" />
 
-        <p className="text-[10px] uppercase tracking-wider text-white/40 px-1 mb-1.5 font-(family-name:--font-manrope)">
+        <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#726F86]">
           Distribute
         </p>
-        <div className="flex gap-1">
+        <div className="flex gap-2">
           {distributeOptions.map(({ option, label, Icon }) => (
             <Button
               key={option}
@@ -102,16 +130,16 @@ export function AlignmentPopover({
               size="sm"
               disabled={!canDistribute}
               onClick={() => onAlign(option)}
-              className="h-9 w-9 p-0 text-white hover:bg-white/10 disabled:opacity-30"
+              className="size-10 p-0 rounded-[10px] border border-white/[0.09] text-[#726F86] hover:bg-[#2C2942] disabled:opacity-50 disabled:cursor-not-allowed"
               title={canDistribute ? label : `${label} (select 3+ layers)`}
               aria-label={label}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="size-[18px]" />
             </Button>
           ))}
         </div>
         {!canDistribute && (
-          <p className="text-[10px] text-white/35 mt-1.5 px-1 font-(family-name:--font-manrope)">
+          <p className="mt-2 text-[11.5px] text-[#726F86]">
             {isMultiSelection && multiCount === 2
               ? "Select 1 more layer to distribute"
               : "Select 3+ layers to distribute"}

@@ -23,7 +23,7 @@ export interface UseImageEditorCanvasOptions {
   setQrSize: (n: number) => void;
   setLogoSize: (n: number) => void;
   setFrameOpacity?: (n: number) => void;
-  saveState: (immediate?: boolean) => void;
+  saveState: (immediate?: boolean, force?: boolean) => void;
   moveSaveTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   saveStateTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
   preventContextMenu: (e: MouseEvent) => false;

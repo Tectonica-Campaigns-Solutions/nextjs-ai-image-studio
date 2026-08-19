@@ -51,8 +51,6 @@ export const TEXT_DEFAULTS = {
   COLOR: { r: 0, g: 0, b: 0, a: 1 },
   BG_COLOR: { r: 255, g: 255, b: 255, a: 1 },
   DEFAULT_TEXT: "Double-click to start editing...",
-  INITIAL_LEFT: 100,
-  INITIAL_TOP: 100,
 } as const;
 
 // Text Tool Ranges
@@ -197,17 +195,78 @@ export const FILE_UPLOAD = {
   ACCEPTED_IMAGE_TYPES: "image/*",
 } as const;
 
-// UI Styling Constants
+// UI Styling Constants — Visual Studio dark surface (Brand C)
 export const UI_COLORS = {
-  PRIMARY_BG: "#0D0D0D",
-  SECONDARY_BG: "#191919",
-  BORDER: "#2D2D2D",
-  BORDER_HOVER: "#444",
-  ACCENT: "#5C38F3",
-  ACCENT_HOVER: "#4A2DD1",
-  TEXT_PRIMARY: "#F4F4F4",
-  TEXT_SECONDARY: "#929292",
+  PRIMARY_BG: "#141220",
+  CANVAS_MAT: "#0E0D18",
+  SECONDARY_BG: "#211E30",
+  SURFACE_HOVER: "#2C2942",
+  BORDER: "rgba(255,255,255,0.09)",
+  BORDER_HOVER: "rgba(255,255,255,0.17)",
+  ACCENT: "#8069FF",
+  ACCENT_DEEP: "#6146F2",
+  ACCENT_HOVER: "#7457F8",
+  ACCENT_SOFT: "rgba(128,105,255,0.16)",
+  TEXT_PRIMARY: "#F5F4FB",
+  TEXT_SECONDARY: "#ADAAC0",
+  TEXT_FAINT: "#726F86",
+  SUCCESS: "#54B978",
+  DANGER: "#F26B81",
+  DANGER_SOFT: "rgba(242,107,129,0.15)",
+  GRADIENT: "linear-gradient(120deg,#7C56F6 0%,#B06BE6 52%,#FF9A54 100%)",
 } as const;
+
+/** Layout dimensions from visual-studio.jsx design artifact */
+export const STUDIO_LAYOUT = {
+  DOCK_WIDTH: 176,
+  PANEL_WIDTH: 320,
+  HEADER_PAD_X: 18,
+  HEADER_PAD_Y: 14,
+  ACTION_BAR_PAD_X: 18,
+  ACTION_BAR_PAD_Y: 14,
+  DOCK_PAD: 14,
+  PANEL_PAD: 16,
+  PANEL_GAP: 14,
+  CANVAS_PAD: 28,
+  CANVAS_TOOLBAR_INSET: 18,
+  ICON_BTN: 40,
+  ACTION_BTN_H: 44,
+  COMPACT_BREAKPOINT: 1340,
+  MOBILE_BREAKPOINT: 880,
+} as const;
+
+export const STUDIO_DESKTOP_TOOLS = [
+  { id: "text-tools", label: "Text Tools", hint: "Add headlines, captions & labels" },
+  { id: "logo-overlay", label: "Logo Overlay", hint: "Place your group or partner logo" },
+  { id: "qr-code", label: "QR Code", hint: "Link to a sign-up, RSVP or donate page" },
+  { id: "ai-edit", label: "Edit with AI", hint: "Describe a change in plain words" },
+  { id: "advanced-options", label: "Advanced", hint: "Crop, filters, export size" },
+] as const;
+
+/** Advanced accordion rows — order and labels from design file */
+export const STUDIO_ADVANCED_ROWS = [
+  { id: "layers", label: "Layers" },
+  { id: "background", label: "Background image" },
+  { id: "shapes", label: "Shape Tools" },
+  { id: "frames", label: "Frames" },
+  { id: "guides", label: "Guides & grid" },
+  { id: "sessions", label: "Saved versions" },
+] as const;
+
+export type StudioDesktopToolId = (typeof STUDIO_DESKTOP_TOOLS)[number]["id"] | "saved-versions";
+
+/** Mobile tab bar — icon-over-label chips (visual-studio-mobile.jsx) */
+export const STUDIO_MOBILE_TOOLS = [
+  { id: "text-tools", label: "Text Tools", short: "Text" },
+  { id: "logo-overlay", label: "Logo Overlay", short: "Logo" },
+  { id: "qr-code", label: "QR Code", short: "QR Code" },
+  { id: "ai-edit", label: "Edit with AI", short: "AI Edit" },
+  { id: "advanced-options", label: "Advanced", short: "More" },
+] as const;
+
+export type StudioMobileToolId =
+  | (typeof STUDIO_MOBILE_TOOLS)[number]["id"]
+  | "saved-versions";
 
 // Mobile Panel
 export const MOBILE_PANEL = {
@@ -218,7 +277,7 @@ export const MOBILE_PANEL = {
 export const GUIDES = {
   SNAP_THRESHOLD: 8,
   DEFAULT_GRID_SIZE: 25,
-  GUIDE_COLOR: "rgba(92, 56, 243, 0.6)",
+  GUIDE_COLOR: "rgba(128, 105, 255, 0.6)",
   GUIDE_WIDTH: 1,
   GRID_COLOR: "rgba(255, 255, 255, 1)",
   GRID_WIDTH: 1,

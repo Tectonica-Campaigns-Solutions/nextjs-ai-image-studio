@@ -4,16 +4,15 @@ import type React from "react";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Text, Group, Shadow, Rect, ActiveSelection } from "fabric";
-import { TectonicaLogo } from "./components/editor-icons";
 import {
   BackgroundImagePanel,
   DisclaimerModal,
   EditorSidebar,
   EditorToolbar,
   AIEditPanel,
-  AlignmentPopover,
   CanvasGuidesOverlay,
   FrameToolsPanel,
+  FrameMobilePicker,
   GuidesAndGridPanel,
   LayersPanel,
   LogoToolsPanel,
@@ -21,19 +20,48 @@ import {
   SaveSessionModal,
   SessionsListPanel,
   ShapeToolsPanel,
+  ShapeMobilePicker,
   TextToolsPanel,
   UploadPromptCard,
   EyedropperMagnifier,
+  FeedbackPanelContent,
+  FeedbackSparklesIcon,
+  StudioAccessDeniedScreen,
+  StudioHeader,
+  StudioActionBar,
+  StudioDesktopToolPanel,
+  AdvancedOptionsPanel,
+  StudioSaveToast,
 } from "./components";
-import { FeedbackButton } from "./components/FeedbackButton";
+import {
+  AdvancedOptionsMobilePanel,
+} from "./components/AdvancedOptionsMobilePanel";
+import {
+  StudioMobileCanvasControls,
+  StudioMobileHeader,
+  StudioMobileHomeSpacer,
+  StudioMobileSessionBar,
+  StudioMobileTabBar,
+  StudioMobileToolSheet,
+} from "./components/StudioMobileChrome";
+import {
+  StudioMobileDoneBar,
+  StudioMobileFloatControls,
+  QrMobileSheetPanel,
+  getMobileFloatTargetFromObject,
+  isMobileFloatToolTab,
+  type MobileFloatTarget,
+} from "./components/StudioMobileFloatControls";
 import type { SessionSummary } from "./components/SessionsListPanel";
 import type {
   ExportConfig,
   ImageEditorStandaloneProps,
+  ShapeType,
 } from "./types/image-editor-types";
 import type { GoogleFontCatalogEntry } from "./types/google-font-catalog";
 import type { DisclaimerPosition } from "./types/image-editor-types";
-import { useToast } from "@/hooks/use-toast";
+import type { StudioDesktopToolId, StudioMobileToolId } from "./constants/editor-constants";
+import { studioToast } from "./utils/studio-toast";
 import {
   BUNDLED_FONT_CSS_VARS,
   DEFAULT_FONTS,
@@ -43,6 +71,7 @@ import {
   TEXT_DEFAULTS,
   UI_COLORS,
   STUDIO_IFRAME_MESSAGE,
+  STUDIO_LAYOUT,
 } from "./constants/editor-constants";
 
 // Import custom hooks
@@ -58,33 +87,18 @@ import { useAlignmentTools } from "./hooks/use-alignment-tools";
 import { useEyedropper } from "./hooks/use-eyedropper";
 import type { EyedropperTarget } from "./hooks/use-eyedropper";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
+import { useMobileStudioViewport } from "./hooks/use-mobile-studio-viewport";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
-import { ChevronLeft, ChevronRight, Copy, Lock, Trash2, Unlock } from "lucide-react";
+import { Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
 import { DEFAULT_TEXT_BLOCK_DELIMITER, insertAutoTextBlocks, parseTextBlocks } from "./utils/text-blocks";
-
-function AccessDenied() {
-  return (
-    <main
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
-    >
-      <div className="max-w-md rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-xl">
-        <h1 className="text-lg font-semibold text-white mb-2">Access denied</h1>
-        <p className="text-sm text-white/70">
-          This Studio can only be accessed from an approved host.
-        </p>
-      </div>
-    </main>
-  );
-}
 
 export default function ImageEditorStandalone({
   ...props
@@ -111,7 +125,7 @@ export default function ImageEditorStandalone({
   }
 
   if (!allowed) {
-    return <AccessDenied />;
+    return <StudioAccessDeniedScreen />;
   }
 
   return <ImageEditorStandaloneInner {...props} />;
@@ -127,8 +141,6 @@ function ImageEditorStandaloneInner({
 }: ImageEditorStandaloneProps) {
   const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
   const didAutoInsertTextRef = useRef(false);
-
-  const { toast } = useToast();
 
   // Track each access to the Visual Studio for audit/logs in the dashboard.
   const hasLoggedAccessRef = useRef(false);
@@ -190,7 +202,14 @@ function ImageEditorStandaloneInner({
 
   // Replace background image state
   const [isReplacingBackground, setIsReplacingBackground] = useState<boolean>(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [desktopTool, setDesktopTool] = useState<StudioDesktopToolId | null>(null);
+  const [isCompactChrome, setIsCompactChrome] = useState(false);
+  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [mobileQrPlaced, setMobileQrPlaced] = useState(false);
+  const [mobileQrSheetOpen, setMobileQrSheetOpen] = useState(false);
+  const [mobileShapeEditingActive, setMobileShapeEditingActive] = useState(false);
+  const [mobileFrameEditingActive, setMobileFrameEditingActive] = useState(false);
+  const [mobileFeedbackOpen, setMobileFeedbackOpen] = useState(false);
 
   // Rotation tooltip (degrees) shown near element while rotating or briefly after
   const [rotationTooltip, setRotationTooltip] = useState<{
@@ -463,9 +482,13 @@ function ImageEditorStandaloneInner({
     preventContextMenu,
     onBackgroundReplaced: (newUrl) => {
       currentBackgroundUrlRef.current = newUrl;
+      originalImageUrlRefStable.current = newUrl;
     },
     onRotationTooltip: setRotationTooltip,
     onSelectionContextMenuPosition: (obj, canvas) => {
+      if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+        return;
+      }
       const pos = computeMenuPosition(obj, canvas);
       if (pos) setSelectionContextMenuPosition(pos);
     },
@@ -488,6 +511,202 @@ function ImageEditorStandaloneInner({
 
   // Mobile panel hook
   const mobilePanel = useMobilePanel();
+  const isMobileStudio = useMobileStudioViewport();
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
+
+  const isQrSelected =
+    !!selection.selectedObject && !!(selection.selectedObject as any).isQR;
+
+  const mobileTextLogoMode =
+    isMobileStudio && isMobileFloatToolTab(mobilePanel.activeTab);
+
+  const mobileQrEditingMode =
+    isMobileStudio &&
+    mobilePanel.activeTab === "qr-code" &&
+    mobileQrPlaced &&
+    !mobileQrSheetOpen;
+
+  const mobileShapeEditingMode =
+    isMobileStudio &&
+    mobilePanel.activeTab === "advanced-options" &&
+    mobileShapeEditingActive &&
+    !mobilePanel.isPanelVisible;
+
+  const mobileFrameEditingMode =
+    isMobileStudio &&
+    mobilePanel.activeTab === "advanced-options" &&
+    mobileFrameEditingActive &&
+    !mobilePanel.isPanelVisible;
+
+  const mobileFloatSelectionTarget = getMobileFloatTargetFromObject(
+    selection.selectedObject,
+  );
+
+  const mobileSelectionFloatMode =
+    isMobileStudio &&
+    !mobilePanel.activeTab &&
+    !mobilePanel.isPanelVisible &&
+    !mobileFeedbackOpen &&
+    !mobileQrSheetOpen &&
+    !!mobileFloatSelectionTarget;
+
+  const mobileFloatChromeMode =
+    mobileTextLogoMode ||
+    mobileQrEditingMode ||
+    mobileShapeEditingMode ||
+    mobileFrameEditingMode ||
+    mobileSelectionFloatMode;
+
+  const mobileAdvancedFloatTarget: MobileFloatTarget | null =
+    mobilePanel.activeTab === "advanced-options"
+      ? mobileFrameEditingActive
+        ? "frame"
+        : mobileShapeEditingActive
+          ? "shape"
+          : null
+      : null;
+
+  const mobileFloatTabTarget: MobileFloatTarget | null =
+    mobilePanel.activeTab === "text-tools"
+      ? "text"
+      : mobilePanel.activeTab === "logo-overlay"
+        ? "logo"
+        : mobilePanel.activeTab === "qr-code"
+          ? "qr"
+          : mobileAdvancedFloatTarget;
+
+  const mobileFloatToolMode: MobileFloatTarget =
+    mobileFloatSelectionTarget ?? mobileFloatTabTarget ?? "text";
+
+  const mobileFloatHasSelection = !!mobileFloatSelectionTarget;
+
+  const closeMobileQrSheet = useCallback(() => {
+    setMobileQrSheetOpen(false);
+    mobilePanel.setIsPanelVisible(false);
+    mobilePanel.setCurrentTranslateY(400);
+  }, [mobilePanel]);
+
+  const handleMobileQrEditLink = useCallback(() => {
+    setMobileQrSheetOpen(true);
+    mobilePanel.setActiveTab("qr-code");
+    mobilePanel.setIsPanelVisible(true);
+    mobilePanel.setCurrentTranslateY(0);
+  }, [mobilePanel]);
+
+  const handleMobileQrGenerate = useCallback(async () => {
+    if (mobileQrPlaced && isQrSelected) {
+      await qrTools.replaceSelectedQRFromUrl();
+      closeMobileQrSheet();
+      return;
+    }
+    if (!qrTools.qrUrl.trim()) return;
+    await qrTools.addQRFromUrl();
+    setMobileQrPlaced(true);
+    closeMobileQrSheet();
+  }, [mobileQrPlaced, isQrSelected, qrTools, closeMobileQrSheet]);
+
+  const handleMobileQrFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !file.type.startsWith("image/")) return;
+      await qrTools.addCustomQR(file);
+      setMobileQrPlaced(true);
+      closeMobileQrSheet();
+    },
+    [qrTools, closeMobileQrSheet],
+  );
+
+  const handleMobileAddShape = useCallback(
+    (type: ShapeType) => {
+      shapeTools.addShape(type);
+      setMobileFrameEditingActive(false);
+      setMobileShapeEditingActive(true);
+      mobilePanel.setIsPanelVisible(false);
+      mobilePanel.setCurrentTranslateY(400);
+    },
+    [shapeTools, mobilePanel],
+  );
+
+  const handleMobileInsertFrame = useCallback(
+    (url: string) => {
+      void frameTools.insertFrame(url);
+      setMobileShapeEditingActive(false);
+      setMobileFrameEditingActive(true);
+      mobilePanel.setIsPanelVisible(false);
+      mobilePanel.setCurrentTranslateY(400);
+    },
+    [frameTools, mobilePanel],
+  );
+
+  const handleMobileTabClick = useCallback(
+    (tabId: string) => {
+      setMobileFeedbackOpen(false);
+      if (isMobileFloatToolTab(tabId)) {
+        if (mobilePanel.activeTab === tabId) {
+          mobilePanel.closePanel();
+        } else {
+          mobilePanel.setActiveTab(tabId);
+          mobilePanel.setIsPanelVisible(false);
+          mobilePanel.setCurrentTranslateY(400);
+        }
+        return;
+      }
+      if (tabId === "qr-code") {
+        if (mobilePanel.activeTab === tabId) {
+          mobilePanel.closePanel();
+          setMobileQrSheetOpen(false);
+        } else {
+          mobilePanel.setActiveTab(tabId);
+          if (mobileQrPlaced) {
+            mobilePanel.setIsPanelVisible(false);
+            mobilePanel.setCurrentTranslateY(400);
+            setMobileQrSheetOpen(false);
+          } else {
+            mobilePanel.setIsPanelVisible(true);
+            mobilePanel.setCurrentTranslateY(0);
+            setMobileQrSheetOpen(true);
+          }
+        }
+        return;
+      }
+      if (tabId === "advanced-options") {
+        if (mobilePanel.activeTab === tabId) {
+          setMobileShapeEditingActive(false);
+          setMobileFrameEditingActive(false);
+          mobilePanel.closePanel();
+        } else {
+          mobilePanel.setActiveTab(tabId);
+          mobilePanel.setIsPanelVisible(true);
+          mobilePanel.setCurrentTranslateY(0);
+        }
+        return;
+      }
+      mobilePanel.handleTabClick(tabId);
+    },
+    [mobilePanel, mobileQrPlaced],
+  );
+
+  useEffect(() => {
+    if (!isMobileStudio || !canvasEditor.canvas) return;
+    const hasQr = canvasEditor.canvas
+      .getObjects()
+      .some((obj) => (obj as { isQR?: boolean }).isQR);
+    if (hasQr) setMobileQrPlaced(true);
+  }, [isMobileStudio, canvasEditor.canvas, history.historyState]);
+
+  useEffect(() => {
+    if (!mobileQrEditingMode || !canvasEditor.canvas) return;
+    const active = canvasEditor.canvas.getActiveObject();
+    if (active) return;
+    const qrObject = canvasEditor.canvas
+      .getObjects()
+      .find((obj) => (obj as { isQR?: boolean }).isQR);
+    if (!qrObject) return;
+    canvasEditor.canvas.setActiveObject(qrObject);
+    canvasEditor.canvas.renderAll();
+    selection.setSelectedObject(qrObject);
+  }, [mobileQrEditingMode, canvasEditor.canvas, selection.setSelectedObject]);
 
   const onFontsLoaded = useCallback(() => {
     remeasureTextboxes(canvasRefStable.current);
@@ -526,6 +745,10 @@ function ImageEditorStandaloneInner({
   }, []);
 
   useEffect(() => {
+    if (isMobileStudio) {
+      setSelectionContextMenuPosition(null);
+      return;
+    }
     const canvas = canvasEditor.canvas;
     const obj = selection.selectedObject;
     if (!canvas || !obj || (obj as any).isBackground) {
@@ -534,10 +757,11 @@ function ImageEditorStandaloneInner({
     }
     const pos = computeMenuPosition(obj, canvas);
     if (pos) setSelectionContextMenuPosition(pos);
-  }, [canvasEditor.canvas, selection.selectedObject, computeMenuPosition]);
+  }, [isMobileStudio, canvasEditor.canvas, selection.selectedObject, computeMenuPosition]);
 
   // Update context menu position while moving the layer so the bar follows the selection
   useEffect(() => {
+    if (isMobileStudio) return;
     const canvas = canvasEditor.canvas;
     if (!canvas) return;
     const onMoveOrModify = (e: any) => {
@@ -555,7 +779,7 @@ function ImageEditorStandaloneInner({
       canvas.off("object:moving", onMoveOrModify);
       canvas.off("object:modified", onMoveOrModify);
     };
-  }, [canvasEditor.canvas, computeMenuPosition]);
+  }, [isMobileStudio, canvasEditor.canvas, computeMenuPosition]);
 
   // Update stable refs when canvas becomes available (so undo/redo can update the canvas's background URL ref)
   useEffect(() => {
@@ -655,29 +879,24 @@ function ImageEditorStandaloneInner({
     history.saveState,
   ]);
 
-  // Recalculate canvas size when sidebar collapses/expands in tablet/laptop.
-  // Dispatch once immediately and once after width transition completes.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new Event("resize"));
-    const timeout = window.setTimeout(() => {
-      window.dispatchEvent(new Event("resize"));
-    }, 220);
-    return () => window.clearTimeout(timeout);
-  }, [isSidebarCollapsed]);
-
-  // Reset collapsed desktop/tablet sidebar state when entering mobile widths.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handleViewportChange = () => {
+      setIsCompactChrome(window.innerWidth < STUDIO_LAYOUT.COMPACT_BREAKPOINT);
       if (window.innerWidth < 768) {
-        setIsSidebarCollapsed(false);
+        setDesktopTool(null);
       }
     };
     handleViewportChange();
     window.addEventListener("resize", handleViewportChange);
     return () => window.removeEventListener("resize", handleViewportChange);
   }, []);
+
+  useEffect(() => {
+    if (!showSaveToast) return;
+    const timer = window.setTimeout(() => setShowSaveToast(false), 6000);
+    return () => window.clearTimeout(timer);
+  }, [showSaveToast]);
 
   // Update text on style change
   useEffect(() => {
@@ -792,22 +1011,20 @@ function ImageEditorStandaloneInner({
         setPreprocessedImageUrl(cleanedUrl);
         await canvasEditor.replaceBackgroundImage(cleanedUrl);
         history.saveState(true);
-        toast({
+        studioToast.success({
           title: "Background updated",
           description: "The background image has been replaced.",
-          className: "bg-[#1a1a1a] border-[#333] text-white",
         });
       } catch {
-        toast({
+        studioToast.error({
           title: "Error",
           description: "Could not load the image.",
-          variant: "destructive",
         });
       } finally {
         setIsReplacingBackground(false);
       }
     },
-    [canvasEditor.replaceBackgroundImage, history.saveState, toast, preprocessImageUrl]
+    [canvasEditor.replaceBackgroundImage, history.saveState, preprocessImageUrl]
   );
 
   const handleReplaceBackgroundFromFile = useCallback(
@@ -906,10 +1123,9 @@ function ImageEditorStandaloneInner({
       } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
 
       if (!dataURL || !caUserId) {
-        toast({
+        studioToast.error({
           title: "Could not export image",
           description: "Try again before sending it to the conversation.",
-          variant: "destructive",
         });
         return;
       }
@@ -928,10 +1144,9 @@ function ImageEditorStandaloneInner({
 
       if (!uploadResponse.ok || !imageUrl) {
         console.error("Failed to upload edited image for URL send:", uploadJson);
-        toast({
+        studioToast.error({
           title: "Could not upload image",
           description: uploadJson?.error ?? "Try again before sending it to the conversation.",
-          variant: "destructive",
         });
         return;
       }
@@ -942,17 +1157,15 @@ function ImageEditorStandaloneInner({
       // same action as the host's "Cerrar" (Exit full screen) button.
       requestExitFullscreen();
 
-      toast({
+      studioToast.success({
         title: "Sent to conversation",
         description: "Posted the image URL to the conversation.",
-        className: "bg-white border-[#e5e5e5] text-black",
       });
     } catch (error) {
       console.error("Failed to send image URL to chat:", error);
-      toast({
+      studioToast.error({
         title: "Error sending to chat",
         description: "Something went wrong sending the URL back to the conversation.",
-        variant: "destructive",
       });
     } finally {
       setIsSendingUrlToChat(false);
@@ -1261,10 +1474,9 @@ function ImageEditorStandaloneInner({
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast({
+        studioToast.error({
           title: "Save failed",
           description: data.error ?? "Could not save the session.",
-          variant: "destructive",
         });
         return;
       }
@@ -1277,11 +1489,7 @@ function ImageEditorStandaloneInner({
       url.searchParams.set("session_id", newSessionId);
       window.history.replaceState({}, "", url.toString());
 
-      toast({
-        title: "Saved",
-        description: "Session saved successfully.",
-        className: "bg-[#1a1a1a] border-[#333] text-white",
-      });
+      setShowSaveToast(true);
       setShowSaveModal(false);
 
       // Upload thumbnail to Supabase Storage in the background (non-blocking)
@@ -1330,11 +1538,9 @@ function ImageEditorStandaloneInner({
       }
     } catch (err) {
       console.error("[handleSave] error:", err);
-      toast({
+      studioToast.error({
         title: "Save failed",
         description: "An unexpected error occurred.",
-        variant: "destructive",
-        className: "bg-red-600 border-red-700 text-white",
       });
     } finally {
       setIsSaving(false);
@@ -1397,10 +1603,9 @@ function ImageEditorStandaloneInner({
         const res = await fetch(`/api/studio/canvas-sessions/${sessionIdToLoad}`);
         const session = await res.json();
         if (!res.ok || session.error) {
-          toast({
+          studioToast.error({
             title: "Could not load session",
             description: session.error ?? "Session not found.",
-            variant: "destructive",
           });
           return;
         }
@@ -1424,10 +1629,9 @@ function ImageEditorStandaloneInner({
         window.history.replaceState({}, "", url.toString());
       } catch (err) {
         console.error("[handleSelectSession]", err);
-        toast({
+        studioToast.error({
           title: "Could not load session",
           description: "An unexpected error occurred.",
-          variant: "destructive",
         });
       }
     },
@@ -1442,10 +1646,9 @@ function ImageEditorStandaloneInner({
         ? getFullCanvasImageForEdit(canvasEditor.canvas)
         : getCurrentBackgroundImageForEdit(canvasEditor.canvas);
       if (!payload || (!payload.imageUrls?.length && !payload.base64Images?.length)) {
-        toast({
+        studioToast.error({
           title: "Edit failed",
           description: "Could not get the current image to edit.",
-          variant: "destructive",
         });
         return;
       }
@@ -1472,10 +1675,9 @@ function ImageEditorStandaloneInner({
               .filter(Boolean)
               .join(" — ")
             : "No image returned.";
-          toast({
+          studioToast.error({
             title: "Edit failed",
             description: errMsg ?? "No image returned.",
-            variant: "destructive",
           });
           return;
         }
@@ -1491,19 +1693,17 @@ function ImageEditorStandaloneInner({
         // Sync stable ref so saveState captures the edited URL (useEffect runs after render)
         originalImageUrlRefStable.current = editedUrl;
         history.saveState(true);
-        toast({
+        studioToast.success({
           title: "Image updated",
           description: includeLayers
             ? "The image has been edited. Canvas now shows the result."
             : "The background has been edited. Overlays are preserved.",
-          className: "bg-[#1a1a1a] border-[#333] text-white",
         });
       } catch (err) {
         console.error("[handleAIEdit] error:", err);
-        toast({
+        studioToast.error({
           title: "Edit failed",
           description: err instanceof Error ? err.message : "An unexpected error occurred.",
-          variant: "destructive",
         });
       } finally {
         setIsEditingWithAI(false);
@@ -1516,7 +1716,6 @@ function ImageEditorStandaloneInner({
       params.client_id,
       params.user_id,
       params.user_email,
-      toast,
     ]
   );
 
@@ -1544,10 +1743,9 @@ function ImageEditorStandaloneInner({
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast({
+        studioToast.error({
           title: "Feedback failed",
           description: data.error ?? "Could not get feedback.",
-          variant: "destructive",
         });
         return;
       }
@@ -1558,15 +1756,30 @@ function ImageEditorStandaloneInner({
       setFeedbackEditPlan(data.edit_plan?.prompt ? { prompt: data.edit_plan.prompt } : null);
     } catch (err) {
       console.error("[handleGetFeedback] error:", err);
-      toast({
+      studioToast.error({
         title: "Feedback failed",
         description: "An unexpected error occurred.",
-        variant: "destructive",
       });
     } finally {
       setIsFetchingFeedback(false);
     }
   };
+
+  const handleMobileFeedbackPress = useCallback(() => {
+    if (mobileFeedbackOpen) {
+      setMobileFeedbackOpen(false);
+      return;
+    }
+    mobilePanel.closePanel();
+    setMobileFeedbackOpen(true);
+    if (!feedbackText && !isFetchingFeedback) {
+      void handleGetFeedback();
+    }
+  }, [mobilePanel, mobileFeedbackOpen, feedbackText, isFetchingFeedback, handleGetFeedback]);
+
+  const closeMobileFeedbackSheet = useCallback(() => {
+    setMobileFeedbackOpen(false);
+  }, []);
 
   const handleApplyCleanup = async () => {
     if (!canvasEditor.canvas) return;
@@ -1597,20 +1810,18 @@ function ImageEditorStandaloneInner({
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast({
+        studioToast.error({
           title: "Cleanup failed",
           description: data.details ?? data.error ?? "Could not apply cleanup.",
-          variant: "destructive",
         });
         return;
       }
 
       const improved = data.image as string | null | undefined;
       if (!improved || typeof improved !== "string") {
-        toast({
+        studioToast.error({
           title: "Cleanup failed",
           description: "No image returned from the cleanup endpoint.",
-          variant: "destructive",
         });
         return;
       }
@@ -1628,24 +1839,24 @@ function ImageEditorStandaloneInner({
 
       await canvasEditor.replaceBackgroundImage(improved);
       canvas.renderAll();
-      history.saveState(true);
+      // Sync stable ref so the post-cleanup history entry stores the new background URL.
+      originalImageUrlRefStable.current = improved;
+      history.saveState(true, true);
 
       // Update feedback panel with the applied plan, so the user sees what happened.
       if (typeof data.feedback === "string") setFeedbackText(data.feedback);
       if (Array.isArray(data.issues)) setFeedbackIssues(data.issues);
       if (data.applied_plan?.prompt) setFeedbackEditPlan({ prompt: data.applied_plan.prompt });
 
-      toast({
+      studioToast.success({
         title: "Cleanup applied",
         description: "Canvas updated with the improved image.",
-        className: "bg-[#1a1a2e] border-[#2a2a55] text-white",
       });
     } catch (err) {
       console.error("[handleApplyCleanup] error:", err);
-      toast({
+      studioToast.error({
         title: "Cleanup failed",
         description: err instanceof Error ? err.message : "An unexpected error occurred.",
-        variant: "destructive",
       });
     } finally {
       setIsApplyingCleanup(false);
@@ -1731,8 +1942,11 @@ function ImageEditorStandaloneInner({
 
   const isLogoSelected =
     !!selection.selectedObject && !!(selection.selectedObject as any).isLogo;
-  const isQrSelected =
-    !!selection.selectedObject && !!(selection.selectedObject as any).isQR;
+
+  const selectedLogoUrl =
+    isLogoSelected && (selection.selectedObject as { logoAssetUrl?: string }).logoAssetUrl
+      ? (selection.selectedObject as { logoAssetUrl?: string }).logoAssetUrl!
+      : null;
 
   const logoToolsPanel = useMemo(
     () => (
@@ -1776,6 +1990,11 @@ function ImageEditorStandaloneInner({
   const isFrameSelected =
     !!selection.selectedObject && !!(selection.selectedObject as any).isFrame;
 
+  const selectedFrameUrl =
+    isFrameSelected && (selection.selectedObject as { frameAssetUrl?: string }).frameAssetUrl
+      ? (selection.selectedObject as { frameAssetUrl?: string }).frameAssetUrl!
+      : null;
+
   const frameToolsPanel = useMemo(
     () => (
       <FrameToolsPanel
@@ -1805,17 +2024,12 @@ function ImageEditorStandaloneInner({
 
   const isShapeSelected = shapeTools.isShapeSelected(selection.selectedObject);
 
-  const alignmentSlot = useMemo(
-    () => (
-      <AlignmentPopover
-        onAlign={(option) => {
-          alignmentTools.runAlign(option);
-          history.saveState(true);
-        }}
-        selectedObject={selection.selectedObject}
-      />
-    ),
-    [alignmentTools.runAlign, history.saveState, selection.selectedObject]
+  const handleAlign = useCallback(
+    (option: Parameters<typeof alignmentTools.runAlign>[0]) => {
+      alignmentTools.runAlign(option);
+      history.saveState(true);
+    },
+    [alignmentTools.runAlign, history.saveState],
   );
 
   const sessionsListPanel = useMemo(
@@ -1851,6 +2065,26 @@ function ImageEditorStandaloneInner({
     [isShapeSelected, shapeTools, eyedropper.activeTarget, eyedropper.startEyedropper]
   );
 
+
+  const handleMobileHistoryClick = () => {
+    if (!params.user_id) return;
+    mobilePanel.setActiveTab("saved-versions");
+    mobilePanel.setIsPanelVisible(true);
+    mobilePanel.setCurrentTranslateY(0);
+  };
+
+  const handleMobileDone = () => {
+    history.saveState(true);
+    canvasEditor.canvas?.discardActiveObject();
+    canvasEditor.canvas?.renderAll();
+    selection.setSelectedObject(null);
+    setMobileQrSheetOpen(false);
+    setMobileShapeEditingActive(false);
+    setMobileFrameEditingActive(false);
+    setMobileFeedbackOpen(false);
+    mobilePanel.closePanel();
+  };
+
   if (showUploadPrompt) {
     return <UploadPromptCard onFileChange={handleImageUpload} />;
   }
@@ -1860,9 +2094,109 @@ function ImageEditorStandaloneInner({
     !!canvasEditor.canvas &&
     (!params.user_id?.trim() || !imageUrl || sessionsInitialFetchDone);
 
-  const sidebarWidthClass = isSidebarCollapsed
-    ? "md:w-[76px] lg:w-[88px] xl:w-[400px]"
-    : "md:w-[260px] lg:w-[320px] xl:w-[400px]";
+  const currentSessionName = sessionsForImage.find((s) => s.id === sessionId)?.name;
+  const studioSubtitle = currentSessionName
+    ? `Editing · ${currentSessionName}`
+    : "Editing · Draft";
+
+  const advancedOptionsContent = (
+    <AdvancedOptionsPanel
+      layersToolsPanel={layersToolsPanel}
+      backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
+      shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
+      frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
+      guidesAndGridPanel={guidesAndGridPanel}
+      sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
+    />
+  );
+
+  const overlayLayerCount = canvasEditor.canvas
+    ? Math.max(0, canvasEditor.canvas.getObjects().length - 1)
+    : 0;
+
+  const shapeMobilePicker = useMemo(
+    () => <ShapeMobilePicker onAddShape={handleMobileAddShape} />,
+    [handleMobileAddShape],
+  );
+
+  const frameMobilePicker = useMemo(
+    () => (
+      <FrameMobilePicker
+        frameAssets={frameTools.frameAssets}
+        aspectRatio={canvasEditor.aspectRatio}
+        onInsertFrame={handleMobileInsertFrame}
+      />
+    ),
+    [frameTools.frameAssets, canvasEditor.aspectRatio, handleMobileInsertFrame],
+  );
+
+  const advancedOptionsMobileContent = (
+    <AdvancedOptionsMobilePanel
+      layersToolsPanel={layersToolsPanel}
+      backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
+      shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeMobilePicker : null}
+      frameToolsPanel={
+        FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameMobilePicker : null
+      }
+      guidesAndGridPanel={guidesAndGridPanel}
+      sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
+      layerCount={overlayLayerCount}
+      showGrid={showGrid}
+      onToggleGrid={() => setShowGrid((v) => !v)}
+    />
+  );
+
+  const mobileAvailableTools = [
+    FEATURE_FLAGS.showTextTools ? "text-tools" : null,
+    FEATURE_FLAGS.showLogoTools ? "logo-overlay" : null,
+    FEATURE_FLAGS.showQrTools ? "qr-code" : null,
+    FEATURE_FLAGS.showEditWithAI ? "ai-edit" : null,
+    layersToolsPanel != null ||
+    (FEATURE_FLAGS.showReplaceBackgroundTool && backgroundImagePanel != null) ||
+    (FEATURE_FLAGS.showShapeTools && shapeToolsPanel != null) ||
+    (FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 && frameToolsPanel != null) ||
+    guidesAndGridPanel != null ||
+    (sessionsForImage.length > 0 && sessionsListPanel != null)
+      ? "advanced-options"
+      : null,
+  ].filter(Boolean) as string[];
+
+  const sidebarProps = {
+    layersToolsPanel,
+    backgroundImagePanel: FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null,
+    textToolsPanel: FEATURE_FLAGS.showTextTools ? textToolsPanel : null,
+    aiEditPanel: FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null,
+    logoToolsPanel: FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null,
+    qrToolsPanel: FEATURE_FLAGS.showQrTools ? qrToolsPanel : null,
+    shapeToolsPanel: FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null,
+    frameToolsPanel: FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null,
+    guidesAndGridPanel,
+    sessionsListPanel: sessionsForImage.length > 0 ? sessionsListPanel : null,
+    desktopTool,
+    onDesktopToolChange: setDesktopTool,
+  };
+
+  const mobileToolSheetContent = (() => {
+    const tab = mobilePanel.activeTab as StudioMobileToolId | null;
+    if (!tab) return null;
+    if (tab === "text-tools") return sidebarProps.textToolsPanel;
+    if (tab === "logo-overlay") return sidebarProps.logoToolsPanel;
+    if (tab === "qr-code") {
+      return (
+        <QrMobileSheetPanel
+          qrUrl={qrTools.qrUrl}
+          setQrUrl={qrTools.setQrUrl}
+          onGenerate={handleMobileQrGenerate}
+          onUpload={handleMobileQrFileUpload}
+          editMode={mobileQrPlaced}
+        />
+      );
+    }
+    if (tab === "ai-edit") return sidebarProps.aiEditPanel;
+    if (tab === "advanced-options") return advancedOptionsMobileContent;
+    if (tab === "saved-versions") return sidebarProps.sessionsListPanel;
+    return null;
+  })();
 
   return (
     <>
@@ -1873,219 +2207,364 @@ function ImageEditorStandaloneInner({
       )}
       <div className={editorReady ? "" : "invisible"}>
         <div
-          className="min-h-screen h-full px-[10px] py-[18px] flex flex-col md:px-[14px] md:py-[18px] lg:px-[22px] lg:py-[20px] xl:px-[30px] md:h-dvh md:overflow-hidden"
-          style={{ backgroundColor: UI_COLORS.PRIMARY_BG }}
+          className="studio-root flex h-dvh flex-col overflow-hidden md:min-h-screen md:h-dvh md:overflow-hidden"
+          style={{ backgroundColor: UI_COLORS.PRIMARY_BG, color: UI_COLORS.TEXT_PRIMARY }}
         >
-          <div className="flex-1 md:block flex flex-col md:min-h-0">
+          <div ref={headerRef} className="hidden md:block">
+            <StudioHeader subtitle={studioSubtitle} />
+          </div>
+
+          <StudioMobileHeader subtitle={studioSubtitle} />
+
+          <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+            <EditorSidebar {...sidebarProps} />
+
             <div
-              id="sidebar"
-              className="flex-1 flex h-full md:flex-row flex-col-reverse md:max-w-[760px] lg:max-w-[1080px] xl:max-w-[1400px] mx-auto md:min-h-0 gap-3 md:gap-4 lg:gap-6 xl:gap-10"
+              className="relative flex min-h-0 min-w-0 flex-1 flex-col"
+              style={{ backgroundColor: UI_COLORS.CANVAS_MAT }}
             >
-              <div className={`w-full ${sidebarWidthClass} overflow-y-auto themed-scrollbar md:h-full md:min-h-0 md:self-start flex flex-col justify-start md:pr-1 lg:pr-2 xl:pr-3 transition-[width] duration-200 ease-out`}>
-                <div className="mb-2 flex items-center justify-end md:justify-start">
-                  <button
-                    type="button"
-                    onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-                    className="hidden md:inline-flex xl:hidden size-9 items-center justify-center rounded-md border border-white/15 bg-[#1a1a1a] text-white/85 hover:bg-[#242424] hover:text-white"
-                    aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                  >
-                    {isSidebarCollapsed ? <ChevronRight className="size-4" aria-hidden /> : <ChevronLeft className="size-4" aria-hidden />}
-                  </button>
-                </div>
+              {desktopTool && (
+                <StudioDesktopToolPanel
+                  tool={desktopTool}
+                  onClose={() => setDesktopTool(null)}
+                  textToolsPanel={sidebarProps.textToolsPanel}
+                  logoToolsPanel={sidebarProps.logoToolsPanel}
+                  qrToolsPanel={sidebarProps.qrToolsPanel}
+                  aiEditPanel={sidebarProps.aiEditPanel}
+                  advancedContent={advancedOptionsContent}
+                  sessionsListPanel={sidebarProps.sessionsListPanel}
+                />
+              )}
 
-                <div className={isSidebarCollapsed ? "block md:hidden xl:block" : "block"}>
-                  <EditorSidebar
-                    layersToolsPanel={layersToolsPanel}
-                    backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
-                    textToolsPanel={FEATURE_FLAGS.showTextTools ? textToolsPanel : null}
-                    aiEditPanel={FEATURE_FLAGS.showEditWithAI ? aiEditPanel : null}
-                    logoToolsPanel={FEATURE_FLAGS.showLogoTools ? logoToolsPanel : null}
-                    qrToolsPanel={FEATURE_FLAGS.showQrTools ? qrToolsPanel : null}
-                    shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
-                    frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
-                    guidesAndGridPanel={guidesAndGridPanel}
-                    sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
-                    activeTab={mobilePanel.activeTab}
-                    handleTabClick={mobilePanel.handleTabClick}
-                    isPanelVisible={mobilePanel.isPanelVisible}
-                    currentTranslateY={mobilePanel.currentTranslateY}
-                    dragStartY={mobilePanel.dragStartY}
-                    panelRef={mobilePanel.panelRef}
-                    handleDragStart={mobilePanel.handleDragStart}
-                    handleDragMove={mobilePanel.handleDragMove}
-                    handleDragEnd={mobilePanel.handleDragEnd}
-                    setIsPanelVisible={mobilePanel.setIsPanelVisible}
-                    setCurrentTranslateY={mobilePanel.setCurrentTranslateY}
-                    setActiveTab={mobilePanel.setActiveTab}
+              <div className="relative flex min-h-0 flex-1 flex-col">
+                {showSaveToast ? (
+                  <StudioSaveToast
+                    onViewVersions={() => {
+                      setShowSaveToast(false);
+                      if (typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches) {
+                        setDesktopTool("saved-versions");
+                      } else {
+                        handleMobileHistoryClick();
+                      }
+                    }}
+                    onClose={() => setShowSaveToast(false)}
+                    className={
+                      mobileFloatChromeMode
+                        ? "bottom-[120px] md:bottom-[18px]"
+                        : "bottom-44 md:bottom-[18px]"
+                    }
                   />
-                </div>
+                ) : null}
 
-                <div className={`opacity-50 mt-6 md:mt-auto ${isSidebarCollapsed ? "md:flex md:justify-center xl:justify-start" : ""}`}>
-                  <TectonicaLogo />
-                </div>
-              </div>
+                <div
+                  id="canvas-area"
+                  className={`themed-scrollbar relative z-[1] flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-4 md:overflow-auto md:m-7 md:p-0 ${
+                    mobileFloatChromeMode ? "pt-[52px] pb-[74px]" : "py-2"
+                  }`}
+                >
+                  <div
+                    ref={canvasWrapperRef}
+                    className="relative inline-flex max-h-full max-w-full"
+                  >
+                    <StudioMobileCanvasControls
+                      undo={history.undo}
+                      redo={history.redo}
+                      deleteSelected={deleteSelected}
+                      onAlign={handleAlign}
+                      historyState={history.historyState}
+                      selectedObject={selection.selectedObject}
+                      onHistoryClick={params.user_id ? handleMobileHistoryClick : undefined}
+                      historyBadge={sessionsForImage.length > 0}
+                    />
 
-              <div
-                id="canvas-area"
-                className="flex-1 min-w-0 md:min-h-0 themed-scrollbar md:overflow-auto"
-              >
-                <div className="mb-5">
-                  <div className="relative w-full max-w-full overflow-hidden rounded-[3px] flex justify-center xl:justify-start">
-                    <canvas ref={canvasEditor.canvasRef} />
-                    {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
-                      <CanvasGuidesOverlay
-                        width={canvasEditor.canvasDimensions.width}
-                        height={canvasEditor.canvasDimensions.height}
-                        showGrid={showGrid}
-                        guidePositions={guidePositions}
-                      />
-                    )}
-                    {rotationTooltip !== null && (
-                      <div
-                        className="pointer-events-none absolute z-10 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white tabular-nums"
-                        style={{
-                          left: rotationTooltip.left,
-                          top: rotationTooltip.top,
-                          transform: "translate(-50%, 0)",
-                        }}
-                        aria-live="polite"
-                        role="status"
-                      >
-                        {rotationTooltip.angle}°
+                    <div className="pointer-events-none absolute top-3 right-3 z-[3] hidden md:top-[18px] md:right-[18px] md:block">
+                      <div className="pointer-events-auto">
+                        <EditorToolbar
+                          undo={history.undo}
+                          redo={history.redo}
+                          deleteSelected={deleteSelected}
+                          handleExportClick={handleExportClick}
+                          handleSave={handleSave}
+                          isExporting={isExporting}
+                          isSaving={isSaving}
+                          historyState={history.historyState}
+                          selectedObject={selection.selectedObject}
+                          showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+                          variant="desktop"
+                          onAlign={handleAlign}
+                          onSaveClick={() => setShowSaveModal(true)}
+                          onSendUrlToChat={handleSendUrlToChatAndClose}
+                          isEmbedded={isEmbedded}
+                          isSendingUrl={isSendingUrlToChat}
+                          onHistoryClick={
+                            params.user_id
+                              ? () =>
+                                  setDesktopTool((current) =>
+                                    current === "saved-versions" ? null : "saved-versions",
+                                  )
+                              : undefined
+                          }
+                          historyBadge={sessionsForImage.length > 0}
+                          historyActive={desktopTool === "saved-versions"}
+                        />
                       </div>
-                    )}
-                    {selectionContextMenuPosition !== null && (() => {
-                      const selObj = selection.selectedObject;
-                      const isLocked =
-                        !!selObj &&
-                        ((selObj as any).__layerLocked === true ||
-                          !!(selObj.lockMovementX && selObj.lockMovementY) ||
-                          selObj.selectable === false ||
-                          selObj.evented === false);
-                      return (
+                    </div>
+
+                    <div
+                      className="relative max-w-full overflow-hidden rounded-xl border shadow-[0_20px_50px_-20px_rgba(0,0,0,0.75)] md:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)]"
+                      style={{ borderColor: UI_COLORS.BORDER }}
+                    >
+                      <canvas ref={canvasEditor.canvasRef} />
+                      {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
+                        <CanvasGuidesOverlay
+                          width={canvasEditor.canvasDimensions.width}
+                          height={canvasEditor.canvasDimensions.height}
+                          showGrid={showGrid}
+                          guidePositions={guidePositions}
+                        />
+                      )}
+                      {rotationTooltip !== null && (
                         <div
-                          className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
+                          className="pointer-events-none absolute z-10 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white tabular-nums"
                           style={{
-                            left: selectionContextMenuPosition.left,
-                            top: selectionContextMenuPosition.top,
+                            left: rotationTooltip.left,
+                            top: rotationTooltip.top,
                             transform: "translate(-50%, 0)",
                           }}
-                          role="toolbar"
-                          aria-label="Layer options"
-                          onPointerDown={(e) => e.stopPropagation()}
+                          aria-live="polite"
+                          role="status"
                         >
-                          <button
-                            type="button"
-                            onClick={duplicateSelected}
-                            className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
-                            aria-label="Duplicate layer"
-                            title="Duplicate layer"
-                          >
-                            <Copy className="size-4" aria-hidden />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={toggleLockSelected}
-                            className={`flex size-8 items-center justify-center rounded-md transition-colors ${isLocked
-                              ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
-                              : "text-white/90 hover:bg-white/15 hover:text-white"
-                              }`}
-                            aria-label={isLocked ? "Unlock layer" : "Lock layer"}
-                            title={isLocked ? "Unlock layer" : "Lock layer"}
-                          >
-                            {isLocked ? <Lock className="size-4" aria-hidden /> : <Unlock className="size-4" aria-hidden />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={deleteSelected}
-                            className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
-                            aria-label="Delete layer"
-                            title="Delete layer"
-                          >
-                            <Trash2 className="size-4" aria-hidden />
-                          </button>
+                          {rotationTooltip.angle}°
                         </div>
-                      );
-                    })()}
+                      )}
+                      {selectionContextMenuPosition !== null && !isMobileStudio && (() => {
+                        const selObj = selection.selectedObject;
+                        const isLocked =
+                          !!selObj &&
+                          ((selObj as any).__layerLocked === true ||
+                            !!(selObj.lockMovementX && selObj.lockMovementY) ||
+                            selObj.selectable === false ||
+                            selObj.evented === false);
+                        return (
+                          <div
+                            className="absolute z-20 flex items-center gap-0.5 rounded-lg border border-white/20 bg-[#1a1a1a] p-1 shadow-lg"
+                            style={{
+                              left: selectionContextMenuPosition.left,
+                              top: selectionContextMenuPosition.top,
+                              transform: "translate(-50%, 0)",
+                            }}
+                            role="toolbar"
+                            aria-label="Layer options"
+                            onPointerDown={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={duplicateSelected}
+                              className="flex size-8 items-center justify-center rounded-md text-white/90 transition-colors hover:bg-white/15 hover:text-white"
+                              aria-label="Duplicate layer"
+                              title="Duplicate layer"
+                            >
+                              <Copy className="size-4" aria-hidden />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={toggleLockSelected}
+                              className={`flex size-8 items-center justify-center rounded-md transition-colors ${isLocked
+                                ? "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
+                                : "text-white/90 hover:bg-white/15 hover:text-white"
+                                }`}
+                              aria-label={isLocked ? "Unlock layer" : "Lock layer"}
+                              title={isLocked ? "Unlock layer" : "Lock layer"}
+                            >
+                              {isLocked ? <Lock className="size-4" aria-hidden /> : <Unlock className="size-4" aria-hidden />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={deleteSelected}
+                              className="flex size-8 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                              aria-label="Delete layer"
+                              title="Delete layer"
+                            >
+                              <Trash2 className="size-4" aria-hidden />
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
                   </div>
+
+                  {mobilePanel.isPanelVisible &&
+                  mobilePanel.activeTab &&
+                  !mobileFloatChromeMode ? (
+                    <StudioMobileToolSheet
+                      activeTab={mobilePanel.activeTab as StudioMobileToolId}
+                      onClose={() => {
+                        if (mobilePanel.activeTab === "qr-code") {
+                          setMobileQrSheetOpen(false);
+                        }
+                        mobilePanel.closePanel();
+                      }}
+                      panelRef={mobilePanel.panelRef}
+                      onDragStart={mobilePanel.handleDragStart}
+                      onDragMove={mobilePanel.handleDragMove}
+                      onDragEnd={mobilePanel.handleDragEnd}
+                      currentTranslateY={mobilePanel.currentTranslateY}
+                    >
+                      {mobileToolSheetContent}
+                    </StudioMobileToolSheet>
+                  ) : null}
+
+                  {mobileFeedbackOpen && !mobileFloatChromeMode ? (
+                    <StudioMobileToolSheet
+                      panelTitle="Design feedback"
+                      panelSubtitle="AI suggestions for your canvas"
+                      panelIcon={
+                        <span
+                          className="inline-flex size-[17px] items-center justify-center"
+                          style={{ color: "#8069FF" }}
+                        >
+                          <FeedbackSparklesIcon />
+                        </span>
+                      }
+                      onClose={closeMobileFeedbackSheet}
+                    >
+                      <FeedbackPanelContent
+                        variant="sheet"
+                        isFetchingFeedback={isFetchingFeedback}
+                        feedbackText={feedbackText}
+                        feedbackIssues={feedbackIssues}
+                        feedbackEditPlan={feedbackEditPlan}
+                        handleApplyCleanup={handleApplyCleanup}
+                        isApplyingCleanup={isApplyingCleanup}
+                        onRefresh={handleGetFeedback}
+                      />
+                    </StudioMobileToolSheet>
+                  ) : null}
                 </div>
 
-                {!mobilePanel.activeTab && (
-                  <EditorToolbar
-                    undo={history.undo}
-                    redo={history.redo}
-                    deleteSelected={deleteSelected}
-                    handleExportClick={handleExportClick}
-                    handleSave={handleSave}
-                    handleGetFeedback={
-                      FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
-                    }
-                    handleApplyCleanup={
-                      FEATURE_FLAGS.showFeedbackButton ? handleApplyCleanup : undefined
-                    }
-                    isExporting={isExporting}
-                    isSaving={isSaving}
-                    isFetchingFeedback={
-                      FEATURE_FLAGS.showFeedbackButton ? isFetchingFeedback : undefined
-                    }
-                    isApplyingCleanup={
-                      FEATURE_FLAGS.showFeedbackButton ? isApplyingCleanup : undefined
-                    }
-                    feedbackText={
-                      FEATURE_FLAGS.showFeedbackButton ? feedbackText : undefined
-                    }
-                    feedbackIssues={
-                      FEATURE_FLAGS.showFeedbackButton ? feedbackIssues : undefined
-                    }
-                    feedbackEditPlan={
-                      FEATURE_FLAGS.showFeedbackButton ? feedbackEditPlan : undefined
-                    }
-                    historyState={history.historyState}
-                    selectedObject={selection.selectedObject}
-                    showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
-                    variant="mobile"
-                    alignmentSlot={alignmentSlot}
-                    onSaveClick={() => setShowSaveModal(true)}
-                    onSendUrlToChat={handleSendUrlToChatAndClose}
-                    isEmbedded={isEmbedded}
-                    isSendingUrl={isSendingUrlToChat}
-                  />
+                {mobileFloatChromeMode ? (
+                  <>
+                    {canvasEditor.canvas ? (
+                      <StudioMobileFloatControls
+                        toolMode={mobileFloatToolMode}
+                        hasSelection={mobileFloatHasSelection}
+                        fontAssets={fontAssets}
+                        onAddText={textTools.addText}
+                        addTextDisabled={!fontsReady}
+                        textTools={{
+                          fontFamily: textTools.fontFamily,
+                          setFontFamily: textTools.setFontFamily,
+                          fontSize: textTools.fontSize,
+                          setFontSize: textTools.setFontSize,
+                          isBold: textTools.isBold,
+                          setIsBold: textTools.setIsBold,
+                          isItalic: textTools.isItalic,
+                          setIsItalic: textTools.setIsItalic,
+                          isUnderline: textTools.isUnderline,
+                          setIsUnderline: textTools.setIsUnderline,
+                          textAlign: textTools.textAlign,
+                          setTextAlign: textTools.setTextAlign,
+                          textColor: textTools.textColor,
+                          setTextColor: textTools.setTextColor,
+                          backgroundColor: textTools.backgroundColor,
+                          setBackgroundColor: textTools.setBackgroundColor,
+                          lineHeight: textTools.lineHeight,
+                          setLineHeight: textTools.setLineHeight,
+                          googleCatalogFonts: googleFontCatalog,
+                          googleCatalogLoading,
+                        }}
+                        logoTools={{
+                          filteredLogoAssets: logoTools.filteredLogoAssets,
+                          logoSize: logoTools.logoSize,
+                          setLogoSize: logoTools.setLogoSize,
+                          logoOpacity: logoTools.logoOpacity,
+                          setLogoOpacity: logoTools.setLogoOpacity,
+                          onSelectLogo: logoTools.replaceSelectedLogo,
+                          onInsertLogo: logoTools.handleInsertDefaultLogo,
+                          selectedLogoUrl,
+                          allowCustomLogo,
+                          onUploadLogo: logoTools.handleLogoFileUpload,
+                        }}
+                        qrTools={{
+                          qrSize: qrTools.qrSize,
+                          setQrSize: qrTools.setQrSize,
+                          qrOpacity: qrTools.qrOpacity,
+                          setQrOpacity: qrTools.setQrOpacity,
+                          onEditLink: handleMobileQrEditLink,
+                        }}
+                        shapeTools={{
+                          shapeFillColor: shapeTools.shapeFillColor,
+                          setShapeFillColor: shapeTools.setShapeFillColor,
+                          shapeStrokeColor: shapeTools.shapeStrokeColor,
+                          setShapeStrokeColor: shapeTools.setShapeStrokeColor,
+                          shapeStrokeWidth: shapeTools.shapeStrokeWidth,
+                          setShapeStrokeWidth: shapeTools.setShapeStrokeWidth,
+                          shapeOpacity: shapeTools.shapeOpacity,
+                          setShapeOpacity: shapeTools.setShapeOpacity,
+                          onAddShape: handleMobileAddShape,
+                        }}
+                        frameTools={{
+                          filteredFrameAssets: frameTools.filteredFrameAssets,
+                          frameOpacity: frameTools.frameOpacity,
+                          setFrameOpacity: frameTools.setFrameOpacity,
+                          onSelectFrame: handleMobileInsertFrame,
+                          onInsertFrame: handleMobileInsertFrame,
+                          selectedFrameUrl,
+                        }}
+                      />
+                    ) : null}
+                    <StudioMobileDoneBar onDone={handleMobileDone} />
+                  </>
+                ) : (
+                  <>
+                    <StudioMobileTabBar
+                      activeTab={mobilePanel.activeTab}
+                      onTabClick={handleMobileTabClick}
+                      availableTools={mobileAvailableTools}
+                    />
+
+                    <StudioMobileSessionBar
+                      handleExportClick={handleExportClick}
+                      isExporting={isExporting}
+                      showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+                      onSaveClick={() => setShowSaveModal(true)}
+                      isSaving={isSaving}
+                      onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
+                      isSendingUrl={isSendingUrlToChat}
+                      onFeedbackPress={
+                        FEATURE_FLAGS.showFeedbackButton ? handleMobileFeedbackPress : undefined
+                      }
+                      isFetchingFeedback={isFetchingFeedback}
+                      feedbackOpen={mobileFeedbackOpen}
+                    />
+
+                    <StudioMobileHomeSpacer />
+                  </>
                 )}
               </div>
-
-              <EditorToolbar
-                undo={history.undo}
-                redo={history.redo}
-                deleteSelected={deleteSelected}
-                handleExportClick={handleExportClick}
-                handleSave={handleSave}
-                isExporting={isExporting}
-                isSaving={isSaving}
-                historyState={history.historyState}
-                selectedObject={selection.selectedObject}
-                showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
-                variant="desktop"
-                alignmentSlot={alignmentSlot}
-                onSaveClick={() => setShowSaveModal(true)}
-                onSendUrlToChat={handleSendUrlToChatAndClose}
-                isEmbedded={isEmbedded}
-                isSendingUrl={isSendingUrlToChat}
-              />
             </div>
           </div>
 
-          {FEATURE_FLAGS.showFeedbackButton && (
-            <FeedbackButton
-              handleGetFeedback={handleGetFeedback}
-              isFetchingFeedback={isFetchingFeedback}
-              feedbackText={feedbackText}
-              feedbackIssues={feedbackIssues}
-              feedbackEditPlan={feedbackEditPlan}
-              handleApplyCleanup={handleApplyCleanup}
-              isApplyingCleanup={isApplyingCleanup}
-            />
-          )}
+          <StudioActionBar
+            compact={isCompactChrome}
+            handleExportClick={handleExportClick}
+            isExporting={isExporting}
+            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+            onSaveClick={() => setShowSaveModal(true)}
+            isSaving={isSaving}
+            onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
+            isSendingUrl={isSendingUrlToChat}
+            handleGetFeedback={
+              FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
+            }
+            isFetchingFeedback={isFetchingFeedback}
+            feedbackText={feedbackText}
+            feedbackIssues={feedbackIssues}
+            feedbackEditPlan={feedbackEditPlan}
+            handleApplyCleanup={handleApplyCleanup}
+            isApplyingCleanup={isApplyingCleanup}
+          />
 
           <SaveSessionModal
             open={showSaveModal}

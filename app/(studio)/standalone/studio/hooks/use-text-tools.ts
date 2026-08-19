@@ -52,9 +52,13 @@ export function useTextTools(options: UseTextToolsOptions) {
     const saveState = saveStateRef.current;
     if (!canvas) return;
 
+    const canvasWidth = canvas.width ?? 0;
+    const canvasHeight = canvas.height ?? 0;
+    if (canvasWidth <= 0 || canvasHeight <= 0) return;
+
     const text = new Textbox(TEXT_DEFAULTS.DEFAULT_TEXT, {
-      left: TEXT_DEFAULTS.INITIAL_LEFT,
-      top: TEXT_DEFAULTS.INITIAL_TOP,
+      left: 0,
+      top: 0,
       width: 340,
       fontSize,
       fontFamily: getCanvasFontFamily(
@@ -76,6 +80,23 @@ export function useTextTools(options: UseTextToolsOptions) {
       splitByGrapheme: false,
     });
     (text as any).isEditable = true;
+
+    text.initDimensions?.();
+    const textWidth =
+      typeof text.getScaledWidth === "function"
+        ? text.getScaledWidth()
+        : (text.width ?? 340);
+    const textHeight =
+      typeof text.getScaledHeight === "function"
+        ? text.getScaledHeight()
+        : (text.height ?? 0);
+
+    text.set({
+      left: Math.max(0, (canvasWidth - textWidth) / 2),
+      top: Math.max(0, (canvasHeight - textHeight) / 2),
+    });
+    text.setCoords();
+
     canvas.add(text);
     canvas.setActiveObject(text);
     canvas.renderAll();

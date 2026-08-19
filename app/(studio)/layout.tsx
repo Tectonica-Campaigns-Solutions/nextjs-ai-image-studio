@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { IBM_Plex_Sans, Manrope } from "next/font/google";
+import { DM_Sans, IBM_Plex_Sans, Manrope } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
@@ -19,6 +19,12 @@ const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
 });
 
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+});
+
 export default function StudioLayout({
   children,
 }: Readonly<{
@@ -27,7 +33,7 @@ export default function StudioLayout({
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
       <div
-        className={`studio-root font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable}`}
+        className={`studio-root font-sans ${GeistSans.variable} ${GeistMono.variable} ${manrope.variable} ${ibmPlexSans.variable} ${dmSans.variable}`}
       >
         {children}
       </div>

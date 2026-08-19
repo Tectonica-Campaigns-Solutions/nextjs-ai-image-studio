@@ -3,7 +3,6 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -14,6 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { LogoAsset } from "../types/image-editor-types";
 import { cn } from "@/lib/utils";
+import { StudioSliderRow, studioForm } from "./studio-ui";
 
 export interface LogoToolsPanelProps {
   logoStyle: string;
@@ -28,9 +28,7 @@ export interface LogoToolsPanelProps {
   setLogoOpacity: (n: number) => void;
   handleInsertDefaultLogo: (path: string) => void;
   handleLogoFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  /** When false, size and opacity controls are disabled (no logo overlay selected on canvas). */
   isLogoSelected?: boolean;
-  /** When false, "Upload custom logo" option is hidden. Default true. */
   allowCustomLogo?: boolean;
 }
 
@@ -51,12 +49,10 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
   allowCustomLogo = true,
 }: LogoToolsPanelProps) {
   return (
-    <div className="space-y-4">
+    <div className={studioForm.section}>
       {availableVariants.length > 0 && (
-        <div className="space-y-3">
-          <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
-            Select a variant
-          </Label>
+        <div className="flex flex-col gap-3">
+          <Label className={studioForm.label}>Select a variant</Label>
           <RadioGroup
             value={selectedVariant || ""}
             onValueChange={(value) => {
@@ -67,15 +63,12 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
           >
             {availableVariants.map((variant) => (
               <div key={variant} className="flex items-center space-x-2">
-                <RadioGroupItem value={variant} id={`variant-${variant}`}
-                  // 
-                  className="bg-[#0D0D0D] border-[#2D2D2D] [&_svg]:fill-[#5C38F3]"
-                // 
+                <RadioGroupItem
+                  value={variant}
+                  id={`variant-${variant}`}
+                  className="border-white/[0.17] bg-[#211E30] text-[#8069FF]"
                 />
-                <Label
-                  htmlFor={`variant-${variant}`}
-                  className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer"
-                >
+                <Label htmlFor={`variant-${variant}`} className={cn(studioForm.hint, "cursor-pointer")}>
                   {variant}
                 </Label>
               </div>
@@ -84,141 +77,92 @@ export const LogoToolsPanel = React.memo(function LogoToolsPanel({
         </div>
       )}
 
-      <div>
-        <Select
-          value={logoStyle}
-          onValueChange={(value) => {
-            const v = value;
-            if (v === "none") {
-              setLogoStyle("none");
-              return;
-            }
-            if (v === "custom") {
-              document.getElementById("logoFileInput")?.click();
-              setLogoStyle("none");
-              return;
-            }
-            if (v.startsWith("asset:")) {
-              const assetUrl = decodeURIComponent(v.replace("asset:", ""));
-              handleInsertDefaultLogo(assetUrl);
-              setLogoStyle("none");
-              return;
-            }
-          }}
-          disabled={availableVariants.length > 0 && !selectedVariant}
-        >
-          <SelectTrigger className="w-full bg-[#0D0D0D] py-[10px] px-[16px] border-[#2D2D2D] text-[13px] font-medium leading-[135%] text-white font-(family-name:--font-manrope) h-[44px]! rounded-[10px] transition-all hover:border-[#444] focus:ring-2 focus:ring-[#5C38F3]/20 disabled:opacity-50 disabled:cursor-not-allowed">
-            <SelectValue
-              placeholder={
-                availableVariants.length > 0 && !selectedVariant
-                  ? "Select a variant first"
-                  : "Select Logo"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent className="bg-[#0D0D0D] border border-[#2D2D2D] text-[#F4F4F4] shadow-md">
-            <SelectItem
-              value="none"
-              disabled
-              className="text-[13px] leading-[135%] text-[#777777] font-(family-name:--font-manrope)"
-            >
-              Select Logo
-            </SelectItem>
-            {filteredLogoAssets.length > 0 &&
-              filteredLogoAssets.map((asset) => (
-                <SelectItem
-                  key={`${asset.url}-${asset.display_name}`}
-                  value={`asset:${encodeURIComponent(asset.url)}`}
-                  className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-                >
-                  {asset.display_name}
-                </SelectItem>
-              ))}
-            {allowCustomLogo !== false && (
-              <SelectItem
-                value="custom"
-                className="text-[13px] leading-[135%] text-[#F4F4F4] font-(family-name:--font-manrope) cursor-pointer hover:bg-[#1B1B1B] focus:bg-[#1F1F1F] aria-selected:bg-[#1F1F1F]"
-              >
-                Upload Custom Logo
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select>
-        {availableVariants.length > 0 && !selectedVariant && (
-          <p className="text-xs text-[#929292] mt-2">
-            Please select a variant to see the available logos
-          </p>
-        )}
-      </div>
-      <div>
-        <Input
-          id="logoFileInput"
-          type="file"
-          accept="image/*"
-          onChange={handleLogoFileUpload}
-          className="sr-only w-fit"
-        />
-      </div>
-
-      <div
-        className={cn(
-          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
-          !isLogoSelected && "opacity-50 pointer-events-none"
-        )}
+      <Select
+        value={logoStyle}
+        onValueChange={(value) => {
+          const v = value;
+          if (v === "none") {
+            setLogoStyle("none");
+            return;
+          }
+          if (v === "custom") {
+            document.getElementById("logoFileInput")?.click();
+            setLogoStyle("none");
+            return;
+          }
+          if (v.startsWith("asset:")) {
+            const assetUrl = decodeURIComponent(v.replace("asset:", ""));
+            handleInsertDefaultLogo(assetUrl);
+            setLogoStyle("none");
+          }
+        }}
+        disabled={availableVariants.length > 0 && !selectedVariant}
       >
-        <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
-          Size
-        </Label>
-        <Slider
-          value={[logoSize]}
-          onValueChange={([value]) => setLogoSize(value)}
+        <SelectTrigger className={studioForm.selectTriggerLarge}>
+          <SelectValue
+            placeholder={
+              availableVariants.length > 0 && !selectedVariant
+                ? "Select a variant first"
+                : "Select Logo"
+            }
+          />
+        </SelectTrigger>
+        <SelectContent className={studioForm.selectContent}>
+          <SelectItem value="none" disabled className={studioForm.selectItem}>
+            Select Logo
+          </SelectItem>
+          {filteredLogoAssets.map((asset) => (
+            <SelectItem
+              key={`${asset.url}-${asset.display_name}`}
+              value={`asset:${encodeURIComponent(asset.url)}`}
+              className={studioForm.selectItem}
+            >
+              {asset.display_name}
+            </SelectItem>
+          ))}
+          {allowCustomLogo !== false && (
+            <SelectItem value="custom" className={studioForm.selectItem}>
+              Upload Custom Logo
+            </SelectItem>
+          )}
+        </SelectContent>
+      </Select>
+
+      {availableVariants.length > 0 && !selectedVariant && (
+        <p className={studioForm.hint}>Please select a variant to see the available logos</p>
+      )}
+
+      <Input
+        id="logoFileInput"
+        type="file"
+        accept="image/*"
+        onChange={handleLogoFileUpload}
+        className="sr-only"
+      />
+
+      <div className={cn(!isLogoSelected && "pointer-events-none opacity-50")}>
+        <StudioSliderRow
+          label="Size"
+          value={logoSize}
+          displayValue={`${logoSize}px`}
           min={50}
           max={400}
           step={10}
+          onChange={setLogoSize}
           disabled={!isLogoSelected}
-          className={cn(
-            "w-full",
-            // Parte inactiva
-            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-            // Parte activa
-            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-            // Esfera / handle
-            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-          )}
         />
-        <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
-          {logoSize}px
-        </div>
       </div>
-      <div
-        className={cn(
-          "grid grid-cols-[auto_1fr_50px] gap-[11px] items-center",
-          !isLogoSelected && "opacity-50 pointer-events-none"
-        )}
-      >
-        <Label className="text-[13px] leading-[110%] font-semibold text-[#F4F4F4] font-(family-name:--font-manrope) block">
-          Opacity
-        </Label>
-        <Slider
-          value={[logoOpacity]}
-          onValueChange={([value]) => setLogoOpacity(value)}
+      <div className={cn(!isLogoSelected && "pointer-events-none opacity-50")}>
+        <StudioSliderRow
+          label="Opacity"
+          value={logoOpacity}
+          displayValue={`${logoOpacity}%`}
           min={10}
           max={100}
           step={5}
+          onChange={setLogoOpacity}
           disabled={!isLogoSelected}
-          className={cn(
-            "w-full",
-            // Parte inactiva
-            "[&_[data-slot=slider-track]]:bg-[#303030c4]",
-            // Parte activa
-            "[&_[data-slot=slider-range]]:bg-[#5C38F3_!important]",
-            // Esfera / handle
-            "[&_[role=slider]]:bg-[#FFF] [&_[role=slider]]:border-[1px] [&_[role=slider]]:border-[#9094A4]"
-          )}
         />
-        <div className="p-[5px] rounded-[5px] border border-[#303030] font-(family-name:--font-manrope) text-[13px] font-medium leading-[135%] text-[#929292] text-center transition-colors hover:border-[#444]">
-          {logoOpacity}%
-        </div>
       </div>
     </div>
   );

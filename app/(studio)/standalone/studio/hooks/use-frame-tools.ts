@@ -82,6 +82,7 @@ export function useFrameTools(options: UseFrameToolsOptions) {
         });
         (img as any).isFrame = true;
         (img as any).isEditable = true;
+        (img as any).frameAssetUrl = url;
 
         // Remove any existing frame before adding the new one
         removeExistingFrame();
