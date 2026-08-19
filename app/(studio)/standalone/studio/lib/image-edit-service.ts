@@ -1,5 +1,9 @@
 const EDIT_IMAGE_API_URL = "/api/studio/edit-with-ia";
 
+// Appended to every prompt so the model only changes what's explicitly requested.
+const PRESERVE_UNMENTIONED_ELEMENTS_INSTRUCTION =
+  "Keep everything else in the image exactly the same.";
+
 export interface EditImageClientInfo {
   client_id?: string;
   user_email?: string;
@@ -66,7 +70,7 @@ export async function editImage(
   const { prompt, imageUrls, base64Images, orgType, clientInfo = {} } = options;
 
   const body = {
-    prompt: prompt.trim(),
+    prompt: `${prompt.trim()} ${PRESERVE_UNMENTIONED_ELEMENTS_INSTRUCTION}`,
     orgType,
     clientInfo: {
       client_id: clientInfo.client_id ?? clientInfo.user_id ?? "",
