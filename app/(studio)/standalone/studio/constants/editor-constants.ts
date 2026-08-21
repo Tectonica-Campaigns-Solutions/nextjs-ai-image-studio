@@ -305,6 +305,8 @@ export const FEATURE_FLAGS = {
   showEditWithAI: true,
   showLayersPanel: true,
   showGuidesAndGrid: true,
+  /** Mobile tab bar "More" (advanced-options). Keep false until shapes/frames/layers ship on mobile. */
+  showMobileMoreTools: false,
   enableDisclaimerCropPreprocess: false,
   enableExportDisclaimer: false,
 } as const;

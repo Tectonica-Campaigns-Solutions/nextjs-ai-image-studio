@@ -155,7 +155,7 @@ export function StudioMobileCanvasControls({
 
   return (
     <div
-      className="flex shrink-0 items-center justify-center px-4 md:hidden"
+      className="flex shrink-0 items-center justify-center px-4 pt-3 md:hidden"
       style={{
         background: UI_COLORS.CANVAS_MAT,
         minHeight: STUDIO_LAYOUT.MOBILE_CANVAS_TOOLBAR_H,
@@ -314,26 +314,26 @@ export function StudioMobileSessionBar({
 
       {showSaveButton && onSaveClick
         ? iconBtn(
-            "Save project",
-            isSaving ? <Loader2 className="size-[19px] animate-spin" /> : <SaveOutlineIcon />,
-            onSaveClick,
-            isSaving,
-          )
+          "Save project",
+          isSaving ? <Loader2 className="size-[19px] animate-spin" /> : <SaveOutlineIcon />,
+          onSaveClick,
+          isSaving,
+        )
         : null}
 
       {iconBtn("Save to Media", <ImagePlus className="size-[19px]" strokeWidth={2.1} />, undefined, true)}
 
       {onSendUrlToChat
         ? iconBtn(
-            "Send to chat",
-            isSendingUrl ? (
-              <Loader2 className="size-[19px] animate-spin" />
-            ) : (
-              <MessageSquareShare className="size-[19px]" strokeWidth={2.1} />
-            ),
-            onSendUrlToChat,
-            isSendingUrl,
-          )
+          "Send to chat",
+          isSendingUrl ? (
+            <Loader2 className="size-[19px] animate-spin" />
+          ) : (
+            <MessageSquareShare className="size-[19px]" strokeWidth={2.1} />
+          ),
+          onSendUrlToChat,
+          isSendingUrl,
+        )
         : null}
 
       {onFeedbackPress ? (

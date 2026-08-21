@@ -1,10 +1,19 @@
-import { UI_COLORS } from "./constants/editor-constants";
+import { FEATURE_FLAGS, UI_COLORS } from "./constants/editor-constants";
 
 /**
  * Structural skeleton for the studio page while editor assets and session load.
  * Mirrors the desktop Visual Studio chrome (header, tool dock, canvas mat, action bar).
  */
 export function StudioLoading() {
+  const mobileTabCount =
+    [
+      FEATURE_FLAGS.showTextTools,
+      FEATURE_FLAGS.showLogoTools,
+      FEATURE_FLAGS.showQrTools,
+      FEATURE_FLAGS.showEditWithAI,
+      FEATURE_FLAGS.showMobileMoreTools,
+    ].filter(Boolean).length || 4;
+
   return (
     <div
       className="flex h-full min-h-0 flex-col overflow-hidden md:min-h-dvh md:h-dvh md:overflow-hidden"
@@ -50,10 +59,13 @@ export function StudioLoading() {
             <div className="aspect-[4/3] w-full max-h-full max-w-3xl animate-pulse rounded-xl bg-white/10" />
           </div>
           <div
-            className="grid shrink-0 grid-cols-5 gap-1 px-2 pb-1.5 pt-2 md:hidden"
-            style={{ borderTop: `1px solid ${UI_COLORS.BORDER}` }}
+            className="grid shrink-0 gap-1 px-2 pb-1.5 pt-2 md:hidden"
+            style={{
+              gridTemplateColumns: `repeat(${mobileTabCount}, minmax(0, 1fr))`,
+              borderTop: `1px solid ${UI_COLORS.BORDER}`,
+            }}
           >
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: mobileTabCount }).map((_, i) => (
               <div key={i} className="mx-auto size-10 animate-pulse rounded-xl bg-white/10" />
             ))}
           </div>

@@ -2150,12 +2150,13 @@ function ImageEditorStandaloneInner({
     FEATURE_FLAGS.showLogoTools ? "logo-overlay" : null,
     FEATURE_FLAGS.showQrTools ? "qr-code" : null,
     FEATURE_FLAGS.showEditWithAI ? "ai-edit" : null,
-    layersToolsPanel != null ||
-    (FEATURE_FLAGS.showReplaceBackgroundTool && backgroundImagePanel != null) ||
-    (FEATURE_FLAGS.showShapeTools && shapeToolsPanel != null) ||
-    (FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 && frameToolsPanel != null) ||
-    guidesAndGridPanel != null ||
-    (sessionsForImage.length > 0 && sessionsListPanel != null)
+    FEATURE_FLAGS.showMobileMoreTools &&
+    (layersToolsPanel != null ||
+      (FEATURE_FLAGS.showReplaceBackgroundTool && backgroundImagePanel != null) ||
+      (FEATURE_FLAGS.showShapeTools && shapeToolsPanel != null) ||
+      (FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 && frameToolsPanel != null) ||
+      guidesAndGridPanel != null ||
+      (sessionsForImage.length > 0 && sessionsListPanel != null))
       ? "advanced-options"
       : null,
   ].filter(Boolean) as string[];
