@@ -18,6 +18,8 @@ type StudioEditorLoaderProps = {
     session_id?: string;
     text?: string;
     text_delim?: string;
+    group_page_url?: string;
+    groupPageUrl?: string;
   }>;
 };
 

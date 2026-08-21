@@ -22,20 +22,12 @@ export function useQRTools(options: UseQRToolsOptions) {
   const [qrOpacity, setQrOpacity] = useState<number>(QR_DEFAULTS.OPACITY);
   const [qrUrl, setQrUrl] = useState("");
 
-  const addQRFromUrl = useCallback(async () => {
-    const canvas = canvasRef.current;
-    const saveState = saveStateRef.current;
-    if (!canvas || !qrUrl.trim()) return;
+  const placeQrImage = useCallback(
+    async (qrImage: Awaited<ReturnType<typeof loadImageWithCORS>>) => {
+      const canvas = canvasRef.current;
+      const saveState = saveStateRef.current;
+      if (!canvas) return;
 
-    try {
-      const qrApiUrl = await generateQR(qrUrl);
-      if (!qrApiUrl) {
-        console.error("Failed to generate QR code: No URL returned");
-        return;
-      }
-
-      const base64Url = await urlToBase64(qrApiUrl);
-      const qrImage = await loadImageWithCORS(base64Url);
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
       const scale = qrSize / Math.max(qrImage.width, qrImage.height);
@@ -53,10 +45,50 @@ export function useQRTools(options: UseQRToolsOptions) {
       canvas.setActiveObject(img);
       canvas.renderAll();
       saveState(true);
-    } catch (error) {
-      console.error("Error adding QR code from URL:", error);
-    }
-  }, [canvasRef, saveStateRef, qrUrl, qrSize, qrOpacity]);
+    },
+    [canvasRef, saveStateRef, qrSize, qrOpacity],
+  );
+
+  /** Generate a QR from a page URL and place it. Optional override avoids setState races. */
+  const addQRFromUrl = useCallback(
+    async (urlOverride?: string) => {
+      const canvas = canvasRef.current;
+      const targetUrl = (urlOverride ?? qrUrl).trim();
+      if (!canvas || !targetUrl) return;
+
+      try {
+        const qrApiUrl = await generateQR(targetUrl);
+        if (!qrApiUrl) {
+          console.error("Failed to generate QR code: No URL returned");
+          return;
+        }
+
+        const base64Url = await urlToBase64(qrApiUrl);
+        const qrImage = await loadImageWithCORS(base64Url);
+        await placeQrImage(qrImage);
+        if (urlOverride) setQrUrl(urlOverride);
+      } catch (error) {
+        console.error("Error adding QR code from URL:", error);
+      }
+    },
+    [canvasRef, qrUrl, placeQrImage],
+  );
+
+  /** Place a pre-rendered QR image (e.g. from the host recruitment page). */
+  const addQRFromImageUrl = useCallback(
+    async (imageUrl: string) => {
+      const canvas = canvasRef.current;
+      if (!canvas || !imageUrl.trim()) return;
+
+      try {
+        const qrImage = await loadImageWithCORS(imageUrl.trim());
+        await placeQrImage(qrImage);
+      } catch (error) {
+        console.error("Error adding QR code from image URL:", error);
+      }
+    },
+    [canvasRef, placeQrImage],
+  );
 
   const addCustomQR = useCallback(
     async (file: File) => {
@@ -160,6 +192,7 @@ export function useQRTools(options: UseQRToolsOptions) {
     qrUrl,
     setQrUrl,
     addQRFromUrl,
+    addQRFromImageUrl,
     addCustomQR,
     updateQRCode,
     replaceSelectedQRFromUrl,

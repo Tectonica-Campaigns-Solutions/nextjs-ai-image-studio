@@ -1100,15 +1100,42 @@ export function QrMobileSheetPanel({
   onGenerate,
   onUpload,
   editMode,
+  groupQr,
 }: {
   qrUrl: string;
   setQrUrl: (s: string) => void;
   onGenerate: () => void | Promise<void>;
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   editMode?: boolean;
+  groupQr?: {
+    label: string | null;
+    hasGroupQr: boolean;
+    onInsert: () => void | Promise<void>;
+    isInserting?: boolean;
+  } | null;
 }) {
+  const showGroupQr = !editMode && !!groupQr?.hasGroupQr;
+
   return (
     <div className={studioForm.section}>
+      {showGroupQr ? (
+        <>
+          <button
+            type="button"
+            onClick={() => void groupQr.onInsert()}
+            disabled={groupQr.isInserting}
+            className={studioForm.primaryButton}
+          >
+            {groupQr.isInserting
+              ? "Adding…"
+              : groupQr.label
+                ? `Add ${groupQr.label} QR`
+                : "Add group QR"}
+          </button>
+          <StudioOrDivider />
+        </>
+      ) : null}
+
       <div className="flex gap-2">
         <input
           type="text"

@@ -554,6 +554,29 @@ window.parent.postMessage(
   - Listening for `message` events and filtering on
     `type === "tectonica-studio-editing-done"`.
   - Consuming `imageUrl` (e.g., posting it back into a chat).
+  - (Optional, VS-C08) Pushing the user's published group / recruitment page
+    so Studio can insert its QR in one click:
+
+```ts
+// Host → Studio (push after iframe loads, or when the group page is published)
+iframe.contentWindow.postMessage(
+  {
+    type: "tectonica-studio-set-group-qr",
+    groupPageUrl: "https://example.com/groups/lincoln-uk", // URL encoded into the QR
+    label: "Lincoln UK", // optional CTA label
+    // qrImageUrl: "https://…/qr.png", // optional: skip generation, use this image
+  },
+  studioOrigin, // prefer concrete origin over "*"
+);
+
+// Studio → Host on mount (handshake if push was missed)
+// { type: "tectonica-studio-group-qr-request", requestId }
+// Host → Studio reply:
+// { type: "tectonica-studio-group-qr-response", requestId, groupPageUrl, label? }
+
+// Standalone test without host:
+// /standalone/studio?imageUrl=…&user_id=…&group_page_url=https://…
+```
 
 When embedding, prefer passing both `client_id` and `user_id`:
 - `client_id` is used first for asset loading (mapped to `clients.ca_user_id`).

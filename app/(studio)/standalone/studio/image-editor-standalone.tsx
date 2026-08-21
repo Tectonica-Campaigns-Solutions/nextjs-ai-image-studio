@@ -79,6 +79,7 @@ import { useImageEditorHistory } from "./hooks/use-image-editor-history";
 import { useImageEditorSelection } from "./hooks/use-image-editor-selection";
 import { useTextTools } from "./hooks/use-text-tools";
 import { useQRTools } from "./hooks/use-qr-tools";
+import { useGroupQrFromHost } from "./hooks/use-group-qr-from-host";
 import { useLogoTools } from "./hooks/use-logo-tools";
 import { useFrameTools } from "./hooks/use-frame-tools";
 import { useShapeTools } from "./hooks/use-shape-tools";
@@ -354,6 +355,23 @@ function ImageEditorStandaloneInner({
     saveStateRef,
   });
 
+  const groupQrFromHost = useGroupQrFromHost();
+  const [isInsertingGroupQr, setIsInsertingGroupQr] = useState(false);
+
+  const handleInsertGroupQr = useCallback(async () => {
+    if (!groupQrFromHost.hasGroupQr) return;
+    setIsInsertingGroupQr(true);
+    try {
+      if (groupQrFromHost.qrImageUrl) {
+        await qrTools.addQRFromImageUrl(groupQrFromHost.qrImageUrl);
+      } else if (groupQrFromHost.groupPageUrl) {
+        await qrTools.addQRFromUrl(groupQrFromHost.groupPageUrl);
+      }
+    } finally {
+      setIsInsertingGroupQr(false);
+    }
+  }, [groupQrFromHost, qrTools]);
+
   const logoTools = useLogoTools({
     canvasRef: canvasRefStable,
     logoAssets,
@@ -603,6 +621,12 @@ function ImageEditorStandaloneInner({
     setMobileQrPlaced(true);
     closeMobileQrSheet();
   }, [mobileQrPlaced, isQrSelected, qrTools, closeMobileQrSheet]);
+
+  const handleMobileInsertGroupQr = useCallback(async () => {
+    await handleInsertGroupQr();
+    setMobileQrPlaced(true);
+    closeMobileQrSheet();
+  }, [handleInsertGroupQr, closeMobileQrSheet]);
 
   const handleMobileQrFileUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1969,6 +1993,26 @@ function ImageEditorStandaloneInner({
     [logoTools, isLogoSelected, allowCustomLogo]
   );
 
+  const groupQrPanelProps = useMemo(
+    () =>
+      groupQrFromHost.hasGroupQr
+        ? {
+            label: groupQrFromHost.label,
+            groupPageUrl: groupQrFromHost.groupPageUrl,
+            hasGroupQr: true as const,
+            onInsert: handleInsertGroupQr,
+            isInserting: isInsertingGroupQr,
+          }
+        : null,
+    [
+      groupQrFromHost.hasGroupQr,
+      groupQrFromHost.label,
+      groupQrFromHost.groupPageUrl,
+      handleInsertGroupQr,
+      isInsertingGroupQr,
+    ],
+  );
+
   const qrToolsPanel = useMemo(
     () => (
       <QrToolsPanel
@@ -1981,9 +2025,10 @@ function ImageEditorStandaloneInner({
         qrOpacity={qrTools.qrOpacity}
         setQrOpacity={qrTools.setQrOpacity}
         isQrSelected={isQrSelected}
+        groupQr={groupQrPanelProps}
       />
     ),
-    [qrTools, isQrSelected]
+    [qrTools, isQrSelected, groupQrPanelProps]
   );
 
   const isFrameSelected =
@@ -2189,6 +2234,16 @@ function ImageEditorStandaloneInner({
           onGenerate={handleMobileQrGenerate}
           onUpload={handleMobileQrFileUpload}
           editMode={mobileQrPlaced}
+          groupQr={
+            groupQrFromHost.hasGroupQr
+              ? {
+                  label: groupQrFromHost.label,
+                  hasGroupQr: true,
+                  onInsert: handleMobileInsertGroupQr,
+                  isInserting: isInsertingGroupQr,
+                }
+              : null
+          }
         />
       );
     }

@@ -2,20 +2,28 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Upload } from "lucide-react";
+import { QrCode, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { StudioOrDivider, StudioSliderRow, studioForm } from "./studio-ui";
+import { StudioOrDivider, StudioPanelHint, StudioSliderRow, studioForm } from "./studio-ui";
 
 export interface QrToolsPanelProps {
   qrUrl: string;
   setQrUrl: (s: string) => void;
-  addQRFromUrl: () => void;
+  addQRFromUrl: (urlOverride?: string) => void | Promise<void>;
   handleQRFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   qrSize: number;
   setQrSize: (n: number) => void;
   qrOpacity: number;
   setQrOpacity: (n: number) => void;
   isQrSelected?: boolean;
+  /** When set by the host (group page), show one-click insert. */
+  groupQr?: {
+    label: string | null;
+    groupPageUrl: string | null;
+    hasGroupQr: boolean;
+    onInsert: () => void | Promise<void>;
+    isInserting?: boolean;
+  } | null;
 }
 
 export const QrToolsPanel = React.memo(function QrToolsPanel({
@@ -28,9 +36,36 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
   qrOpacity,
   setQrOpacity,
   isQrSelected = false,
+  groupQr = null,
 }: QrToolsPanelProps) {
+  const showGroupQr = !!groupQr?.hasGroupQr;
+
   return (
     <div className={studioForm.section}>
+      {showGroupQr ? (
+        <>
+          <button
+            type="button"
+            onClick={() => void groupQr.onInsert()}
+            disabled={groupQr.isInserting}
+            className={studioForm.primaryButton}
+          >
+            <QrCode className="size-[19px]" strokeWidth={2.2} aria-hidden />
+            {groupQr.isInserting
+              ? "Adding…"
+              : groupQr.label
+                ? `Add ${groupQr.label} QR`
+                : "Add group QR"}
+          </button>
+          {groupQr.groupPageUrl ? (
+            <StudioPanelHint>
+              From your recruitment page — one click adds the QR to this poster.
+            </StudioPanelHint>
+          ) : null}
+          <StudioOrDivider />
+        </>
+      ) : null}
+
       <div className="flex gap-2">
         <input
           type="text"
@@ -39,12 +74,12 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
           onChange={(e) => setQrUrl(e.target.value)}
           className={cn(studioForm.input, "flex-1 min-w-0")}
           onKeyDown={(e) => {
-            if (e.key === "Enter") addQRFromUrl();
+            if (e.key === "Enter") void addQRFromUrl();
           }}
         />
         <button
           type="button"
-          onClick={addQRFromUrl}
+          onClick={() => void addQRFromUrl()}
           disabled={!qrUrl.trim()}
           className={studioForm.inlinePrimaryButton}
         >

@@ -312,8 +312,23 @@ export const FEATURE_FLAGS = {
   enableExportDisclaimer: false,
 } as const;
 
-// Iframe communication from Studio → parent (ChangeAgent/Open WebUI)
+// Iframe communication with parent (ChangeAgent/Open WebUI)
 export const STUDIO_IFRAME_MESSAGE = {
   EDITING_DONE_TYPE: "tectonica-studio-editing-done",
   EXIT_FULLSCREEN_TYPE: "tectonica-studio-exit-fullscreen",
+  /** Host → Studio: push the user's published group page for one-click QR insert */
+  SET_GROUP_QR_TYPE: "tectonica-studio-set-group-qr",
+  /** Studio → Host: ask for group QR if push was missed (race on iframe mount) */
+  GROUP_QR_REQUEST_TYPE: "tectonica-studio-group-qr-request",
+  /** Host → Studio: reply to GROUP_QR_REQUEST_TYPE */
+  GROUP_QR_RESPONSE_TYPE: "tectonica-studio-group-qr-response",
 } as const;
+
+/** Payload for SET_GROUP_QR / GROUP_QR_RESPONSE (host → Studio). */
+export type StudioGroupQrPayload = {
+  groupPageUrl?: string | null;
+  /** Optional display name for the CTA (e.g. "Lincoln UK group"). */
+  label?: string | null;
+  /** Optional pre-rendered QR image URL; if set, Studio inserts it without regenerating. */
+  qrImageUrl?: string | null;
+};
