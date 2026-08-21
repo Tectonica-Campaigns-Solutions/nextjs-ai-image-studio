@@ -236,7 +236,8 @@ export const STUDIO_LAYOUT = {
   CANVAS_TOOLBAR_INSET: 18,
   ICON_BTN: 40,
   ACTION_BTN_H: 44,
-  COMPACT_BREAKPOINT: 1340,
+  /** Below this width, desktop bottom action bar uses icon-only buttons. */
+  COMPACT_BREAKPOINT: 992,
   MOBILE_BREAKPOINT: 880,
   /** Fixed row for undo/redo/align/history/delete — keeps canvas-area height stable. */
   MOBILE_CANVAS_TOOLBAR_H: 48,
