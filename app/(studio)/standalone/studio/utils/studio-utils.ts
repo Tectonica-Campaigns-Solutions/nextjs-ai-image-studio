@@ -253,8 +253,8 @@ const INPUT_PROMPT_SUBMIT_TYPE = "input:prompt:submit";
  * embeds an artifact iframe which embeds our iframe), and top — whichever are
  * reachable and distinct from the current window.
  */
-function broadcastToHost(payload: Record<string, unknown>, logLabel: string) {
-  if (typeof window === "undefined") return;
+function broadcastToHost(payload: Record<string, unknown>, logLabel: string): boolean {
+  if (typeof window === "undefined") return false;
 
   console.log(
     `[${logLabel}] Sending message to parent window:`,
@@ -291,7 +291,7 @@ function broadcastToHost(payload: Record<string, unknown>, logLabel: string) {
 
     if (!parentWin && !grandParentWin && !topWin) {
       console.warn(`[${logLabel}] No parent/grandparent/top window available.`);
-      return;
+      return false;
     }
 
     const targets: Array<{
@@ -324,8 +324,10 @@ function broadcastToHost(payload: Record<string, unknown>, logLabel: string) {
       targetOrigin,
       hintedBaseUrl,
     });
+    return Object.values(sentTo).some(Boolean);
   } catch (err) {
     console.error(`[${logLabel}] Failed to send postMessage:`, err);
+    return false;
   }
 }
 
@@ -351,5 +353,39 @@ export function requestExitFullscreen() {
   broadcastToHost(
     { type: STUDIO_IFRAME_MESSAGE.EXIT_FULLSCREEN_TYPE },
     "requestExitFullscreen",
+  );
+}
+
+export type StudioSaveToMediaRequestPayload = {
+  requestId: string;
+  imageUrl: string;
+  mimeType?: "image/jpeg";
+  title?: string;
+  width?: number;
+  height?: number;
+};
+
+/**
+ * Asks the embedding host to copy the uploaded image into Media & Assets.
+ * Sends the Studio proxy URL only — never image bytes / data URLs.
+ */
+export function requestSaveToMedia(payload: StudioSaveToMediaRequestPayload): boolean {
+  const chatId =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("chat_id") ?? null
+      : null;
+
+  return broadcastToHost(
+    {
+      type: STUDIO_IFRAME_MESSAGE.SAVE_TO_MEDIA_TYPE,
+      requestId: payload.requestId,
+      imageUrl: payload.imageUrl,
+      mimeType: payload.mimeType ?? "image/jpeg",
+      title: payload.title,
+      chatId,
+      width: payload.width,
+      height: payload.height,
+    },
+    "requestSaveToMedia",
   );
 }

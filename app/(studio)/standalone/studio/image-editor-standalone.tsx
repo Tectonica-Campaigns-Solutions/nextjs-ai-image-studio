@@ -94,7 +94,7 @@ import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { Copy, Lock, Trash2, Unlock } from "lucide-react";
-import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, sendToChat } from "./utils/studio-utils";
+import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, requestSaveToMedia, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
@@ -176,6 +176,9 @@ function ImageEditorStandaloneInner({
 
   // Iframe send-url-to-chat state
   const [isSendingUrlToChat, setIsSendingUrlToChat] = useState<boolean>(false);
+  const [isSavingToMedia, setIsSavingToMedia] = useState<boolean>(false);
+  const pendingSaveToMediaRequestIdRef = useRef<string | null>(null);
+  const saveToMediaTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -1124,6 +1127,130 @@ function ImageEditorStandaloneInner({
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
+  const flattenAndUploadEditedImage = async (): Promise<{
+    imageUrl: string;
+    width: number;
+    height: number;
+  } | null> => {
+    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) {
+      studioToast.error({
+        title: "Could not export image",
+        description: "Try again.",
+      });
+      return null;
+    }
+
+    const caUserId = params.user_id?.trim();
+    if (!caUserId) {
+      studioToast.error({
+        title: "Could not upload image",
+        description: "Missing user. Open Studio from chat and try again.",
+      });
+      return null;
+    }
+
+    const currentWidth = canvasEditor.canvas.width;
+    const multiplier =
+      currentWidth > 0
+        ? canvasEditor.originalImageDimensions.width / currentWidth
+        : 1;
+
+    const dataURL = canvasEditor.canvas.toDataURL({
+      format: "jpeg",
+      quality: 1,
+      multiplier,
+    } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
+
+    if (!dataURL) {
+      studioToast.error({
+        title: "Could not export image",
+        description: "Try again.",
+      });
+      return null;
+    }
+
+    const uploadResponse = await fetch("/api/studio/upload-edited-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        image_base64: dataURL,
+        ca_user_id: caUserId,
+      }),
+    });
+
+    const uploadJson = await uploadResponse.json().catch(() => null);
+    const imageUrl = uploadJson?.image_url ? String(uploadJson.image_url) : "";
+
+    if (!uploadResponse.ok || !imageUrl) {
+      console.error("Failed to upload edited image:", uploadJson);
+      studioToast.error({
+        title: "Could not upload image",
+        description: uploadJson?.error ?? "Try again.",
+      });
+      return null;
+    }
+
+    return {
+      imageUrl,
+      width: canvasEditor.originalImageDimensions.width,
+      height: canvasEditor.originalImageDimensions.height,
+    };
+  };
+
+  const clearSaveToMediaPending = useCallback(() => {
+    pendingSaveToMediaRequestIdRef.current = null;
+    if (saveToMediaTimeoutRef.current) {
+      clearTimeout(saveToMediaTimeoutRef.current);
+      saveToMediaTimeoutRef.current = null;
+    }
+    setIsSavingToMedia(false);
+  }, []);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (!isAllowedEmbedOrigin(event.origin)) return;
+      const data = event.data;
+      if (!data || typeof data !== "object") return;
+
+      const msg = data as {
+        type?: unknown;
+        requestId?: unknown;
+        ok?: unknown;
+        error?: unknown;
+      };
+      if (msg.type !== STUDIO_IFRAME_MESSAGE.SAVE_TO_MEDIA_RESULT_TYPE) return;
+      if (typeof msg.requestId !== "string") return;
+      if (msg.requestId !== pendingSaveToMediaRequestIdRef.current) return;
+
+      clearSaveToMediaPending();
+
+      if (msg.ok === true) {
+        studioToast.success({
+          title: "Saved to Media",
+          description: "The image was added to Media & Assets.",
+        });
+        return;
+      }
+
+      const errorText =
+        typeof msg.error === "string" && msg.error.trim()
+          ? msg.error
+          : "The host could not save the image.";
+      studioToast.error({
+        title: "Could not save to Media",
+        description: errorText,
+      });
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      if (saveToMediaTimeoutRef.current) {
+        clearTimeout(saveToMediaTimeoutRef.current);
+      }
+    };
+  }, [clearSaveToMediaPending]);
+
   // Export current canvas, upload it, send only URL to chat, then signal parent to close Studio.
   const handleSendUrlToChatAndClose = async () => {
     if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
@@ -1131,51 +1258,11 @@ function ImageEditorStandaloneInner({
     try {
       setIsSendingUrlToChat(true);
 
-      const caUserId = params.user_id?.trim();
+      const uploaded = await flattenAndUploadEditedImage();
+      if (!uploaded) return;
 
-      const currentWidth = canvasEditor.canvas.width;
-      const multiplier =
-        currentWidth > 0
-          ? canvasEditor.originalImageDimensions.width / currentWidth
-          : 1;
-
-      const dataURL = canvasEditor.canvas.toDataURL({
-        format: "jpeg",
-        quality: 1,
-        multiplier,
-      } as Parameters<typeof canvasEditor.canvas.toDataURL>[0]);
-
-      if (!dataURL || !caUserId) {
-        studioToast.error({
-          title: "Could not export image",
-          description: "Try again before sending it to the conversation.",
-        });
-        return;
-      }
-
-      const uploadResponse = await fetch("/api/studio/upload-edited-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_base64: dataURL,
-          ca_user_id: caUserId,
-        }),
-      });
-
-      const uploadJson = await uploadResponse.json().catch(() => null);
-      const imageUrl = uploadJson?.image_url ? String(uploadJson.image_url) : "";
-
-      if (!uploadResponse.ok || !imageUrl) {
-        console.error("Failed to upload edited image for URL send:", uploadJson);
-        studioToast.error({
-          title: "Could not upload image",
-          description: uploadJson?.error ?? "Try again before sending it to the conversation.",
-        });
-        return;
-      }
-
-      sendToChat(imageUrl);
-      console.log("Sent to chat:", imageUrl);
+      sendToChat(uploaded.imageUrl);
+      console.log("Sent to chat:", uploaded.imageUrl);
       // Exit full screen so the user can see the image landed in the conversation —
       // same action as the host's "Cerrar" (Exit full screen) button.
       requestExitFullscreen();
@@ -1192,6 +1279,63 @@ function ImageEditorStandaloneInner({
       });
     } finally {
       setIsSendingUrlToChat(false);
+    }
+  };
+
+  const handleSaveToMedia = async () => {
+    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
+    if (isSavingToMedia) return;
+
+    try {
+      setIsSavingToMedia(true);
+
+      const uploaded = await flattenAndUploadEditedImage();
+      if (!uploaded) {
+        setIsSavingToMedia(false);
+        return;
+      }
+
+      const requestId =
+        crypto?.randomUUID?.() ??
+        `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      pendingSaveToMediaRequestIdRef.current = requestId;
+
+      const sent = requestSaveToMedia({
+        requestId,
+        imageUrl: uploaded.imageUrl,
+        mimeType: "image/jpeg",
+        title: EXPORT.DEFAULT_FILENAME_BASE,
+        width: uploaded.width,
+        height: uploaded.height,
+      });
+
+      if (!sent) {
+        clearSaveToMediaPending();
+        studioToast.error({
+          title: "Could not save to Media",
+          description: "Could not reach the host app. Try again from chat.",
+        });
+        return;
+      }
+
+      if (saveToMediaTimeoutRef.current) {
+        clearTimeout(saveToMediaTimeoutRef.current);
+      }
+      saveToMediaTimeoutRef.current = setTimeout(() => {
+        if (pendingSaveToMediaRequestIdRef.current !== requestId) return;
+        clearSaveToMediaPending();
+        studioToast.error({
+          title: "Could not save to Media",
+          description: "The host did not confirm the save. Try again.",
+        });
+      }, 30_000);
+    } catch (error) {
+      console.error("Failed to save image to media:", error);
+      clearSaveToMediaPending();
+      studioToast.error({
+        title: "Could not save to Media",
+        description: "Something went wrong uploading the image.",
+      });
     }
   };
 
@@ -2597,6 +2741,8 @@ function ImageEditorStandaloneInner({
                         isSaving={isSaving}
                         onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
                         isSendingUrl={isSendingUrlToChat}
+                        onSaveToMedia={handleSaveToMedia}
+                        isSavingToMedia={isSavingToMedia}
                         onFeedbackPress={
                           FEATURE_FLAGS.showFeedbackButton ? handleMobileFeedbackPress : undefined
                         }
@@ -2619,6 +2765,8 @@ function ImageEditorStandaloneInner({
             isSaving={isSaving}
             onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
             isSendingUrl={isSendingUrlToChat}
+            onSaveToMedia={handleSaveToMedia}
+            isSavingToMedia={isSavingToMedia}
             handleGetFeedback={
               FEATURE_FLAGS.showFeedbackButton ? handleGetFeedback : undefined
             }

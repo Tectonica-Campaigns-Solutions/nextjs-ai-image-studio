@@ -258,6 +258,8 @@ export function StudioMobileSessionBar({
   isSaving,
   onSendUrlToChat,
   isSendingUrl,
+  onSaveToMedia,
+  isSavingToMedia,
   onFeedbackPress,
   isFetchingFeedback,
   feedbackOpen,
@@ -269,6 +271,8 @@ export function StudioMobileSessionBar({
   isSaving: boolean;
   onSendUrlToChat?: () => void;
   isSendingUrl?: boolean;
+  onSaveToMedia?: () => void;
+  isSavingToMedia?: boolean;
   onFeedbackPress?: () => void;
   isFetchingFeedback?: boolean;
   feedbackOpen?: boolean;
@@ -321,7 +325,16 @@ export function StudioMobileSessionBar({
         )
         : null}
 
-      {iconBtn("Save to Media", <ImagePlus className="size-[19px]" strokeWidth={2.1} />, undefined, true)}
+      {iconBtn(
+        "Save to Media",
+        isSavingToMedia ? (
+          <Loader2 className="size-[19px] animate-spin" />
+        ) : (
+          <ImagePlus className="size-[19px]" strokeWidth={2.1} />
+        ),
+        onSaveToMedia,
+        !onSaveToMedia || isSavingToMedia,
+      )}
 
       {onSendUrlToChat
         ? iconBtn(

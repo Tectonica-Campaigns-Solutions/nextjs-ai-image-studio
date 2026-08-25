@@ -322,6 +322,10 @@ export const STUDIO_IFRAME_MESSAGE = {
   GROUP_QR_REQUEST_TYPE: "tectonica-studio-group-qr-request",
   /** Host → Studio: reply to GROUP_QR_REQUEST_TYPE */
   GROUP_QR_RESPONSE_TYPE: "tectonica-studio-group-qr-response",
+  /** Studio → Host: save flattened image URL into Media & Assets */
+  SAVE_TO_MEDIA_TYPE: "tectonica-studio-save-to-media",
+  /** Host → Studio: result of SAVE_TO_MEDIA_TYPE */
+  SAVE_TO_MEDIA_RESULT_TYPE: "tectonica-studio-save-to-media-result",
 } as const;
 
 /** Payload for SET_GROUP_QR / GROUP_QR_RESPONSE (host → Studio). */

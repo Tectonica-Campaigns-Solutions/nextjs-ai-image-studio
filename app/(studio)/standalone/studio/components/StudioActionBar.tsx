@@ -14,6 +14,8 @@ export interface StudioActionBarProps {
   isSaving: boolean;
   onSendUrlToChat?: () => void;
   isSendingUrl?: boolean;
+  onSaveToMedia?: () => void;
+  isSavingToMedia?: boolean;
   handleGetFeedback?: () => void;
   isFetchingFeedback?: boolean;
   feedbackText?: string | null;
@@ -32,6 +34,8 @@ export function StudioActionBar({
   isSaving,
   onSendUrlToChat,
   isSendingUrl,
+  onSaveToMedia,
+  isSavingToMedia,
   handleGetFeedback,
   isFetchingFeedback = false,
   feedbackText = null,
@@ -99,8 +103,15 @@ export function StudioActionBar({
         label="Save to Media"
         variant="ghost"
         iconOnly={compact}
-        disabled
-        icon={<ImagePlus className="size-[18px]" strokeWidth={2.2} />}
+        onClick={onSaveToMedia}
+        disabled={!onSaveToMedia || isSavingToMedia}
+        icon={
+          isSavingToMedia ? (
+            <Loader2 className="size-[18px] animate-spin" />
+          ) : (
+            <ImagePlus className="size-[18px]" strokeWidth={2.2} />
+          )
+        }
       >
         Save to Media
       </StudioActionButton>
