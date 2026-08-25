@@ -2,6 +2,7 @@ export const ALLOWED_EMBED_ORIGINS = [
   "https://tectonica.thechange.ai",
   "https://tectonica-ai-v2-production.up.railway.app",
   "https://tectonica.up.railway.app",
+  "https://web-staging-tectonica.up.railway.app",
   "https://allout.tectonica.ai",
   "https://handinhand.tectonica.ai",
   "https://demo.tectonica.ai",
