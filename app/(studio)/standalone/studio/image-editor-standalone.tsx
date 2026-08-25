@@ -97,7 +97,7 @@ import { Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, requestSaveToMedia, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
 import { useEmbedSource } from "./hooks/use-embed-source";
-import { isAllowedEmbedOrigin } from "./lib/embed-allowlist";
+import { isAllowedEmbedOrigin, isTrustedMessageOrigin } from "./lib/embed-allowlist";
 import { DEFAULT_TEXT_BLOCK_DELIMITER, insertAutoTextBlocks, parseTextBlocks } from "./utils/text-blocks";
 
 export default function ImageEditorStandalone({
@@ -1208,7 +1208,20 @@ function ImageEditorStandaloneInner({
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      if (!isAllowedEmbedOrigin(event.origin)) return;
+      if (!isTrustedMessageOrigin(event.origin)) {
+        if (
+          event.data &&
+          typeof event.data === "object" &&
+          (event.data as { type?: unknown }).type ===
+            STUDIO_IFRAME_MESSAGE.SAVE_TO_MEDIA_RESULT_TYPE
+        ) {
+          console.warn(
+            "[saveToMedia] ignored result from untrusted origin",
+            event.origin,
+          );
+        }
+        return;
+      }
       const data = event.data;
       if (!data || typeof data !== "object") return;
 

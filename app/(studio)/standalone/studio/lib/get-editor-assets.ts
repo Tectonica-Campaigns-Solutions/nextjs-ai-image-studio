@@ -57,8 +57,10 @@ async function fetchEditorAssetsForClientQueryId(
     }
 
     if (!clientRecord?.id) {
-      console.warn(
-        "No active client found by query client_id; continuing with RPC path",
+      // Expected for org slugs (e.g. `allout`) that resolve assets via RPC
+      // instead of a `clients.ca_user_id` row. Not a user-facing failure.
+      console.debug(
+        "No clients-table row for query client_id; resolving assets via RPC",
         { clientQueryId: trimmedClientQueryId },
       );
     }

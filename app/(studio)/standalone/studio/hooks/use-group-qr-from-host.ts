@@ -5,7 +5,7 @@ import {
   STUDIO_IFRAME_MESSAGE,
   type StudioGroupQrPayload,
 } from "../constants/editor-constants";
-import { isAllowedEmbedOrigin } from "../lib/embed-allowlist";
+import { isTrustedMessageOrigin } from "../lib/embed-allowlist";
 
 export type GroupQrFromHost = {
   groupPageUrl: string | null;
@@ -45,25 +45,6 @@ function normalizePayload(raw: StudioGroupQrPayload): GroupQrFromHost | null {
   }
 
   return { groupPageUrl, label, qrImageUrl };
-}
-
-function getHintedParentOrigin(): string | null {
-  if (typeof window === "undefined") return null;
-  const sp = new URLSearchParams(window.location.search);
-  const hinted =
-    sp.get("parentOrigin") || sp.get("owui_base_url") || sp.get("host");
-  if (!hinted) return null;
-  try {
-    return new URL(hinted).origin;
-  } catch {
-    return null;
-  }
-}
-
-function isTrustedMessageOrigin(origin: string): boolean {
-  if (isAllowedEmbedOrigin(origin)) return true;
-  const hinted = getHintedParentOrigin();
-  return !!hinted && hinted === origin;
 }
 
 function readGroupPageUrlFromQuery(): string | null {

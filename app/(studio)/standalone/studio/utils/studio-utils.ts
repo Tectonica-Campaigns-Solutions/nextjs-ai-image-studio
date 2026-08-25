@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import { DASHBOARD_FEATURE_FLAGS } from "@/app/(studio)/dashboard/config/feature-flags";
 import { STUDIO_IFRAME_MESSAGE } from "../constants/editor-constants";
+import { getHostPostMessageOrigin, getHintedParentOrigin } from "../lib/embed-allowlist";
 
 // Brand utils
 export const GOOGLE_FONTS = [
@@ -262,22 +263,10 @@ function broadcastToHost(payload: Record<string, unknown>, logLabel: string): bo
   );
 
   try {
-    const sp = new URLSearchParams(window.location.search);
-    const hintedBaseUrl =
-      sp.get("parentOrigin") || sp.get("owui_base_url") || sp.get("host");
-
-    const hintedOrigin = (() => {
-      if (!hintedBaseUrl) return null;
-      try {
-        return new URL(hintedBaseUrl).origin;
-      } catch {
-        return null;
-      }
-    })();
-
-    // Prefer a specific origin when we have a strong hint (e.g. `owui_base_url=https://tectonica.thechange.ai`)
-    // otherwise keep permissive behavior.
-    const targetOrigin = hintedOrigin ?? "*";
+    const hintedOrigin = getHintedParentOrigin();
+    // Prefer the actual embedder (referrer / ancestorOrigins) over a stale
+    // owui_base_url — e.g. production URL while the iframe is on staging.
+    const targetOrigin = getHostPostMessageOrigin();
 
     const parentWin =
       window.parent && window.parent !== window ? window.parent : null;
@@ -322,7 +311,7 @@ function broadcastToHost(payload: Record<string, unknown>, logLabel: string): bo
     console.log(`[${logLabel}] postMessage sent successfully.`, {
       sentTo,
       targetOrigin,
-      hintedBaseUrl,
+      hintedOrigin,
     });
     return Object.values(sentTo).some(Boolean);
   } catch (err) {
