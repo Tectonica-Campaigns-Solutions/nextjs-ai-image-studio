@@ -9,6 +9,7 @@ export interface SessionSummary {
   id: string;
   name: string | null;
   thumbnail_url: string | null;
+  background_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -85,7 +86,7 @@ export function SessionsListPanel({
   }
 
   if (!sessions.length) {
-    return <StudioPanelHint>No saved versions for this image.</StudioPanelHint>;
+    return <StudioPanelHint>No saved versions yet. Use Save to keep a version you can reopen later.</StudioPanelHint>;
   }
 
   return (
@@ -101,7 +102,19 @@ export function SessionsListPanel({
             className={cn(
               "flex items-center gap-3 px-1 py-[13px]",
               index > 0 && "border-t border-white/[0.09]",
+              !isCurrent && "cursor-pointer rounded-lg hover:bg-white/[0.03]",
             )}
+            onClick={() => {
+              if (!isCurrent) void handleRestore(session.id);
+            }}
+            onKeyDown={(event) => {
+              if (isCurrent) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                void handleRestore(session.id);
+              }
+            }}
+            tabIndex={isCurrent ? undefined : 0}
           >
             <span
               className={cn(
@@ -136,7 +149,10 @@ export function SessionsListPanel({
             {!isCurrent ? (
               <button
                 type="button"
-                onClick={() => handleRestore(session.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void handleRestore(session.id);
+                }}
                 disabled={!!loadingSessionId}
                 className={cn(
                   "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/[0.17] px-2.5 py-1.5 text-[12.5px] font-bold text-[#8069FF] transition-colors",

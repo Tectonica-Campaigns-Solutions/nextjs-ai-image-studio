@@ -92,7 +92,7 @@ import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
-import { getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
+import { getCanvasOverlaySnapshot, getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, requestSaveToMedia, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
@@ -131,6 +131,34 @@ export default function ImageEditorStandalone({
   return <ImageEditorStandaloneInner {...props} />;
 }
 
+function mapSessionSummaries(
+  sessions: Array<{
+    id: string;
+    name: string | null;
+    thumbnail_url: string | null;
+    background_url?: string;
+    created_at: string;
+    updated_at: string;
+  }>,
+  currentBackgroundUrl: string | null | undefined,
+) {
+  const currentBg = (currentBackgroundUrl ?? "").trim();
+  const mapped = sessions.map((s) => ({
+    id: s.id,
+    name: s.name,
+    thumbnail_url: s.thumbnail_url,
+    background_url: s.background_url,
+    created_at: s.created_at,
+    updated_at: s.updated_at,
+  }));
+  if (!currentBg) return mapped;
+  return mapped.sort((a, b) => {
+    const aMatch = (a.background_url ?? "").trim() === currentBg ? 0 : 1;
+    const bMatch = (b.background_url ?? "").trim() === currentBg ? 0 : 1;
+    return aMatch - bMatch;
+  });
+}
+
 function ImageEditorStandaloneInner({
   params,
   logoAssets,
@@ -139,7 +167,9 @@ function ImageEditorStandaloneInner({
   sessionData = null,
   allowCustomLogo = true,
 }: ImageEditorStandaloneProps) {
-  const imageUrlFromParams = params.imageUrl ?? sessionData?.background_url;
+  // Prefer the saved session background so restoring a version does not paint
+  // overlays onto a different chat image.
+  const imageUrlFromParams = sessionData?.background_url ?? params.imageUrl;
   const didAutoInsertTextRef = useRef(false);
 
   // Track each access to the Visual Studio for audit/logs in the dashboard.
@@ -1621,19 +1651,28 @@ function ImageEditorStandaloneInner({
 
   // Save canvas session to database (optionalName from SaveSessionModal when saving via modal)
   const handleSave = async (optionalName?: string) => {
-    if (!canvasEditor.canvas || !imageUrl) return;
+    if (!canvasEditor.canvas) {
+      studioToast.error({
+        title: "Save failed",
+        description: "The canvas is not ready. Open Studio full screen and try again.",
+      });
+      return;
+    }
+    const backgroundUrlForSave = currentBackgroundUrlRef.current ?? imageUrl;
+    if (!backgroundUrlForSave) {
+      studioToast.error({
+        title: "Save failed",
+        description: "No image is loaded to save.",
+      });
+      return;
+    }
     setIsSaving(true);
 
     try {
-      const currentEntry = history.historyState.entries[history.historyState.currentIndex];
-      const overlayJson = currentEntry
-        ? JSON.parse(currentEntry.overlayJSON)
-        : { version: "5.3.0", objects: [] };
-
-      const metadataToSave = currentEntry ? currentEntry.metadata : {};
+      history.saveState(true, true);
+      const { overlayJson, metadata: metadataToSave } = getCanvasOverlaySnapshot(canvasEditor.canvas);
 
       const caUserId = params.user_id ?? "";
-      const backgroundUrlForSave = currentBackgroundUrlRef.current ?? imageUrl;
 
       const body: Record<string, unknown> = {
         ca_user_id: caUserId,
@@ -1693,29 +1732,7 @@ function ImageEditorStandaloneInner({
         console.warn("[handleSave] thumbnail upload failed (non-critical):", err);
       });
 
-      // Refresh saved versions list after successful save
-      const bgUrl = currentBackgroundUrlRef.current ?? imageUrl;
-      if (caUserIdForThumb && bgUrl) {
-        try {
-          const listRes = await fetch(
-            `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserIdForThumb)}&background_url=${encodeURIComponent(bgUrl)}`
-          );
-          const listData = await listRes.json();
-          if (listRes.ok && Array.isArray(listData.sessions)) {
-            setSessionsForImage(
-              listData.sessions.map((s: { id: string; name: string | null; thumbnail_url: string | null; created_at: string; updated_at: string }) => ({
-                id: s.id,
-                name: s.name,
-                thumbnail_url: s.thumbnail_url,
-                created_at: s.created_at,
-                updated_at: s.updated_at,
-              }))
-            );
-          }
-        } catch {
-          // non-blocking
-        }
-      }
+      await fetchSavedSessions();
     } catch (err) {
       console.error("[handleSave] error:", err);
       studioToast.error({
@@ -1727,11 +1744,11 @@ function ImageEditorStandaloneInner({
     }
   };
 
-  // Fetch sessions for current image (saved versions panel)
-  const fetchSessionsForImage = useCallback(async () => {
+  // All saved versions for this user — not filtered by the current background URL.
+  // Edit-with-AI (and reopen-from-chat) change that URL, which previously hid the save.
+  const fetchSavedSessions = useCallback(async () => {
     const caUserId = params.user_id?.trim();
-    const bgUrl = currentBackgroundUrlRef.current ?? imageUrl;
-    if (!caUserId || !bgUrl) {
+    if (!caUserId) {
       setSessionsForImage([]);
       setSessionsInitialFetchDone(true);
       return;
@@ -1739,18 +1756,12 @@ function ImageEditorStandaloneInner({
     setSessionsLoading(true);
     try {
       const res = await fetch(
-        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}&background_url=${encodeURIComponent(bgUrl)}`
+        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}`
       );
       const data = await res.json();
       if (res.ok && Array.isArray(data.sessions)) {
         setSessionsForImage(
-          data.sessions.map((s: { id: string; name: string | null; thumbnail_url: string | null; created_at: string; updated_at: string }) => ({
-            id: s.id,
-            name: s.name,
-            thumbnail_url: s.thumbnail_url,
-            created_at: s.created_at,
-            updated_at: s.updated_at,
-          }))
+          mapSessionSummaries(data.sessions, currentBackgroundUrlRef.current ?? imageUrl),
         );
       } else {
         setSessionsForImage([]);
@@ -1764,58 +1775,98 @@ function ImageEditorStandaloneInner({
   }, [params.user_id, imageUrl]);
 
   useEffect(() => {
-    fetchSessionsForImage();
-  }, [fetchSessionsForImage]);
+    fetchSavedSessions();
+  }, [fetchSavedSessions]);
 
-  // When there is no user or no image, we don't fetch sessions; mark as done so we don't block editor ready.
+  // When there is no user, we don't fetch sessions; mark as done so we don't block editor ready.
   useEffect(() => {
-    if (!params.user_id?.trim() || !imageUrl) {
+    if (!params.user_id?.trim()) {
       setSessionsInitialFetchDone(true);
     }
-  }, [params.user_id, imageUrl]);
+  }, [params.user_id]);
 
-  // Load a saved session into the canvas (from Saved versions panel)
+  // Load a saved session into the canvas (from Saved versions panel).
+  // Restore background + overlays — same idea as undo — so the version is editable.
   const handleSelectSession = useCallback(
     async (sessionIdToLoad: string) => {
       const canvas = canvasEditor.canvas;
-      if (!canvas) return;
+      if (!canvas || !canvasEditor.replaceBackgroundImage) {
+        studioToast.error({
+          title: "Could not load version",
+          description: "The canvas is not ready. Open Studio full screen and try again.",
+        });
+        return;
+      }
+      history.isRestoringState.current = true;
       try {
         const res = await fetch(`/api/studio/canvas-sessions/${sessionIdToLoad}`);
         const session = await res.json();
         if (!res.ok || session.error) {
           studioToast.error({
-            title: "Could not load session",
-            description: session.error ?? "Session not found.",
+            title: "Could not load version",
+            description: session.error ?? "Version not found.",
           });
           return;
         }
-        const overlayJSON = JSON.stringify(session.overlay_json ?? { version: "5.3.0", objects: [] });
+
         const objects = canvas.getObjects();
         for (let i = objects.length - 1; i >= 1; i--) {
           canvas.remove(objects[i]);
         }
+
+        const sessionBg =
+          typeof session.background_url === "string" ? session.background_url.trim() : "";
+        if (sessionBg) {
+          const currentBg = canvas.getObjects()[0];
+          const canReplace =
+            !!currentBg &&
+            (currentBg as { isBackground?: boolean }).isBackground === true &&
+            !!canvasEditor.replaceBackgroundImage;
+          if (canReplace) {
+            await canvasEditor.replaceBackgroundImage(sessionBg);
+          } else {
+            canvasEditor.originalImageUrlRef.current = sessionBg;
+            originalImageUrlRefStable.current = sessionBg;
+            currentBackgroundUrlRef.current = sessionBg;
+            canvas.clear();
+            await history.addBackgroundFromUrl(canvas);
+          }
+        }
+
+        const overlayJSON = JSON.stringify(session.overlay_json ?? { version: "5.3.0", objects: [] });
         await history.loadOverlaysFromJSON(canvas, overlayJSON);
         history.applyEntryMetadataToCanvas({
           overlayJSON,
           metadata: session.metadata ?? {},
         } as any);
+        remeasureTextboxes(canvas);
         canvas.discardActiveObject();
         canvas.renderAll();
-        history.saveState(true);
+        history.isRestoringState.current = false;
+        history.saveState(true, true);
         setSessionId(sessionIdToLoad);
         selection.setSelectedObject(null);
         const url = new URL(window.location.href);
         url.searchParams.set("session_id", sessionIdToLoad);
+        if (sessionBg) url.searchParams.set("imageUrl", sessionBg);
         window.history.replaceState({}, "", url.toString());
+        studioToast.success({
+          title: "Version restored",
+          description: session.name?.trim()
+            ? `Loaded “${session.name.trim()}”.`
+            : "Loaded the saved version.",
+        });
       } catch (err) {
         console.error("[handleSelectSession]", err);
         studioToast.error({
-          title: "Could not load session",
+          title: "Could not load version",
           description: "An unexpected error occurred.",
         });
+      } finally {
+        history.isRestoringState.current = false;
       }
     },
-    [canvasEditor.canvas, history, selection.setSelectedObject]
+    [canvasEditor.canvas, canvasEditor.replaceBackgroundImage, canvasEditor.originalImageUrlRef, history, selection.setSelectedObject]
   );
 
   // Edit background with AI
@@ -2307,7 +2358,7 @@ function ImageEditorStandaloneInner({
       shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
       frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
       guidesAndGridPanel={guidesAndGridPanel}
-      sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
+      sessionsListPanel={sessionsListPanel}
     />
   );
 
@@ -2340,7 +2391,7 @@ function ImageEditorStandaloneInner({
         FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameMobilePicker : null
       }
       guidesAndGridPanel={guidesAndGridPanel}
-      sessionsListPanel={sessionsForImage.length > 0 ? sessionsListPanel : null}
+      sessionsListPanel={sessionsListPanel}
       layerCount={overlayLayerCount}
       showGrid={showGrid}
       onToggleGrid={() => setShowGrid((v) => !v)}
@@ -2358,7 +2409,7 @@ function ImageEditorStandaloneInner({
       (FEATURE_FLAGS.showShapeTools && shapeToolsPanel != null) ||
       (FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 && frameToolsPanel != null) ||
       guidesAndGridPanel != null ||
-      (sessionsForImage.length > 0 && sessionsListPanel != null))
+      (sessionsListPanel != null))
       ? "advanced-options"
       : null,
   ].filter(Boolean) as string[];

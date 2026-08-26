@@ -1,5 +1,6 @@
 import { FabricImage, Textbox, cache } from "fabric";
 import type { Canvas } from "fabric";
+import type { ObjectMetadata } from "../types/image-editor-types";
 
 export function fileToBase64(file: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -122,6 +123,34 @@ export function getFullCanvasImageForEdit(canvas: {
   } catch {
     return null;
   }
+}
+
+/**
+ * Serialize overlay objects (everything except the background) from the live canvas.
+ * Used by Save so we persist what is on screen, not a possibly stale history snapshot.
+ */
+export function getCanvasOverlaySnapshot(canvas: Canvas): {
+  overlayJson: { version: string; objects: unknown[] };
+  metadata: Record<number, ObjectMetadata>;
+} {
+  const objects = canvas.getObjects();
+  const fullJSON = (canvas as Canvas & { toJSON: (props?: string[]) => { version?: string; objects?: unknown[] } }).toJSON([
+    "src",
+  ]);
+  const overlayJson = {
+    version: fullJSON.version ?? "5.3.0",
+    objects: (fullJSON.objects ?? []).slice(1),
+  };
+  const metadata: Record<number, ObjectMetadata> = {};
+  objects.slice(1).forEach((obj: { isQR?: boolean; isLogo?: boolean; isEditable?: boolean }, index: number) => {
+    metadata[index] = {
+      isBackground: false,
+      isQR: obj.isQR || false,
+      isLogo: obj.isLogo || false,
+      isEditable: obj.isEditable !== false,
+    };
+  });
+  return { overlayJson, metadata };
 }
 
 /**
