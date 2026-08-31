@@ -6,6 +6,7 @@ export const ALLOWED_EMBED_ORIGINS = [
   "https://allout.tectonica.ai",
   "https://handinhand.tectonica.ai",
   "https://demo.tectonica.ai",
+  "https://staging.tectonica.ai",
   "http://localhost:3001",
   "http://localhost:3000",
 ] as const;
