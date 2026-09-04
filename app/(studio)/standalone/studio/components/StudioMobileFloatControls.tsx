@@ -251,7 +251,7 @@ function MobileFloatSliderRow({
   );
 }
 
-function hslToRgba(hsl: string): RgbaColor | null {
+function hslToRgba(hsl: string, a = 1): RgbaColor | null {
   const el = document.createElement("div");
   el.style.color = hsl;
   document.body.appendChild(el);
@@ -259,7 +259,38 @@ function hslToRgba(hsl: string): RgbaColor | null {
   document.body.removeChild(el);
   const m = rgb.match(/\d+/g);
   if (!m) return null;
-  return { r: +m[0], g: +m[1], b: +m[2], a: 1 };
+  return { r: +m[0], g: +m[1], b: +m[2], a };
+}
+
+/** Checkerboard pattern used to indicate a transparent colour swatch/preview. */
+const TRANSPARENCY_PATTERN_STYLE: React.CSSProperties = {
+  backgroundImage:
+    "linear-gradient(45deg,#726F86 25%,transparent 25%,transparent 75%,#726F86 75%),linear-gradient(45deg,#726F86 25%,transparent 25%,transparent 75%,#726F86 75%)",
+  backgroundSize: "6px 6px",
+  backgroundPosition: "0 0, 3px 3px",
+};
+
+function AlphaSliderRow({
+  color,
+  onChange,
+}: {
+  color: RgbaColor;
+  onChange: (c: RgbaColor) => void;
+}) {
+  const alphaPct = Math.round(color.a * 100);
+
+  return (
+    <div className="mt-2.5">
+      <MobileFloatSliderRow
+        value={alphaPct}
+        min={0}
+        max={100}
+        step={1}
+        displayValue={`${alphaPct}%`}
+        onChange={(v) => onChange({ ...color, a: v / 100 })}
+      />
+    </div>
+  );
 }
 
 function ColorPickerPanel({
@@ -267,11 +298,13 @@ function ColorPickerPanel({
   onChange,
   allowClear,
   onClear,
+  clearLabel = "No highlight",
 }: {
   color: RgbaColor;
   onChange: (c: RgbaColor) => void;
   allowClear?: boolean;
   onClear?: () => void;
+  clearLabel?: string;
 }) {
   const colorHex = color.a === 0 ? null : rgbaToHex(color);
 
@@ -283,7 +316,7 @@ function ColorPickerPanel({
           onClick={onClear}
           className="mb-2.5 flex h-9 w-full cursor-pointer items-center justify-center rounded-[10px] border border-white/[0.09] text-[13px] font-bold text-[#ADAAC0] hover:bg-white/[0.04]"
         >
-          No highlight
+          {clearLabel}
         </button>
       ) : null}
       <div className="mb-2.5 flex items-center justify-between gap-1.5">
@@ -292,7 +325,7 @@ function ColorPickerPanel({
             key={c}
             type="button"
             title={c}
-            onClick={() => onChange(hexToRgba(c))}
+            onClick={() => onChange(hexToRgba(c, color.a === 0 ? 1 : color.a))}
             className={cn(
               "size-8 shrink-0 cursor-pointer rounded-full border-2 box-border",
               c === colorHex ? "border-[#8069FF]" : "border-white/[0.17]",
@@ -303,10 +336,11 @@ function ColorPickerPanel({
       </div>
       <HueBar
         onPick={(hsl) => {
-          const picked = hslToRgba(hsl);
+          const picked = hslToRgba(hsl, color.a === 0 ? 1 : color.a);
           if (picked) onChange(picked);
         }}
       />
+      <AlphaSliderRow color={color} onChange={onChange} />
     </FloatPanel>
   );
 }
@@ -374,7 +408,13 @@ function TextFloatControls({
     <div className="relative flex flex-col items-center gap-2">
       {expand === "color" ? (
         <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2">
-          <ColorPickerPanel color={textColor} onChange={setTextColor} />
+          <ColorPickerPanel
+            color={textColor}
+            onChange={setTextColor}
+            allowClear
+            clearLabel="Transparent"
+            onClear={() => setTextColor({ ...textColor, a: 0 })}
+          />
         </div>
       ) : null}
 
@@ -384,6 +424,7 @@ function TextFloatControls({
             color={backgroundColor}
             onChange={setBackgroundColor}
             allowClear
+            clearLabel="No highlight"
             onClear={() => setBackgroundColor({ r: 255, g: 255, b: 255, a: 0 })}
           />
         </div>
@@ -476,7 +517,11 @@ function TextFloatControls({
           >
             <span
               className="size-full rounded-full border border-black/25"
-              style={{ background: rgbaToString(textColor) }}
+              style={
+                textColor.a === 0
+                  ? TRANSPARENCY_PATTERN_STYLE
+                  : { background: rgbaToString(textColor) }
+              }
             />
           </span>
         </button>
@@ -494,12 +539,7 @@ function TextFloatControls({
             className="relative inline-flex size-7 items-center justify-center overflow-hidden rounded-md border border-white/[0.17]"
             style={
               backgroundColor.a === 0
-                ? {
-                  backgroundImage:
-                    "linear-gradient(45deg,#726F86 25%,transparent 25%,transparent 75%,#726F86 75%),linear-gradient(45deg,#726F86 25%,transparent 25%,transparent 75%,#726F86 75%)",
-                  backgroundSize: "6px 6px",
-                  backgroundPosition: "0 0, 3px 3px",
-                }
+                ? TRANSPARENCY_PATTERN_STYLE
                 : { background: rgbaToString(backgroundColor) }
             }
           >
@@ -746,21 +786,36 @@ function QrFloatControls({
 function ShapeColorPanel({
   color,
   onChange,
+  allowClear,
+  onClear,
+  clearLabel = "Transparent",
 }: {
   color: RgbaColor;
   onChange: (c: RgbaColor) => void;
+  allowClear?: boolean;
+  onClear?: () => void;
+  clearLabel?: string;
 }) {
   const colorHex = color.a === 0 ? null : rgbaToHex(color);
 
   return (
     <FloatPanel compact>
+      {allowClear && onClear ? (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mb-2.5 flex h-9 w-full cursor-pointer items-center justify-center rounded-[10px] border border-white/[0.09] text-[13px] font-bold text-[#ADAAC0] hover:bg-white/[0.04]"
+        >
+          {clearLabel}
+        </button>
+      ) : null}
       <div className="flex items-center gap-1.5">
         {SHAPE_SWATCHES.map((c) => (
           <button
             key={c}
             type="button"
             title={c}
-            onClick={() => onChange(hexToRgba(c))}
+            onClick={() => onChange(hexToRgba(c, color.a === 0 ? 1 : color.a))}
             className={cn(
               "size-8 shrink-0 cursor-pointer rounded-full border-2 box-border",
               c === colorHex ? "border-[#8069FF]" : "border-white/[0.17]",
@@ -772,11 +827,12 @@ function ShapeColorPanel({
       <div className="mt-2.5">
         <HueBar
           onPick={(hsl) => {
-            const picked = hslToRgba(hsl);
+            const picked = hslToRgba(hsl, color.a === 0 ? 1 : color.a);
             if (picked) onChange(picked);
           }}
         />
       </div>
+      <AlphaSliderRow color={color} onChange={onChange} />
     </FloatPanel>
   );
 }
@@ -803,15 +859,27 @@ function ShapeFloatControls({
   const [expand, setExpand] = useState<"fill" | "stroke" | "width" | "opacity" | null>(null);
   const fillHex = rgbaToString(shapeFillColor);
   const strokeHex = rgbaToString(shapeStrokeColor);
+  const fillTransparent = shapeFillColor.a === 0;
+  const strokeTransparent = shapeStrokeColor.a === 0;
 
   return (
     <div className="relative flex flex-col items-center gap-2">
       {expand ? (
         <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2">
           {expand === "fill" ? (
-            <ShapeColorPanel color={shapeFillColor} onChange={setShapeFillColor} />
+            <ShapeColorPanel
+              color={shapeFillColor}
+              onChange={setShapeFillColor}
+              allowClear
+              onClear={() => setShapeFillColor({ ...shapeFillColor, a: 0 })}
+            />
           ) : expand === "stroke" ? (
-            <ShapeColorPanel color={shapeStrokeColor} onChange={setShapeStrokeColor} />
+            <ShapeColorPanel
+              color={shapeStrokeColor}
+              onChange={setShapeStrokeColor}
+              allowClear
+              onClear={() => setShapeStrokeColor({ ...shapeStrokeColor, a: 0 })}
+            />
           ) : (
             <FloatPanel compact>
               <MobileFloatSliderRow
@@ -850,7 +918,7 @@ function ShapeFloatControls({
         >
           <span
             className="size-6 rounded-full border border-black/25"
-            style={{ background: fillHex }}
+            style={fillTransparent ? TRANSPARENCY_PATTERN_STYLE : { background: fillHex }}
           />
         </button>
         <PillDivider />
@@ -865,8 +933,15 @@ function ShapeFloatControls({
           )}
         >
           <span
-            className="size-[26px] rounded-full border-[3px] box-border"
-            style={{ borderColor: strokeHex }}
+            className={cn(
+              "size-[26px] rounded-full box-border",
+              strokeTransparent ? "border border-white/[0.17]" : "border-[3px]",
+            )}
+            style={
+              strokeTransparent
+                ? { ...TRANSPARENCY_PATTERN_STYLE, overflow: "hidden" }
+                : { borderColor: strokeHex }
+            }
           />
         </button>
         <PillDivider />
