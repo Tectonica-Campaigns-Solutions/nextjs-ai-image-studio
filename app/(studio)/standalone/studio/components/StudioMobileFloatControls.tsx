@@ -1183,7 +1183,6 @@ export function QrMobileSheetPanel({
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   editMode?: boolean;
   groupQr?: {
-    label: string | null;
     hasGroupQr: boolean;
     onInsert: () => void | Promise<void>;
     isInserting?: boolean;
@@ -1201,11 +1200,8 @@ export function QrMobileSheetPanel({
             disabled={groupQr.isInserting}
             className={studioForm.primaryButton}
           >
-            {groupQr.isInserting
-              ? "Adding…"
-              : groupQr.label
-                ? `Add ${groupQr.label} QR`
-                : "Add group QR"}
+            {/* Fixed copy: the host's page title can be long and break the button. */}
+            {groupQr.isInserting ? "Adding…" : "Add signup page QR"}
           </button>
           <StudioOrDivider />
         </>

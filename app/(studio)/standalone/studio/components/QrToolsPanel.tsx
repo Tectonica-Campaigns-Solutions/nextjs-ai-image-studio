@@ -18,7 +18,6 @@ export interface QrToolsPanelProps {
   isQrSelected?: boolean;
   /** When set by the host (group page), show one-click insert. */
   groupQr?: {
-    label: string | null;
     groupPageUrl: string | null;
     hasGroupQr: boolean;
     onInsert: () => void | Promise<void>;
@@ -51,15 +50,12 @@ export const QrToolsPanel = React.memo(function QrToolsPanel({
             className={studioForm.primaryButton}
           >
             <QrCode className="size-[19px]" strokeWidth={2.2} aria-hidden />
-            {groupQr.isInserting
-              ? "Adding…"
-              : groupQr.label
-                ? `Add ${groupQr.label} QR`
-                : "Add group QR"}
+            {/* Fixed copy: the host's page title can be long and break the button. */}
+            {groupQr.isInserting ? "Adding…" : "Add signup page QR"}
           </button>
           {groupQr.groupPageUrl ? (
             <StudioPanelHint>
-              From your recruitment page — one click adds the QR to this poster.
+              From your signup page — one click adds the QR to this poster.
             </StudioPanelHint>
           ) : null}
           <StudioOrDivider />

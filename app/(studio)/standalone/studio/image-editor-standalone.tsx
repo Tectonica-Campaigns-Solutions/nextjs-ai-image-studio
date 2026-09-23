@@ -2290,7 +2290,6 @@ function ImageEditorStandaloneInner({
     () =>
       groupQrFromHost.hasGroupQr
         ? {
-            label: groupQrFromHost.label,
             groupPageUrl: groupQrFromHost.groupPageUrl,
             hasGroupQr: true as const,
             onInsert: handleInsertGroupQr,
@@ -2299,7 +2298,6 @@ function ImageEditorStandaloneInner({
         : null,
     [
       groupQrFromHost.hasGroupQr,
-      groupQrFromHost.label,
       groupQrFromHost.groupPageUrl,
       handleInsertGroupQr,
       isInsertingGroupQr,
@@ -2530,7 +2528,6 @@ function ImageEditorStandaloneInner({
           groupQr={
             groupQrFromHost.hasGroupQr
               ? {
-                  label: groupQrFromHost.label,
                   hasGroupQr: true,
                   onInsert: handleMobileInsertGroupQr,
                   isInserting: isInsertingGroupQr,
