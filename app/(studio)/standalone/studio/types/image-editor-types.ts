@@ -36,6 +36,11 @@ export interface CanvasSessionData {
   overlay_json: Record<string, unknown>;
   metadata: Record<number, ObjectMetadata>;
   name: string | null;
+  /**
+   * True when resolved from a "Send to chat" image URL instead of `?session_id=`.
+   * The session is a snapshot of what was sent, so the editor must not save over it.
+   */
+  openedFromImageLink?: boolean;
 }
 
 export interface CanvasSessionSummary {

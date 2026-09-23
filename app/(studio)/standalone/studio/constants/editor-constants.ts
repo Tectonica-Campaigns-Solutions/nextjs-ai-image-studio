@@ -140,6 +140,9 @@ export const AI_EDIT_RANGES = {
   MAX_ADDED_TEXT_WORDS: 8,
 } as const;
 
+// Name of the canvas session saved on "Send to chat" (keeps sent images editable)
+export const SEND_TO_CHAT_SESSION_NAME = "Sent to chat";
+
 // Export/Disclaimer Configuration
 export const EXPORT_FORMATS = [
   { value: "png" as const, label: "PNG" },

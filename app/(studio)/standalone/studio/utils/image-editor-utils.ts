@@ -95,6 +95,37 @@ export function getCurrentBackgroundImageForEdit(canvas: {
 }
 
 /**
+ * Export only the background image (at its natural size) as a JPEG data URL.
+ * Used to persist local backgrounds (blob:/data: URLs) that can't be saved as-is
+ * in a canvas session.
+ */
+export function getBackgroundImageDataURL(canvas: {
+  getObjects(): Array<{
+    type?: string;
+    getElement?: () => HTMLImageElement;
+    _element?: HTMLImageElement;
+  }>;
+}): string | null {
+  const bg = canvas.getObjects()[0];
+  if (!bg || bg.type !== "image") return null;
+  const el = bg.getElement?.() ?? bg._element;
+  if (!el?.naturalWidth || !el.naturalHeight) return null;
+
+  try {
+    const offscreen = document.createElement("canvas");
+    offscreen.width = el.naturalWidth;
+    offscreen.height = el.naturalHeight;
+    const ctx = offscreen.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(el, 0, 0);
+    return offscreen.toDataURL("image/jpeg", 0.95);
+  } catch {
+    // Tainted canvas (cross-origin background without CORS)
+    return null;
+  }
+}
+
+/**
  * Get the full canvas (background + all overlays) as base64 for sending to the edit API.
  * Use when the user wants to include layers (text, QR, frames, etc.) in the image sent for editing.
  *

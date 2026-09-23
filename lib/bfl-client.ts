@@ -542,7 +542,7 @@ export async function storeOutputImage(
   prompt?: string,
   userId?: string,
   needsDisclaimerOverlay = false
-): Promise<{ proxyUrl: string; path: string }> {
+): Promise<{ proxyUrl: string; path: string; id: string }> {
   const supabase = createAdminClient()
   const random = Math.random().toString(36).slice(2)
   const storagePath = `${orgType.toLowerCase()}/bfl-output/${Date.now()}-${random}.${format}`
@@ -578,7 +578,7 @@ export async function storeOutputImage(
   }
 
   const appUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "")
-  return { proxyUrl: `${appUrl}/api/images/${record.id}`, path: storagePath }
+  return { proxyUrl: `${appUrl}/api/images/${record.id}`, path: storagePath, id: record.id }
 }
 
 /**

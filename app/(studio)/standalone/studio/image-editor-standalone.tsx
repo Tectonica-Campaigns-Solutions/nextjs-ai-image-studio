@@ -71,6 +71,7 @@ import {
   UI_COLORS,
   STUDIO_IFRAME_MESSAGE,
   STUDIO_LAYOUT,
+  SEND_TO_CHAT_SESSION_NAME,
 } from "./constants/editor-constants";
 
 // Import custom hooks
@@ -92,7 +93,7 @@ import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
-import { getCanvasOverlaySnapshot, getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
+import { getBackgroundImageDataURL, getCanvasOverlaySnapshot, getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
 import { Copy, Lock, Trash2, Unlock } from "lucide-react";
 import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, requestSaveToMedia, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
@@ -212,7 +213,11 @@ function ImageEditorStandaloneInner({
 
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
+  // A session resolved from a sent-to-chat image is a read-only snapshot: start
+  // without a session so Save creates a new one instead of overwriting it.
+  const [sessionId, setSessionId] = useState<string | null>(
+    sessionData?.openedFromImageLink ? null : sessionData?.id ?? null
+  );
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
 
   // Sessions list for current image (saved versions)
@@ -1157,7 +1162,10 @@ function ImageEditorStandaloneInner({
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  const flattenAndUploadEditedImage = async (): Promise<{
+  const flattenAndUploadEditedImage = async (options?: {
+    /** Canvas session with the editable layers of this image (see saveSendToChatSnapshot). */
+    canvasSessionId?: string | null;
+  }): Promise<{
     imageUrl: string;
     width: number;
     height: number;
@@ -1205,6 +1213,7 @@ function ImageEditorStandaloneInner({
       body: JSON.stringify({
         image_base64: dataURL,
         ca_user_id: caUserId,
+        ...(options?.canvasSessionId ? { canvas_session_id: options.canvasSessionId } : {}),
       }),
     });
 
@@ -1294,6 +1303,68 @@ function ImageEditorStandaloneInner({
     };
   }, [clearSaveToMediaPending]);
 
+  // Returns an http(s) URL for the current background, uploading it first when it
+  // is a local file (blob:/data:) so it can be stored in a canvas session.
+  const getPersistentBackgroundUrl = async (): Promise<string | null> => {
+    const bgUrl = currentBackgroundUrlRef.current ?? imageUrl;
+    if (bgUrl && /^https?:\/\//i.test(bgUrl)) return bgUrl;
+    if (!canvasEditor.canvas || !params.user_id) return null;
+
+    const dataURL = getBackgroundImageDataURL(canvasEditor.canvas);
+    if (!dataURL) return null;
+
+    const res = await fetch("/api/studio/upload-edited-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_base64: dataURL, ca_user_id: params.user_id }),
+    });
+    const json = await res.json().catch(() => null);
+    const uploadedUrl = res.ok && json?.image_url ? String(json.image_url) : null;
+    // Reuse it on later sends/saves instead of uploading the same file again.
+    if (uploadedUrl) currentBackgroundUrlRef.current = uploadedUrl;
+    return uploadedUrl;
+  };
+
+  // Saves the clean background + editable layers as a new canvas session, so the
+  // flattened image sent to the chat can be reopened with its layers. A new session
+  // per send keeps each chat image tied to exactly what was sent. Best-effort:
+  // returns null (image is sent flat) when there are no layers or saving fails.
+  const saveSendToChatSnapshot = async (): Promise<string | null> => {
+    if (!canvasEditor.canvas || !params.user_id) return null;
+    try {
+      const { overlayJson, metadata } = getCanvasOverlaySnapshot(canvasEditor.canvas);
+      if (overlayJson.objects.length === 0) return null;
+
+      const backgroundUrl = await getPersistentBackgroundUrl();
+      if (!backgroundUrl) return null;
+
+      const res = await fetch("/api/studio/canvas-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ca_user_id: params.user_id,
+          name: SEND_TO_CHAT_SESSION_NAME,
+          background_url: backgroundUrl,
+          overlay_json: overlayJson,
+          metadata,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.id) {
+        console.warn("[saveSendToChatSnapshot] could not save session:", data?.error);
+        return null;
+      }
+
+      const snapshotId = String(data.id);
+      uploadSessionThumbnail(snapshotId);
+      void fetchSavedSessions();
+      return snapshotId;
+    } catch (err) {
+      console.warn("[saveSendToChatSnapshot] failed:", err);
+      return null;
+    }
+  };
+
   // Export current canvas, upload it, send only URL to chat, then signal parent to close Studio.
   const handleSendUrlToChatAndClose = async () => {
     if (!isEmbedded || !canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
@@ -1301,7 +1372,9 @@ function ImageEditorStandaloneInner({
     try {
       setIsSendingUrlToChat(true);
 
-      const uploaded = await flattenAndUploadEditedImage();
+      // Keep the layers editable when this image is reopened from the chat.
+      const canvasSessionId = await saveSendToChatSnapshot();
+      const uploaded = await flattenAndUploadEditedImage({ canvasSessionId });
       if (!uploaded) return;
 
       sendToChat(uploaded.imageUrl);
@@ -1649,6 +1722,29 @@ function ImageEditorStandaloneInner({
     history.saveState(true);
   }, [canvasEditor.canvas, getSelectedObjects, selection.setSelectedObject, history.saveState]);
 
+  // Upload a session thumbnail to Supabase Storage in the background (non-blocking)
+  const uploadSessionThumbnail = (targetSessionId: string) => {
+    if (!canvasEditor.canvas) return;
+    const currentWidth = canvasEditor.canvas.width;
+    const thumbMultiplier = Math.min(1, 300 / currentWidth);
+    const thumbnailBase64 = canvasEditor.canvas.toDataURL({
+      format: "jpeg",
+      quality: 0.6,
+      multiplier: thumbMultiplier,
+    });
+    fetch("/api/studio/canvas-sessions/thumbnail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: targetSessionId,
+        ca_user_id: params.user_id ?? "",
+        image_base64: thumbnailBase64,
+      }),
+    }).catch((err) => {
+      console.warn("[uploadSessionThumbnail] failed (non-critical):", err);
+    });
+  };
+
   // Save canvas session to database (optionalName from SaveSessionModal when saving via modal)
   const handleSave = async (optionalName?: string) => {
     if (!canvasEditor.canvas) {
@@ -1711,26 +1807,7 @@ function ImageEditorStandaloneInner({
       setShowSaveToast(true);
       setShowSaveModal(false);
 
-      // Upload thumbnail to Supabase Storage in the background (non-blocking)
-      const caUserIdForThumb = params.user_id ?? "";
-      const currentWidth = canvasEditor.canvas.width;
-      const thumbMultiplier = Math.min(1, 300 / currentWidth);
-      const thumbnailBase64 = canvasEditor.canvas.toDataURL({
-        format: "jpeg",
-        quality: 0.6,
-        multiplier: thumbMultiplier,
-      });
-      fetch("/api/studio/canvas-sessions/thumbnail", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: newSessionId,
-          ca_user_id: caUserIdForThumb,
-          image_base64: thumbnailBase64,
-        }),
-      }).catch((err) => {
-        console.warn("[handleSave] thumbnail upload failed (non-critical):", err);
-      });
+      uploadSessionThumbnail(newSessionId);
 
       await fetchSavedSessions();
     } catch (err) {

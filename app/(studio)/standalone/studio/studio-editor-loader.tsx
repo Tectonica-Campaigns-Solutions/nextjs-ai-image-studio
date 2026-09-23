@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { getEditorAssets } from "./lib/get-editor-assets";
-import { getCanvasSession } from "./lib/get-canvas-session";
+import { getCanvasSession, getCanvasSessionForImageUrl } from "./lib/get-canvas-session";
 import { StudioLoading } from "./studio-loading";
 import { getClientStatusByUserId } from "./lib/get-client-status";
 
@@ -42,9 +42,11 @@ export default async function StudioEditorLoader({
     sessionData,
   ] = await Promise.all([
     getEditorAssets(params.client_id, params.user_id),
+    // An explicit session wins; otherwise an image sent from Studio to the chat
+    // reopens with its editable layers.
     params.session_id
       ? getCanvasSession(params.session_id)
-      : Promise.resolve(null),
+      : getCanvasSessionForImageUrl(params.imageUrl, params.user_id),
   ]);
 
   return (
