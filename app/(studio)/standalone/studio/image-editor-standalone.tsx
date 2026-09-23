@@ -213,11 +213,7 @@ function ImageEditorStandaloneInner({
 
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  // A session resolved from a sent-to-chat image is a read-only snapshot: start
-  // without a session so Save creates a new one instead of overwriting it.
-  const [sessionId, setSessionId] = useState<string | null>(
-    sessionData?.openedFromImageLink ? null : sessionData?.id ?? null
-  );
+  const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
 
   // Sessions list for current image (saved versions)
@@ -1325,15 +1321,15 @@ function ImageEditorStandaloneInner({
     return uploadedUrl;
   };
 
-  // Saves the clean background + editable layers as a new canvas session, so the
-  // flattened image sent to the chat can be reopened with its layers. A new session
-  // per send keeps each chat image tied to exactly what was sent. Best-effort:
-  // returns null (image is sent flat) when there are no layers or saving fails.
+  // Saves the clean background + editable layers as a new canvas session, so what
+  // was sent to the chat always shows up in Saved versions and the flattened image
+  // can be reopened with its layers. A new session per send keeps each chat image
+  // tied to exactly what was sent. Best-effort: returns null (image is sent flat,
+  // unlinked) when saving fails.
   const saveSendToChatSnapshot = async (): Promise<string | null> => {
     if (!canvasEditor.canvas || !params.user_id) return null;
     try {
       const { overlayJson, metadata } = getCanvasOverlaySnapshot(canvasEditor.canvas);
-      if (overlayJson.objects.length === 0) return null;
 
       const backgroundUrl = await getPersistentBackgroundUrl();
       if (!backgroundUrl) return null;
@@ -1356,8 +1352,8 @@ function ImageEditorStandaloneInner({
       }
 
       const snapshotId = String(data.id);
-      uploadSessionThumbnail(snapshotId);
       void fetchSavedSessions();
+      void uploadSessionThumbnail(snapshotId).then(fetchSavedSessions);
       return snapshotId;
     } catch (err) {
       console.warn("[saveSendToChatSnapshot] failed:", err);
@@ -1722,8 +1718,9 @@ function ImageEditorStandaloneInner({
     history.saveState(true);
   }, [canvasEditor.canvas, getSelectedObjects, selection.setSelectedObject, history.saveState]);
 
-  // Upload a session thumbnail to Supabase Storage in the background (non-blocking)
-  const uploadSessionThumbnail = (targetSessionId: string) => {
+  // Upload a session thumbnail to Supabase Storage. Never rejects; callers use the
+  // promise only to refresh Saved versions once the thumbnail is stored.
+  const uploadSessionThumbnail = async (targetSessionId: string): Promise<void> => {
     if (!canvasEditor.canvas) return;
     const currentWidth = canvasEditor.canvas.width;
     const thumbMultiplier = Math.min(1, 300 / currentWidth);
@@ -1732,20 +1729,24 @@ function ImageEditorStandaloneInner({
       quality: 0.6,
       multiplier: thumbMultiplier,
     });
-    fetch("/api/studio/canvas-sessions/thumbnail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: targetSessionId,
-        ca_user_id: params.user_id ?? "",
-        image_base64: thumbnailBase64,
-      }),
-    }).catch((err) => {
+    try {
+      await fetch("/api/studio/canvas-sessions/thumbnail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: targetSessionId,
+          ca_user_id: params.user_id ?? "",
+          image_base64: thumbnailBase64,
+        }),
+      });
+    } catch (err) {
       console.warn("[uploadSessionThumbnail] failed (non-critical):", err);
-    });
+    }
   };
 
-  // Save canvas session to database (optionalName from SaveSessionModal when saving via modal)
+  // Save canvas session to database (optionalName from SaveSessionModal when saving via modal).
+  // Every save creates a new version, as the Save modal promises — updating the
+  // active session in place silently overwrote earlier (or just restored) versions.
   const handleSave = async (optionalName?: string) => {
     if (!canvasEditor.canvas) {
       studioToast.error({
@@ -1754,8 +1755,7 @@ function ImageEditorStandaloneInner({
       });
       return;
     }
-    const backgroundUrlForSave = currentBackgroundUrlRef.current ?? imageUrl;
-    if (!backgroundUrlForSave) {
+    if (!(currentBackgroundUrlRef.current ?? imageUrl)) {
       studioToast.error({
         title: "Save failed",
         description: "No image is loaded to save.",
@@ -1765,6 +1765,16 @@ function ImageEditorStandaloneInner({
     setIsSaving(true);
 
     try {
+      // Local backgrounds (blob:/data:) are uploaded so the version can be reopened.
+      const backgroundUrlForSave = await getPersistentBackgroundUrl();
+      if (!backgroundUrlForSave) {
+        studioToast.error({
+          title: "Save failed",
+          description: "Could not store the background image. Try again.",
+        });
+        return;
+      }
+
       history.saveState(true, true);
       const { overlayJson, metadata: metadataToSave } = getCanvasOverlaySnapshot(canvasEditor.canvas);
 
@@ -1776,7 +1786,6 @@ function ImageEditorStandaloneInner({
         overlay_json: overlayJson,
         metadata: metadataToSave,
       };
-      if (sessionId) body.session_id = sessionId;
       const nameTrimmed = optionalName?.trim();
       if (nameTrimmed) body.name = nameTrimmed;
 
@@ -1807,9 +1816,8 @@ function ImageEditorStandaloneInner({
       setShowSaveToast(true);
       setShowSaveModal(false);
 
-      uploadSessionThumbnail(newSessionId);
-
       await fetchSavedSessions();
+      void uploadSessionThumbnail(newSessionId).then(fetchSavedSessions);
     } catch (err) {
       console.error("[handleSave] error:", err);
       studioToast.error({

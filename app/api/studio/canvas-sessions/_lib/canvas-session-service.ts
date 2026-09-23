@@ -87,7 +87,9 @@ export async function uploadThumbnailToStorage(
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    return `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${filePath}`;
+    // The path is fixed per session, so bust browser/CDN caches on every upload;
+    // otherwise Saved versions keeps showing the previous thumbnail.
+    return `${supabaseUrl}/storage/v1/object/public/${BUCKET_NAME}/${filePath}?v=${Date.now()}`;
   } catch (err) {
     console.error("[canvas-session-service] thumbnail upload error:", err);
     return null;
@@ -169,6 +171,10 @@ export async function updateSessionThumbnail(
   }
 }
 
+function countOverlays(overlayJson: Record<string, unknown>): number {
+  return Array.isArray(overlayJson.objects) ? overlayJson.objects.length : 0;
+}
+
 export async function saveSession(
   payload: SaveSessionPayload
 ): Promise<{ id: string } | { error: string }> {
@@ -202,6 +208,12 @@ export async function saveSession(
       .eq("id", payload.session_id);
 
     if (error) return { error: "Failed to update session" };
+    console.log("[canvas-session-service] session updated", {
+      id: payload.session_id,
+      ca_user_id: payload.ca_user_id,
+      background_url: payload.background_url,
+      overlays: countOverlays(payload.overlay_json),
+    });
     return { id: payload.session_id };
   }
 
@@ -221,6 +233,13 @@ export async function saveSession(
     .single();
 
   if (error || !data) return { error: "Failed to create session" };
+  console.log("[canvas-session-service] session created", {
+    id: data.id,
+    ca_user_id: payload.ca_user_id,
+    name: payload.name ?? null,
+    background_url: payload.background_url,
+    overlays: countOverlays(payload.overlay_json),
+  });
   return { id: data.id };
 }
 
@@ -261,5 +280,11 @@ export async function getSessionById(
     .single();
 
   if (error || !data) return { error: "Session not found" };
+  console.log("[canvas-session-service] session loaded", {
+    id: data.id,
+    ca_user_id: data.ca_user_id,
+    background_url: data.background_url,
+    overlays: countOverlays((data.overlay_json ?? {}) as Record<string, unknown>),
+  });
   return data as SessionRow;
 }

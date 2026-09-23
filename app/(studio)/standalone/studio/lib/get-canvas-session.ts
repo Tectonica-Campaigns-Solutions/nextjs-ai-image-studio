@@ -78,7 +78,6 @@ export async function getCanvasSessionForImageUrl(
       background_url: data.background_url,
       overlay_json: data.overlay_json as Record<string, unknown>,
       metadata: (data.metadata ?? {}) as Record<number, ObjectMetadata>,
-      openedFromImageLink: true,
     };
   } catch (err) {
     console.error("[getCanvasSessionForImageUrl] error:", err);
