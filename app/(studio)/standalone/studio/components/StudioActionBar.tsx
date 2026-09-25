@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ImagePlus, Loader2, MessageSquareShare, Save, Sparkles } from "lucide-react";
+import { Download, ImagePlus, Loader2, MessageSquareShare, Save } from "lucide-react";
 import { StudioActionButton } from "./studio-ui";
 import { UI_COLORS } from "../constants/editor-constants";
 import { FeedbackButtonBar } from "./FeedbackButton";
@@ -60,29 +60,7 @@ export function StudioActionBar({
           handleApplyCleanup={handleApplyCleanup}
           isApplyingCleanup={isApplyingCleanup}
         />
-      ) : (
-        <StudioActionButton
-          label="Get Feedback"
-          variant="ai"
-          iconOnly={compact}
-          icon={
-            <span
-              className="inline-flex"
-              style={{
-                background: UI_COLORS.GRADIENT,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              <Sparkles className="size-[18px] text-[#B06BE6]" strokeWidth={2.2} />
-            </span>
-          }
-          disabled
-        >
-          Get Feedback
-        </StudioActionButton>
-      )}
+      ) : null}
 
       <div className="flex-1" />
 
