@@ -249,11 +249,31 @@ export const STUDIO_LAYOUT = {
 } as const;
 
 export const STUDIO_DESKTOP_TOOLS = [
-  { id: "text-tools", label: "Text Tools", hint: "Add headlines, captions & labels" },
-  { id: "logo-overlay", label: "Logo Overlay", hint: "Place your group or partner logo" },
-  { id: "qr-code", label: "QR Code", hint: "Link to a sign-up, RSVP or donate page" },
-  { id: "ai-edit", label: "Edit with AI", hint: "Describe a change in plain words" },
-  { id: "advanced-options", label: "Advanced", hint: "Crop, filters, export size" },
+  {
+    id: "text-tools",
+    label: "Text Tools",
+    hint: "Add headlines, captions & labels",
+  },
+  {
+    id: "logo-overlay",
+    label: "Logo Overlay",
+    hint: "Place your group or partner logo",
+  },
+  {
+    id: "qr-code",
+    label: "QR Code",
+    hint: "Link to a sign-up, RSVP or donate page",
+  },
+  {
+    id: "ai-edit",
+    label: "Edit with AI",
+    hint: "Describe a change in plain words",
+  },
+  {
+    id: "advanced-options",
+    label: "Advanced",
+    hint: "Crop, filters, export size",
+  },
 ] as const;
 
 /** Advanced accordion rows — order and labels from design file */
@@ -266,7 +286,9 @@ export const STUDIO_ADVANCED_ROWS = [
   { id: "sessions", label: "Saved versions" },
 ] as const;
 
-export type StudioDesktopToolId = (typeof STUDIO_DESKTOP_TOOLS)[number]["id"] | "saved-versions";
+export type StudioDesktopToolId =
+  | (typeof STUDIO_DESKTOP_TOOLS)[number]["id"]
+  | "saved-versions";
 
 /** Mobile tab bar — icon-over-label chips (visual-studio-mobile.jsx) */
 export const STUDIO_MOBILE_TOOLS = [
@@ -298,7 +320,7 @@ export const GUIDES = {
 
 // Feature flags — toggle UI without removing code
 export const FEATURE_FLAGS = {
-  showFeedbackButton: true,
+  showFeedbackButton: false,
   showSaveCanvas: true,
   showReplaceBackgroundTool: true,
   showTextTools: true,
