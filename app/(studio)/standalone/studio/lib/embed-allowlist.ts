@@ -9,6 +9,7 @@ export const ALLOWED_EMBED_ORIGINS = [
   "https://staging.tectonica.ai",
   "http://localhost:3001",
   "http://localhost:3000",
+  "https://onepa.org.center/",
 ] as const;
 
 export function isAllowedEmbedOrigin(origin: string | null): boolean {
