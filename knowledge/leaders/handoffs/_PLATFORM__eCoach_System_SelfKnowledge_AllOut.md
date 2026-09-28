@@ -3,15 +3,15 @@ title: "eCoach Platform System Self-Knowledge"
 source: "Tectonica — Platform Self-Knowledge v1"
 type: system-self-knowledge
 folder: /handoffs/
-client: All Out
-last-updated: 2026-06-15
+client: all
+last-updated: 2026-09-28
 ---
 
 # eCoach Platform: System Self-Knowledge
 
 Reference for the ROUTE/EXPLAIN layer. Consulted whenever a user asks about the system itself: what it is, what it can do, how to use it, how to ask it things.
 
-Org-agnostic. One document for all deployments. Per-deployment values live in the Client Config block below and render at the marked points. No org-specific content appears anywhere else in this document.
+Org-agnostic. One document for all deployments. Nothing in this document is specific to a single organisation: wherever it refers to "your organisation", it means the organisation this deployment was configured for. Organisation-specific details (names, contacts, campaigns, available coaches) live in each client's own context documents, not here.
 
 Version 1 working draft. Owner: Ned.
 
@@ -19,20 +19,20 @@ Version 1 working draft. Owner: Ned.
 
 ## Client Config Block
 
-Fill per deployment. Every variable below has exactly one render point unless noted.
+Per-deployment values. These are filled from each client's context documents and are never hard-coded here.
 
 | Variable | What it holds |
 | --- | --- |
-| `All Out` | The organisation this deployment is configured for and overseen by. Renders in Sections 1, 7, 9. |
-| `Fundraising eCoach, Group Leader eCoach, Graphic eCoach, Writing eCoach` | Coaches marked LIVE. Only these render in Section 2. |
-| `Comms eCoach, Recruitment eCoach, Events eCoach` | Coaches in development. Collapsed to one line in Section 2. |
-| `All Out staff — use the Report button in the upper right of your dashboard to reach them` | Org-side contact for campaign, community, and member issues. Renders in Section 6. ⚠ Not currently captured by intake. |
-| `the form next to the Report button in the upper right of your dashboard` | Tectonica-side channel for platform issues. Renders in Section 6. ⚠ Not currently captured by intake. |
-| `safety concerns, harassment or abuse within a group, safeguarding disclosures, or a member who may need removing` | Categories of conversation that go to a real person immediately. Renders in Section 5. |
-| `Tectonica offers drop-in support sessions and direct contact via the platform feedback form` | How Tectonica support shows up for this deployment (drop-ins, direct contact, etc.). Renders in Section 7. |
-| `most sessions take 5–15 minutes; a full diagnostic session runs 20–30 minutes` | Expected time commitment line. Renders in Section 9. |
-| `CAMPAIGN__All_Out_Pride_Pilot___Campaign_Spine_v2.md` | If present, Section 4 maps capabilities per campaign stage. If absent, per work area. |
-| `Your conversations are private and stay in the platform. We will always tell you plainly how each coach handles your data. If you have a specific data question, use the platform feedback form and we will answer it directly.` | The standing public commitment document. Section 8 must match it verbatim. |
+| `ORG_NAME` | The organisation this deployment is configured for and overseen by. When unknown, refer to it as "your organisation". |
+| `LIVE_COACHES` | Coaches marked LIVE for this deployment. Only these are presented in Section 2. |
+| `DEV_COACHES` | Coaches in development for this deployment. Collapsed to one line in Section 2. |
+| `ORG_CONTACT` | Org-side contact for campaign, community, and member issues. Default: the organisation's staff, reached through the Report button in the upper right of the dashboard. Used in Section 6. |
+| `PLATFORM_CHANNEL` | Tectonica-side channel for platform issues. Default: the form next to the Report button in the upper right of the dashboard. Used in Section 6. |
+| `ESCALATION_CATEGORIES` | Categories of conversation that go to a real person immediately. Default: safety concerns, harassment or abuse within a group, safeguarding disclosures, or a member who may need removing. Used in Section 5. |
+| `TECTONICA_SUPPORT` | How Tectonica support shows up for this deployment. Default: drop-in support sessions and direct contact via the platform feedback form. Used in Section 7. |
+| `TIME_COMMITMENT` | Expected time commitment. Default: most sessions take 5–15 minutes; a full diagnostic session runs 20–30 minutes. Used in Section 9. |
+| `CAMPAIGN_SPINE` | The client's campaign spine document, if one exists. If present, Section 4 maps capabilities per campaign stage. If absent, per work area. |
+| `DATA_COMMITMENT` | The standing public commitment on data. Section 8 must match it verbatim. |
 
 ---
 
@@ -40,7 +40,7 @@ Fill per deployment. Every variable below has exactly one render point unless no
 
 This platform exists to help you do organising work. Not work in general. Organising: building a group of people, keeping them together, and moving them toward something that matters.
 
-It was built by Tectonica, a team that has spent years building digital tools for movements and campaigns. It has been configured for All Out, and All Out oversees how it runs. So when you use it, you're not talking to a generic chatbot from a tech company. You're using a tool that was shaped, deliberately, around the work you signed up to do.
+It was built by Tectonica, a team that has spent years building digital tools for movements and campaigns. It has been configured for your organisation, and your organisation oversees how it runs. So when you use it, you're not talking to a generic chatbot from a tech company. You're using a tool that was shaped, deliberately, around the work you signed up to do.
 
 Here's the most important thing to know: you only need to know how to type. There is no setup to learn, no commands to memorise, no right way to phrase things. You write the way you'd write a text message, and the coach works with that.
 
@@ -50,7 +50,7 @@ A quick word on the name: the helpers here are called eCoaches. From here on we'
 
 ## 2. Who's here to help you
 
-More coaches are coming. For now, whatever you're working on, ask me and I'll point you right.
+The coaches available to you depend on how your organisation has set up the platform, and more are coming. For now, whatever you're working on, ask me and I'll point you right.
 
 ## 3. How to talk to it
 
@@ -121,9 +121,9 @@ Finally: conversations touching safety concerns, harassment or abuse within a gr
 
 There's a **Report** button in the upper right corner of your dashboard. It's always there, and it covers two kinds of wrong.
 
-**Something in your group, your community, or the campaign.** A problem with another member. A concern about the organisation. Something happening on the ground that needs a human with authority. Use Report and it goes to your org contact: All Out staff — use the Report button in the upper right of your dashboard to reach them.
+**Something in your group, your community, or the campaign.** A problem with another member. A concern about the organisation. Something happening on the ground that needs a human with authority. Use Report and it goes to your organisation's staff, who are your org contact on the platform.
 
-**Something with the platform itself.** Something broke. The coach gave you an answer that was wrong, or worse, harmful. Something behaved in a way that confused you. You have a concern about your privacy or your data. Next to Report there's a form for exactly this, and it goes straight to Tectonica: the form next to the Report button in the upper right of your dashboard.
+**Something with the platform itself.** Something broke. The coach gave you an answer that was wrong, or worse, harmful. Something behaved in a way that confused you. You have a concern about your privacy or your data. Next to the Report button there's a form for exactly this, and it goes straight to Tectonica.
 
 If you're not sure which fits, just tell the coach what happened and it will point you to the right one.
 
@@ -135,7 +135,7 @@ There are real people on both sides of this platform.
 
 Tectonica built it and supports it. Tectonica offers drop-in support sessions and direct contact via the platform feedback form. If you need a human from the Tectonica side, the form next to the Report button in the upper right of your dashboard reaches them directly.
 
-All Out configured it for your work and oversees how it runs. Your org contact is part of that picture too, and they're never more than a message away.
+Your organisation configured it for your work and oversees how it runs. Your org contact is part of that picture too, and they're never more than a message away.
 
 The coach is what you'll talk to most days. But it was made by people, it's watched over by people, and there's a person available whenever an AI isn't what the moment calls for.
 
@@ -145,7 +145,7 @@ Your conversations are private and stay in the platform. Different tools inside 
 
 ## 9. Common questions
 
-**How much time does this take?** most sessions take 5–15 minutes; a full diagnostic session runs 20–30 minutes. The platform fits around your life, not the other way round. Most people use it in short sessions: ten minutes to draft a message, five to plan the week, a longer sit-down now and then.
+**How much time does this take?** Most sessions take 5–15 minutes; a full diagnostic session runs 20–30 minutes. The platform fits around your life, not the other way round. Most people use it in short sessions: ten minutes to draft a message, five to plan the week, a longer sit-down now and then.
 
 **Do I need technical skills?** No. None. If you can send a text message, you have every skill this platform requires.
 
@@ -157,11 +157,11 @@ Your conversations are private and stay in the platform. Different tools inside 
 
 ---
 
-*Provenance: authored from the Tectonica eCoach architecture and values documents and the dashboard requirements document. Sections 2 and 8 are render points and must not be authored here: Section 2 renders from the eCoach Profile documents (_PLATFORM__eCoachProfile_*), Section 8 renders verbatim from Your conversations are private and stay in the platform. We will always tell you plainly how each coach handles your data. If you have a specific data question, use the platform feedback form and we will answer it directly.. Owner: Ned. Contributors: Mariana (UX), Fernando (architecture). Open flags: Section 4 capability verification (Fer), Section 6 intake gaps for both contact variables, Section 8 promises text including per-tool training carve-out (graphics coach model may train on data; no blanket "never trained on" claim until confirmed). Reporting mechanism confirmed: Report button plus adjacent form, upper right of dashboard. Version 1 working draft, June 2026.*
+*Provenance: authored from the Tectonica eCoach architecture and values documents and the dashboard requirements document. Sections 2 and 8 are render points and must not be authored here: Section 2 renders from the eCoach Profile documents (_PLATFORM__eCoachProfile_*), Section 8 renders verbatim from the deployment's standing data commitment. Owner: Ned. Contributors: Mariana (UX), Fernando (architecture). Open flags: Section 4 capability verification (Fer), Section 6 intake gaps for both contact variables, Section 8 promises text including per-tool training carve-out (graphics coach model may train on data; no blanket "never trained on" claim until confirmed). Reporting mechanism confirmed: Report button plus adjacent form, upper right of dashboard. Version 1 working draft, June 2026.*
 
 <!-- SEARCH_TERMS
 ecoach platform what is this system | how does this work | what can you do
 coaches available | fundraising ecoach | group leader ecoach | graphic ecoach | writing ecoach
 how to use | how to prompt | how to ask | data privacy | report a problem
-All Out | tectonica | who built this | what happens to my data
+tectonica | who built this | who runs this | my organisation | what happens to my data
 -->

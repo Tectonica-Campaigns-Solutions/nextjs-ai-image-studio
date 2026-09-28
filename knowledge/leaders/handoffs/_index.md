@@ -1,7 +1,7 @@
 # Index — Handoffs & System Self-Knowledge
 *GroupLeader eCoach knowledge base · handoffs · 5 source(s) · 2026-06-16*
 
-**Keywords:** ecoach profiles, what each coach does, when to route, sibling coaches, system self-knowledge, how the platform works, All Out deployment
+**Keywords:** ecoach profiles, what each coach does, when to route, sibling coaches, system self-knowledge, how the platform works, platform deployment
 
 ---
 
@@ -20,5 +20,5 @@
 <!-- SEARCH_TERMS
 handoff | sibling coach | route to | what coach | which coach | what can this system do
 ecoach profiles | group leader | fundraising | graphic | writing
-how to use the platform | system self-knowledge | All Out
+how to use the platform | system self-knowledge | tectonica
 -->
