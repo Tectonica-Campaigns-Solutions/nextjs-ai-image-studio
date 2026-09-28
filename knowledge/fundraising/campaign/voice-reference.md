@@ -8,6 +8,7 @@ content-type: VOICE
 priority: above-corpus
 folder: /campaign/
 last-updated: 2026-06-16
+tags: [voice_reference, fundraising, client:allout]
 ---
 
 # All Out — Voice Reference & Appeal Examples

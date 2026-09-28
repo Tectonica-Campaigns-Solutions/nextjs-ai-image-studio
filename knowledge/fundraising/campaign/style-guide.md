@@ -8,6 +8,7 @@ content-type: STYLE
 priority: above-corpus
 folder: /campaign/
 last-updated: 2026-06-16
+tags: [style_guide, fundraising, client:allout]
 ---
 
 # All Out — Editorial Style Guide (EN)
