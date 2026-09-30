@@ -33,6 +33,7 @@ import {
   studioForm,
 } from "./studio-ui";
 import { ShapeMobilePicker } from "./ShapeToolsPanel";
+import { PresetTextList } from "./PresetTextList";
 import { FrameItem } from "./editor-icons";
 
 export type MobileFloatTarget = "text" | "logo" | "qr" | "shape" | "frame";
@@ -1254,26 +1255,76 @@ export function QrMobileSheetPanel({
 function TextFloatEntry({
   onAddText,
   disabled,
+  presetTexts = [],
+  usedPresetIndexes,
+  onInsertPreset,
+  onInsertAllPresets,
 }: {
   onAddText: () => void;
   disabled?: boolean;
+  presetTexts?: string[];
+  usedPresetIndexes?: Set<number>;
+  onInsertPreset?: (index: number) => void;
+  onInsertAllPresets?: () => void;
 }) {
+  const [expand, setExpand] = useState(false);
+  const hasPresets =
+    presetTexts.length > 0 && !!onInsertPreset && !!onInsertAllPresets;
+
   return (
-    <FloatPill>
-      <button
-        type="button"
-        onClick={onAddText}
-        disabled={disabled}
-        className="inline-flex h-[38px] shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 text-[13px] font-bold text-[#F5F4FB] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {disabled ? (
-          <Loader2 className="size-[17px] animate-spin" aria-hidden />
-        ) : (
-          <Type className="size-[17px]" strokeWidth={2} />
-        )}
-        Add a text box
-      </button>
-    </FloatPill>
+    <div className="relative flex flex-col items-center gap-2">
+      {hasPresets && expand ? (
+        <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2">
+          <FloatPanel compact className="w-[min(300px,calc(100vw-2rem))]">
+            <PresetTextList
+              variant="popover"
+              presets={presetTexts}
+              usedIndexes={usedPresetIndexes ?? new Set()}
+              disabled={disabled}
+              onInsert={(index) => {
+                onInsertPreset?.(index);
+                setExpand(false);
+              }}
+              onInsertAll={() => {
+                onInsertAllPresets?.();
+                setExpand(false);
+              }}
+            />
+          </FloatPanel>
+        </div>
+      ) : null}
+      <FloatPill>
+        <button
+          type="button"
+          onClick={onAddText}
+          disabled={disabled}
+          className="inline-flex h-[38px] shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 text-[13px] font-bold text-[#F5F4FB] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {disabled ? (
+            <Loader2 className="size-[17px] animate-spin" aria-hidden />
+          ) : (
+            <Type className="size-[17px]" strokeWidth={2} />
+          )}
+          Add a text box
+        </button>
+        {hasPresets ? (
+          <>
+            <PillDivider />
+            <button
+              type="button"
+              onClick={() => setExpand((v) => !v)}
+              aria-expanded={expand}
+              className={cn(
+                "inline-flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] font-bold",
+                expand ? "text-[#8069FF]" : "text-[#F5F4FB]",
+              )}
+            >
+              Presets ({presetTexts.length})
+            </button>
+          </>
+        ) : null}
+      </FloatPill>
+    </div>
   );
 }
 
@@ -1329,6 +1380,10 @@ export interface StudioMobileFloatControlsProps {
   fontAssets: FontAsset[];
   onAddText: () => void;
   addTextDisabled?: boolean;
+  presetTexts?: string[];
+  usedPresetIndexes?: Set<number>;
+  onInsertPreset?: (index: number) => void;
+  onInsertAllPresets?: () => void;
   textTools: {
     fontFamily: string;
     setFontFamily: (v: string) => void;
@@ -1397,6 +1452,10 @@ export function StudioMobileFloatControls({
   fontAssets,
   onAddText,
   addTextDisabled,
+  presetTexts,
+  usedPresetIndexes,
+  onInsertPreset,
+  onInsertAllPresets,
   textTools,
   logoTools,
   qrTools,
@@ -1408,7 +1467,14 @@ export function StudioMobileFloatControls({
       hasSelection ? (
         <TextFloatControls fontAssets={fontAssets} {...textTools} />
       ) : (
-        <TextFloatEntry onAddText={onAddText} disabled={addTextDisabled} />
+        <TextFloatEntry
+          onAddText={onAddText}
+          disabled={addTextDisabled}
+          presetTexts={presetTexts}
+          usedPresetIndexes={usedPresetIndexes}
+          onInsertPreset={onInsertPreset}
+          onInsertAllPresets={onInsertAllPresets}
+        />
       )
     ) : toolMode === "logo" ? (
       hasSelection ? (

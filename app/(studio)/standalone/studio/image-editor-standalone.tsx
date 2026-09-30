@@ -62,12 +62,10 @@ import type { DisclaimerPosition } from "./types/image-editor-types";
 import type { StudioDesktopToolId, StudioMobileToolId } from "./constants/editor-constants";
 import { studioToast } from "./utils/studio-toast";
 import {
-  BUNDLED_FONT_CSS_VARS,
   DEFAULT_FONTS,
   EXPORT,
   FEATURE_FLAGS,
   SELECTION_MENU,
-  TEXT_DEFAULTS,
   UI_COLORS,
   STUDIO_IFRAME_MESSAGE,
   STUDIO_LAYOUT,
@@ -93,13 +91,13 @@ import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
-import { getBackgroundImageDataURL, getCanvasOverlaySnapshot, getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, rgbaToString, remeasureTextboxes } from "./utils/image-editor-utils";
+import { getBackgroundImageDataURL, getCanvasOverlaySnapshot, getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
 import { Copy, Lock, Trash2, Unlock } from "lucide-react";
-import { getCanvasFontFamily, logVisualStudioAccess, requestExitFullscreen, requestSaveToMedia, sendToChat } from "./utils/studio-utils";
+import { logVisualStudioAccess, requestExitFullscreen, requestSaveToMedia, sendToChat } from "./utils/studio-utils";
 import { normalizeFontCatalogKey } from "./utils/build-google-font-css2-url";
 import { useEmbedSource } from "./hooks/use-embed-source";
 import { isAllowedEmbedOrigin, isTrustedMessageOrigin } from "./lib/embed-allowlist";
-import { DEFAULT_TEXT_BLOCK_DELIMITER, insertAutoTextBlocks, parseTextBlocks } from "./utils/text-blocks";
+import { DEFAULT_TEXT_BLOCK_DELIMITER, parseTextBlocks } from "./utils/text-blocks";
 
 export default function ImageEditorStandalone({
   ...props
@@ -171,7 +169,12 @@ function ImageEditorStandaloneInner({
   // Prefer the saved session background so restoring a version does not paint
   // overlays onto a different chat image.
   const imageUrlFromParams = sessionData?.background_url ?? params.imageUrl;
-  const didAutoInsertTextRef = useRef(false);
+  // Preset texts from `?text=` are offered in Text Tools for manual insertion.
+  const presetTexts = useMemo(
+    () => parseTextBlocks(params.text, params.text_delim ?? DEFAULT_TEXT_BLOCK_DELIMITER),
+    [params.text, params.text_delim],
+  );
+  const [usedPresetIndexes, setUsedPresetIndexes] = useState<Set<number>>(() => new Set());
 
   // Track each access to the Visual Studio for audit/logs in the dashboard.
   const hasLoggedAccessRef = useRef(false);
@@ -236,7 +239,10 @@ function ImageEditorStandaloneInner({
 
   // Replace background image state
   const [isReplacingBackground, setIsReplacingBackground] = useState<boolean>(false);
-  const [desktopTool, setDesktopTool] = useState<StudioDesktopToolId | null>(null);
+  // Open Text Tools up front when presets are available so they are discoverable.
+  const [desktopTool, setDesktopTool] = useState<StudioDesktopToolId | null>(() =>
+    FEATURE_FLAGS.showTextTools && presetTexts.length > 0 ? "text-tools" : null,
+  );
   const [isCompactChrome, setIsCompactChrome] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [mobileQrPlaced, setMobileQrPlaced] = useState(false);
@@ -383,6 +389,21 @@ function ImageEditorStandaloneInner({
     saveStateRef,
     defaultFontFamily: fontAssets[0]?.font_family || DEFAULT_FONTS.PRIMARY,
   });
+
+  const insertPresetText = useCallback(
+    (index: number) => {
+      const preset = presetTexts[index];
+      if (!preset) return;
+      textTools.addTexts([preset]);
+      setUsedPresetIndexes((prev) => new Set(prev).add(index));
+    },
+    [presetTexts, textTools.addTexts],
+  );
+
+  const insertAllPresetTexts = useCallback(() => {
+    textTools.addTexts(presetTexts);
+    setUsedPresetIndexes(new Set(presetTexts.map((_, i) => i)));
+  }, [presetTexts, textTools.addTexts]);
 
   const qrTools = useQRTools({
     canvasRef: canvasRefStable,
@@ -878,63 +899,6 @@ function ImageEditorStandaloneInner({
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasEditor.canvas, canvasEditor.originalImageDimensions]);
-
-  // Auto-insert text blocks from query param when opening the editor.
-  // Per requirement: ignore `text` if a session is being loaded.
-  useEffect(() => {
-    if (didAutoInsertTextRef.current) return;
-    if (!params?.text?.trim()) return;
-    if (params.session_id || sessionData?.id) return;
-    if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
-
-    didAutoInsertTextRef.current = true;
-
-    const blocks = parseTextBlocks(params.text, params.text_delim ?? DEFAULT_TEXT_BLOCK_DELIMITER);
-    if (blocks.length === 0) return;
-
-    const canvas = canvasEditor.canvas;
-    const defaultFontFamily = fontAssets[0]?.font_family || DEFAULT_FONTS.PRIMARY;
-    const resolvedFontFamily = getCanvasFontFamily(
-      defaultFontFamily,
-      DEFAULT_FONTS.PRIMARY,
-      BUNDLED_FONT_CSS_VARS,
-    );
-
-    // Snapshot current state so user can Undo the insertion.
-    history.saveState(true);
-
-    const created = insertAutoTextBlocks(canvas, blocks, {
-      initialFontSize: TEXT_DEFAULTS.FONT_SIZE,
-      minFontSize: 12,
-      textAlign: "center",
-      textboxOptions: {
-        fontFamily: resolvedFontFamily,
-        fill: rgbaToString(TEXT_DEFAULTS.COLOR),
-        backgroundColor: rgbaToString(TEXT_DEFAULTS.BG_COLOR),
-        lineHeight: TEXT_DEFAULTS.LINE_HEIGHT,
-        charSpacing: TEXT_DEFAULTS.LETTER_SPACING,
-        editable: true,
-        selectable: true,
-      },
-    });
-
-    if (created.length > 0) {
-      canvas.setActiveObject(created[0]);
-      canvas.renderAll();
-      // Stabilize dimensions if fonts are still loading.
-      remeasureTextboxes(canvas);
-      history.saveState(true);
-    }
-  }, [
-    params.text,
-    params.text_delim,
-    params.session_id,
-    sessionData?.id,
-    canvasEditor.canvas,
-    canvasEditor.originalImageDimensions,
-    fontAssets,
-    history.saveState,
-  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2230,9 +2194,13 @@ function ImageEditorStandaloneInner({
         setBackgroundColor={textTools.setBackgroundColor}
         eyedropperTarget={eyedropper.activeTarget}
         onStartEyedropper={eyedropper.startEyedropper}
+        presetTexts={presetTexts}
+        usedPresetIndexes={usedPresetIndexes}
+        onInsertPreset={insertPresetText}
+        onInsertAllPresets={insertAllPresetTexts}
       />
     ),
-    [selection.selectedObject, fontAssets, fontsReady, googleFontCatalog, googleCatalogLoading, googleCatalogError, textTools, eyedropper.activeTarget, eyedropper.startEyedropper]
+    [selection.selectedObject, fontAssets, fontsReady, googleFontCatalog, googleCatalogLoading, googleCatalogError, textTools, eyedropper.activeTarget, eyedropper.startEyedropper, presetTexts, usedPresetIndexes, insertPresetText, insertAllPresetTexts]
   );
 
   const aiEditPanel = useMemo(
@@ -2802,6 +2770,10 @@ function ImageEditorStandaloneInner({
                           fontAssets={fontAssets}
                           onAddText={textTools.addText}
                           addTextDisabled={!fontsReady}
+                          presetTexts={presetTexts}
+                          usedPresetIndexes={usedPresetIndexes}
+                          onInsertPreset={insertPresetText}
+                          onInsertAllPresets={insertAllPresetTexts}
                           textTools={{
                             fontFamily: textTools.fontFamily,
                             setFontFamily: textTools.setFontFamily,

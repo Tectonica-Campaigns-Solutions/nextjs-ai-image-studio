@@ -133,8 +133,8 @@ type StudioPageProps = {
     client_id?: string;
     session_id?: string;
     /**
-     * Optional initial text to auto-insert as editable text blocks.
-     * Multiple blocks can be separated with `||` (or via `text_delim`).
+     * Optional preset texts listed in the Text Tools panel for the user to insert.
+     * Multiple presets can be separated with `||` (or via `text_delim`).
      */
     text?: string;
     /** Optional delimiter for splitting `text` (default: `||`). */
@@ -161,7 +161,10 @@ export default function StudioPage({ searchParams }: StudioPageProps) {
     - `user_id` (fallback for backward compatibility when `client_id` is not provided).
   - User identity for sessions/logging (`user_id`, `user_email`).
   - An existing `session_id` (to restore a saved canvas session).
-  - Optional auto text insertion (`text` / `text_delim`) when opening a new session.
+  - Optional preset texts (`text` / `text_delim`). They are not inserted automatically:
+    they appear under "Preset texts" in Text Tools (and in the mobile "Presets" pill),
+    where the user can add each one, or all at once, using the panel's current text style.
+    When presets exist, the desktop Text Tools panel opens on load.
 
 Example:
 

@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { Textbox } from "fabric";
-import { rgbaToString } from "../utils/image-editor-utils";
+import { rgbaToString, remeasureTextboxes } from "../utils/image-editor-utils";
+import { insertAutoTextBlocks } from "../utils/text-blocks";
 import { getCanvasFontFamily } from "../utils/studio-utils";
 import type { RgbaColor } from "../types/image-editor-types";
 import {
@@ -116,6 +117,59 @@ export function useTextTools(options: UseTextToolsOptions) {
     textAlign,
   ]);
 
+  /**
+   * Inserts the given strings as editable textboxes using the panel's current
+   * style. Width adapts to each text and blocks are stacked and centered.
+   */
+  const addTexts = useCallback(
+    (contents: string[]) => {
+      const canvas = canvasRef.current;
+      const saveState = saveStateRef.current;
+      if (!canvas || contents.length === 0) return;
+
+      const created = insertAutoTextBlocks(canvas, contents, {
+        initialFontSize: fontSize,
+        textAlign,
+        textboxOptions: {
+          fontFamily: getCanvasFontFamily(
+            fontFamily,
+            DEFAULT_FONTS.PRIMARY,
+            BUNDLED_FONT_CSS_VARS,
+          ),
+          fill: rgbaToString(textColor),
+          backgroundColor:
+            backgroundColor.a === 0 ? "" : rgbaToString(backgroundColor),
+          fontWeight: isBold ? "bold" : "normal",
+          fontStyle: isItalic ? "italic" : "normal",
+          underline: isUnderline,
+          lineHeight,
+          charSpacing: letterSpacing,
+        },
+      });
+      if (created.length === 0) return;
+
+      canvas.setActiveObject(created[0]);
+      canvas.renderAll();
+      // Stabilize dimensions if fonts are still loading.
+      remeasureTextboxes(canvas);
+      saveState(true);
+    },
+    [
+      canvasRef,
+      saveStateRef,
+      fontSize,
+      fontFamily,
+      textColor,
+      backgroundColor,
+      isBold,
+      isItalic,
+      isUnderline,
+      lineHeight,
+      letterSpacing,
+      textAlign,
+    ],
+  );
+
   const updateSelectedText = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -177,6 +231,7 @@ export function useTextTools(options: UseTextToolsOptions) {
     textAlign,
     setTextAlign,
     addText,
+    addTexts,
     updateSelectedText,
   };
 }

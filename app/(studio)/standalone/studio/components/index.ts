@@ -44,6 +44,7 @@ export {
 } from "./StudioStateScreen";
 export { FrameToolsPanel, FrameMobilePicker } from "./FrameToolsPanel";
 export { LogoToolsPanel } from "./LogoToolsPanel";
+export { PresetTextList } from "./PresetTextList";
 export { QrToolsPanel } from "./QrToolsPanel";
 export { SaveSessionModal } from "./SaveSessionModal";
 export { SessionsListPanel } from "./SessionsListPanel";

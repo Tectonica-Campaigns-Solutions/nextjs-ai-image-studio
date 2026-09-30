@@ -24,6 +24,7 @@ import type { GoogleFontCatalogEntry } from "../types/google-font-catalog";
 import { normalizeFontCatalogKey } from "../utils/build-google-font-css2-url";
 import { TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextToolIcon } from "./editor-icons";
 import { StudioColorControl, StudioSliderRow, StudioSquareButton, studioForm } from "./studio-ui";
+import { PresetTextList } from "./PresetTextList";
 
 export interface TextToolsPanelProps {
   selectedObject: any;
@@ -56,6 +57,11 @@ export interface TextToolsPanelProps {
   setBackgroundColor: (c: RgbaColor) => void;
   eyedropperTarget: EyedropperTarget;
   onStartEyedropper?: (target: EyedropperTarget) => void;
+  /** Preset texts from the `text` query param, shown for manual insertion. */
+  presetTexts?: string[];
+  usedPresetIndexes?: Set<number>;
+  onInsertPreset?: (index: number) => void;
+  onInsertAllPresets?: () => void;
 }
 
 export const TextToolsPanel = React.memo(function TextToolsPanel({
@@ -88,6 +94,10 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
   setBackgroundColor,
   eyedropperTarget,
   onStartEyedropper,
+  presetTexts = [],
+  usedPresetIndexes,
+  onInsertPreset,
+  onInsertAllPresets,
 }: TextToolsPanelProps) {
   const [fontPickerOpen, setFontPickerOpen] = React.useState(false);
   const isAddTextDisabled = fontAssets.length > 0 && !fontsReady;
@@ -149,6 +159,19 @@ export const TextToolsPanel = React.memo(function TextToolsPanel({
       </button>
 
       <div className={studioForm.divider} />
+
+      {presetTexts.length > 0 && onInsertPreset && onInsertAllPresets ? (
+        <>
+          <PresetTextList
+            presets={presetTexts}
+            usedIndexes={usedPresetIndexes ?? new Set()}
+            onInsert={onInsertPreset}
+            onInsertAll={onInsertAllPresets}
+            disabled={isAddTextDisabled}
+          />
+          <div className={studioForm.divider} />
+        </>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="min-w-[130px] flex-1">
