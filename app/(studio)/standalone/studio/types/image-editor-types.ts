@@ -22,6 +22,8 @@ export interface ImageEditorStandaloneParams {
   imageUrl?: string;
   user_id?: string;
   session_id?: string;
+  /** Tectonica conversation id, stored on saved versions for traceability. */
+  chat_id?: string;
   client_id?: string;
   user_email?: string;
   /** Optional preset texts shown in Text Tools for the user to insert manually. */
@@ -33,6 +35,8 @@ export interface ImageEditorStandaloneParams {
 export interface CanvasSessionData {
   id: string;
   background_url: string;
+  /** Lineage key of the image this version belongs to (null on legacy rows). */
+  root_image_url: string | null;
   overlay_json: Record<string, unknown>;
   metadata: Record<number, ObjectMetadata>;
   name: string | null;

@@ -16,6 +16,7 @@ type StudioEditorLoaderProps = {
     client_id?: string;
     user_email?: string;
     session_id?: string;
+    chat_id?: string;
     text?: string;
     text_delim?: string;
     group_page_url?: string;
@@ -45,7 +46,7 @@ export default async function StudioEditorLoader({
     // An explicit session wins; otherwise an image sent from Studio to the chat
     // reopens with its editable layers.
     params.session_id
-      ? getCanvasSession(params.session_id)
+      ? getCanvasSession(params.session_id, params.user_id)
       : getCanvasSessionForImageUrl(params.imageUrl, params.user_id),
   ]);
 

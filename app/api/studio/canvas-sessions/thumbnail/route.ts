@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  sessionBelongsToUser,
   uploadThumbnailToStorage,
   updateSessionThumbnail,
 } from "../_lib/canvas-session-service";
@@ -26,12 +27,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "image_base64 is required" }, { status: 400 });
   }
 
-  const thumbnailUrl = await uploadThumbnailToStorage(image_base64, ca_user_id.trim(), session_id.trim());
+  const sessionId = session_id.trim();
+  const caUserId = ca_user_id.trim();
+
+  // Sessions of other users answer 404, same as a missing one.
+  if (!(await sessionBelongsToUser(sessionId, caUserId))) {
+    return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  }
+
+  const thumbnailUrl = await uploadThumbnailToStorage(image_base64, caUserId, sessionId);
   if (!thumbnailUrl) {
     return NextResponse.json({ error: "Failed to upload thumbnail" }, { status: 500 });
   }
 
-  await updateSessionThumbnail(session_id.trim(), thumbnailUrl);
+  await updateSessionThumbnail(sessionId, caUserId, thumbnailUrl);
 
   return NextResponse.json({ thumbnail_url: thumbnailUrl });
 }

@@ -9,6 +9,7 @@ type StudioPageProps = {
     client_id?: string;
     user_email?: string;
     session_id?: string;
+    chat_id?: string;
     text?: string;
     text_delim?: string;
     /** Published group / recruitment page URL for one-click QR (VS-C08). */

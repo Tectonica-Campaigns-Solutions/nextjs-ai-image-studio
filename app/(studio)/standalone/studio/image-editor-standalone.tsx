@@ -139,10 +139,9 @@ function mapSessionSummaries(
     created_at: string;
     updated_at: string;
   }>,
-  currentBackgroundUrl: string | null | undefined,
 ) {
-  const currentBg = (currentBackgroundUrl ?? "").trim();
-  const mapped = sessions.map((s) => ({
+  // Already scoped to the current image and ordered newest first by the API.
+  return sessions.map((s) => ({
     id: s.id,
     name: s.name,
     thumbnail_url: s.thumbnail_url,
@@ -150,12 +149,6 @@ function mapSessionSummaries(
     created_at: s.created_at,
     updated_at: s.updated_at,
   }));
-  if (!currentBg) return mapped;
-  return mapped.sort((a, b) => {
-    const aMatch = (a.background_url ?? "").trim() === currentBg ? 0 : 1;
-    const bMatch = (b.background_url ?? "").trim() === currentBg ? 0 : 1;
-    return aMatch - bMatch;
-  });
 }
 
 function ImageEditorStandaloneInner({
@@ -218,6 +211,19 @@ function ImageEditorStandaloneInner({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+
+  // Lineage of the image being edited: the URL Studio was first opened with.
+  // Saved versions inherit it, so Edit with AI (new background) and reopening a
+  // sent image stay in the same Saved versions list. Legacy sessions have no
+  // lineage, so their background URL starts one. Null until a local upload is
+  // first saved.
+  const lineageRootRef = useRef<string | null>(
+    sessionData?.root_image_url ?? sessionData?.background_url ?? (params.imageUrl?.trim() || null)
+  );
+  const resolveLineageRoot = (backgroundUrl: string): string => {
+    lineageRootRef.current ??= backgroundUrl;
+    return lineageRootRef.current;
+  };
 
   // Sessions list for current image (saved versions)
   const [sessionsForImage, setSessionsForImage] = useState<SessionSummary[]>([]);
@@ -1305,6 +1311,8 @@ function ImageEditorStandaloneInner({
           ca_user_id: params.user_id,
           name: SEND_TO_CHAT_SESSION_NAME,
           background_url: backgroundUrl,
+          root_image_url: resolveLineageRoot(backgroundUrl),
+          chat_id: params.chat_id,
           overlay_json: overlayJson,
           metadata,
         }),
@@ -1747,6 +1755,8 @@ function ImageEditorStandaloneInner({
       const body: Record<string, unknown> = {
         ca_user_id: caUserId,
         background_url: backgroundUrlForSave,
+        root_image_url: resolveLineageRoot(backgroundUrlForSave),
+        chat_id: params.chat_id,
         overlay_json: overlayJson,
         metadata: metadataToSave,
       };
@@ -1793,11 +1803,12 @@ function ImageEditorStandaloneInner({
     }
   };
 
-  // All saved versions for this user — not filtered by the current background URL.
-  // Edit-with-AI (and reopen-from-chat) change that URL, which previously hid the save.
+  // Saved versions of the current image lineage only — not filtered by the current
+  // background URL, which Edit with AI (and reopen-from-chat) change.
   const fetchSavedSessions = useCallback(async () => {
     const caUserId = params.user_id?.trim();
-    if (!caUserId) {
+    const rootImageUrl = lineageRootRef.current;
+    if (!caUserId || !rootImageUrl) {
       setSessionsForImage([]);
       setSessionsInitialFetchDone(true);
       return;
@@ -1805,12 +1816,12 @@ function ImageEditorStandaloneInner({
     setSessionsLoading(true);
     try {
       const res = await fetch(
-        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}`
+        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}&root_image_url=${encodeURIComponent(rootImageUrl)}`
       );
       const data = await res.json();
       if (res.ok && Array.isArray(data.sessions)) {
         setSessionsForImage(
-          mapSessionSummaries(data.sessions, currentBackgroundUrlRef.current ?? imageUrl),
+          mapSessionSummaries(data.sessions),
         );
       } else {
         setSessionsForImage([]);
@@ -1821,7 +1832,7 @@ function ImageEditorStandaloneInner({
       setSessionsLoading(false);
       setSessionsInitialFetchDone(true);
     }
-  }, [params.user_id, imageUrl]);
+  }, [params.user_id]);
 
   useEffect(() => {
     fetchSavedSessions();
@@ -1848,7 +1859,9 @@ function ImageEditorStandaloneInner({
       }
       history.isRestoringState.current = true;
       try {
-        const res = await fetch(`/api/studio/canvas-sessions/${sessionIdToLoad}`);
+        const res = await fetch(
+          `/api/studio/canvas-sessions/${sessionIdToLoad}?ca_user_id=${encodeURIComponent(params.user_id ?? "")}`
+        );
         const session = await res.json();
         if (!res.ok || session.error) {
           studioToast.error({
