@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const caUserId = searchParams.get("ca_user_id");
-  const backgroundUrl = searchParams.get("background_url") ?? undefined;
+  const rootImageUrl = searchParams.get("root_image_url");
 
   if (!caUserId?.trim()) {
     return NextResponse.json(
@@ -14,10 +14,15 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
+  // Saved versions are scoped to one image; never list every image of the user.
+  if (!rootImageUrl?.trim()) {
+    return NextResponse.json(
+      { error: "root_image_url query parameter is required" },
+      { status: 400 }
+    );
+  }
 
-  const result = await listSessions(caUserId.trim(), {
-    ...(backgroundUrl ? { background_url: backgroundUrl } : {}),
-  });
+  const result = await listSessions(caUserId.trim(), rootImageUrl.trim());
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
@@ -42,7 +47,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { ca_user_id, session_id, name, background_url, overlay_json, metadata } = body as Record<string, unknown>;
+  const { ca_user_id, session_id, name, background_url, root_image_url, chat_id, overlay_json, metadata } =
+    body as Record<string, unknown>;
 
   if (!ca_user_id || typeof ca_user_id !== "string" || !ca_user_id.trim()) {
     return NextResponse.json({ error: "ca_user_id is required" }, { status: 400 });
@@ -59,6 +65,8 @@ export async function POST(request: NextRequest) {
     session_id: typeof session_id === "string" ? session_id : undefined,
     name: typeof name === "string" ? name : undefined,
     background_url,
+    root_image_url: typeof root_image_url === "string" && root_image_url.trim() ? root_image_url.trim() : undefined,
+    chat_id: typeof chat_id === "string" && chat_id.trim() ? chat_id.trim() : undefined,
     overlay_json: overlay_json as Record<string, unknown>,
     metadata: (metadata && typeof metadata === "object" ? metadata : {}) as Record<string, unknown>,
   });

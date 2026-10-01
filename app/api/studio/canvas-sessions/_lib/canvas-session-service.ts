@@ -16,6 +16,9 @@ export interface SaveSessionPayload {
   session_id?: string;
   name?: string;
   background_url: string;
+  /** Lineage key: the image URL Studio was first opened with. Set on insert only. */
+  root_image_url?: string;
+  chat_id?: string;
   overlay_json: Record<string, unknown>;
   metadata: Record<string, unknown>;
 }
@@ -26,6 +29,8 @@ export interface SessionRow {
   ca_user_id: string;
   name: string | null;
   background_url: string;
+  root_image_url: string | null;
+  chat_id: string | null;
   overlay_json: Record<string, unknown>;
   metadata: Record<string, unknown>;
   thumbnail_url: string | null;
@@ -49,6 +54,20 @@ async function resolveClientId(
 
 const BUCKET_NAME = "client-assets";
 
+/**
+ * Storage folder for a user's Studio files: their client's folder, or — for
+ * users without a clients row (most users coming from the Tectonica iframe) —
+ * a per-user folder, so their uploads don't fail.
+ */
+async function resolveStorageFolder(
+  supabase: ReturnType<typeof createServiceClient>,
+  caUserId: string
+): Promise<string> {
+  const clientId = await resolveClientId(supabase, caUserId);
+  if (clientId) return `clients/${clientId}`;
+  return `users/${caUserId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
+}
+
 export async function uploadThumbnailToStorage(
   base64: string,
   caUserId: string,
@@ -57,11 +76,7 @@ export async function uploadThumbnailToStorage(
   try {
     const supabase = createServiceClient();
 
-    const clientId = await resolveClientId(supabase, caUserId);
-    if (!clientId) {
-      console.error("[canvas-session-service] client not found for ca_user_id:", caUserId);
-      return null;
-    }
+    const folder = await resolveStorageFolder(supabase, caUserId);
 
     let mimeType = "image/jpeg";
     let base64Data = base64;
@@ -75,7 +90,7 @@ export async function uploadThumbnailToStorage(
 
     const buffer = Buffer.from(base64Data, "base64");
     // Fixed path per session — upsert overwrites the same file on every save
-    const filePath = `clients/${clientId}/thumbnails/${sessionId}.jpg`;
+    const filePath = `${folder}/thumbnails/${sessionId}.jpg`;
 
     const { error } = await supabase.storage
       .from(BUCKET_NAME)
@@ -103,11 +118,7 @@ export async function uploadConversationImageToStorage(
   try {
     const supabase = createServiceClient();
 
-    const clientId = await resolveClientId(supabase, caUserId);
-    if (!clientId) {
-      console.error("[canvas-session-service] client not found for ca_user_id (conversation image):", caUserId);
-      return null;
-    }
+    const folder = await resolveStorageFolder(supabase, caUserId);
 
     let mimeType = "image/png";
     let base64Data = base64;
@@ -131,7 +142,7 @@ export async function uploadConversationImageToStorage(
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 10)}.${extension}`;
-    const filePath = `clients/${clientId}/conversation-outputs/${fileName}`;
+    const filePath = `${folder}/conversation-outputs/${fileName}`;
 
     const { error } = await supabase.storage
       .from(BUCKET_NAME)
@@ -156,8 +167,24 @@ export async function uploadConversationImageToStorage(
   }
 }
 
+export async function sessionBelongsToUser(
+  sessionId: string,
+  caUserId: string
+): Promise<boolean> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("client_canvas_sessions")
+    .select("id")
+    .eq("id", sessionId)
+    .eq("ca_user_id", caUserId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  return !!data;
+}
+
 export async function updateSessionThumbnail(
   sessionId: string,
+  caUserId: string,
   thumbnailUrl: string
 ): Promise<void> {
   try {
@@ -165,7 +192,8 @@ export async function updateSessionThumbnail(
     await supabase
       .from("client_canvas_sessions")
       .update({ thumbnail_url: thumbnailUrl, updated_at: new Date().toISOString() })
-      .eq("id", sessionId);
+      .eq("id", sessionId)
+      .eq("ca_user_id", caUserId);
   } catch (err) {
     console.error("[canvas-session-service] updateSessionThumbnail error:", err);
   }
@@ -221,6 +249,8 @@ export async function saveSession(
     ca_user_id: payload.ca_user_id,
     client_id: clientId,
     background_url: payload.background_url,
+    root_image_url: payload.root_image_url ?? null,
+    chat_id: payload.chat_id ?? null,
     overlay_json: payload.overlay_json,
     metadata: payload.metadata,
     name: payload.name ?? null,
@@ -243,31 +273,39 @@ export async function saveSession(
   return { id: data.id };
 }
 
+const SESSION_COLUMNS =
+  "id, client_id, ca_user_id, name, thumbnail_url, background_url, root_image_url, chat_id, overlay_json, metadata, created_at, updated_at";
+
+/**
+ * Saved versions of one image lineage for a user. Rows saved before lineages
+ * existed (root_image_url NULL) are matched by their background_url instead.
+ */
 export async function listSessions(
   caUserId: string,
-  options?: { background_url?: string }
+  rootImageUrl: string
 ): Promise<SessionRow[] | { error: string }> {
   const supabase = createServiceClient();
-  let query = supabase
-    .from("client_canvas_sessions")
-    .select(
-      "id, client_id, ca_user_id, name, thumbnail_url, background_url, overlay_json, metadata, created_at, updated_at"
-    )
-    .eq("ca_user_id", caUserId)
-    .is("deleted_at", null);
+  const baseQuery = () =>
+    supabase
+      .from("client_canvas_sessions")
+      .select(SESSION_COLUMNS)
+      .eq("ca_user_id", caUserId)
+      .is("deleted_at", null);
 
-  if (options?.background_url?.trim()) {
-    query = query.eq("background_url", options.background_url.trim());
-  }
+  const [lineage, legacy] = await Promise.all([
+    baseQuery().eq("root_image_url", rootImageUrl),
+    baseQuery().is("root_image_url", null).eq("background_url", rootImageUrl),
+  ]);
 
-  const { data, error } = await query.order("updated_at", { ascending: false });
-
-  if (error) return { error: "Failed to fetch sessions" };
-  return (data ?? []) as SessionRow[];
+  if (lineage.error || legacy.error) return { error: "Failed to fetch sessions" };
+  return [...(lineage.data ?? []), ...(legacy.data ?? [])].sort((a, b) =>
+    b.updated_at.localeCompare(a.updated_at)
+  ) as SessionRow[];
 }
 
 export async function getSessionById(
-  sessionId: string
+  sessionId: string,
+  caUserId: string
 ): Promise<SessionRow | { error: string }> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
@@ -276,8 +314,9 @@ export async function getSessionById(
       "id, client_id, ca_user_id, name, thumbnail_url, background_url, overlay_json, metadata, created_at, updated_at"
     )
     .eq("id", sessionId)
+    .eq("ca_user_id", caUserId)
     .is("deleted_at", null)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return { error: "Session not found" };
   console.log("[canvas-session-service] session loaded", {

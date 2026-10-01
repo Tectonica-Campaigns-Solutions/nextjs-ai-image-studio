@@ -1,19 +1,26 @@
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { CanvasSessionData, ObjectMetadata } from "../types/image-editor-types";
 
+/**
+ * Loads a saved version for `?session_id=` (reload / resume). Uses the admin
+ * client — RLS hides these rows from the anon client — so it only returns
+ * sessions owned by the requesting user.
+ */
 export async function getCanvasSession(
-  sessionId: string
+  sessionId: string,
+  caUserId: string | undefined
 ): Promise<CanvasSessionData | null> {
-  if (!sessionId?.trim()) return null;
+  if (!sessionId?.trim() || !caUserId?.trim()) return null;
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("client_canvas_sessions")
-      .select("id, name, background_url, overlay_json, metadata")
+      .select("id, name, background_url, root_image_url, overlay_json, metadata")
       .eq("id", sessionId.trim())
+      .eq("ca_user_id", caUserId.trim())
       .is("deleted_at", null)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return null;
 
@@ -21,6 +28,7 @@ export async function getCanvasSession(
       id: data.id,
       name: data.name ?? null,
       background_url: data.background_url,
+      root_image_url: data.root_image_url ?? null,
       overlay_json: data.overlay_json as Record<string, unknown>,
       metadata: (data.metadata ?? {}) as Record<number, ObjectMetadata>,
     };
@@ -65,7 +73,7 @@ export async function getCanvasSessionForImageUrl(
 
     const { data, error } = await supabase
       .from("client_canvas_sessions")
-      .select("id, name, background_url, overlay_json, metadata")
+      .select("id, name, background_url, root_image_url, overlay_json, metadata")
       .eq("id", sessionId)
       .eq("ca_user_id", caUserId.trim())
       .is("deleted_at", null)
@@ -76,6 +84,7 @@ export async function getCanvasSessionForImageUrl(
       id: data.id,
       name: data.name ?? null,
       background_url: data.background_url,
+      root_image_url: data.root_image_url ?? null,
       overlay_json: data.overlay_json as Record<string, unknown>,
       metadata: (data.metadata ?? {}) as Record<number, ObjectMetadata>,
     };

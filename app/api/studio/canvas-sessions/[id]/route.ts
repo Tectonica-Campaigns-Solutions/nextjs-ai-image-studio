@@ -4,16 +4,24 @@ import { getSessionById } from "../_lib/canvas-session-service";
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const caUserId = request.nextUrl.searchParams.get("ca_user_id");
 
   if (!id?.trim()) {
     return NextResponse.json({ error: "Session ID is required" }, { status: 400 });
   }
+  if (!caUserId?.trim()) {
+    return NextResponse.json(
+      { error: "ca_user_id query parameter is required" },
+      { status: 400 }
+    );
+  }
 
-  const result = await getSessionById(id.trim());
+  // Sessions of other users answer 404, same as a missing one.
+  const result = await getSessionById(id.trim(), caUserId.trim());
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 404 });
   }
