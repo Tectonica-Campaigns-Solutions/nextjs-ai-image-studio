@@ -161,7 +161,10 @@ export function validateFontFile(file: File): {
     "application/x-font-opentype",
   ];
 
-  if (!allowedTypes.includes(file.type)) {
+  // Browsers often send an empty type for fonts (macOS has no UTI for .woff2),
+  // so an unknown type is checked by extension below.
+  const hasUnknownType = !file.type || file.type === "application/octet-stream";
+  if (!hasUnknownType && !allowedTypes.includes(file.type)) {
     return {
       valid: false,
       error: `File type not allowed. Allowed types: ${allowedTypes.join(", ")}`,

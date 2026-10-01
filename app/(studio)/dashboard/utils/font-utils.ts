@@ -15,10 +15,21 @@ const ALLOWED_MIME_TYPES = [
   // "application/x-font-opentype" was removed — not a valid MIME type; font/otf covers OTF
 ];
 
+// Canonical MIME type per extension. Browsers often send an empty type (or
+// application/octet-stream) for font files — e.g. macOS has no UTI for .woff2 —
+// so we fall back to the extension and store the file with a proper type.
+const EXTENSION_MIME_TYPES: Record<string, string> = {
+  ttf: "font/ttf",
+  otf: "font/otf",
+  woff: "font/woff",
+  woff2: "font/woff2",
+};
+
 export interface UploadFontResult {
   success: boolean;
   url?: string;
   path?: string;
+  mimeType?: string;
   error?: string;
 }
 
@@ -29,8 +40,9 @@ export function validateFontFile(file: File): {
   valid: boolean;
   error?: string;
 } {
-  // Validate MIME type
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+  // Validate MIME type (an unknown type is checked by extension below)
+  const hasUnknownType = !file.type || file.type === "application/octet-stream";
+  if (!hasUnknownType && !ALLOWED_MIME_TYPES.includes(file.type)) {
     return {
       valid: false,
       error: `File type not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(
@@ -41,7 +53,7 @@ export function validateFontFile(file: File): {
 
   // Validate file extension
   const fileExt = file.name.split(".").pop()?.toLowerCase();
-  const allowedExtensions = ["ttf", "woff", "woff2", "otf"];
+  const allowedExtensions = Object.keys(EXTENSION_MIME_TYPES);
   if (!fileExt || !allowedExtensions.includes(fileExt)) {
     return {
       valid: false,
@@ -83,19 +95,21 @@ export async function uploadFontFile(
     const supabase = await createClient();
 
     // Generate unique filename for the file
-    const fileExt = file.name.split(".").pop();
+    const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "";
     const sanitizedFontFamily = fontFamily.replace(/[^a-zA-Z0-9]/g, "_");
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(7)}.${fileExt}`;
     const filePath = `clients/${clientId}/fonts/${sanitizedFontFamily}/${fileName}`;
 
+    const contentType = EXTENSION_MIME_TYPES[fileExt] ?? file.type;
+
     // Convert File to ArrayBuffer to upload
     const arrayBuffer = await file.arrayBuffer();
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filePath, arrayBuffer, {
-        contentType: file.type,
+        contentType,
         upsert: false,
       });
 
@@ -114,6 +128,7 @@ export async function uploadFontFile(
       success: true,
       url: publicUrl,
       path: filePath,
+      mimeType: contentType,
     };
   } catch (error) {
     console.error("Error in uploadFontFile:", error);

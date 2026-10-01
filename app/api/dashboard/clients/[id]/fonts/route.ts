@@ -163,7 +163,7 @@ export async function POST(
       fileUrl = uploadResult.url;
       storagePath = uploadResult.path;
       fileSize = file.size;
-      mimeType = file.type;
+      mimeType = uploadResult.mimeType ?? file.type;
     }
 
     if (isPrimary) {
