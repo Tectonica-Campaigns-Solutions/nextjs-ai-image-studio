@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(git stash *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "mcp__claude_ai_Claude_Docs__update",
+      "mcp__claude_ai_Claude_Docs__batch",
+      "mcp__claude_ai_Claude_Docs__read"
     ]
   }
 }

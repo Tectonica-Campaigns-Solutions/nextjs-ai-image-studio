@@ -251,7 +251,7 @@ export async function addDisclaimerToBuffer(imageBuffer: Buffer): Promise<Buffer
         x="${imageWidth - 216}" y="${imageHeight - 12}" 
         font-family="Arial, sans-serif" font-size="${disclaimerFontSize}" 
         fill="white" text-anchor="start"
-      >MORE AT: TECTONICA.AI</text>
+      >MORE AT: ORGANIZING.CENTER</text>
     </svg>
   `
 
@@ -353,7 +353,7 @@ export async function addDisclaimerToImage(
         x="${imageWidth - 216}" y="${imageHeight - 12}" 
         font-family="Arial, sans-serif" font-size="${disclaimerFontSize}" 
         fill="white" text-anchor="start"
-      >MORE AT: TECTONICA.AI</text>
+      >MORE AT: ORGANIZING.CENTER</text>
     </svg>
   `
     

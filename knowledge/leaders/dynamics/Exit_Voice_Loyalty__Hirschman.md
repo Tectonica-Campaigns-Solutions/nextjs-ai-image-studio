@@ -241,7 +241,7 @@ source: [Hirschman](https://www.goodreads.com/book/show/149033.Exit_Voice_and_Lo
 
 ---
 
-*Provenance: distilled by Tectonica.AI from Albert O. Hirschman, *Exit, Voice, and Loyalty: Responses to Decline in Firms, Organizations, and States* (Harvard University Press, 1970). Tagged against Group eCoach Tag Register; exit/voice frame anchored on A3.2 + A6.4 (not registered as a lens, per decision). All quotations verbatim and attributed; org-altitude examples carry Source reach notes.*
+*Provenance: distilled by organizing.center from Albert O. Hirschman, *Exit, Voice, and Loyalty: Responses to Decline in Firms, Organizations, and States* (Harvard University Press, 1970). Tagged against Group eCoach Tag Register; exit/voice frame anchored on A3.2 + A6.4 (not registered as a lens, per decision). All quotations verbatim and attributed; org-altitude examples carry Source reach notes.*
 
 <!-- SEARCH_TERMS
 hirschman — exit voice and loyalty | exit voice and loyalty

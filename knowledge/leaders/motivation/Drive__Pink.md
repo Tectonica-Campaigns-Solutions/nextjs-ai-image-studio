@@ -286,7 +286,7 @@ Where an entry above reaches into a volunteer-leadership claim Pink doesn't dire
 - **Footnotes, acknowledgments, and the "rest of the genre" reading list.**
 
 ---
-*Provenance: distilled in Tectonica.AI's own words from Daniel H. Pink, "Drive: The Surprising Truth About What Motivates Us" (Riverhead/Penguin), Introduction–Chapter 6. Quotations are verbatim, under 15 words, attributed. Tagged against Group eCoach Tag Register v(current). Not a substitute for the source; recommend the book as further reading.*
+*Provenance: distilled in organizing.center's own words from Daniel H. Pink, "Drive: The Surprising Truth About What Motivates Us" (Riverhead/Penguin), Introduction–Chapter 6. Quotations are verbatim, under 15 words, attributed. Tagged against Group eCoach Tag Register v(current). Not a substitute for the source; recommend the book as further reading.*
 
 <!-- SEARCH_TERMS
 pink — drive | drive

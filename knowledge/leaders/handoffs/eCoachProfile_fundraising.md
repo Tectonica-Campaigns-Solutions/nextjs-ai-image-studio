@@ -73,7 +73,7 @@ fundraise, raise money, donations, ask, appeal, donate page, peer-to-peer, crowd
 
 ---
 
-*Tectonica.AI | Platform Self-Knowledge — eCoach Directory | Fundraising eCoach Profile | v1.0 — June 12, 2026 | Sources: Fundraising Coach Persona & Governing Principles v1.0, Structure Design Plan v2.0, Design Context Document, Use Case Scenarios, Helpers Architecture & Philosophy | Internal use*
+*organizing.center | Platform Self-Knowledge — eCoach Directory | Fundraising eCoach Profile | v1.0 — June 12, 2026 | Sources: Fundraising Coach Persona & Governing Principles v1.0, Structure Design Plan v2.0, Design Context Document, Use Case Scenarios, Helpers Architecture & Philosophy | Internal use*
 
 <!-- SEARCH_TERMS
 fundraising ecoach | what does fundraising ecoach do | when to use fundraising ecoach

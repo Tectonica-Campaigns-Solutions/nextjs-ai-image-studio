@@ -52,7 +52,7 @@ Mirror: when siblings hear "I need an image of…", "what colours should…", or
 
 ## 5. Status & meanwhile
 
-LIVE as of 12 June 2026. The Graphic eCoach is the first fully functional tool in the Tectonica.AI suite and is in active use through the Community Change pilot deployment. Freemium access is rolling out for progressive organizations and campaigners. No meanwhile fallback needed: it's the coach to go to.
+LIVE as of 12 June 2026. The Graphic eCoach is the first fully functional tool in the organizing.center suite and is in active use through the Community Change pilot deployment. Freemium access is rolling out for progressive organizations and campaigners. No meanwhile fallback needed: it's the coach to go to.
 
 ## 6. Routing notes (internal)
 
