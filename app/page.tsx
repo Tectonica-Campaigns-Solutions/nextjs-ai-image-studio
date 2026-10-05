@@ -32,6 +32,16 @@ const COMPOSITION_RULES: { value: string; label: string }[] = [
 ]
 
 export default function ImageEditor() {
+  // Organization whose reference images/config are used (?orgType=demo → public/demo-reference-images)
+  const [orgType, setOrgType] = useState("general")
+
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("orgType")
+    if (param && /^[a-z0-9-]+$/i.test(param)) {
+      setOrgType(param.toLowerCase())
+    }
+  }, [])
+
   // Flux LoRA Text-to-Image States
   const [fluxProPrompt, setFluxProPrompt] = useState("")
   const [fluxProSettings, setFluxProSettings] = useState({
@@ -554,7 +564,7 @@ export default function ImageEditor() {
       console.log("[FRONTEND] Final settings being sent:", settings)
       
       formData.append("settings", JSON.stringify(settings))
-      formData.append("orgType", "general")
+      formData.append("orgType", orgType)
 
       const response = await fetch("/api/flux-pro-text-to-image", {
         method: "POST",
@@ -648,7 +658,7 @@ export default function ImageEditor() {
       console.log("[FRONTEND] Final multi settings being sent:", settings)
       
       formData.append("settings", JSON.stringify(settings))
-      formData.append("orgType", "general")
+      formData.append("orgType", orgType)
 
       const response = await fetch("/api/flux-pro-multi-text-to-image", {
         method: "POST",
@@ -737,7 +747,7 @@ export default function ImageEditor() {
       console.log("[FRONTEND] Flux Ultra settings being sent:", settings)
       
       formData.append("settings", JSON.stringify(settings))
-      formData.append("orgType", "general")
+      formData.append("orgType", orgType)
 
       const response = await fetch("/api/flux-ultra-finetuned", {
         method: "POST",
@@ -842,7 +852,7 @@ export default function ImageEditor() {
       console.log("[FRONTEND] Final combine settings being sent:", settings)
       
       formData.append("settings", JSON.stringify(settings))
-      formData.append("orgType", "general")
+      formData.append("orgType", orgType)
 
       // Add canonical prompt parameters
       formData.append("useCanonicalPrompt", useCanonicalPrompt.toString())
@@ -1333,7 +1343,7 @@ export default function ImageEditor() {
       }
       
       formData.append("settings", JSON.stringify(settings))
-      formData.append("orgType", "general")
+      formData.append("orgType", orgType)
       formData.append("useCanonicalPrompt", "false")
       if (flux2ProEditCompositionRule) {
         formData.append("compositionRule", flux2ProEditCompositionRule)
@@ -1425,7 +1435,7 @@ export default function ImageEditor() {
       // Prepare JSON body (not FormData)
       const requestBody: any = {
         prompt: flux2ProCreatePrompt,
-        orgType: "general",
+        orgType,
         useCanonicalPrompt: false
       }
       
@@ -1819,7 +1829,7 @@ export default function ImageEditor() {
       }
       
       formData.append("settings", JSON.stringify(settings))
-      formData.append("orgType", "general")
+      formData.append("orgType", orgType)
       formData.append("useCanonicalPrompt", "false")
       if (flux2ProCombineCompositionRule) {
         formData.append("compositionRule", flux2ProCombineCompositionRule)
@@ -1902,7 +1912,7 @@ export default function ImageEditor() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: flux2DevPrompt,
-          orgType: "general",
+          orgType,
           settings,
         }),
       })
