@@ -88,7 +88,7 @@ import type { EyedropperTarget } from "./hooks/use-eyedropper";
 import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useMobileStudioViewport } from "./hooks/use-mobile-studio-viewport";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
-import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
+import { useDynamicGoogleFonts } from "./hooks/use-dynamic-google-font";
 import { CURATED_FONTS } from "./constants/curated-fonts";
 import { getDefaultFontFamily } from "./utils/font-picker-groups";
 import { editImage } from "./lib/image-edit-service";
@@ -793,7 +793,8 @@ function ImageEditorStandaloneInner({
 
   const googleCatalogByFamily = useMemo(() => {
     const m = new Map<string, GoogleFontCatalogEntry>();
-    for (const f of [...CURATED_FONTS, ...googleFontCatalog]) {
+    // Curated entries last so they win: their css2 URLs stay stable once the catalog arrives.
+    for (const f of [...googleFontCatalog, ...CURATED_FONTS]) {
       m.set(normalizeFontCatalogKey(f.family), f);
     }
     return m;
@@ -803,7 +804,8 @@ function ImageEditorStandaloneInner({
     remeasureTextboxes(canvasRefStable.current);
   }, []);
 
-  useDynamicGoogleFont({
+  useDynamicGoogleFonts({
+    canvas: canvasEditor.canvas,
     fontFamily: textTools.fontFamily,
     isBold: textTools.isBold,
     isItalic: textTools.isItalic,

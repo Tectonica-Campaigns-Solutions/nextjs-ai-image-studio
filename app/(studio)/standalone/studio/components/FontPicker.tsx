@@ -73,11 +73,12 @@ export function FontPicker({
       <PopoverContent
         align="start"
         side={side}
-        className="w-[min(100vw-1.5rem,22rem)] overflow-hidden rounded-[10px] border border-white/[0.17] bg-[#211E30] p-0 text-[#F5F4FB] shadow-[0_18px_40px_-16px_rgba(0,0,0,0.7)]"
+        collisionPadding={8}
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-[min(100vw-1.5rem,22rem)] flex-col overflow-hidden rounded-[10px] border border-white/[0.17] bg-[#211E30] p-0 text-[#F5F4FB] shadow-[0_18px_40px_-16px_rgba(0,0,0,0.7)]"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command
-          className="bg-[#211E30] text-[#F5F4FB] [&_[cmdk-input-wrapper]]:border-white/[0.09] [&_[cmdk-input-wrapper]]:border-b"
+          className="min-h-0 bg-[#211E30] text-[#F5F4FB] [&_[cmdk-input-wrapper]]:border-white/[0.09] [&_[cmdk-input-wrapper]]:border-b"
           filter={(value, search) => {
             if (!search.trim()) return 1;
             return value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0;
@@ -87,7 +88,7 @@ export function FontPicker({
             placeholder="Search fonts…"
             className="h-10 border-0 bg-transparent text-[13.5px] text-[#F5F4FB] placeholder:text-[#726F86]"
           />
-          <CommandList className="max-h-[min(60vh,360px)]">
+          <CommandList className="max-h-[min(60vh,360px)] min-h-0 flex-1">
             <CommandEmpty className="py-6 text-[13px] text-[#ADAAC0]">No fonts match.</CommandEmpty>
             {groups.map((group) => (
               <CommandGroup key={group.id} heading={group.label} className={GROUP_HEADING_CLASS}>
