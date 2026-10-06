@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   AlignCenter,
   AlignLeft,
@@ -23,9 +23,7 @@ import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import { UI_COLORS, TEXT_RANGES, SHAPE_RANGES } from "../constants/editor-constants";
 import type { FontAsset, FrameAsset, LogoAsset, RgbaColor, ShapeType } from "../types/image-editor-types";
-import type { GoogleFontCatalogEntry } from "../types/google-font-catalog";
 import { rgbaToString } from "../utils/image-editor-utils";
-import { normalizeFontCatalogKey } from "../utils/build-google-font-css2-url";
 import {
   StudioOrDivider,
   StudioSliderRow,
@@ -34,6 +32,7 @@ import {
 } from "./studio-ui";
 import { ShapeMobilePicker } from "./ShapeToolsPanel";
 import { PresetTextList } from "./PresetTextList";
+import { FontPicker } from "./FontPicker";
 import { FrameItem } from "./editor-icons";
 
 export type MobileFloatTarget = "text" | "logo" | "qr" | "shape" | "frame";
@@ -93,35 +92,6 @@ export function getMobileFloatTargetFromObject(obj: unknown): MobileFloatTarget 
   if (o.isShape) return "shape";
   if (o.isFrame) return "frame";
   return null;
-}
-
-function buildMobileFontFamilies(
-  fontAssets: FontAsset[],
-  googleCatalogFonts: GoogleFontCatalogEntry[],
-): string[] {
-  const brandFonts = fontAssets.filter((f) => f.is_brand).map((f) => f.font_family);
-  const brandKeys = new Set(brandFonts.map((f) => normalizeFontCatalogKey(f)));
-  const otherFamilies = new Set<string>();
-
-  for (const entry of googleCatalogFonts) {
-    const key = normalizeFontCatalogKey(entry.family);
-    if (!brandKeys.has(key)) otherFamilies.add(entry.family);
-  }
-
-  for (const asset of fontAssets) {
-    if (asset.is_brand || asset.font_source !== "custom") continue;
-    const key = normalizeFontCatalogKey(asset.font_family);
-    if (!brandKeys.has(key)) otherFamilies.add(asset.font_family);
-  }
-
-  if (brandFonts.length === 0 && otherFamilies.size === 0) {
-    return ["Manrope"];
-  }
-
-  return [
-    ...brandFonts,
-    ...[...otherFamilies].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
-  ];
 }
 
 function FloatPanel({
@@ -366,8 +336,6 @@ function TextFloatControls({
   setBackgroundColor,
   lineHeight,
   setLineHeight,
-  googleCatalogFonts,
-  googleCatalogLoading,
 }: {
   fontAssets: FontAsset[];
   fontFamily: string;
@@ -388,8 +356,6 @@ function TextFloatControls({
   setBackgroundColor: (c: RgbaColor) => void;
   lineHeight: number;
   setLineHeight: (n: number) => void;
-  googleCatalogFonts: GoogleFontCatalogEntry[];
-  googleCatalogLoading?: boolean;
 }) {
   const [expand, setExpand] = useState<"color" | "background" | "type" | null>(null);
   const AlignIcon =
@@ -399,11 +365,6 @@ function TextFloatControls({
     const i = order.indexOf(textAlign);
     setTextAlign(order[(i + 1) % order.length]);
   };
-
-  const fonts = useMemo(
-    () => buildMobileFontFamilies(fontAssets, googleCatalogFonts),
-    [fontAssets, googleCatalogFonts],
-  );
 
   return (
     <div className="relative flex flex-col items-center gap-2">
@@ -435,29 +396,14 @@ function TextFloatControls({
         <div className="absolute bottom-[calc(100%+8px)] left-1/2 w-[min(300px,calc(100vw-2rem))] -translate-x-1/2">
           <FloatPanel>
             <div className="flex items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-                <select
-                  value={fontFamily}
-                  onChange={(e) => setFontFamily(e.target.value)}
-                  disabled={googleCatalogLoading}
-                  className={cn(
-                    studioForm.selectTrigger,
-                    "h-12 w-full truncate pr-9",
-                    googleCatalogLoading && "opacity-60",
-                  )}
-                >
-                  {fonts.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </select>
-                {googleCatalogLoading ? (
-                  <Loader2
-                    className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-[#ADAAC0]"
-                    aria-hidden
-                  />
-                ) : null}
+              <div className="min-w-0 flex-1">
+                <FontPicker
+                  fontAssets={fontAssets}
+                  fontFamily={fontFamily}
+                  setFontFamily={setFontFamily}
+                  side="top"
+                  triggerClassName="h-12"
+                />
               </div>
               <div className="flex shrink-0 gap-1.5">
                 <StudioSquareButton label="Bold" active={isBold} onClick={() => setIsBold(!isBold)}>
@@ -1403,8 +1349,6 @@ export interface StudioMobileFloatControlsProps {
     setBackgroundColor: (c: RgbaColor) => void;
     lineHeight: number;
     setLineHeight: (n: number) => void;
-    googleCatalogFonts: GoogleFontCatalogEntry[];
-    googleCatalogLoading?: boolean;
   };
   logoTools: {
     filteredLogoAssets: LogoAsset[];

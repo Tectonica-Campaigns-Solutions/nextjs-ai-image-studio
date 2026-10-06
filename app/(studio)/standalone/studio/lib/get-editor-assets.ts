@@ -149,6 +149,7 @@ async function fetchEditorAssetsForClientQueryId(
           font_weights: string[] | null;
           file_url: string | null;
           is_brand?: boolean;
+          is_primary?: boolean;
         }[]
       ).map((font) => ({
         font_source: font.font_source,
@@ -156,6 +157,7 @@ async function fetchEditorAssetsForClientQueryId(
         font_weights: font.font_weights ?? ["400"],
         file_url: font.file_url ?? undefined,
         is_brand: Boolean(font.is_brand),
+        is_primary: Boolean(font.is_primary),
       }));
     } else {
       if (fontsRpcError) {
@@ -173,7 +175,7 @@ async function fetchEditorAssetsForClientQueryId(
 
         const { data: directFonts, error: directFontsError } = await supabase
           .from("client_fonts")
-          .select("font_source, font_family, font_weights, file_url, is_brand")
+          .select("font_source, font_family, font_weights, file_url, is_brand, is_primary")
           .eq("client_id", clientId)
           .is("deleted_at", null)
           .order("is_brand", { ascending: false })
@@ -189,6 +191,7 @@ async function fetchEditorAssetsForClientQueryId(
               font_weights: string[] | null;
               file_url: string | null;
               is_brand?: boolean;
+              is_primary?: boolean;
             }>
           ).map((font) => ({
             font_source: font.font_source as "google" | "custom",
@@ -196,6 +199,7 @@ async function fetchEditorAssetsForClientQueryId(
             font_weights: font.font_weights ?? ["400"],
             file_url: font.file_url ?? undefined,
             is_brand: Boolean(font.is_brand),
+            is_primary: Boolean(font.is_primary),
           }));
         } else if (directFontsError) {
           console.error(
@@ -385,6 +389,7 @@ async function fetchEditorAssetsForUser(
           font_weights: string[] | null;
           file_url: string | null;
           is_brand?: boolean;
+          is_primary?: boolean;
         }[]
       ).map((font) => ({
         font_source: font.font_source,
@@ -392,6 +397,7 @@ async function fetchEditorAssetsForUser(
         font_weights: font.font_weights ?? ["400"],
         file_url: font.file_url ?? undefined,
         is_brand: Boolean(font.is_brand),
+        is_primary: Boolean(font.is_primary),
       }));
     } else if (fontsRpcError) {
       console.warn(
@@ -414,7 +420,7 @@ async function fetchEditorAssetsForUser(
       if (fontClientId) {
         const { data: directFonts, error: fontsError } = await supabase
           .from("client_fonts")
-          .select("font_source, font_family, font_weights, file_url, is_brand")
+          .select("font_source, font_family, font_weights, file_url, is_brand, is_primary")
           .eq("client_id", fontClientId)
           .is("deleted_at", null)
           .order("is_brand", { ascending: false })
@@ -430,6 +436,7 @@ async function fetchEditorAssetsForUser(
               font_weights: string[] | null;
               file_url: string | null;
               is_brand?: boolean;
+              is_primary?: boolean;
             }>
           ).map((font) => ({
             font_source: font.font_source as "google" | "custom",
@@ -437,6 +444,7 @@ async function fetchEditorAssetsForUser(
             font_weights: font.font_weights ?? ["400"],
             file_url: font.file_url ?? undefined,
             is_brand: Boolean(font.is_brand),
+            is_primary: Boolean(font.is_primary),
           }));
         } else if (fontsError) {
           console.error("Error fetching client fonts:", fontsError);

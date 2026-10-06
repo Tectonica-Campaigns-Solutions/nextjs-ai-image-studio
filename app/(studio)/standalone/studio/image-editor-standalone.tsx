@@ -89,6 +89,8 @@ import { useMobilePanel } from "./hooks/use-mobile-panel";
 import { useMobileStudioViewport } from "./hooks/use-mobile-studio-viewport";
 import { useEditorFonts } from "./hooks/use-editor-fonts";
 import { useDynamicGoogleFont } from "./hooks/use-dynamic-google-font";
+import { CURATED_FONTS } from "./constants/curated-fonts";
+import { getDefaultFontFamily } from "./utils/font-picker-groups";
 import { editImage } from "./lib/image-edit-service";
 import { StudioLoading } from "./studio-loading";
 import { getBackgroundImageDataURL, getCanvasOverlaySnapshot, getCurrentBackgroundImageForEdit, getFullCanvasImageForEdit, remeasureTextboxes } from "./utils/image-editor-utils";
@@ -271,8 +273,6 @@ function ImageEditorStandaloneInner({
   } | null>(null);
 
   const [googleFontCatalog, setGoogleFontCatalog] = useState<GoogleFontCatalogEntry[]>([]);
-  const [googleCatalogLoading, setGoogleCatalogLoading] = useState(true);
-  const [googleCatalogError, setGoogleCatalogError] = useState(false);
 
   // Guides and grid
   const [showGrid, setShowGrid] = useState(false);
@@ -348,24 +348,17 @@ function ImageEditorStandaloneInner({
     };
   }, [rawImageUrl, requiresPreprocess, preprocessImageUrl]);
 
+  // Full catalog gives correct css2 weights for non-curated fonts (e.g. from older sessions).
   useEffect(() => {
     let cancelled = false;
     void fetch("/api/fonts/google-catalog")
       .then(async (r) => {
         const data = (await r.json().catch(() => ({}))) as {
           fonts?: GoogleFontCatalogEntry[];
-          error?: string;
         };
-        if (cancelled) return;
-        setGoogleFontCatalog(Array.isArray(data.fonts) ? data.fonts : []);
-        if (!r.ok || data.error) setGoogleCatalogError(true);
+        if (!cancelled && Array.isArray(data.fonts)) setGoogleFontCatalog(data.fonts);
       })
-      .catch(() => {
-        if (!cancelled) setGoogleCatalogError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setGoogleCatalogLoading(false);
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -393,7 +386,7 @@ function ImageEditorStandaloneInner({
   const textTools = useTextTools({
     canvasRef: canvasRefStable,
     saveStateRef,
-    defaultFontFamily: fontAssets[0]?.font_family || DEFAULT_FONTS.PRIMARY,
+    defaultFontFamily: getDefaultFontFamily(fontAssets),
   });
 
   const insertPresetText = useCallback(
@@ -800,7 +793,7 @@ function ImageEditorStandaloneInner({
 
   const googleCatalogByFamily = useMemo(() => {
     const m = new Map<string, GoogleFontCatalogEntry>();
-    for (const f of googleFontCatalog) {
+    for (const f of [...CURATED_FONTS, ...googleFontCatalog]) {
       m.set(normalizeFontCatalogKey(f.family), f);
     }
     return m;
@@ -2180,9 +2173,6 @@ function ImageEditorStandaloneInner({
       <TextToolsPanel
         selectedObject={selection.selectedObject}
         fontAssets={fontAssets}
-        googleCatalogFonts={googleFontCatalog}
-        googleCatalogLoading={googleCatalogLoading}
-        googleCatalogError={googleCatalogError}
         fontsReady={fontsReady}
         addText={textTools.addText}
         fontSize={textTools.fontSize}
@@ -2213,7 +2203,7 @@ function ImageEditorStandaloneInner({
         onInsertAllPresets={insertAllPresetTexts}
       />
     ),
-    [selection.selectedObject, fontAssets, fontsReady, googleFontCatalog, googleCatalogLoading, googleCatalogError, textTools, eyedropper.activeTarget, eyedropper.startEyedropper, presetTexts, usedPresetIndexes, insertPresetText, insertAllPresetTexts]
+    [selection.selectedObject, fontAssets, fontsReady, textTools, eyedropper.activeTarget, eyedropper.startEyedropper, presetTexts, usedPresetIndexes, insertPresetText, insertAllPresetTexts]
   );
 
   const aiEditPanel = useMemo(
@@ -2806,8 +2796,6 @@ function ImageEditorStandaloneInner({
                             setBackgroundColor: textTools.setBackgroundColor,
                             lineHeight: textTools.lineHeight,
                             setLineHeight: textTools.setLineHeight,
-                            googleCatalogFonts: googleFontCatalog,
-                            googleCatalogLoading,
                           }}
                           logoTools={{
                             filteredLogoAssets: logoTools.filteredLogoAssets,

@@ -69,6 +69,7 @@ export interface FontAsset {
   font_weights: string[];
   file_url?: string;
   is_brand?: boolean;
+  is_primary?: boolean;
 }
 
 export interface ImageEditorStandaloneProps {
