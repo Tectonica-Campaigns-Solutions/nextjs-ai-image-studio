@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import {
+  Crop,
   Grid3X3,
   History,
   ImageIcon,
@@ -107,6 +108,15 @@ export const STUDIO_TOOLS = [
     hint: "Describe a change in plain words",
     mobileLabel: "AI Edit",
     icon: WandSparkles,
+    placement: "dock",
+    group: "edit",
+    modes: IMAGE_ONLY,
+  },
+  {
+    id: "crop",
+    label: "Crop",
+    hint: "Trim the image to a size",
+    icon: Crop,
     placement: "dock",
     group: "edit",
     modes: IMAGE_ONLY,

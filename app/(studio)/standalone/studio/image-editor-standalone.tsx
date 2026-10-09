@@ -69,6 +69,14 @@ import {
 import { useTemplateAuthor } from "./hooks/use-template-author";
 import { useTemplateCanvas, useTemplateSelection } from "./hooks/use-template-mode";
 import { TemplateGalleryScreen, TemplatesPanel } from "./components/TemplatesPanel";
+import { CropOverlay } from "./components/CropOverlay";
+import { CropPanel } from "./components/CropPanel";
+import {
+  CROP_ASPECTS,
+  centeredCropBox,
+  cropBackgroundToDataUrl,
+  type CropBox,
+} from "./lib/crop";
 import { TemplateSlotsPanel } from "./components/TemplateSlotsPanel";
 import { TemplateAuthorActionBar } from "./components/TemplateAuthorActionBar";
 import { studioToast } from "./utils/studio-toast";
@@ -625,6 +633,67 @@ function ImageEditorStandaloneInner({
     loadOverlaysFromJSON: history.loadOverlaysFromJSON,
     saveState: history.saveState,
   });
+
+  // Crop tool (image mode): the box lives over the canvas while the tool is open.
+  const [cropAspectKey, setCropAspectKey] = useState("free");
+  const [cropBox, setCropBox] = useState<CropBox | null>(null);
+  const [isApplyingCrop, setIsApplyingCrop] = useState(false);
+  const cropRatio = useMemo(() => {
+    if (cropAspectKey === "original") {
+      const dims = canvasEditor.canvasDimensions;
+      return dims ? dims.width / dims.height : null;
+    }
+    return CROP_ASPECTS.find((a) => a.key === cropAspectKey)?.ratio ?? null;
+  }, [cropAspectKey, canvasEditor.canvasDimensions]);
+
+  useEffect(() => {
+    const dims = canvasEditor.canvasDimensions;
+    if (desktopTool !== "crop" || !dims) {
+      setCropBox(null);
+      return;
+    }
+    canvasEditor.canvas?.discardActiveObject();
+    canvasEditor.canvas?.requestRenderAll();
+    setCropBox(centeredCropBox(dims.width, dims.height, cropRatio));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [desktopTool, canvasEditor.canvasDimensions, cropRatio]);
+
+  const handleApplyCrop = async () => {
+    const canvas = canvasEditor.canvas;
+    if (!canvas || !cropBox) return;
+    const dataUrl = cropBackgroundToDataUrl(canvas, cropBox);
+    if (!dataUrl) {
+      studioToast.error({
+        title: "This image can't be cropped",
+        description: "Its host doesn't allow editing it in the browser.",
+      });
+      return;
+    }
+    setIsApplyingCrop(true);
+    try {
+      canvas.discardActiveObject();
+      // Keep every element on the same spot of the image: move to the crop origin;
+      // replaceBackgroundImage then scales from the crop width to the new canvas.
+      for (const obj of canvas.getObjects().slice(1)) {
+        obj.set({ left: (obj.left ?? 0) - cropBox.x, top: (obj.top ?? 0) - cropBox.y });
+        obj.setCoords();
+      }
+      await canvasEditor.replaceBackgroundImage(dataUrl, { previousDisplayWidth: cropBox.w });
+      // Undo can't restore another image size, so the crop becomes the new baseline.
+      history.saveState(true);
+      history.setHistoryState((prev) => ({
+        entries: prev.entries.slice(prev.currentIndex, prev.currentIndex + 1),
+        currentIndex: 0,
+      }));
+      setDesktopTool(null);
+      studioToast.success({ title: "Image cropped" });
+    } catch (err) {
+      console.error("[crop] failed:", err);
+      studioToast.error({ title: "Could not crop the image" });
+    } finally {
+      setIsApplyingCrop(false);
+    }
+  };
 
   const templateAuthoring = useTemplateAuthor({
     templateAuthor,
@@ -2573,8 +2642,36 @@ function ImageEditorStandaloneInner({
     sessionsListPanel: sessionsForImage.length > 0 ? sessionsListPanel : null,
   };
 
+  const cropOutputSize =
+    cropBox && canvasEditor.originalImageDimensions && canvasEditor.canvasDimensions
+      ? {
+          width: Math.round(
+            (cropBox.w * canvasEditor.originalImageDimensions.width) /
+              canvasEditor.canvasDimensions.width,
+          ),
+          height: Math.round(
+            (cropBox.h * canvasEditor.originalImageDimensions.height) /
+              canvasEditor.canvasDimensions.height,
+          ),
+        }
+      : null;
+
   const toolPanels: StudioToolPanels = filterPanelsForMode({
     templates: templatesPanel,
+    crop: (
+      <CropPanel
+        aspectKey={cropAspectKey}
+        onAspectChange={setCropAspectKey}
+        outputSize={cropOutputSize}
+        isApplying={isApplyingCrop}
+        onApply={() => void handleApplyCrop()}
+        onReset={() => {
+          const dims = canvasEditor.canvasDimensions;
+          setCropAspectKey("free");
+          if (dims) setCropBox(centeredCropBox(dims.width, dims.height, null));
+        }}
+      />
+    ),
     "template-slots": templateAuthor ? (
       <TemplateSlotsPanel
         canvas={canvasEditor.canvas}
@@ -2756,6 +2853,15 @@ function ImageEditorStandaloneInner({
                       style={{ borderColor: UI_COLORS.BORDER }}
                     >
                       <canvas ref={canvasEditor.canvasRef} />
+                      {cropBox && canvasEditor.canvasDimensions ? (
+                        <CropOverlay
+                          width={canvasEditor.canvasDimensions.width}
+                          height={canvasEditor.canvasDimensions.height}
+                          box={cropBox}
+                          ratio={cropRatio}
+                          onChange={setCropBox}
+                        />
+                      ) : null}
                       {canvasEditor.canvasDimensions && (showGrid || guidePositions.v.length > 0 || guidePositions.h.length > 0) && (
                         <CanvasGuidesOverlay
                           width={canvasEditor.canvasDimensions.width}

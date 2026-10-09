@@ -853,8 +853,14 @@ export function useImageEditorCanvas(
     };
   }, [sourceKey]);
 
+  /**
+   * Swaps the background image and resizes the canvas to it, scaling overlays.
+   * `previousDisplayWidth` is the width (display px) the overlays are laid out
+   * against; it defaults to the current canvas width (a crop passes the crop
+   * box width, after shifting overlays to the box origin).
+   */
   const replaceBackgroundImage = useCallback(
-    async (newImageUrl: string) => {
+    async (newImageUrl: string, opts?: { previousDisplayWidth?: number }) => {
       const instance = canvasInstanceRef.current;
       if (!instance) return;
       const objects = instance.getObjects();
@@ -927,7 +933,7 @@ export function useImageEditorCanvas(
         instance.sendObjectToBack(newImg);
 
         if (canvasArea && originalWidth > 0 && originalHeight > 0) {
-          const oldWidth = instance.width ?? newDisplayWidth;
+          const oldWidth = opts?.previousDisplayWidth ?? instance.width ?? newDisplayWidth;
           const scale = newDisplayWidth / oldWidth;
 
           instance.setDimensions({
