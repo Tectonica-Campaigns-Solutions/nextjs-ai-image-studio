@@ -7,45 +7,27 @@ import {
   ImagePlus,
   Loader2,
   MessageSquareShare,
-  QrCode,
-  SlidersHorizontal,
   Sparkles,
-  Stamp,
   Trash2,
-  Type,
-  WandSparkles,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { STUDIO_LAYOUT, UI_COLORS } from "../constants/editor-constants";
 import {
-  STUDIO_LAYOUT,
   STUDIO_MOBILE_TOOLS,
-  UI_COLORS,
+  getStudioTool,
   type StudioMobileToolId,
-} from "../constants/editor-constants";
+} from "../constants/studio-tools";
 import type { HistoryState } from "../types/image-editor-types";
 import type { AlignOption } from "../hooks/use-alignment-tools";
 import { AlignmentPopover } from "./AlignmentPopover";
 import { FeedbackMobileTrigger } from "./FeedbackButton";
 import { StudioIconButton } from "./studio-ui";
 
-const TOOL_ICONS: Record<string, ReactNode> = {
-  "text-tools": <Type className="size-[19px]" strokeWidth={2} />,
-  "logo-overlay": <Stamp className="size-[19px]" strokeWidth={2} />,
-  "qr-code": <QrCode className="size-[19px]" strokeWidth={2} />,
-  "ai-edit": <WandSparkles className="size-[19px]" strokeWidth={2} />,
-  "advanced-options": <SlidersHorizontal className="size-[19px]" strokeWidth={2} />,
-  "saved-versions": <History className="size-[17px]" strokeWidth={2} />,
-};
-
-const TOOL_LABELS: Record<string, string> = {
-  "text-tools": "Text Tools",
-  "logo-overlay": "Logo Overlay",
-  "qr-code": "QR Code",
-  "ai-edit": "Edit with AI",
-  "advanced-options": "Advanced",
-  "saved-versions": "Saved versions",
-};
+function toolIcon(id: StudioMobileToolId): ReactNode {
+  const Icon = getStudioTool(id).icon;
+  return <Icon className={id === "saved-versions" ? "size-[17px]" : "size-[19px]"} strokeWidth={2} />;
+}
 
 const UndoIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 18 18" fill="none" className={className} aria-hidden>
@@ -235,13 +217,13 @@ export function StudioMobileTabBar({
                 color: active ? "#fff" : UI_COLORS.TEXT_PRIMARY,
               }}
             >
-              {TOOL_ICONS[t.id]}
+              <t.icon className="size-[19px]" strokeWidth={2} />
             </span>
             <span
               className="text-[10.5px] font-bold tracking-[-0.01em] whitespace-nowrap"
               style={{ color: active ? UI_COLORS.TEXT_PRIMARY : UI_COLORS.TEXT_SECONDARY }}
             >
-              {t.short}
+              {t.mobileLabel}
             </span>
           </button>
         );
@@ -389,8 +371,8 @@ export function StudioMobileToolSheet({
 }) {
   if (!activeTab && !panelTitle) return null;
 
-  const title = panelTitle ?? (activeTab ? TOOL_LABELS[activeTab] : undefined) ?? "Tools";
-  const icon = panelIcon ?? (activeTab ? TOOL_ICONS[activeTab] : null);
+  const title = panelTitle ?? (activeTab ? getStudioTool(activeTab).label : undefined) ?? "Tools";
+  const icon = panelIcon ?? (activeTab ? toolIcon(activeTab) : null);
 
   return (
     <aside

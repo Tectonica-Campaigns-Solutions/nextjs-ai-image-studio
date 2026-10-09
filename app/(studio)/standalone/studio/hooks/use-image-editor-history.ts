@@ -3,6 +3,10 @@
 import { useState, useRef, useCallback } from "react";
 import { Canvas } from "fabric";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
+import {
+  createBackgroundObject,
+  type BlankCanvasSource,
+} from "../lib/canvas-background";
 import type {
   HistoryEntry,
   HistoryState,
@@ -26,6 +30,8 @@ export interface UseImageEditorHistoryOptions {
   setLogoOpacity: (n: number) => void;
   /** Called when undo/redo restores a different background URL so the canvas ref can stay in sync. */
   onRestoreBackgroundUrl?: (url: string) => void;
+  /** Solid background to rebuild on undo/redo when the canvas has no background image. */
+  blankBackgroundRef?: React.MutableRefObject<BlankCanvasSource | null>;
 }
 
 export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
@@ -40,6 +46,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
     setLogoSize,
     setLogoOpacity,
     onRestoreBackgroundUrl,
+    blankBackgroundRef,
   } = options;
 
   const [historyState, setHistoryState] = useState<HistoryState>({
@@ -154,7 +161,20 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
   const addBackgroundFromUrl = useCallback(
     async (targetCanvas: Canvas): Promise<void> => {
       const url = originalImageUrlRef.current;
-      if (!url) return;
+      if (!url) {
+        const blank = blankBackgroundRef?.current;
+        if (!blank) return;
+        const { object, width, height } = await createBackgroundObject(blank);
+        originalImageDimensionsRef.current = { width, height };
+        const scale = Math.min(
+          ((targetCanvas as any).width as number) / width,
+          ((targetCanvas as any).height as number) / height,
+        );
+        object.set({ scaleX: scale, scaleY: scale });
+        targetCanvas.add(object);
+        targetCanvas.sendObjectToBack(object);
+        return;
+      }
       const img = await loadImageWithCORS(url);
       const originalWidth = img.width;
       const originalHeight = img.height;
@@ -189,7 +209,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
       targetCanvas.add(img);
       targetCanvas.sendObjectToBack(img);
     },
-    [originalImageUrlRef, originalImageDimensionsRef],
+    [originalImageUrlRef, originalImageDimensionsRef, blankBackgroundRef],
   );
 
   const loadOverlaysFromJSON = useCallback(

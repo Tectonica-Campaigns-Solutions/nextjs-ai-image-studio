@@ -9,6 +9,11 @@ import {
   type TPointerEvent,
 } from "fabric";
 import { loadImageWithCORS } from "../utils/image-editor-utils";
+import {
+  createBackgroundObject,
+  getCanvasSourceKey,
+  type CanvasSource,
+} from "../lib/canvas-background";
 import { getCustomControlRenderers } from "../lib/fabric-control-icons";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
 import { CANVAS_CONTROLS, GUIDES } from "../constants/editor-constants";
@@ -173,11 +178,14 @@ function updateControlsPositionForCanvasBounds(obj: any, canvas: Canvas): void {
 }
 
 export function useImageEditorCanvas(
-  imageUrl: string | null,
+  source: CanvasSource | null,
   options: UseImageEditorCanvasOptions,
 ) {
   const optionsRef = useRef(options);
   optionsRef.current = options;
+  const sourceRef = useRef(source);
+  sourceRef.current = source;
+  const sourceKey = getCanvasSourceKey(source);
 
   const {
     headerRef,
@@ -307,9 +315,11 @@ export function useImageEditorCanvas(
     };
   }, [canvas, originalImageDimensions]);
 
-  // Init effect - only re-run when imageUrl changes
+  // Init effect - only re-run when the canvas source changes
   useEffect(() => {
-    if (!imageUrl) return;
+    const source = sourceRef.current;
+    if (!source) return;
+    const imageUrl = source.kind === "image" ? source.imageUrl : null;
 
     const initializeCanvas = async () => {
       const opts = optionsRef.current;
@@ -512,9 +522,11 @@ export function useImageEditorCanvas(
 
       try {
         originalImageUrlRef.current = imageUrl;
-        const img = await loadImageWithCORS(imageUrl);
-        const originalWidth = img.width;
-        const originalHeight = img.height;
+        const {
+          object: img,
+          width: originalWidth,
+          height: originalHeight,
+        } = await createBackgroundObject(source);
 
         setOriginalImageDimensions({
           width: originalWidth,
@@ -545,23 +557,7 @@ export function useImageEditorCanvas(
 
         setCanvasDimensions({ width: displayWidth, height: displayHeight });
 
-        img.set({
-          left: 0,
-          top: 0,
-          selectable: false,
-          evented: false,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockRotation: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          hasControls: false,
-          hasBorders: false,
-          scaleX: displayScale,
-          scaleY: displayScale,
-        });
-        (img as any).isBackground = true;
-        (img as any).isEditable = false;
+        img.set({ scaleX: displayScale, scaleY: displayScale });
 
         fabricCanvas.add(img);
         fabricCanvas.renderAll();
@@ -580,7 +576,7 @@ export function useImageEditorCanvas(
               {
                 overlayJSON: initialOverlayJSON,
                 metadata: {},
-                backgroundUrl: imageUrl,
+                backgroundUrl: imageUrl ?? undefined,
               },
             ],
             currentIndex: 0,
@@ -595,7 +591,7 @@ export function useImageEditorCanvas(
           });
         }, 100);
       } catch (error) {
-        console.error("Error loading image:", error);
+        console.error("Error loading canvas background:", error);
       }
 
       const ROTATION_TOOLTIP_OFFSET_TOP = 80;
@@ -841,7 +837,7 @@ export function useImageEditorCanvas(
         instance.dispose();
       }
     };
-  }, [imageUrl]);
+  }, [sourceKey]);
 
   const replaceBackgroundImage = useCallback(
     async (newImageUrl: string) => {

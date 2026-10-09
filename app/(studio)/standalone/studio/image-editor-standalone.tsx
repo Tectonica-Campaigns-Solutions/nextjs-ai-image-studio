@@ -59,7 +59,11 @@ import type {
 } from "./types/image-editor-types";
 import type { GoogleFontCatalogEntry } from "./types/google-font-catalog";
 import type { DisclaimerPosition } from "./types/image-editor-types";
-import type { StudioDesktopToolId, StudioMobileToolId } from "./constants/editor-constants";
+import type {
+  StudioDesktopToolId,
+  StudioMobileToolId,
+  StudioToolPanels,
+} from "./constants/studio-tools";
 import { studioToast } from "./utils/studio-toast";
 import {
   DEFAULT_FONTS,
@@ -74,6 +78,7 @@ import {
 
 // Import custom hooks
 import { useImageEditorCanvas, constrainObjectToCanvas } from "./hooks/use-image-editor-canvas";
+import type { BlankCanvasSource, CanvasSource } from "./lib/canvas-background";
 import { useImageEditorHistory } from "./hooks/use-image-editor-history";
 import { useImageEditorSelection } from "./hooks/use-image-editor-selection";
 import { useTextTools } from "./hooks/use-text-tools";
@@ -297,6 +302,14 @@ function ImageEditorStandaloneInner({
     ? (isPreprocessingImage ? null : (preprocessedImageUrl ?? null))
     : rawImageUrl;
 
+  const canvasSource = useMemo<CanvasSource | null>(
+    () => (imageUrl ? { kind: "image", imageUrl } : null),
+    [imageUrl],
+  );
+  // Undo/redo rebuilds object 0; a solid background has no URL to reload from.
+  const blankBackgroundRef = useRef<BlankCanvasSource | null>(null);
+  blankBackgroundRef.current = canvasSource?.kind === "blank" ? canvasSource : null;
+
   const preprocessImageUrl = useCallback(async (url: string): Promise<string> => {
     // Skip preprocessing for local object URLs and already-inlined data URLs.
     if (url.startsWith("blob:") || url.startsWith("data:")) return url;
@@ -502,6 +515,7 @@ function ImageEditorStandaloneInner({
       if (canvasOriginalImageUrlRefRef.current) canvasOriginalImageUrlRefRef.current.current = url;
       currentBackgroundUrlRef.current = url;
     },
+    blankBackgroundRef,
   });
 
   // Update saveStateRef whenever history.saveState changes
@@ -539,7 +553,7 @@ function ImageEditorStandaloneInner({
   );
 
   // Initialize canvas hook (provides canvas instance)
-  const canvasEditor = useImageEditorCanvas(imageUrl, {
+  const canvasEditor = useImageEditorCanvas(canvasSource, {
     headerRef,
     setHistoryState: history.setHistoryState,
     setObjectMetadata: selection.setObjectMetadata,
@@ -2481,8 +2495,21 @@ function ImageEditorStandaloneInner({
     frameToolsPanel: FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null,
     guidesAndGridPanel,
     sessionsListPanel: sessionsForImage.length > 0 ? sessionsListPanel : null,
-    desktopTool,
-    onDesktopToolChange: setDesktopTool,
+  };
+
+  const toolPanels: StudioToolPanels = {
+    "text-tools": sidebarProps.textToolsPanel,
+    "logo-overlay": sidebarProps.logoToolsPanel,
+    "qr-code": sidebarProps.qrToolsPanel,
+    "ai-edit": sidebarProps.aiEditPanel,
+    "advanced-options": advancedOptionsContent,
+    layers: sidebarProps.layersToolsPanel,
+    background: sidebarProps.backgroundImagePanel,
+    shapes: sidebarProps.shapeToolsPanel,
+    frames: sidebarProps.frameToolsPanel,
+    guides: sidebarProps.guidesAndGridPanel,
+    sessions: sidebarProps.sessionsListPanel,
+    "saved-versions": sidebarProps.sessionsListPanel,
   };
 
   const mobileToolSheetContent = (() => {
@@ -2535,7 +2562,11 @@ function ImageEditorStandaloneInner({
           <StudioMobileHeader subtitle={studioSubtitle} />
 
           <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-            <EditorSidebar {...sidebarProps} />
+            <EditorSidebar
+              panels={toolPanels}
+              desktopTool={desktopTool}
+              onDesktopToolChange={setDesktopTool}
+            />
 
             <div
               className="relative flex min-h-0 min-w-0 flex-1 flex-col"
@@ -2545,12 +2576,7 @@ function ImageEditorStandaloneInner({
                 <StudioDesktopToolPanel
                   tool={desktopTool}
                   onClose={() => setDesktopTool(null)}
-                  textToolsPanel={sidebarProps.textToolsPanel}
-                  logoToolsPanel={sidebarProps.logoToolsPanel}
-                  qrToolsPanel={sidebarProps.qrToolsPanel}
-                  aiEditPanel={sidebarProps.aiEditPanel}
-                  advancedContent={advancedOptionsContent}
-                  sessionsListPanel={sidebarProps.sessionsListPanel}
+                  panels={toolPanels}
                 />
               )}
 
