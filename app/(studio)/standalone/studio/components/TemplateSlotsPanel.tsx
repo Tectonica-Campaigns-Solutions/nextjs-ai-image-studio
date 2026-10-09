@@ -84,6 +84,7 @@ export function TemplateSlotsPanel({
 
   const updateSlot = (obj: SlotObject, patch: Partial<BrandSlotProps>) => {
     const slotType = "slotType" in patch ? patch.slotType : obj.slotType;
+    if (slotType && !allowedSlotTypes(obj).includes(slotType)) return;
     if (!slotType) {
       obj.set({ slotId: undefined, slotType: undefined, slotLabel: undefined } as never);
     } else {

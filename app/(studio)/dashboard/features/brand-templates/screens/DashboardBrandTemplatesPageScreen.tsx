@@ -101,7 +101,7 @@ export function DashboardBrandTemplatesPageScreen({
   return (
     <main className="ml-0 pt-24 px-10 pb-12 min-h-screen bg-surface">
       <DashboardPageHeader
-        segments={[{ label: "Dashboard", href: "/dashboard" }, { label: "Brand Templates" }]}
+        segments={[{ label: "Brand Templates" }]}
         title="Brand Templates"
         description="Template library for the Studio's Branding section. Global templates are available to every client."
         actions={
@@ -157,16 +157,17 @@ export function DashboardBrandTemplatesPageScreen({
                       className="max-h-full max-w-full object-contain"
                     />
                   ) : (
-                    <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant/70">
+                    <span className="rounded-full bg-surface-container-lowest/90 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
                       No layout yet
                     </span>
                   )}
                   <span
                     className={cx(
                       "absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold",
+                      "shadow-sm",
                       template.is_active
-                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                        : "bg-surface-container-high text-on-surface-variant",
+                        ? "bg-emerald-600 text-white"
+                        : "bg-surface-container-lowest text-on-surface-variant",
                     )}
                   >
                     {template.is_active ? "Active" : "Draft"}

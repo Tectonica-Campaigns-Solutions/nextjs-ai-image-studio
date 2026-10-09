@@ -72,8 +72,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       userId: adminCheck.user.id,
     });
 
-    // The template card shows the first layout ever saved until one exists.
-    if (thumbnailUrl && !template.thumbnail_url) {
+    // The template card shows the square layout, or the first one saved until
+    // a square exists.
+    if (thumbnailUrl && (format === "square" || !template.thumbnail_url)) {
       await createAdminClient()
         .from("brand_templates")
         .update({ thumbnail_url: thumbnailUrl, updated_by: adminCheck.user.id })

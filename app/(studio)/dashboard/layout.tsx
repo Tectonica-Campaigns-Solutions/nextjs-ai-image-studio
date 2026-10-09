@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: {
@@ -12,5 +13,12 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+  // Dashboard screens notify through sonner's `toast`; the root layout only
+  // mounts the shadcn toaster, so sonner needs its own outlet here.
+  return (
+    <>
+      {children}
+      <SonnerToaster position="bottom-right" richColors />
+    </>
+  );
 }
