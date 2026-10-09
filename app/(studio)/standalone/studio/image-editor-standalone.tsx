@@ -2534,6 +2534,7 @@ function ImageEditorStandaloneInner({
         variant={templateState.variant}
         isApplyingVariant={templateCanvas.isApplyingVariant}
         onSelectTemplate={templateState.selectTemplate}
+        onSelectFormat={(f) => templateCanvas.switchFormat(f.key)}
         onSelectVariant={(v) => void templateCanvas.applyVariant(v)}
         onTextChange={() => history.saveState()}
       />

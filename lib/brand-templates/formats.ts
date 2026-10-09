@@ -34,8 +34,19 @@ export const BRAND_SLOT_TYPES: readonly { value: BrandSlotType; label: string }[
   { value: "logo", label: "Logo" },
 ];
 
-/** Custom fabric props that must survive toJSON / loadFromJSON for templates. */
-export const BRAND_SLOT_PROPS = ["slotId", "slotType", "slotLabel"] as const;
+/**
+ * Custom fabric props that must survive toJSON / loadFromJSON for templates:
+ * slot identity, `templateLayer` (object came from the template layout, not
+ * added by the user) and, for filled photo slots, the frame shape and crop.
+ */
+export const BRAND_SLOT_PROPS = [
+  "slotId",
+  "slotType",
+  "slotLabel",
+  "templateLayer",
+  "slotShape",
+  "slotCrop",
+] as const;
 
 /** Background used while authoring when a template has no color variant. */
 export const BRAND_DEFAULT_BACKGROUND = "#FFFFFF";

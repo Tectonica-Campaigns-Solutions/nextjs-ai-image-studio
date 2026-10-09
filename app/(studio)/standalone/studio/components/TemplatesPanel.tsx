@@ -4,7 +4,7 @@ import { useEffect, useReducer, useState } from "react";
 import type { Canvas, FabricObject } from "fabric";
 import { Check, LayoutGrid, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { BrandFormatPreset } from "@/lib/brand-templates/formats";
+import { BRAND_FORMATS, type BrandFormatPreset } from "@/lib/brand-templates/formats";
 import type {
   BrandSlotProps,
   BrandTemplateVariant,
@@ -221,6 +221,7 @@ export interface TemplatesPanelProps {
   variant: BrandTemplateVariant | null;
   isApplyingVariant: boolean;
   onSelectTemplate: (template: BrandTemplateWithFormats) => void;
+  onSelectFormat: (format: BrandFormatPreset) => void;
   onSelectVariant: (variant: BrandTemplateVariant) => void;
   /** Called (debounced by history) after a slot's text changes. */
   onTextChange: () => void;
@@ -234,6 +235,7 @@ export function TemplatesPanel({
   variant,
   isApplyingVariant,
   onSelectTemplate,
+  onSelectFormat,
   onSelectVariant,
   onTextChange,
 }: TemplatesPanelProps) {
@@ -248,6 +250,8 @@ export function TemplatesPanel({
   }, [canvas]);
 
   const textSlots = getTextSlots(canvas);
+  const savedKeys = new Set(template.formats.map((f) => f.format_key));
+  const availableFormats = BRAND_FORMATS.filter((f) => savedKeys.has(f.key));
 
   const updateText = (obj: TextSlotObject, text: string) => {
     if (!canvas) return;
@@ -313,6 +317,43 @@ export function TemplatesPanel({
           </button>
         ) : null}
       </div>
+
+      {availableFormats.length > 1 ? (
+        <div className="flex flex-col gap-2">
+          <span className={studioForm.label}>Size</span>
+          <div className="grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Format">
+            {availableFormats.map((f) => {
+              const active = f.key === format.key;
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  title={`${f.label} · ${f.width}×${f.height} · ${f.hint}`}
+                  onClick={() => !active && onSelectFormat(f)}
+                  className={cn(
+                    "flex h-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-[10px] border text-[12px] font-bold transition-colors",
+                    active
+                      ? "border-[#8069FF] bg-[rgba(128,105,255,0.16)] text-[#F5F4FB]"
+                      : "border-white/[0.09] bg-[#211E30] text-[#ADAAC0] hover:bg-[#2C2942] hover:text-[#F5F4FB]",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className="rounded-[2px] border-[1.5px] border-current"
+                    style={{
+                      width: f.width >= f.height ? 18 : (18 * f.width) / f.height,
+                      height: f.height >= f.width ? 18 : (18 * f.height) / f.width,
+                    }}
+                  />
+                  {f.ratio}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       {template.variants.length > 1 ? (
         <div className="flex flex-col gap-2">

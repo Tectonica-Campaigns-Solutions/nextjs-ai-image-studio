@@ -19,6 +19,13 @@ import {
   type BlankCanvasSource,
 } from "../lib/canvas-background";
 import { layoutToDisplayOverlayJSON } from "../lib/template-layout";
+import {
+  applyTemplateTexts,
+  captureTemplateContent,
+  extrasToDisplayOverlayJSON,
+  markAsTemplateLayer,
+  type TemplateContent,
+} from "../lib/template-content";
 import { studioToast } from "../utils/studio-toast";
 
 interface TemplateSelection {
@@ -53,6 +60,10 @@ export function useTemplateSelection(templates: BrandTemplateWithFormats[] | nul
   const [variantId, setVariantId] = useState<string | null>(null);
   /** Set by useTemplateCanvas so a switch never loads onto the outgoing canvas. */
   const outgoingCanvasRef = useRef<Canvas | null>(null);
+  /** Content to carry onto the next canvas after a format switch. */
+  const pendingContentRef = useRef<{ content: TemplateContent; from: BrandFormatPreset } | null>(
+    null,
+  );
   const latestCanvasRef = useRef<Canvas | null>(null);
 
   const format = selection ? getBrandFormat(selection.formatKey) : null;
@@ -80,9 +91,23 @@ export function useTemplateSelection(templates: BrandTemplateWithFormats[] | nul
     if (!formatKey) return;
     const firstVariant = template.variants[0]?.id ?? null;
     outgoingCanvasRef.current = latestCanvasRef.current;
+    pendingContentRef.current = null;
     setVariantId(firstVariant);
     setSelection({ template, formatKey, initialVariantId: firstVariant });
   }, []);
+
+  /** Rebuilds the canvas in another format of the same template, keeping the background. */
+  const changeFormat = useCallback(
+    (formatKey: BrandFormatKey, content: TemplateContent | null) => {
+      if (!selection || formatKey === selection.formatKey) return;
+      outgoingCanvasRef.current = latestCanvasRef.current;
+      pendingContentRef.current = content
+        ? { content, from: getBrandFormat(selection.formatKey) }
+        : null;
+      setSelection({ ...selection, formatKey, initialVariantId: variant?.id ?? null });
+    },
+    [selection, variant?.id],
+  );
 
   return {
     isTemplateMode: templates != null,
@@ -94,8 +119,10 @@ export function useTemplateSelection(templates: BrandTemplateWithFormats[] | nul
     canvasSource,
     currentBackground,
     selectTemplate,
+    changeFormat,
     outgoingCanvasRef,
     latestCanvasRef,
+    pendingContentRef,
   };
 }
 
@@ -116,7 +143,16 @@ export function useTemplateCanvas({
   loadOverlaysFromJSON: (canvas: Canvas, overlayJSON: string) => Promise<void>;
   saveState: (immediate?: boolean, force?: boolean) => void;
 }) {
-  const { selection, format, variant, setVariantId, outgoingCanvasRef, latestCanvasRef } = state;
+  const {
+    selection,
+    format,
+    variant,
+    setVariantId,
+    outgoingCanvasRef,
+    latestCanvasRef,
+    pendingContentRef,
+    changeFormat,
+  } = state;
   const [isApplyingVariant, setIsApplyingVariant] = useState(false);
   latestCanvasRef.current = canvas;
 
@@ -125,24 +161,49 @@ export function useTemplateCanvas({
   useEffect(() => {
     if (!selection || !canvas || outgoingCanvasRef.current === canvas) return;
     outgoingCanvasRef.current = canvas;
+    const target = getBrandFormat(selection.formatKey);
     const layout = selection.template.formats.find((f) => f.format_key === selection.formatKey)
       ?.fabric_json;
-    if (!layout?.objects.length) return;
+    const pending = pendingContentRef.current;
+    pendingContentRef.current = null;
+    if (!layout?.objects.length && !pending) return;
 
     void (async () => {
       try {
-        await loadOverlaysFromJSON(
-          canvas,
-          layoutToDisplayOverlayJSON(layout, canvas, getBrandFormat(selection.formatKey).width),
-        );
+        if (layout?.objects.length) {
+          await loadOverlaysFromJSON(
+            canvas,
+            layoutToDisplayOverlayJSON(markAsTemplateLayer(layout), canvas, target.width),
+          );
+        }
+        if (pending) {
+          await applyTemplateTexts(canvas, pending.content);
+          const extras = extrasToDisplayOverlayJSON(pending.content, pending.from, target, canvas);
+          if (extras) {
+            await loadOverlaysFromJSON(canvas, extras);
+            studioToast.success({
+              title: "Your added elements were resized",
+              description: "Check their position in this format.",
+            });
+          }
+        }
         canvas.renderAll();
+        // The first snapshot of this canvas: undo never goes behind the template.
         saveState(true);
       } catch (err) {
         console.error("[template-mode] failed to load layout:", err);
         studioToast.error({ title: "Could not load this template" });
       }
     })();
-  }, [selection, canvas, loadOverlaysFromJSON, saveState, outgoingCanvasRef]);
+  }, [selection, canvas, loadOverlaysFromJSON, saveState, outgoingCanvasRef, pendingContentRef]);
+
+  const switchFormat = useCallback(
+    (formatKey: BrandFormatKey) => {
+      if (!canvas || !format) return;
+      changeFormat(formatKey, captureTemplateContent(canvas, format.width));
+    },
+    [canvas, format, changeFormat],
+  );
 
   const applyVariant = useCallback(
     async (next: BrandTemplateVariant) => {
@@ -166,5 +227,5 @@ export function useTemplateCanvas({
     [canvas, selection, format, variant?.id, setVariantId],
   );
 
-  return { applyVariant, isApplyingVariant };
+  return { applyVariant, isApplyingVariant, switchFormat };
 }

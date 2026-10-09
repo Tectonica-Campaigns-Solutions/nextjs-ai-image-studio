@@ -19,11 +19,23 @@ export interface BrandTemplateVariant {
 /** What a slot holds; content is carried between formats by slotId. */
 export type BrandSlotType = "text" | "image" | "logo";
 
+/** Photo framing inside an image slot: zoom ≥ 1 and focal point (0..1). */
+export interface BrandSlotCrop {
+  zoom: number;
+  fx: number;
+  fy: number;
+}
+
 /** Extra props stored on fabric objects that are template slots. */
 export interface BrandSlotProps {
   slotId?: string;
   slotType?: BrandSlotType;
   slotLabel?: string;
+  /** Set on every object loaded from a template layout (vs. added by the user). */
+  templateLayer?: boolean;
+  /** Frame shape of a filled photo slot. */
+  slotShape?: "rect" | "ellipse";
+  slotCrop?: BrandSlotCrop;
 }
 
 /** fabric_json column: overlay objects only (the background comes from the variant). */
