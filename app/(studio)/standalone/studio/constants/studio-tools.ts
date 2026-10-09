@@ -49,8 +49,10 @@ export interface StudioToolDef {
 }
 
 const ALL_MODES = ["image", "template", "template-author"] as const;
-/** Tools that depend on an image background (or on its saved versions, for now). */
+/** Tools that depend on an image background. */
 const IMAGE_ONLY = ["image"] as const;
+/** Tools for end users' designs (not template authoring). */
+const USER_MODES = ["image", "template"] as const;
 
 export const STUDIO_TOOLS = [
   {
@@ -184,7 +186,7 @@ export const STUDIO_TOOLS = [
     icon: Save,
     placement: "advanced",
     group: "arrange",
-    modes: IMAGE_ONLY,
+    modes: USER_MODES,
   },
   // Opened from the canvas toolbar / save toast, not from the dock
   {
@@ -194,7 +196,7 @@ export const STUDIO_TOOLS = [
     icon: History,
     placement: "toolbar",
     group: "arrange",
-    modes: IMAGE_ONLY,
+    modes: USER_MODES,
   },
 ] as const satisfies readonly StudioToolDef[];
 

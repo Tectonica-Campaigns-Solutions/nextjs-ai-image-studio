@@ -104,7 +104,8 @@ export async function fillPhotoSlot(
   const index = canvas.getObjects().indexOf(slot);
   canvas.remove(slot);
   canvas.insertAt(index < 0 ? canvas.getObjects().length : index, img);
-  canvas.setActiveObject(img);
+  // Offscreen StaticCanvas renders (multi-format export) have no selection.
+  (canvas as Partial<Pick<Canvas, "setActiveObject">>).setActiveObject?.(img);
   canvas.requestRenderAll();
   return img;
 }

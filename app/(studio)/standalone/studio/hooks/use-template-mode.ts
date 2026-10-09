@@ -5,14 +5,25 @@ import type { Canvas } from "fabric";
 import {
   BRAND_DEFAULT_BACKGROUND,
   getBrandFormat,
+  isBrandFormatKey,
   pickDefaultFormat,
   type BrandFormatPreset,
 } from "@/lib/brand-templates/formats";
 import type {
   BrandFormatKey,
+  BrandTemplateFabricJson,
   BrandTemplateVariant,
   BrandTemplateWithFormats,
 } from "@/lib/brand-templates/types";
+import type { TemplateSessionState } from "../types/image-editor-types";
+
+/** A saved template design to open (from Saved versions or `?session_id=`). */
+export interface TemplateSessionInput {
+  id: string;
+  template_id?: string | null;
+  template_state?: TemplateSessionState | null;
+  overlay_json: Record<string, unknown>;
+}
 import {
   createBackgroundObject,
   fitBackgroundToCanvas,
@@ -34,9 +45,12 @@ interface TemplateSelection {
   formatKey: BrandFormatKey;
   /** Variant the canvas was built with; later switches only swap object 0. */
   initialVariantId: string | null;
+  /** Bumped when a saved design is opened, so the canvas always rebuilds. */
+  revision?: number;
 }
 
-function blankSourceFor(
+/** Canvas source for a template format with a given background variant. */
+export function blankSourceFor(
   template: BrandTemplateWithFormats,
   format: BrandFormatPreset,
   variant: BrandTemplateVariant | null,
@@ -56,9 +70,42 @@ function blankSourceFor(
  * Branding template mode, part 1 (before the canvas exists): which template,
  * format and background variant are selected, and the canvas source for them.
  */
-export function useTemplateSelection(templates: BrandTemplateWithFormats[] | null) {
-  const [selection, setSelection] = useState<TemplateSelection | null>(null);
-  const [variantId, setVariantId] = useState<string | null>(null);
+function resolveSession(
+  templates: BrandTemplateWithFormats[] | null,
+  session: TemplateSessionInput | null | undefined,
+): { selection: TemplateSelection; overlay: BrandTemplateFabricJson } | null {
+  if (!templates || !session?.template_id) return null;
+  const template = templates.find((t) => t.id === session.template_id);
+  if (!template) return null;
+  const saved = session.template_state?.format;
+  const formatKey =
+    isBrandFormatKey(saved) && template.formats.some((f) => f.format_key === saved)
+      ? saved
+      : pickDefaultFormat(template.formats);
+  if (!formatKey) return null;
+  const variantId = template.variants.some((v) => v.id === session.template_state?.variantId)
+    ? (session.template_state?.variantId ?? null)
+    : (template.variants[0]?.id ?? null);
+  const objects = Array.isArray(session.overlay_json?.objects)
+    ? (session.overlay_json.objects as BrandTemplateFabricJson["objects"])
+    : [];
+  return {
+    selection: { template, formatKey, initialVariantId: variantId },
+    overlay: { version: session.overlay_json?.version as string | undefined, objects },
+  };
+}
+
+export function useTemplateSelection(
+  templates: BrandTemplateWithFormats[] | null,
+  initialSession?: TemplateSessionInput | null,
+) {
+  const [initial] = useState(() => resolveSession(templates, initialSession));
+  const [selection, setSelection] = useState<TemplateSelection | null>(initial?.selection ?? null);
+  const [variantId, setVariantId] = useState<string | null>(
+    initial?.selection.initialVariantId ?? null,
+  );
+  /** Saved design objects to load instead of the template layout (native px). */
+  const pendingOverlayRef = useRef<BrandTemplateFabricJson | null>(initial?.overlay ?? null);
   /** Set by useTemplateCanvas so a switch never loads onto the outgoing canvas. */
   const outgoingCanvasRef = useRef<Canvas | null>(null);
   /** Content to carry onto the next canvas after a format switch. */
@@ -78,7 +125,10 @@ export function useTemplateSelection(templates: BrandTemplateWithFormats[] | nul
     if (!selection) return null;
     const initial =
       selection.template.variants.find((v) => v.id === selection.initialVariantId) ?? null;
-    return blankSourceFor(selection.template, getBrandFormat(selection.formatKey), initial);
+    return {
+      ...blankSourceFor(selection.template, getBrandFormat(selection.formatKey), initial),
+      revision: selection.revision ?? 0,
+    };
   }, [selection]);
 
   /** What undo/redo should rebuild as the background (the current variant). */
@@ -93,9 +143,25 @@ export function useTemplateSelection(templates: BrandTemplateWithFormats[] | nul
     const firstVariant = template.variants[0]?.id ?? null;
     outgoingCanvasRef.current = latestCanvasRef.current;
     pendingContentRef.current = null;
+    pendingOverlayRef.current = null;
     setVariantId(firstVariant);
     setSelection({ template, formatKey, initialVariantId: firstVariant });
   }, []);
+
+  /** Opens a saved design. Returns false when its template is no longer available. */
+  const restoreSession = useCallback(
+    (session: TemplateSessionInput): boolean => {
+      const resolved = resolveSession(templates, session);
+      if (!resolved) return false;
+      outgoingCanvasRef.current = latestCanvasRef.current;
+      pendingContentRef.current = null;
+      pendingOverlayRef.current = resolved.overlay;
+      setVariantId(resolved.selection.initialVariantId);
+      setSelection((prev) => ({ ...resolved.selection, revision: (prev?.revision ?? 0) + 1 }));
+      return true;
+    },
+    [templates],
+  );
 
   /** Rebuilds the canvas in another format of the same template, keeping the background. */
   const changeFormat = useCallback(
@@ -120,10 +186,14 @@ export function useTemplateSelection(templates: BrandTemplateWithFormats[] | nul
     canvasSource,
     currentBackground,
     selectTemplate,
+    restoreSession,
     changeFormat,
     outgoingCanvasRef,
     latestCanvasRef,
     pendingContentRef,
+    pendingOverlayRef,
+    /** Id of the saved design opened at load (`?session_id=`), if any. */
+    initialSessionId: initial ? (initialSession?.id ?? null) : null,
   };
 }
 
@@ -152,6 +222,7 @@ export function useTemplateCanvas({
     outgoingCanvasRef,
     latestCanvasRef,
     pendingContentRef,
+    pendingOverlayRef,
     changeFormat,
   } = state;
   const [isApplyingVariant, setIsApplyingVariant] = useState(false);
@@ -167,11 +238,18 @@ export function useTemplateCanvas({
       ?.fabric_json;
     const pending = pendingContentRef.current;
     pendingContentRef.current = null;
-    if (!layout?.objects.length && !pending) return;
+    // A saved design replaces the template layout entirely.
+    const saved = pendingOverlayRef.current;
+    pendingOverlayRef.current = null;
+    if (!layout?.objects.length && !pending && !saved) return;
 
     void (async () => {
       try {
-        if (layout?.objects.length) {
+        if (saved) {
+          if (saved.objects.length) {
+            await loadOverlaysFromJSON(canvas, layoutToDisplayOverlayJSON(saved, canvas, target.width));
+          }
+        } else if (layout?.objects.length) {
           await loadOverlaysFromJSON(
             canvas,
             layoutToDisplayOverlayJSON(markAsTemplateLayer(layout), canvas, target.width),
@@ -204,7 +282,15 @@ export function useTemplateCanvas({
         studioToast.error({ title: "Could not load this template" });
       }
     })();
-  }, [selection, canvas, loadOverlaysFromJSON, saveState, outgoingCanvasRef, pendingContentRef]);
+  }, [
+    selection,
+    canvas,
+    loadOverlaysFromJSON,
+    saveState,
+    outgoingCanvasRef,
+    pendingContentRef,
+    pendingOverlayRef,
+  ]);
 
   const switchFormat = useCallback(
     (formatKey: BrandFormatKey) => {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveSession, listSessions } from "./_lib/canvas-session-service";
+import { saveSession, listSessions, listTemplateSessions } from "./_lib/canvas-session-service";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const runtime = "nodejs";
 
@@ -7,6 +9,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const caUserId = searchParams.get("ca_user_id");
   const rootImageUrl = searchParams.get("root_image_url");
+  const templateId = searchParams.get("template_id");
 
   if (!caUserId?.trim()) {
     return NextResponse.json(
@@ -14,15 +17,21 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
-  // Saved versions are scoped to one image; never list every image of the user.
-  if (!rootImageUrl?.trim()) {
+  // Saved versions are scoped to one image (or one template); never list every
+  // design of the user.
+  if (templateId !== null && !UUID_RE.test(templateId)) {
+    return NextResponse.json({ error: "Invalid template_id" }, { status: 400 });
+  }
+  if (!templateId && !rootImageUrl?.trim()) {
     return NextResponse.json(
-      { error: "root_image_url query parameter is required" },
+      { error: "root_image_url or template_id query parameter is required" },
       { status: 400 }
     );
   }
 
-  const result = await listSessions(caUserId.trim(), rootImageUrl.trim());
+  const result = templateId
+    ? await listTemplateSessions(caUserId.trim(), templateId)
+    : await listSessions(caUserId.trim(), rootImageUrl!.trim());
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
@@ -47,13 +56,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { ca_user_id, session_id, name, background_url, root_image_url, chat_id, overlay_json, metadata } =
-    body as Record<string, unknown>;
+  const {
+    ca_user_id,
+    session_id,
+    name,
+    background_url,
+    root_image_url,
+    chat_id,
+    overlay_json,
+    metadata,
+    kind,
+    template_id,
+    template_state,
+  } = body as Record<string, unknown>;
+  const isTemplate = kind === "template";
 
   if (!ca_user_id || typeof ca_user_id !== "string" || !ca_user_id.trim()) {
     return NextResponse.json({ error: "ca_user_id is required" }, { status: 400 });
   }
-  if (!background_url || typeof background_url !== "string") {
+  if (isTemplate) {
+    if (typeof template_id !== "string" || !UUID_RE.test(template_id)) {
+      return NextResponse.json({ error: "template_id is required" }, { status: 400 });
+    }
+    if (!template_state || typeof template_state !== "object") {
+      return NextResponse.json({ error: "template_state is required" }, { status: 400 });
+    }
+  } else if (!background_url || typeof background_url !== "string") {
     return NextResponse.json({ error: "background_url is required" }, { status: 400 });
   }
   if (!overlay_json || typeof overlay_json !== "object") {
@@ -64,7 +92,10 @@ export async function POST(request: NextRequest) {
     ca_user_id: ca_user_id.trim(),
     session_id: typeof session_id === "string" ? session_id : undefined,
     name: typeof name === "string" ? name : undefined,
-    background_url,
+    background_url: isTemplate ? null : (background_url as string),
+    kind: isTemplate ? "template" : "image",
+    template_id: isTemplate ? (template_id as string) : undefined,
+    template_state: isTemplate ? (template_state as Record<string, unknown>) : undefined,
     root_image_url: typeof root_image_url === "string" && root_image_url.trim() ? root_image_url.trim() : undefined,
     chat_id: typeof chat_id === "string" && chat_id.trim() ? chat_id.trim() : undefined,
     overlay_json: overlay_json as Record<string, unknown>,

@@ -5,6 +5,7 @@ import { getCanvasSession, getCanvasSessionForImageUrl } from "./lib/get-canvas-
 import { StudioLoading } from "./studio-loading";
 import { getClientStatusByUserId } from "./lib/get-client-status";
 import { getTemplateAuthorData } from "./lib/get-template-author-data";
+import type { CanvasSessionData } from "./types/image-editor-types";
 import { listActiveBrandTemplatesForClient } from "@/lib/brand-templates/server";
 import {
   StudioAccessDeniedScreen,
@@ -49,19 +50,13 @@ export default async function StudioEditorLoader({
   }
 
   if (params.mode === "templates") {
-    const [assets, brandTemplates] = await Promise.all([
-      getEditorAssets(params.client_id, params.user_id),
-      listActiveBrandTemplatesForClient(params.client_id),
-    ]);
+    const session = params.session_id
+      ? await getCanvasSession(params.session_id, params.user_id)
+      : null;
     return (
-      <ImageEditorStandalone
+      <TemplateModeLoader
         params={params}
-        logoAssets={assets.logoAssets}
-        frameAssets={assets.frameAssets}
-        fontAssets={assets.fontAssets}
-        sessionData={null}
-        allowCustomLogo={assets.allowCustomLogo}
-        brandTemplates={brandTemplates}
+        session={session?.kind === "template" ? session : null}
       />
     );
   }
@@ -82,6 +77,11 @@ export default async function StudioEditorLoader({
       ? getCanvasSession(params.session_id, params.user_id)
       : getCanvasSessionForImageUrl(params.imageUrl, params.user_id),
   ]);
+
+  // An image sent to the chat from a template design reopens that design.
+  if (sessionData?.kind === "template") {
+    return <TemplateModeLoader params={params} session={sessionData} />;
+  }
 
   return (
     <ImageEditorStandalone
@@ -130,6 +130,31 @@ async function TemplateAuthorLoader({
       sessionData={null}
       allowCustomLogo={allowCustomLogo}
       templateAuthor={result.data}
+    />
+  );
+}
+
+async function TemplateModeLoader({
+  params,
+  session,
+}: {
+  params: Awaited<StudioEditorLoaderProps["searchParams"]>;
+  session: CanvasSessionData | null;
+}) {
+  const [assets, brandTemplates] = await Promise.all([
+    getEditorAssets(params.client_id, params.user_id),
+    listActiveBrandTemplatesForClient(params.client_id),
+  ]);
+  return (
+    <ImageEditorStandalone
+      params={{ ...params, mode: "templates", imageUrl: undefined }}
+      logoAssets={assets.logoAssets}
+      frameAssets={assets.frameAssets}
+      fontAssets={assets.fontAssets}
+      sessionData={null}
+      allowCustomLogo={assets.allowCustomLogo}
+      brandTemplates={brandTemplates}
+      initialTemplateSession={session}
     />
   );
 }

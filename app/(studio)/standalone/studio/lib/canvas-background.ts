@@ -18,6 +18,8 @@ export type CanvasSource =
       height: number;
       backgroundColor: string;
       backgroundImageUrl?: string | null;
+      /** Bump to force a rebuild with identical settings (e.g. reopening a saved design). */
+      revision?: number;
     };
 
 export type BlankCanvasSource = Extract<CanvasSource, { kind: "blank" }>;
@@ -35,7 +37,7 @@ export function getCanvasSourceKey(source: CanvasSource | null): string | null {
   if (!source) return null;
   return source.kind === "image"
     ? `image:${source.imageUrl}`
-    : `blank:${source.width}x${source.height}:${source.backgroundColor}:${source.backgroundImageUrl ?? ""}`;
+    : `blank:${source.width}x${source.height}:${source.backgroundColor}:${source.backgroundImageUrl ?? ""}:${source.revision ?? 0}`;
 }
 
 /** Background objects are not selectable, movable or exported as overlays. */

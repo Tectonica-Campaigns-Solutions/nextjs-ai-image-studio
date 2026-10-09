@@ -1,5 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import type { CanvasSessionData, ObjectMetadata } from "../types/image-editor-types";
+import type {
+  CanvasSessionData,
+  ObjectMetadata,
+  TemplateSessionState,
+} from "../types/image-editor-types";
 
 /**
  * Loads a saved version for `?session_id=` (reload / resume). Uses the admin
@@ -16,7 +20,7 @@ export async function getCanvasSession(
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("client_canvas_sessions")
-      .select("id, name, background_url, root_image_url, overlay_json, metadata")
+      .select("id, name, background_url, root_image_url, overlay_json, metadata, kind, template_id, template_state")
       .eq("id", sessionId.trim())
       .eq("ca_user_id", caUserId.trim())
       .is("deleted_at", null)
@@ -31,6 +35,9 @@ export async function getCanvasSession(
       root_image_url: data.root_image_url ?? null,
       overlay_json: data.overlay_json as Record<string, unknown>,
       metadata: (data.metadata ?? {}) as Record<number, ObjectMetadata>,
+      kind: data.kind === "template" ? "template" : "image",
+      template_id: data.template_id ?? null,
+      template_state: (data.template_state ?? null) as TemplateSessionState | null,
     };
   } catch (err) {
     console.error("[getCanvasSession] error:", err);
@@ -73,7 +80,7 @@ export async function getCanvasSessionForImageUrl(
 
     const { data, error } = await supabase
       .from("client_canvas_sessions")
-      .select("id, name, background_url, root_image_url, overlay_json, metadata")
+      .select("id, name, background_url, root_image_url, overlay_json, metadata, kind, template_id, template_state")
       .eq("id", sessionId)
       .eq("ca_user_id", caUserId.trim())
       .is("deleted_at", null)
@@ -87,6 +94,9 @@ export async function getCanvasSessionForImageUrl(
       root_image_url: data.root_image_url ?? null,
       overlay_json: data.overlay_json as Record<string, unknown>,
       metadata: (data.metadata ?? {}) as Record<number, ObjectMetadata>,
+      kind: data.kind === "template" ? "template" : "image",
+      template_id: data.template_id ?? null,
+      template_state: (data.template_state ?? null) as TemplateSessionState | null,
     };
   } catch (err) {
     console.error("[getCanvasSessionForImageUrl] error:", err);

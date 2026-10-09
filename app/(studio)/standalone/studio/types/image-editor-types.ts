@@ -58,9 +58,19 @@ export interface TemplateAuthorData {
   backgroundColor: string;
 }
 
+/** template_state of a saved template design (client_canvas_sessions). */
+export interface TemplateSessionState {
+  format: string;
+  variantId: string | null;
+}
+
 export interface CanvasSessionData {
   id: string;
-  background_url: string;
+  /** Null for template designs. */
+  background_url: string | null;
+  kind?: "image" | "template";
+  template_id?: string | null;
+  template_state?: TemplateSessionState | null;
   /** Lineage key of the image this version belongs to (null on legacy rows). */
   root_image_url: string | null;
   overlay_json: Record<string, unknown>;
@@ -110,6 +120,8 @@ export interface ImageEditorStandaloneProps {
   templateAuthor?: TemplateAuthorData | null;
   /** Templates available to the user; present only in `mode=templates`. */
   brandTemplates?: BrandTemplateWithFormats[] | null;
+  /** Saved template design to open first (template mode only). */
+  initialTemplateSession?: CanvasSessionData | null;
 }
 
 export type DisclaimerPosition =

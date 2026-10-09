@@ -70,6 +70,12 @@ import { useTemplateAuthor } from "./hooks/use-template-author";
 import { useTemplateCanvas, useTemplateSelection } from "./hooks/use-template-mode";
 import { TemplateGalleryScreen, TemplatesPanel } from "./components/TemplatesPanel";
 import { CropOverlay } from "./components/CropOverlay";
+import { saveTemplateDesign } from "./lib/template-sessions";
+import { renderTemplateFormat, type RenderedImageType } from "./lib/template-render";
+import { captureTemplateContent } from "./lib/template-content";
+import { ExportSizesDialog, type ExportSizesAction } from "./components/ExportSizesDialog";
+import { BRAND_FORMATS, getBrandFormat } from "@/lib/brand-templates/formats";
+import type { BrandFormatKey } from "@/lib/brand-templates/types";
 import { CropPanel } from "./components/CropPanel";
 import {
   CROP_ASPECTS,
@@ -184,6 +190,7 @@ function ImageEditorStandaloneInner({
   allowCustomLogo = true,
   templateAuthor = null,
   brandTemplates = null,
+  initialTemplateSession = null,
 }: ImageEditorStandaloneProps) {
   const editorMode: StudioEditorMode = templateAuthor
     ? "template-author"
@@ -191,7 +198,11 @@ function ImageEditorStandaloneInner({
       ? "template"
       : "image";
   const isImageMode = editorMode === "image";
-  const templateState = useTemplateSelection(brandTemplates);
+  const templateState = useTemplateSelection(brandTemplates, initialTemplateSession);
+  /** Saved versions exist for image and template designs, not while authoring. */
+  const supportsVersions = editorMode !== "template-author";
+  /** data: URL → stored URL of photos already uploaded by a template save. */
+  const templateImageCacheRef = useRef(new Map<string, string>());
   // Prefer the saved session background so restoring a version does not paint
   // overlays onto a different chat image.
   const imageUrlFromParams = sessionData?.background_url ?? params.imageUrl;
@@ -238,11 +249,18 @@ function ImageEditorStandaloneInner({
   const [isSendingUrlToChat, setIsSendingUrlToChat] = useState<boolean>(false);
   const [isSavingToMedia, setIsSavingToMedia] = useState<boolean>(false);
   const pendingSaveToMediaRequestIdRef = useRef<string | null>(null);
+  /** Multi-size Save to Media: requestId → resolver for the host's result. */
+  const mediaWaitersRef = useRef(new Map<string, (ok: boolean) => void>());
+  const [showExportSizes, setShowExportSizes] = useState(false);
+  const [exportSizesBusy, setExportSizesBusy] = useState<ExportSizesAction | null>(null);
+  const [exportSizesProgress, setExportSizesProgress] = useState<string | null>(null);
   const saveToMediaTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Save state
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string | null>(sessionData?.id ?? null);
+  const [sessionId, setSessionId] = useState<string | null>(
+    sessionData?.id ?? templateState.initialSessionId ?? null,
+  );
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
 
   // Lineage of the image being edited: the URL Studio was first opened with.
@@ -1213,6 +1231,10 @@ function ImageEditorStandaloneInner({
 
   // Handle export click
   const handleExportClick = () => {
+    if (templateState.selection) {
+      setShowExportSizes(true);
+      return;
+    }
     if (!FEATURE_FLAGS.enableExportDisclaimer) {
       // Disclaimer temporarily disabled — export directly with defaults, skip the modal.
       void exportImage({
@@ -1370,6 +1392,12 @@ function ImageEditorStandaloneInner({
       };
       if (msg.type !== STUDIO_IFRAME_MESSAGE.SAVE_TO_MEDIA_RESULT_TYPE) return;
       if (typeof msg.requestId !== "string") return;
+      const waiter = mediaWaitersRef.current.get(msg.requestId);
+      if (waiter) {
+        mediaWaitersRef.current.delete(msg.requestId);
+        waiter(msg.ok === true);
+        return;
+      }
       if (msg.requestId !== pendingSaveToMediaRequestIdRef.current) return;
 
       clearSaveToMediaPending();
@@ -1428,8 +1456,37 @@ function ImageEditorStandaloneInner({
   // can be reopened with its layers. A new session per send keeps each chat image
   // tied to exactly what was sent. Best-effort: returns null (image is sent flat,
   // unlinked) when saving fails.
+  /** Saves the current template design as a new version (kind=template). */
+  const saveCurrentTemplateDesign = async (name?: string): Promise<string> => {
+    const sel = templateState.selection;
+    if (!canvasEditor.canvas || !sel || !templateState.format || !params.user_id) {
+      throw new Error("Nothing to save");
+    }
+    return saveTemplateDesign({
+      canvas: canvasEditor.canvas,
+      nativeWidth: templateState.format.width,
+      caUserId: params.user_id,
+      chatId: params.chat_id,
+      name,
+      templateId: sel.template.id,
+      state: { format: sel.formatKey, variantId: templateState.variant?.id ?? null },
+      imageCache: templateImageCacheRef.current,
+    });
+  };
+
   const saveSendToChatSnapshot = async (): Promise<string | null> => {
     if (!canvasEditor.canvas || !params.user_id) return null;
+    if (templateState.selection) {
+      try {
+        const snapshotId = await saveCurrentTemplateDesign(SEND_TO_CHAT_SESSION_NAME);
+        void fetchSavedSessions();
+        void uploadSessionThumbnail(snapshotId).then(fetchSavedSessions);
+        return snapshotId;
+      } catch (err) {
+        console.warn("[saveSendToChatSnapshot] template design not saved:", err);
+        return null;
+      }
+    }
     try {
       const { overlayJson, metadata } = getCanvasOverlaySnapshot(canvasEditor.canvas);
 
@@ -1499,6 +1556,10 @@ function ImageEditorStandaloneInner({
   };
 
   const handleSaveToMedia = async () => {
+    if (templateState.selection) {
+      setShowExportSizes(true);
+      return;
+    }
     if (!canvasEditor.canvas || !canvasEditor.originalImageDimensions) return;
     if (isSavingToMedia) return;
 
@@ -1552,6 +1613,142 @@ function ImageEditorStandaloneInner({
         title: "Could not save to Media",
         description: "Something went wrong uploading the image.",
       });
+    }
+  };
+
+  /**
+   * Renders the chosen sizes of the current template design: the size being
+   * edited straight from the canvas (exactly what the user sees), the others
+   * from their layouts with the user's content applied.
+   */
+  const renderTemplateSizes = async (
+    keys: BrandFormatKey[],
+    type: RenderedImageType,
+  ): Promise<Array<{ key: BrandFormatKey; dataUrl: string }>> => {
+    const canvas = canvasEditor.canvas;
+    const sel = templateState.selection;
+    const current = templateState.format;
+    if (!canvas || !sel || !current) return [];
+    canvas.discardActiveObject();
+    canvas.renderAll();
+    const content = captureTemplateContent(canvas, current.width);
+    const out: Array<{ key: BrandFormatKey; dataUrl: string }> = [];
+    for (const [i, key] of keys.entries()) {
+      setExportSizesProgress(`${i + 1} of ${keys.length}`);
+      const dataUrl =
+        key === current.key
+          ? canvas.toDataURL({
+              format: type,
+              quality: type === "jpeg" ? 0.95 : 1,
+              multiplier: current.width / (canvas.width || current.width),
+            })
+          : await renderTemplateFormat({
+              template: sel.template,
+              formatKey: key,
+              variant: templateState.variant,
+              content,
+              sourceFormat: current,
+              type,
+            });
+      out.push({ key, dataUrl });
+    }
+    return out;
+  };
+
+  const templateFileBase = (name: string) =>
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "design";
+
+  const waitForMediaResult = (requestId: string) =>
+    new Promise<boolean>((resolve) => {
+      const timeout = setTimeout(() => {
+        mediaWaitersRef.current.delete(requestId);
+        resolve(false);
+      }, 30_000);
+      mediaWaitersRef.current.set(requestId, (ok) => {
+        clearTimeout(timeout);
+        resolve(ok);
+      });
+    });
+
+  const handleExportSizes = async (action: ExportSizesAction, keys: BrandFormatKey[]) => {
+    const sel = templateState.selection;
+    if (!sel || keys.length === 0) return;
+    setExportSizesBusy(action);
+    try {
+      const rendered = await renderTemplateSizes(keys, action === "download" ? "png" : "jpeg");
+      const base = templateFileBase(sel.template.name);
+
+      if (action === "download") {
+        for (const { key, dataUrl } of rendered) {
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = `${base}-${getBrandFormat(key).ratio.replace(":", "x")}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          // Browsers drop rapid consecutive downloads.
+          await new Promise((r) => setTimeout(r, 350));
+        }
+        setShowExportSizes(false);
+        return;
+      }
+
+      const caUserId = params.user_id?.trim();
+      if (!caUserId) {
+        studioToast.error({ title: "Could not save to Media", description: "Missing user." });
+        return;
+      }
+      let saved = 0;
+      for (const [i, { key, dataUrl }] of rendered.entries()) {
+        setExportSizesProgress(`Saving ${i + 1} of ${rendered.length}`);
+        const format = getBrandFormat(key);
+        const res = await fetch("/api/studio/upload-edited-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_base64: dataUrl, ca_user_id: caUserId }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.image_url) continue;
+        const requestId =
+          crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const result = waitForMediaResult(requestId);
+        const sent = requestSaveToMedia({
+          requestId,
+          imageUrl: String(json.image_url),
+          mimeType: "image/jpeg",
+          title: `${sel.template.name} ${format.ratio}`,
+          width: format.width,
+          height: format.height,
+        });
+        if (!sent) {
+          mediaWaitersRef.current.delete(requestId);
+          break;
+        }
+        if (await result) saved += 1;
+      }
+      if (saved === rendered.length) {
+        studioToast.success({
+          title: "Saved to Media",
+          description:
+            saved > 1 ? `${saved} sizes were added to Media & Assets.` : "The image was added to Media & Assets.",
+        });
+        setShowExportSizes(false);
+      } else {
+        studioToast.error({
+          title: saved > 0 ? `Saved ${saved} of ${rendered.length} sizes` : "Could not save to Media",
+          description: "The host did not confirm every image. Try again from the chat.",
+        });
+      }
+    } catch (err) {
+      console.error("[export sizes] failed:", err);
+      studioToast.error({ title: "Could not export", description: "Something went wrong rendering the sizes." });
+    } finally {
+      setExportSizesBusy(null);
+      setExportSizesProgress(null);
     }
   };
 
@@ -1859,6 +2056,31 @@ function ImageEditorStandaloneInner({
       });
       return;
     }
+    if (templateState.selection) {
+      setIsSaving(true);
+      try {
+        history.saveState(true, true);
+        const newSessionId = await saveCurrentTemplateDesign(optionalName);
+        setSessionId(newSessionId);
+        const url = new URL(window.location.href);
+        url.searchParams.set("mode", "templates");
+        url.searchParams.set("session_id", newSessionId);
+        window.history.replaceState({}, "", url.toString());
+        setShowSaveToast(true);
+        setShowSaveModal(false);
+        await fetchSavedSessions();
+        void uploadSessionThumbnail(newSessionId).then(fetchSavedSessions);
+      } catch (err) {
+        console.error("[handleSave] template design:", err);
+        studioToast.error({
+          title: "Save failed",
+          description: err instanceof Error ? err.message : "Could not save the design.",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
     if (!(currentBackgroundUrlRef.current ?? imageUrl)) {
       studioToast.error({
         title: "Save failed",
@@ -1937,10 +2159,19 @@ function ImageEditorStandaloneInner({
 
   // Saved versions of the current image lineage only — not filtered by the current
   // background URL, which Edit with AI (and reopen-from-chat) change.
+  const currentTemplateId = templateState.selection?.template.id ?? null;
   const fetchSavedSessions = useCallback(async () => {
     const caUserId = params.user_id?.trim();
     const rootImageUrl = lineageRootRef.current;
-    if (!caUserId || !rootImageUrl) {
+    // Template designs list the versions made from the same template.
+    const scope = brandTemplates
+      ? currentTemplateId
+        ? `template_id=${encodeURIComponent(currentTemplateId)}`
+        : null
+      : rootImageUrl
+        ? `root_image_url=${encodeURIComponent(rootImageUrl)}`
+        : null;
+    if (!caUserId || !scope) {
       setSessionsForImage([]);
       setSessionsInitialFetchDone(true);
       return;
@@ -1948,7 +2179,7 @@ function ImageEditorStandaloneInner({
     setSessionsLoading(true);
     try {
       const res = await fetch(
-        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}&root_image_url=${encodeURIComponent(rootImageUrl)}`
+        `/api/studio/canvas-sessions?ca_user_id=${encodeURIComponent(caUserId)}&${scope}`
       );
       const data = await res.json();
       if (res.ok && Array.isArray(data.sessions)) {
@@ -1964,7 +2195,7 @@ function ImageEditorStandaloneInner({
       setSessionsLoading(false);
       setSessionsInitialFetchDone(true);
     }
-  }, [params.user_id]);
+  }, [params.user_id, brandTemplates, currentTemplateId]);
 
   useEffect(() => {
     fetchSavedSessions();
@@ -1999,6 +2230,28 @@ function ImageEditorStandaloneInner({
           studioToast.error({
             title: "Could not load version",
             description: session.error ?? "Version not found.",
+          });
+          return;
+        }
+
+        if (session.kind === "template") {
+          // Template designs rebuild the canvas for their template/format.
+          if (!templateState.restoreSession({ ...session, id: sessionIdToLoad })) {
+            studioToast.error({
+              title: "Could not load version",
+              description: "Its template is no longer available.",
+            });
+            return;
+          }
+          setSessionId(sessionIdToLoad);
+          const url = new URL(window.location.href);
+          url.searchParams.set("session_id", sessionIdToLoad);
+          window.history.replaceState({}, "", url.toString());
+          studioToast.success({
+            title: "Version restored",
+            description: session.name?.trim()
+              ? `Loaded “${session.name.trim()}”.`
+              : "Loaded the saved version.",
           });
           return;
         }
@@ -2060,7 +2313,14 @@ function ImageEditorStandaloneInner({
         history.isRestoringState.current = false;
       }
     },
-    [canvasEditor.canvas, canvasEditor.replaceBackgroundImage, canvasEditor.originalImageUrlRef, history, selection.setSelectedObject]
+    [
+      canvasEditor.canvas,
+      canvasEditor.replaceBackgroundImage,
+      canvasEditor.originalImageUrlRef,
+      history,
+      selection.setSelectedObject,
+      templateState.restoreSession,
+    ]
   );
 
   // Edit background with AI
@@ -2553,7 +2813,7 @@ function ImageEditorStandaloneInner({
       shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
       frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
       guidesAndGridPanel={guidesAndGridPanel}
-      sessionsListPanel={isImageMode ? sessionsListPanel : null}
+      sessionsListPanel={supportsVersions ? sessionsListPanel : null}
     />
   );
 
@@ -2802,7 +3062,7 @@ function ImageEditorStandaloneInner({
                     onAlign={handleAlign}
                     historyState={history.historyState}
                     selectedObject={selection.selectedObject}
-                    onHistoryClick={params.user_id && isImageMode ? handleMobileHistoryClick : undefined}
+                    onHistoryClick={params.user_id && supportsVersions ? handleMobileHistoryClick : undefined}
                     historyBadge={sessionsForImage.length > 0}
                   />
                 ) : null}
@@ -2827,7 +3087,7 @@ function ImageEditorStandaloneInner({
                           isSaving={isSaving}
                           historyState={history.historyState}
                           selectedObject={selection.selectedObject}
-                          showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && isImageMode}
+                          showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && supportsVersions}
                           variant="desktop"
                           onAlign={handleAlign}
                           onSaveClick={() => setShowSaveModal(true)}
@@ -2835,7 +3095,7 @@ function ImageEditorStandaloneInner({
                           isEmbedded={isEmbedded}
                           isSendingUrl={isSendingUrlToChat}
                           onHistoryClick={
-                            params.user_id && isImageMode
+                            params.user_id && supportsVersions
                               ? () =>
                                   setDesktopTool((current) =>
                                     current === "saved-versions" ? null : "saved-versions",
@@ -3090,7 +3350,7 @@ function ImageEditorStandaloneInner({
                       <StudioMobileSessionBar
                         handleExportClick={handleExportClick}
                         isExporting={isExporting}
-                        showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && isImageMode}
+                        showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && supportsVersions}
                         onSaveClick={() => setShowSaveModal(true)}
                         isSaving={isSaving}
                         onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
@@ -3123,7 +3383,7 @@ function ImageEditorStandaloneInner({
             compact={isCompactChrome}
             handleExportClick={handleExportClick}
             isExporting={isExporting}
-            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && isImageMode}
+            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && supportsVersions}
             onSaveClick={() => setShowSaveModal(true)}
             isSaving={isSaving}
             onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
@@ -3141,6 +3401,21 @@ function ImageEditorStandaloneInner({
             isApplyingCleanup={isApplyingCleanup}
           />
           )}
+
+          {templateState.selection && templateState.format ? (
+            <ExportSizesDialog
+              open={showExportSizes}
+              onOpenChange={setShowExportSizes}
+              formats={BRAND_FORMATS.filter((f) =>
+                templateState.selection!.template.formats.some((tf) => tf.format_key === f.key),
+              )}
+              currentFormat={templateState.format.key}
+              busyAction={exportSizesBusy}
+              progress={exportSizesProgress}
+              canSaveToMedia={isEmbedded && !!params.user_id}
+              onConfirm={(action, keys) => void handleExportSizes(action, keys)}
+            />
+          ) : null}
 
           <SaveSessionModal
             open={showSaveModal}
