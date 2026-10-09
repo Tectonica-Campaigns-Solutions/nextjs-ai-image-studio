@@ -4,6 +4,7 @@ import {
   History,
   ImageIcon,
   Layers,
+  LayoutTemplate,
   QrCode,
   Save,
   Shapes,
@@ -19,8 +20,11 @@ import { FrameItem } from "../components/editor-icons";
  * the mobile tab bar and the desktop tool panel header all derive from here.
  */
 
-/** "image" = editing an uploaded/generated image; "template" = Branding templates. */
-export type StudioEditorMode = "image" | "template";
+/**
+ * "image" = editing an uploaded/generated image; "template" = Branding templates;
+ * "template-author" = admins designing a template layout (from the dashboard).
+ */
+export type StudioEditorMode = "image" | "template" | "template-author";
 
 /** Toolbar grouping for the upcoming dock redesign (not rendered yet). */
 export type StudioToolGroup = "design" | "add" | "edit" | "arrange";
@@ -42,9 +46,20 @@ export interface StudioToolDef {
   modes: readonly StudioEditorMode[];
 }
 
-const ALL_MODES = ["image", "template"] as const;
+const ALL_MODES = ["image", "template", "template-author"] as const;
+/** Tools that act on what end users produce, not on a template layout. */
+const USER_MODES = ["image", "template"] as const;
 
 export const STUDIO_TOOLS = [
+  {
+    id: "template-slots",
+    label: "Template slots",
+    hint: "Choose what users can edit",
+    icon: LayoutTemplate,
+    placement: "dock",
+    group: "design",
+    modes: ["template-author"],
+  },
   {
     id: "text-tools",
     label: "Text Tools",
@@ -83,7 +98,7 @@ export const STUDIO_TOOLS = [
     icon: WandSparkles,
     placement: "dock",
     group: "edit",
-    modes: ALL_MODES,
+    modes: USER_MODES,
   },
   {
     id: "advanced-options",
@@ -148,7 +163,7 @@ export const STUDIO_TOOLS = [
     icon: Save,
     placement: "advanced",
     group: "arrange",
-    modes: ALL_MODES,
+    modes: USER_MODES,
   },
   // Opened from the canvas toolbar / save toast, not from the dock
   {
@@ -158,7 +173,7 @@ export const STUDIO_TOOLS = [
     icon: History,
     placement: "toolbar",
     group: "arrange",
-    modes: ALL_MODES,
+    modes: USER_MODES,
   },
 ] as const satisfies readonly StudioToolDef[];
 
@@ -182,13 +197,30 @@ export function getStudioTool(id: StudioToolId): StudioToolDef {
   return STUDIO_TOOLS.find((t) => t.id === id)!;
 }
 
+/** Tools for a placement, optionally limited to the ones available in `mode`. */
 export function getStudioTools(
   placement: StudioToolPlacement,
-  mode: StudioEditorMode = "image",
+  mode?: StudioEditorMode,
 ): readonly StudioToolDef[] {
   return STUDIO_TOOLS.filter(
-    (t) => t.placement === placement && (t.modes as readonly StudioEditorMode[]).includes(mode),
+    (t) =>
+      t.placement === placement &&
+      (!mode || (t.modes as readonly StudioEditorMode[]).includes(mode)),
   );
+}
+
+/** Drops panels of tools that don't belong to `mode`, which hides those tools. */
+export function filterPanelsForMode(
+  panels: StudioToolPanels,
+  mode: StudioEditorMode,
+): StudioToolPanels {
+  return Object.fromEntries(
+    Object.entries(panels).map(([id, panel]) => {
+      const tool = STUDIO_TOOLS.find((t) => t.id === id);
+      const inMode = !!tool && (tool.modes as readonly StudioEditorMode[]).includes(mode);
+      return [id, inMode ? panel : null];
+    }),
+  ) as StudioToolPanels;
 }
 
 export const STUDIO_DOCK_TOOLS = getStudioTools("dock") as readonly (StudioToolDef & {

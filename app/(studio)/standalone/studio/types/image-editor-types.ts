@@ -1,3 +1,6 @@
+import type { BrandTemplate, BrandTemplateFabricJson } from "@/lib/brand-templates/types";
+import type { BrandFormatPreset } from "@/lib/brand-templates/formats";
+
 export interface ObjectMetadata {
   isBackground?: boolean;
   isQR?: boolean;
@@ -30,6 +33,22 @@ export interface ImageEditorStandaloneParams {
   text?: string;
   /** Optional delimiter for splitting `text` into presets (default: `||`). */
   text_delim?: string;
+  /** "template-author": admins design a Branding template layout. */
+  mode?: string;
+  template_id?: string;
+  format?: string;
+}
+
+/** Loaded server-side (admin only) for `mode=template-author`. */
+export interface TemplateAuthorData {
+  template: Pick<BrandTemplate, "id" | "name" | "variants">;
+  format: BrandFormatPreset;
+  /** Saved layout for this format, or null when it's being designed for the first time. */
+  layout: BrandTemplateFabricJson | null;
+  /** Saved layouts of the other formats, offered as a starting point. */
+  otherLayouts: Array<{ format: BrandFormatPreset; layout: BrandTemplateFabricJson }>;
+  /** Initial canvas background while authoring (first color variant). */
+  backgroundColor: string;
 }
 
 export interface CanvasSessionData {
@@ -80,6 +99,8 @@ export interface ImageEditorStandaloneProps {
   sessionData?: CanvasSessionData | null;
   /** When false, "Upload custom logo" is hidden in Logo overlay. Default true. */
   allowCustomLogo?: boolean;
+  /** Present only in template-author mode. */
+  templateAuthor?: TemplateAuthorData | null;
 }
 
 export type DisclaimerPosition =

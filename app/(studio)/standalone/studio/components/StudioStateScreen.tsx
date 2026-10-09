@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { UI_COLORS } from "../constants/editor-constants";
-import { STUDIO_DOCK_TOOLS } from "../constants/studio-tools";
+import { getStudioTools } from "../constants/studio-tools";
 import { StudioHeader } from "./StudioHeader";
 import { StudioMobileHeader, StudioMobileHomeSpacer, StudioMobileTabBar } from "./StudioMobileChrome";
 
@@ -40,7 +40,7 @@ export function StudioStateScreen({
               Tools
             </div>
             <div className="flex flex-col gap-1.5 opacity-40">
-              {STUDIO_DOCK_TOOLS.map((tool) => (
+              {getStudioTools("dock", "image").map((tool) => (
                 <div
                   key={tool.id}
                   className="flex items-center gap-2.5 rounded-[11px] border px-2.5 py-2"

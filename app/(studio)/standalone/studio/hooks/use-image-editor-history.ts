@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Canvas } from "fabric";
-import { loadImageWithCORS } from "../utils/image-editor-utils";
+import { loadImageWithCORS, serializeCanvas } from "../utils/image-editor-utils";
 import {
   createBackgroundObject,
   type BlankCanvasSource,
@@ -72,7 +72,7 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
         const objects = canvas.getObjects();
         if (objects.length < 1) return;
 
-        const fullJSON = (canvas as any).toJSON(["src"]) as {
+        const fullJSON = serializeCanvas(canvas) as {
           version?: string;
           objects: any[];
         };

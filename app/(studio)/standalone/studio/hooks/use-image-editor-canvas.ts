@@ -8,7 +8,7 @@ import {
   Textbox,
   type TPointerEvent,
 } from "fabric";
-import { loadImageWithCORS } from "../utils/image-editor-utils";
+import { loadImageWithCORS, serializeCanvas } from "../utils/image-editor-utils";
 import {
   createBackgroundObject,
   getCanvasSourceKey,
@@ -563,7 +563,7 @@ export function useImageEditorCanvas(
         fabricCanvas.renderAll();
 
         setTimeout(() => {
-          const fullJSON = (fabricCanvas as any).toJSON(["src"]) as {
+          const fullJSON = serializeCanvas(fabricCanvas) as {
             version?: string;
             objects?: any[];
           };

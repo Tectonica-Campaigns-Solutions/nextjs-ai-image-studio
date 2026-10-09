@@ -59,11 +59,16 @@ import type {
 } from "./types/image-editor-types";
 import type { GoogleFontCatalogEntry } from "./types/google-font-catalog";
 import type { DisclaimerPosition } from "./types/image-editor-types";
-import type {
-  StudioDesktopToolId,
-  StudioMobileToolId,
-  StudioToolPanels,
+import {
+  filterPanelsForMode,
+  type StudioDesktopToolId,
+  type StudioEditorMode,
+  type StudioMobileToolId,
+  type StudioToolPanels,
 } from "./constants/studio-tools";
+import { useTemplateAuthor } from "./hooks/use-template-author";
+import { TemplateSlotsPanel } from "./components/TemplateSlotsPanel";
+import { TemplateAuthorActionBar } from "./components/TemplateAuthorActionBar";
 import { studioToast } from "./utils/studio-toast";
 import {
   DEFAULT_FONTS,
@@ -123,7 +128,9 @@ export default function ImageEditorStandalone({
   // deny by default (unless dev/debug).
   const isInIframe = embedSource.isIframe === true;
 
-  const allowed = isDev || debugEnabled || (isInIframe && allowedByEmbedOrigin);
+  // Template-author data is only loaded after a server-side admin check.
+  const allowed =
+    isDev || debugEnabled || !!props.templateAuthor || (isInIframe && allowedByEmbedOrigin);
 
   // Avoid flicker while the client-only embed detection initializes.
   if (!allowed && embedSource.isIframe === null && !isDev && !debugEnabled) {
@@ -165,7 +172,9 @@ function ImageEditorStandaloneInner({
   fontAssets = [],
   sessionData = null,
   allowCustomLogo = true,
+  templateAuthor = null,
 }: ImageEditorStandaloneProps) {
+  const editorMode: StudioEditorMode = templateAuthor ? "template-author" : "image";
   // Prefer the saved session background so restoring a version does not paint
   // overlays onto a different chat image.
   const imageUrlFromParams = sessionData?.background_url ?? params.imageUrl;
@@ -195,7 +204,7 @@ function ImageEditorStandaloneInner({
   // Upload state
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [showUploadPrompt, setShowUploadPrompt] = useState<boolean>(
-    !imageUrlFromParams
+    !imageUrlFromParams && !templateAuthor
   );
 
   // Preprocess input image URLs (remove disclaimer if present) so editing is clean.
@@ -253,9 +262,10 @@ function ImageEditorStandaloneInner({
   // Replace background image state
   const [isReplacingBackground, setIsReplacingBackground] = useState<boolean>(false);
   // Open Text Tools up front when presets are available so they are discoverable.
-  const [desktopTool, setDesktopTool] = useState<StudioDesktopToolId | null>(() =>
-    FEATURE_FLAGS.showTextTools && presetTexts.length > 0 ? "text-tools" : null,
-  );
+  const [desktopTool, setDesktopTool] = useState<StudioDesktopToolId | null>(() => {
+    if (templateAuthor) return "template-slots";
+    return FEATURE_FLAGS.showTextTools && presetTexts.length > 0 ? "text-tools" : null;
+  });
   const [isCompactChrome, setIsCompactChrome] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [mobileQrPlaced, setMobileQrPlaced] = useState(false);
@@ -302,10 +312,17 @@ function ImageEditorStandaloneInner({
     ? (isPreprocessingImage ? null : (preprocessedImageUrl ?? null))
     : rawImageUrl;
 
-  const canvasSource = useMemo<CanvasSource | null>(
-    () => (imageUrl ? { kind: "image", imageUrl } : null),
-    [imageUrl],
-  );
+  const canvasSource = useMemo<CanvasSource | null>(() => {
+    if (templateAuthor) {
+      return {
+        kind: "blank",
+        width: templateAuthor.format.width,
+        height: templateAuthor.format.height,
+        backgroundColor: templateAuthor.backgroundColor,
+      };
+    }
+    return imageUrl ? { kind: "image", imageUrl } : null;
+  }, [imageUrl, templateAuthor]);
   // Undo/redo rebuilds object 0; a solid background has no URL to reload from.
   const blankBackgroundRef = useRef<BlankCanvasSource | null>(null);
   blankBackgroundRef.current = canvasSource?.kind === "blank" ? canvasSource : null;
@@ -578,6 +595,14 @@ function ImageEditorStandaloneInner({
       if (pos) setSelectionContextMenuPosition(pos);
     },
     guidePositionsRef,
+  });
+
+  const templateAuthoring = useTemplateAuthor({
+    templateAuthor,
+    canvas: canvasEditor.canvas,
+    backgroundReady: !!canvasEditor.originalImageDimensions,
+    loadOverlaysFromJSON: history.loadOverlaysFromJSON,
+    saveState: history.saveState,
   });
 
   const frameTools = useFrameTools({
@@ -2417,18 +2442,23 @@ function ImageEditorStandaloneInner({
     (!params.user_id?.trim() || !imageUrl || sessionsInitialFetchDone);
 
   const currentSessionName = sessionsForImage.find((s) => s.id === sessionId)?.name;
-  const studioSubtitle = currentSessionName
-    ? `Editing · ${currentSessionName}`
-    : "Editing · Draft";
+  const studioSubtitle = templateAuthor
+    ? `Template · ${templateAuthor.template.name} · ${templateAuthor.format.label} ${templateAuthor.format.ratio}`
+    : currentSessionName
+      ? `Editing · ${currentSessionName}`
+      : "Editing · Draft";
 
+  const isImageMode = editorMode === "image";
   const advancedOptionsContent = (
     <AdvancedOptionsPanel
       layersToolsPanel={layersToolsPanel}
-      backgroundImagePanel={FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null}
+      backgroundImagePanel={
+        isImageMode && FEATURE_FLAGS.showReplaceBackgroundTool ? backgroundImagePanel : null
+      }
       shapeToolsPanel={FEATURE_FLAGS.showShapeTools ? shapeToolsPanel : null}
       frameToolsPanel={FEATURE_FLAGS.showFrameTools && frameAssets.length > 0 ? frameToolsPanel : null}
       guidesAndGridPanel={guidesAndGridPanel}
-      sessionsListPanel={sessionsListPanel}
+      sessionsListPanel={isImageMode ? sessionsListPanel : null}
     />
   );
 
@@ -2497,7 +2527,16 @@ function ImageEditorStandaloneInner({
     sessionsListPanel: sessionsForImage.length > 0 ? sessionsListPanel : null,
   };
 
-  const toolPanels: StudioToolPanels = {
+  const toolPanels: StudioToolPanels = filterPanelsForMode({
+    "template-slots": templateAuthor ? (
+      <TemplateSlotsPanel
+        canvas={canvasEditor.canvas}
+        selectedObject={selection.selectedObject}
+        onSlotsChange={templateAuthoring.onSlotsChange}
+        startFromFormats={templateAuthoring.startFromFormats}
+        onStartFrom={(format) => void templateAuthoring.startFrom(format)}
+      />
+    ) : null,
     "text-tools": sidebarProps.textToolsPanel,
     "logo-overlay": sidebarProps.logoToolsPanel,
     "qr-code": sidebarProps.qrToolsPanel,
@@ -2510,7 +2549,7 @@ function ImageEditorStandaloneInner({
     guides: sidebarProps.guidesAndGridPanel,
     sessions: sidebarProps.sessionsListPanel,
     "saved-versions": sidebarProps.sessionsListPanel,
-  };
+  }, editorMode);
 
   const mobileToolSheetContent = (() => {
     const tab = mobilePanel.activeTab as StudioMobileToolId | null;
@@ -2903,6 +2942,15 @@ function ImageEditorStandaloneInner({
             </div>
           </div>
 
+          {templateAuthor ? (
+            <TemplateAuthorActionBar
+              templateId={templateAuthor.template.id}
+              currentFormat={templateAuthor.format}
+              isDirty={templateAuthoring.isDirty}
+              isSaving={templateAuthoring.isSaving}
+              onSave={() => void templateAuthoring.saveLayout()}
+            />
+          ) : (
           <StudioActionBar
             compact={isCompactChrome}
             handleExportClick={handleExportClick}
@@ -2924,6 +2972,7 @@ function ImageEditorStandaloneInner({
             handleApplyCleanup={handleApplyCleanup}
             isApplyingCleanup={isApplyingCleanup}
           />
+          )}
 
           <SaveSessionModal
             open={showSaveModal}
