@@ -1,4 +1,8 @@
-import type { BrandTemplate, BrandTemplateFabricJson } from "@/lib/brand-templates/types";
+import type {
+  BrandTemplate,
+  BrandTemplateFabricJson,
+  BrandTemplateWithFormats,
+} from "@/lib/brand-templates/types";
 import type { BrandFormatPreset } from "@/lib/brand-templates/formats";
 
 export interface ObjectMetadata {
@@ -33,7 +37,10 @@ export interface ImageEditorStandaloneParams {
   text?: string;
   /** Optional delimiter for splitting `text` into presets (default: `||`). */
   text_delim?: string;
-  /** "template-author": admins design a Branding template layout. */
+  /**
+   * "templates": start from a Branding template (no image needed).
+   * "template-author": admins design a Branding template layout.
+   */
   mode?: string;
   template_id?: string;
   format?: string;
@@ -101,6 +108,8 @@ export interface ImageEditorStandaloneProps {
   allowCustomLogo?: boolean;
   /** Present only in template-author mode. */
   templateAuthor?: TemplateAuthorData | null;
+  /** Templates available to the user; present only in `mode=templates`. */
+  brandTemplates?: BrandTemplateWithFormats[] | null;
 }
 
 export type DisclaimerPosition =

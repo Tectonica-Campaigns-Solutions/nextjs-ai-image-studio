@@ -4,7 +4,9 @@ import { useState, useRef, useCallback } from "react";
 import { Canvas } from "fabric";
 import { loadImageWithCORS, serializeCanvas } from "../utils/image-editor-utils";
 import {
+  CANVAS_BASE_COLOR,
   createBackgroundObject,
+  fitBackgroundToCanvas,
   type BlankCanvasSource,
 } from "../lib/canvas-background";
 import type {
@@ -161,16 +163,15 @@ export function useImageEditorHistory(options: UseImageEditorHistoryOptions) {
   const addBackgroundFromUrl = useCallback(
     async (targetCanvas: Canvas): Promise<void> => {
       const url = originalImageUrlRef.current;
+      const blank = url ? null : blankBackgroundRef?.current;
+      // canvas.clear() also resets backgroundColor, which shows through
+      // transparent backgrounds; restore what the canvas was created with.
+      targetCanvas.backgroundColor = blank?.backgroundColor ?? CANVAS_BASE_COLOR;
       if (!url) {
-        const blank = blankBackgroundRef?.current;
         if (!blank) return;
         const { object, width, height } = await createBackgroundObject(blank);
         originalImageDimensionsRef.current = { width, height };
-        const scale = Math.min(
-          ((targetCanvas as any).width as number) / width,
-          ((targetCanvas as any).height as number) / height,
-        );
-        object.set({ scaleX: scale, scaleY: scale });
+        fitBackgroundToCanvas(object, targetCanvas.width, targetCanvas.height);
         targetCanvas.add(object);
         targetCanvas.sendObjectToBack(object);
         return;

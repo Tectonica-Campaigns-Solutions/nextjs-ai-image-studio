@@ -1,4 +1,4 @@
-import type { BrandFormatKey, BrandSlotType } from "./types";
+import type { BrandFormatKey, BrandSlotType, BrandTemplateFormat } from "./types";
 
 export interface BrandFormatPreset {
   key: BrandFormatKey;
@@ -39,3 +39,9 @@ export const BRAND_SLOT_PROPS = ["slotId", "slotType", "slotLabel"] as const;
 
 /** Background used while authoring when a template has no color variant. */
 export const BRAND_DEFAULT_BACKGROUND = "#FFFFFF";
+
+/** The format a template opens in: square when designed, else the first in display order. */
+export function pickDefaultFormat(formats: Pick<BrandTemplateFormat, "format_key">[]): BrandFormatKey | null {
+  const keys = new Set(formats.map((f) => f.format_key));
+  return BRAND_FORMATS.find((f) => keys.has(f.key))?.key ?? null;
+}

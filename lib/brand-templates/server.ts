@@ -147,3 +147,49 @@ export function decodeImageDataUrl(
   if (!match) return null;
   return { contentType: match[1], buffer: Buffer.from(match[2], "base64") };
 }
+
+/**
+ * Active templates a Studio user can use: global ones plus the ones assigned
+ * to their client (resolved from the `client_id` query param = clients.ca_user_id).
+ * Includes layouts; only formats with at least one saved layout are returned.
+ */
+export async function listActiveBrandTemplatesForClient(
+  caUserId: string | undefined,
+): Promise<BrandTemplateWithFormats[]> {
+  const supabase = createAdminClient();
+
+  let clientRowId: string | null = null;
+  const trimmed = caUserId?.trim();
+  if (trimmed) {
+    const { data } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("ca_user_id", trimmed)
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .maybeSingle();
+    clientRowId = data?.id ?? null;
+  }
+
+  let query = supabase
+    .from("brand_templates")
+    .select(`${TEMPLATE_COLUMNS}, formats:brand_template_formats(${FORMAT_COLUMNS})`)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  query = clientRowId
+    ? query.or(`client_id.is.null,client_id.eq.${clientRowId}`)
+    : query.is("client_id", null);
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("[brand-templates] failed to list for client:", error.message);
+    return [];
+  }
+
+  return (data ?? [])
+    .map((row) => normalizeTemplate(row as unknown as BrandTemplateWithFormats))
+    .map((t) => ({ ...t, formats: t.formats.filter((f) => f.fabric_json?.objects?.length > 0) }))
+    .filter((t) => t.formats.length > 0);
+}

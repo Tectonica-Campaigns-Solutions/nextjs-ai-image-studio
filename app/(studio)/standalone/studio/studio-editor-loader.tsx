@@ -5,6 +5,7 @@ import { getCanvasSession, getCanvasSessionForImageUrl } from "./lib/get-canvas-
 import { StudioLoading } from "./studio-loading";
 import { getClientStatusByUserId } from "./lib/get-client-status";
 import { getTemplateAuthorData } from "./lib/get-template-author-data";
+import { listActiveBrandTemplatesForClient } from "@/lib/brand-templates/server";
 import {
   StudioAccessDeniedScreen,
   StudioStateCard,
@@ -45,6 +46,24 @@ export default async function StudioEditorLoader({
 
   if (params.mode === "template-author") {
     return <TemplateAuthorLoader params={params} />;
+  }
+
+  if (params.mode === "templates") {
+    const [assets, brandTemplates] = await Promise.all([
+      getEditorAssets(params.client_id, params.user_id),
+      listActiveBrandTemplatesForClient(params.client_id),
+    ]);
+    return (
+      <ImageEditorStandalone
+        params={params}
+        logoAssets={assets.logoAssets}
+        frameAssets={assets.frameAssets}
+        fontAssets={assets.fontAssets}
+        sessionData={null}
+        allowCustomLogo={assets.allowCustomLogo}
+        brandTemplates={brandTemplates}
+      />
+    );
   }
 
   // const clientStatus = await getClientStatusByUserId(params.user_id);

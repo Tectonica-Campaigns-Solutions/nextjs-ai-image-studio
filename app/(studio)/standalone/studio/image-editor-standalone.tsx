@@ -67,6 +67,8 @@ import {
   type StudioToolPanels,
 } from "./constants/studio-tools";
 import { useTemplateAuthor } from "./hooks/use-template-author";
+import { useTemplateCanvas, useTemplateSelection } from "./hooks/use-template-mode";
+import { TemplateGalleryScreen, TemplatesPanel } from "./components/TemplatesPanel";
 import { TemplateSlotsPanel } from "./components/TemplateSlotsPanel";
 import { TemplateAuthorActionBar } from "./components/TemplateAuthorActionBar";
 import { studioToast } from "./utils/studio-toast";
@@ -173,8 +175,15 @@ function ImageEditorStandaloneInner({
   sessionData = null,
   allowCustomLogo = true,
   templateAuthor = null,
+  brandTemplates = null,
 }: ImageEditorStandaloneProps) {
-  const editorMode: StudioEditorMode = templateAuthor ? "template-author" : "image";
+  const editorMode: StudioEditorMode = templateAuthor
+    ? "template-author"
+    : brandTemplates
+      ? "template"
+      : "image";
+  const isImageMode = editorMode === "image";
+  const templateState = useTemplateSelection(brandTemplates);
   // Prefer the saved session background so restoring a version does not paint
   // overlays onto a different chat image.
   const imageUrlFromParams = sessionData?.background_url ?? params.imageUrl;
@@ -204,7 +213,7 @@ function ImageEditorStandaloneInner({
   // Upload state
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [showUploadPrompt, setShowUploadPrompt] = useState<boolean>(
-    !imageUrlFromParams && !templateAuthor
+    !imageUrlFromParams && !templateAuthor && !brandTemplates
   );
 
   // Preprocess input image URLs (remove disclaimer if present) so editing is clean.
@@ -264,6 +273,7 @@ function ImageEditorStandaloneInner({
   // Open Text Tools up front when presets are available so they are discoverable.
   const [desktopTool, setDesktopTool] = useState<StudioDesktopToolId | null>(() => {
     if (templateAuthor) return "template-slots";
+    if (brandTemplates) return "templates";
     return FEATURE_FLAGS.showTextTools && presetTexts.length > 0 ? "text-tools" : null;
   });
   const [isCompactChrome, setIsCompactChrome] = useState(false);
@@ -313,6 +323,7 @@ function ImageEditorStandaloneInner({
     : rawImageUrl;
 
   const canvasSource = useMemo<CanvasSource | null>(() => {
+    if (brandTemplates) return templateState.canvasSource;
     if (templateAuthor) {
       return {
         kind: "blank",
@@ -322,10 +333,14 @@ function ImageEditorStandaloneInner({
       };
     }
     return imageUrl ? { kind: "image", imageUrl } : null;
-  }, [imageUrl, templateAuthor]);
+  }, [imageUrl, templateAuthor, brandTemplates, templateState.canvasSource]);
   // Undo/redo rebuilds object 0; a solid background has no URL to reload from.
   const blankBackgroundRef = useRef<BlankCanvasSource | null>(null);
-  blankBackgroundRef.current = canvasSource?.kind === "blank" ? canvasSource : null;
+  blankBackgroundRef.current = brandTemplates
+    ? templateState.currentBackground
+    : canvasSource?.kind === "blank"
+      ? canvasSource
+      : null;
 
   const preprocessImageUrl = useCallback(async (url: string): Promise<string> => {
     // Skip preprocessing for local object URLs and already-inlined data URLs.
@@ -595,6 +610,20 @@ function ImageEditorStandaloneInner({
       if (pos) setSelectionContextMenuPosition(pos);
     },
     guidePositionsRef,
+  });
+
+  // A rebuilt canvas (e.g. another template) has nothing selected yet.
+  useEffect(() => {
+    selection.setSelectedObject(null);
+    setSelectionContextMenuPosition(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasEditor.canvas]);
+
+  const templateCanvas = useTemplateCanvas({
+    state: templateState,
+    canvas: canvasEditor.canvas,
+    loadOverlaysFromJSON: history.loadOverlaysFromJSON,
+    saveState: history.saveState,
   });
 
   const templateAuthoring = useTemplateAuthor({
@@ -2432,10 +2461,6 @@ function ImageEditorStandaloneInner({
     mobilePanel.closePanel();
   };
 
-  if (showUploadPrompt) {
-    return <UploadPromptCard onFileChange={handleImageUpload} />;
-  }
-
   // Avoid layout shift: keep loading until canvas and sessions (if needed) are ready.
   const editorReady =
     !!canvasEditor.canvas &&
@@ -2444,11 +2469,12 @@ function ImageEditorStandaloneInner({
   const currentSessionName = sessionsForImage.find((s) => s.id === sessionId)?.name;
   const studioSubtitle = templateAuthor
     ? `Template · ${templateAuthor.template.name} · ${templateAuthor.format.label} ${templateAuthor.format.ratio}`
+    : templateState.selection
+      ? `Template · ${templateState.selection.template.name}`
     : currentSessionName
       ? `Editing · ${currentSessionName}`
       : "Editing · Draft";
 
-  const isImageMode = editorMode === "image";
   const advancedOptionsContent = (
     <AdvancedOptionsPanel
       layersToolsPanel={layersToolsPanel}
@@ -2498,11 +2524,27 @@ function ImageEditorStandaloneInner({
     />
   );
 
+  const templatesPanel =
+    templateState.selection && templateState.format ? (
+      <TemplatesPanel
+        canvas={canvasEditor.canvas}
+        templates={templateState.templates}
+        template={templateState.selection.template}
+        format={templateState.format}
+        variant={templateState.variant}
+        isApplyingVariant={templateCanvas.isApplyingVariant}
+        onSelectTemplate={templateState.selectTemplate}
+        onSelectVariant={(v) => void templateCanvas.applyVariant(v)}
+        onTextChange={() => history.saveState()}
+      />
+    ) : null;
+
   const mobileAvailableTools = [
+    templatesPanel ? "templates" : null,
     FEATURE_FLAGS.showTextTools ? "text-tools" : null,
     FEATURE_FLAGS.showLogoTools ? "logo-overlay" : null,
     FEATURE_FLAGS.showQrTools ? "qr-code" : null,
-    FEATURE_FLAGS.showEditWithAI ? "ai-edit" : null,
+    FEATURE_FLAGS.showEditWithAI && isImageMode ? "ai-edit" : null,
     FEATURE_FLAGS.showMobileMoreTools &&
     (layersToolsPanel != null ||
       (FEATURE_FLAGS.showReplaceBackgroundTool && backgroundImagePanel != null) ||
@@ -2528,6 +2570,7 @@ function ImageEditorStandaloneInner({
   };
 
   const toolPanels: StudioToolPanels = filterPanelsForMode({
+    templates: templatesPanel,
     "template-slots": templateAuthor ? (
       <TemplateSlotsPanel
         canvas={canvasEditor.canvas}
@@ -2554,6 +2597,7 @@ function ImageEditorStandaloneInner({
   const mobileToolSheetContent = (() => {
     const tab = mobilePanel.activeTab as StudioMobileToolId | null;
     if (!tab) return null;
+    if (tab === "templates") return templatesPanel;
     if (tab === "text-tools") return sidebarProps.textToolsPanel;
     if (tab === "logo-overlay") return sidebarProps.logoToolsPanel;
     if (tab === "qr-code") {
@@ -2581,6 +2625,20 @@ function ImageEditorStandaloneInner({
     if (tab === "saved-versions") return sidebarProps.sessionsListPanel;
     return null;
   })();
+
+  // After every hook has run, so switching screens keeps the hook order stable.
+  if (showUploadPrompt) {
+    return <UploadPromptCard onFileChange={handleImageUpload} />;
+  }
+
+  if (brandTemplates && !templateState.selection) {
+    return (
+      <TemplateGalleryScreen
+        templates={templateState.templates}
+        onSelect={templateState.selectTemplate}
+      />
+    );
+  }
 
   return (
     <>
@@ -2643,7 +2701,7 @@ function ImageEditorStandaloneInner({
                     onAlign={handleAlign}
                     historyState={history.historyState}
                     selectedObject={selection.selectedObject}
-                    onHistoryClick={params.user_id ? handleMobileHistoryClick : undefined}
+                    onHistoryClick={params.user_id && isImageMode ? handleMobileHistoryClick : undefined}
                     historyBadge={sessionsForImage.length > 0}
                   />
                 ) : null}
@@ -2668,7 +2726,7 @@ function ImageEditorStandaloneInner({
                           isSaving={isSaving}
                           historyState={history.historyState}
                           selectedObject={selection.selectedObject}
-                          showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+                          showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && isImageMode}
                           variant="desktop"
                           onAlign={handleAlign}
                           onSaveClick={() => setShowSaveModal(true)}
@@ -2676,7 +2734,7 @@ function ImageEditorStandaloneInner({
                           isEmbedded={isEmbedded}
                           isSendingUrl={isSendingUrlToChat}
                           onHistoryClick={
-                            params.user_id
+                            params.user_id && isImageMode
                               ? () =>
                                   setDesktopTool((current) =>
                                     current === "saved-versions" ? null : "saved-versions",
@@ -2922,7 +2980,7 @@ function ImageEditorStandaloneInner({
                       <StudioMobileSessionBar
                         handleExportClick={handleExportClick}
                         isExporting={isExporting}
-                        showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+                        showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && isImageMode}
                         onSaveClick={() => setShowSaveModal(true)}
                         isSaving={isSaving}
                         onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}
@@ -2955,7 +3013,7 @@ function ImageEditorStandaloneInner({
             compact={isCompactChrome}
             handleExportClick={handleExportClick}
             isExporting={isExporting}
-            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id}
+            showSaveButton={FEATURE_FLAGS.showSaveCanvas && !!params.user_id && isImageMode}
             onSaveClick={() => setShowSaveModal(true)}
             isSaving={isSaving}
             onSendUrlToChat={isEmbedded ? handleSendUrlToChatAndClose : undefined}

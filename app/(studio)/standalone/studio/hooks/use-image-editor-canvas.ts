@@ -11,6 +11,8 @@ import {
 import { loadImageWithCORS, serializeCanvas } from "../utils/image-editor-utils";
 import {
   createBackgroundObject,
+  fitBackgroundToCanvas,
+  getCanvasBaseColor,
   getCanvasSourceKey,
   type CanvasSource,
 } from "../lib/canvas-background";
@@ -323,6 +325,9 @@ export function useImageEditorCanvas(
 
     const initializeCanvas = async () => {
       const opts = optionsRef.current;
+      // A rebuilt canvas (new source) starts with a fresh history.
+      opts.setHistoryState({ entries: [], currentIndex: -1 });
+      opts.setObjectMetadata({});
       await new Promise((resolve) => requestAnimationFrame(resolve));
 
       const canvasArea = document.getElementById("canvas-area");
@@ -504,7 +509,7 @@ export function useImageEditorCanvas(
       const fabricCanvas = new Canvas(canvasRef.current, {
         width: maxDisplayWidth,
         height: maxDisplayHeight,
-        backgroundColor: "#f8f9fa",
+        backgroundColor: getCanvasBaseColor(source),
         preserveObjectStacking: true,
         selection: true,
         selectionKey: "shiftKey",
@@ -557,7 +562,7 @@ export function useImageEditorCanvas(
 
         setCanvasDimensions({ width: displayWidth, height: displayHeight });
 
-        img.set({ scaleX: displayScale, scaleY: displayScale });
+        fitBackgroundToCanvas(img, displayWidth, displayHeight);
 
         fabricCanvas.add(img);
         fabricCanvas.renderAll();
@@ -571,24 +576,33 @@ export function useImageEditorCanvas(
             version: fullJSON.version ?? "5.3.0",
             objects: [],
           });
-          opts.setHistoryState({
-            entries: [
-              {
-                overlayJSON: initialOverlayJSON,
-                metadata: {},
-                backgroundUrl: imageUrl ?? undefined,
-              },
-            ],
-            currentIndex: 0,
+          // Overlays loaded right after init (saved session, template layout)
+          // may already have saved the first entry; keep it as the baseline.
+          opts.setHistoryState((prev) => {
+            if (prev.entries.length > 0) return prev;
+            return {
+              entries: [
+                {
+                  overlayJSON: initialOverlayJSON,
+                  metadata: {},
+                  backgroundUrl: imageUrl ?? undefined,
+                },
+              ],
+              currentIndex: 0,
+            };
           });
-          opts.setObjectMetadata({
-            0: {
-              isBackground: true,
-              isQR: false,
-              isLogo: false,
-              isEditable: false,
-            },
-          });
+          opts.setObjectMetadata((prev) =>
+            Object.keys(prev).length === 0
+              ? {
+                  0: {
+                    isBackground: true,
+                    isQR: false,
+                    isLogo: false,
+                    isEditable: false,
+                  },
+                }
+              : prev,
+          );
         }, 100);
       } catch (error) {
         console.error("Error loading canvas background:", error);

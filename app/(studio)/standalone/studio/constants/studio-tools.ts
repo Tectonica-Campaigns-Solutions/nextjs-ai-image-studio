@@ -4,6 +4,7 @@ import {
   History,
   ImageIcon,
   Layers,
+  LayoutGrid,
   LayoutTemplate,
   QrCode,
   Save,
@@ -47,10 +48,20 @@ export interface StudioToolDef {
 }
 
 const ALL_MODES = ["image", "template", "template-author"] as const;
-/** Tools that act on what end users produce, not on a template layout. */
-const USER_MODES = ["image", "template"] as const;
+/** Tools that depend on an image background (or on its saved versions, for now). */
+const IMAGE_ONLY = ["image"] as const;
 
 export const STUDIO_TOOLS = [
+  {
+    id: "templates",
+    label: "Templates",
+    hint: "Pick a design, colors and texts",
+    mobileLabel: "Templates",
+    icon: LayoutGrid,
+    placement: "dock",
+    group: "design",
+    modes: ["template"],
+  },
   {
     id: "template-slots",
     label: "Template slots",
@@ -98,7 +109,7 @@ export const STUDIO_TOOLS = [
     icon: WandSparkles,
     placement: "dock",
     group: "edit",
-    modes: USER_MODES,
+    modes: IMAGE_ONLY,
   },
   {
     id: "advanced-options",
@@ -163,7 +174,7 @@ export const STUDIO_TOOLS = [
     icon: Save,
     placement: "advanced",
     group: "arrange",
-    modes: USER_MODES,
+    modes: IMAGE_ONLY,
   },
   // Opened from the canvas toolbar / save toast, not from the dock
   {
@@ -173,7 +184,7 @@ export const STUDIO_TOOLS = [
     icon: History,
     placement: "toolbar",
     group: "arrange",
-    modes: USER_MODES,
+    modes: IMAGE_ONLY,
   },
 ] as const satisfies readonly StudioToolDef[];
 

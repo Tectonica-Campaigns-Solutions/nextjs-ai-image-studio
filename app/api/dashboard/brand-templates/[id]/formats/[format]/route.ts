@@ -15,6 +15,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 type RouteContext = { params: Promise<{ id: string; format: string }> };
 
 const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
+const MAX_LAYOUT_CHARS = 1_500_000;
 
 async function resolveParams(context: RouteContext) {
   const { id, format } = await context.params;
@@ -41,6 +42,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const body = await request.json().catch(() => null);
     const parsed = brandTemplateFabricJsonSchema.safeParse(body?.fabric_json);
     if (!parsed.success) return errorResponse("Invalid layout", 400);
+
+    // Layouts ship to every Studio session that lists templates; keep them small
+    // and free of local-only image URLs that can't load elsewhere.
+    const serialized = JSON.stringify(parsed.data);
+    if (serialized.length > MAX_LAYOUT_CHARS) {
+      return errorResponse("Layout is too large. Use smaller or fewer uploaded images.", 400);
+    }
+    if (serialized.includes('"src":"blob:')) {
+      return errorResponse("Layout has a local image that can't be saved. Re-add it and try again.", 400);
+    }
 
     const slotIds = parsed.data.objects.map((o) => o.slotId).filter(Boolean);
     if (new Set(slotIds).size !== slotIds.length) {
