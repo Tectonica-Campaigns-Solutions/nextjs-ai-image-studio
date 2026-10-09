@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import type { Canvas, FabricObject } from "fabric";
-import { Check, LayoutGrid, Loader2 } from "lucide-react";
+import { Check, ImagePlus, LayoutGrid, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BRAND_FORMATS, type BrandFormatPreset } from "@/lib/brand-templates/formats";
 import type {
@@ -10,7 +10,18 @@ import type {
   BrandTemplateVariant,
   BrandTemplateWithFormats,
 } from "@/lib/brand-templates/types";
-import { studioForm } from "./studio-ui";
+import { studioForm, StudioSliderRow } from "./studio-ui";
+import type { LogoAsset } from "../types/image-editor-types";
+import {
+  DEFAULT_SLOT_CROP,
+  fillPhotoSlot,
+  isFilledPhotoSlot,
+  readPhotoFile,
+  replaceLogoSlot,
+  updatePhotoCrop,
+  type SlotObject,
+} from "../lib/photo-slots";
+import { studioToast } from "../utils/studio-toast";
 import { StudioStateScreen } from "./StudioStateScreen";
 
 /* ------------------------------------------------------------------ */
@@ -213,6 +224,147 @@ function VariantSwatch({
   );
 }
 
+function getMediaSlots(canvas: Canvas | null): SlotObject[] {
+  if (!canvas) return [];
+  return (canvas.getObjects().slice(1) as SlotObject[]).filter(
+    (o) => !!o.slotId && (o.slotType === "image" || o.slotType === "logo"),
+  );
+}
+
+function PhotoSlotRow({
+  canvas,
+  slot,
+  selected,
+  onPick,
+  onChange,
+}: {
+  canvas: Canvas;
+  slot: SlotObject;
+  selected: boolean;
+  onPick: (slot: SlotObject) => void;
+  onChange: () => void;
+}) {
+  const filled = isFilledPhotoSlot(slot);
+  const crop = slot.slotCrop ?? DEFAULT_SLOT_CROP;
+  const setCrop = (patch: Partial<typeof crop>) => {
+    updatePhotoCrop(canvas, slot, { ...crop, ...patch });
+    onChange();
+  };
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-2.5 rounded-[12px] border p-2.5",
+        selected ? "border-[#8069FF] bg-[rgba(128,105,255,0.08)]" : "border-white/[0.09] bg-[#211E30]",
+      )}
+    >
+      <div className="flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            canvas.setActiveObject(slot);
+            canvas.requestRenderAll();
+          }}
+          className="size-11 shrink-0 cursor-pointer overflow-hidden rounded-[8px] bg-[#16141F]"
+          aria-label={`Select ${slot.slotLabel || "photo"}`}
+        >
+          {filled && slot.getSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={slot.getSrc()} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <ImagePlus className="m-auto size-4 text-[#ADAAC0]" aria-hidden />
+          )}
+        </button>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-[#F5F4FB]">
+          {slot.slotLabel || "Photo"}
+        </span>
+        <button
+          type="button"
+          onClick={() => onPick(slot)}
+          className="h-8 shrink-0 cursor-pointer rounded-[9px] border border-white/[0.09] px-2.5 text-[12px] font-bold text-[#F5F4FB] hover:bg-[#2C2942]"
+        >
+          {filled ? "Replace" : "Add photo"}
+        </button>
+      </div>
+      {filled ? (
+        <div className="flex flex-col gap-2">
+          <StudioSliderRow
+            label="Zoom"
+            value={crop.zoom}
+            displayValue={`${crop.zoom.toFixed(1)}×`}
+            min={1}
+            max={4}
+            step={0.05}
+            onChange={(zoom) => setCrop({ zoom })}
+          />
+          <StudioSliderRow
+            label="Left / right"
+            value={Math.round(crop.fx * 100)}
+            displayValue={`${Math.round(crop.fx * 100)}%`}
+            min={0}
+            max={100}
+            step={1}
+            onChange={(v) => setCrop({ fx: v / 100 })}
+          />
+          <StudioSliderRow
+            label="Up / down"
+            value={Math.round(crop.fy * 100)}
+            displayValue={`${Math.round(crop.fy * 100)}%`}
+            min={0}
+            max={100}
+            step={1}
+            onChange={(v) => setCrop({ fy: v / 100 })}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function LogoSlotRow({
+  canvas,
+  slot,
+  logoAssets,
+  onChange,
+}: {
+  canvas: Canvas;
+  slot: SlotObject;
+  logoAssets: LogoAsset[];
+  onChange: () => void;
+}) {
+  const current = slot.getSrc?.();
+  return (
+    <div className="flex flex-col gap-2 rounded-[12px] border border-white/[0.09] bg-[#211E30] p-2.5">
+      <span className="text-[13px] font-bold text-[#F5F4FB]">{slot.slotLabel || "Logo"}</span>
+      <div className="flex flex-wrap gap-2">
+        {logoAssets.map((logo) => (
+          <button
+            key={logo.url}
+            type="button"
+            title={logo.display_name}
+            aria-pressed={current === logo.url}
+            onClick={async () => {
+              try {
+                await replaceLogoSlot(canvas, slot, logo.url);
+                onChange();
+              } catch {
+                studioToast.error({ title: "Could not load that logo" });
+              }
+            }}
+            className={cn(
+              "flex size-14 cursor-pointer items-center justify-center rounded-[10px] border bg-[#16141F] p-1.5",
+              current === logo.url ? "border-[#8069FF]" : "border-white/[0.09] hover:border-white/[0.2]",
+            )}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logo.url} alt={logo.display_name} className="max-h-full max-w-full object-contain" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export interface TemplatesPanelProps {
   canvas: Canvas | null;
   templates: BrandTemplateWithFormats[];
@@ -225,6 +377,10 @@ export interface TemplatesPanelProps {
   onSelectVariant: (variant: BrandTemplateVariant) => void;
   /** Called (debounced by history) after a slot's text changes. */
   onTextChange: () => void;
+  /** Called after a photo/logo slot changes (history snapshot). */
+  onMediaChange: (immediate: boolean) => void;
+  selectedObject: FabricObject | null;
+  logoAssets: LogoAsset[];
 }
 
 export function TemplatesPanel({
@@ -238,7 +394,13 @@ export function TemplatesPanel({
   onSelectFormat,
   onSelectVariant,
   onTextChange,
+  onMediaChange,
+  selectedObject,
+  logoAssets,
 }: TemplatesPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingSlotRef = useRef<SlotObject | null>(null);
+  const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
   const [browsing, setBrowsing] = useState(false);
   const [, rerender] = useReducer((n: number) => n + 1, 0);
 
@@ -250,6 +412,36 @@ export function TemplatesPanel({
   }, [canvas]);
 
   const textSlots = getTextSlots(canvas);
+  const mediaSlots = getMediaSlots(canvas);
+  const photoSlots = mediaSlots.filter((o) => o.slotType === "image");
+  const logoSlots = logoAssets.length > 0 ? mediaSlots.filter((o) => o.slotType === "logo") : [];
+
+  const pickPhoto = (slot: SlotObject) => {
+    pendingSlotRef.current = slot;
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoFile = async (file: File | undefined) => {
+    const slot = pendingSlotRef.current;
+    pendingSlotRef.current = null;
+    if (!file || !slot || !canvas) return;
+    if (!file.type.startsWith("image/")) {
+      studioToast.error({ title: "Choose an image file" });
+      return;
+    }
+    setIsLoadingPhoto(true);
+    try {
+      const dataUrl = await readPhotoFile(file);
+      await fillPhotoSlot(canvas, slot, dataUrl);
+      rerender();
+      onMediaChange(true);
+    } catch (err) {
+      console.error("[templates] photo slot failed:", err);
+      studioToast.error({ title: "Could not add that photo" });
+    } finally {
+      setIsLoadingPhoto(false);
+    }
+  };
   const savedKeys = new Set(template.formats.map((f) => f.format_key));
   const availableFormats = BRAND_FORMATS.filter((f) => savedKeys.has(f.key));
 
@@ -372,6 +564,54 @@ export function TemplatesPanel({
               />
             ))}
           </div>
+        </div>
+      ) : null}
+
+      {photoSlots.length > 0 || logoSlots.length > 0 ? (
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className={studioForm.label}>Photos & logos</span>
+            {isLoadingPhoto ? <Loader2 className="size-3.5 animate-spin text-[#ADAAC0]" /> : null}
+          </div>
+          {canvas
+            ? photoSlots.map((slot, i) => (
+                <PhotoSlotRow
+                  key={`${slot.slotId}-${i}`}
+                  canvas={canvas}
+                  slot={slot}
+                  selected={selectedObject === slot}
+                  onPick={pickPhoto}
+                  onChange={() => {
+                    rerender();
+                    onMediaChange(false);
+                  }}
+                />
+              ))
+            : null}
+          {canvas
+            ? logoSlots.map((slot, i) => (
+                <LogoSlotRow
+                  key={`${slot.slotId}-${i}`}
+                  canvas={canvas}
+                  slot={slot}
+                  logoAssets={logoAssets}
+                  onChange={() => {
+                    rerender();
+                    onMediaChange(true);
+                  }}
+                />
+              ))
+            : null}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              void handlePhotoFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
         </div>
       ) : null}
 

@@ -19,6 +19,7 @@ import {
   type BlankCanvasSource,
 } from "../lib/canvas-background";
 import { layoutToDisplayOverlayJSON } from "../lib/template-layout";
+import { fillPhotoSlot, type SlotObject } from "../lib/photo-slots";
 import {
   applyTemplateTexts,
   captureTemplateContent,
@@ -178,6 +179,14 @@ export function useTemplateCanvas({
         }
         if (pending) {
           await applyTemplateTexts(canvas, pending.content);
+          for (const slot of canvas.getObjects().slice(1) as SlotObject[]) {
+            const photo = slot.slotId ? pending.content.photos[slot.slotId] : undefined;
+            if (!photo?.src || slot.slotType !== "image") continue;
+            await fillPhotoSlot(canvas, slot, photo.src, photo.crop ?? undefined).catch((err) =>
+              console.warn("[template-mode] could not carry a photo:", err),
+            );
+          }
+          canvas.discardActiveObject();
           const extras = extrasToDisplayOverlayJSON(pending.content, pending.from, target, canvas);
           if (extras) {
             await loadOverlaysFromJSON(canvas, extras);

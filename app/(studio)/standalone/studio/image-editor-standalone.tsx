@@ -2537,6 +2537,9 @@ function ImageEditorStandaloneInner({
         onSelectFormat={(f) => templateCanvas.switchFormat(f.key)}
         onSelectVariant={(v) => void templateCanvas.applyVariant(v)}
         onTextChange={() => history.saveState()}
+        onMediaChange={(immediate) => history.saveState(immediate)}
+        selectedObject={selection.selectedObject}
+        logoAssets={logoAssets}
       />
     ) : null;
 
