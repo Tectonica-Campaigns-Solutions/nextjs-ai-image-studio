@@ -8,7 +8,14 @@ import {
   Textbox,
   type TPointerEvent,
 } from "fabric";
-import { loadImageWithCORS } from "../utils/image-editor-utils";
+import { loadImageWithCORS, serializeCanvas } from "../utils/image-editor-utils";
+import {
+  createBackgroundObject,
+  fitBackgroundToCanvas,
+  getCanvasBaseColor,
+  getCanvasSourceKey,
+  type CanvasSource,
+} from "../lib/canvas-background";
 import { getCustomControlRenderers } from "../lib/fabric-control-icons";
 import type { HistoryState, ObjectMetadata } from "../types/image-editor-types";
 import { CANVAS_CONTROLS, GUIDES } from "../constants/editor-constants";
@@ -173,11 +180,14 @@ function updateControlsPositionForCanvasBounds(obj: any, canvas: Canvas): void {
 }
 
 export function useImageEditorCanvas(
-  imageUrl: string | null,
+  source: CanvasSource | null,
   options: UseImageEditorCanvasOptions,
 ) {
   const optionsRef = useRef(options);
   optionsRef.current = options;
+  const sourceRef = useRef(source);
+  sourceRef.current = source;
+  const sourceKey = getCanvasSourceKey(source);
 
   const {
     headerRef,
@@ -307,12 +317,17 @@ export function useImageEditorCanvas(
     };
   }, [canvas, originalImageDimensions]);
 
-  // Init effect - only re-run when imageUrl changes
+  // Init effect - only re-run when the canvas source changes
   useEffect(() => {
-    if (!imageUrl) return;
+    const source = sourceRef.current;
+    if (!source) return;
+    const imageUrl = source.kind === "image" ? source.imageUrl : null;
 
     const initializeCanvas = async () => {
       const opts = optionsRef.current;
+      // A rebuilt canvas (new source) starts with a fresh history.
+      opts.setHistoryState({ entries: [], currentIndex: -1 });
+      opts.setObjectMetadata({});
       await new Promise((resolve) => requestAnimationFrame(resolve));
 
       const canvasArea = document.getElementById("canvas-area");
@@ -494,7 +509,7 @@ export function useImageEditorCanvas(
       const fabricCanvas = new Canvas(canvasRef.current, {
         width: maxDisplayWidth,
         height: maxDisplayHeight,
-        backgroundColor: "#f8f9fa",
+        backgroundColor: getCanvasBaseColor(source),
         preserveObjectStacking: true,
         selection: true,
         selectionKey: "shiftKey",
@@ -512,9 +527,11 @@ export function useImageEditorCanvas(
 
       try {
         originalImageUrlRef.current = imageUrl;
-        const img = await loadImageWithCORS(imageUrl);
-        const originalWidth = img.width;
-        const originalHeight = img.height;
+        const {
+          object: img,
+          width: originalWidth,
+          height: originalHeight,
+        } = await createBackgroundObject(source);
 
         setOriginalImageDimensions({
           width: originalWidth,
@@ -545,29 +562,13 @@ export function useImageEditorCanvas(
 
         setCanvasDimensions({ width: displayWidth, height: displayHeight });
 
-        img.set({
-          left: 0,
-          top: 0,
-          selectable: false,
-          evented: false,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockRotation: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          hasControls: false,
-          hasBorders: false,
-          scaleX: displayScale,
-          scaleY: displayScale,
-        });
-        (img as any).isBackground = true;
-        (img as any).isEditable = false;
+        fitBackgroundToCanvas(img, displayWidth, displayHeight);
 
         fabricCanvas.add(img);
         fabricCanvas.renderAll();
 
         setTimeout(() => {
-          const fullJSON = (fabricCanvas as any).toJSON(["src"]) as {
+          const fullJSON = serializeCanvas(fabricCanvas) as {
             version?: string;
             objects?: any[];
           };
@@ -575,27 +576,36 @@ export function useImageEditorCanvas(
             version: fullJSON.version ?? "5.3.0",
             objects: [],
           });
-          opts.setHistoryState({
-            entries: [
-              {
-                overlayJSON: initialOverlayJSON,
-                metadata: {},
-                backgroundUrl: imageUrl,
-              },
-            ],
-            currentIndex: 0,
+          // Overlays loaded right after init (saved session, template layout)
+          // may already have saved the first entry; keep it as the baseline.
+          opts.setHistoryState((prev) => {
+            if (prev.entries.length > 0) return prev;
+            return {
+              entries: [
+                {
+                  overlayJSON: initialOverlayJSON,
+                  metadata: {},
+                  backgroundUrl: imageUrl ?? undefined,
+                },
+              ],
+              currentIndex: 0,
+            };
           });
-          opts.setObjectMetadata({
-            0: {
-              isBackground: true,
-              isQR: false,
-              isLogo: false,
-              isEditable: false,
-            },
-          });
+          opts.setObjectMetadata((prev) =>
+            Object.keys(prev).length === 0
+              ? {
+                  0: {
+                    isBackground: true,
+                    isQR: false,
+                    isLogo: false,
+                    isEditable: false,
+                  },
+                }
+              : prev,
+          );
         }, 100);
       } catch (error) {
-        console.error("Error loading image:", error);
+        console.error("Error loading canvas background:", error);
       }
 
       const ROTATION_TOOLTIP_OFFSET_TOP = 80;
@@ -841,10 +851,16 @@ export function useImageEditorCanvas(
         instance.dispose();
       }
     };
-  }, [imageUrl]);
+  }, [sourceKey]);
 
+  /**
+   * Swaps the background image and resizes the canvas to it, scaling overlays.
+   * `previousDisplayWidth` is the width (display px) the overlays are laid out
+   * against; it defaults to the current canvas width (a crop passes the crop
+   * box width, after shifting overlays to the box origin).
+   */
   const replaceBackgroundImage = useCallback(
-    async (newImageUrl: string) => {
+    async (newImageUrl: string, opts?: { previousDisplayWidth?: number }) => {
       const instance = canvasInstanceRef.current;
       if (!instance) return;
       const objects = instance.getObjects();
@@ -917,7 +933,7 @@ export function useImageEditorCanvas(
         instance.sendObjectToBack(newImg);
 
         if (canvasArea && originalWidth > 0 && originalHeight > 0) {
-          const oldWidth = instance.width ?? newDisplayWidth;
+          const oldWidth = opts?.previousDisplayWidth ?? instance.width ?? newDisplayWidth;
           const scale = newDisplayWidth / oldWidth;
 
           instance.setDimensions({

@@ -15,6 +15,10 @@ type StudioPageProps = {
     /** Published group / recruitment page URL for one-click QR (VS-C08). */
     group_page_url?: string;
     groupPageUrl?: string;
+    /** "template-author" (admins, from the dashboard). */
+    mode?: string;
+    template_id?: string;
+    format?: string;
   }>;
 };
 

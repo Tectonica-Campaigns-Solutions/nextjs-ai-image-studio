@@ -1,32 +1,21 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Grid3X3,
-  ImageIcon,
-  Layers,
-  Save,
-  Shapes,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { STUDIO_ADVANCED_ROWS, UI_COLORS } from "../constants/editor-constants";
-import { FrameItem } from "./editor-icons";
+import { UI_COLORS } from "../constants/editor-constants";
+import {
+  STUDIO_ADVANCED_ROWS,
+  getStudioTool,
+  type StudioAdvancedRowId,
+} from "../constants/studio-tools";
 
-type AdvancedScreen = "layers" | "background" | "shapes" | "frames" | "guides" | "sessions";
+type AdvancedScreen = StudioAdvancedRowId;
 
-const SCREEN_META: Record<
-  AdvancedScreen,
-  { label: string; icon: ReactNode }
-> = {
-  layers: { label: "Layers", icon: <Layers className="size-5" strokeWidth={2} /> },
-  background: { label: "Background image", icon: <ImageIcon className="size-5" strokeWidth={2} /> },
-  shapes: { label: "Shape Tools", icon: <Shapes className="size-5" strokeWidth={2} /> },
-  frames: { label: "Frames", icon: <FrameItem /> },
-  guides: { label: "Guides & grid", icon: <Grid3X3 className="size-5" strokeWidth={2} /> },
-  sessions: { label: "Saved versions", icon: <Save className="size-5" strokeWidth={2} /> },
-};
+function screenIcon(screen: AdvancedScreen): ReactNode {
+  const Icon = getStudioTool(screen).icon;
+  return <Icon className="size-5" strokeWidth={2} />;
+}
 
 function NavRow({
   icon,
@@ -144,7 +133,7 @@ export function AdvancedOptionsMobilePanel({
         <NavRow
           key={row.id}
           first={index === 0}
-          icon={SCREEN_META[row.id as AdvancedScreen].icon}
+          icon={screenIcon(row.id)}
           label={row.label}
           badge={row.id === "layers" && layerCount != null ? layerCount : undefined}
           onClick={() => setScreen(row.id as AdvancedScreen)}
@@ -180,10 +169,10 @@ export function AdvancedOptionsMobilePanel({
 
 export function getAdvancedMobileScreenTitle(screen: AdvancedScreen | null): string | null {
   if (!screen) return null;
-  return SCREEN_META[screen]?.label ?? null;
+  return getStudioTool(screen)?.label ?? null;
 }
 
 export function getAdvancedMobileScreenIcon(screen: AdvancedScreen | null): ReactNode | null {
   if (!screen) return null;
-  return SCREEN_META[screen]?.icon ?? null;
+  return screenIcon(screen);
 }

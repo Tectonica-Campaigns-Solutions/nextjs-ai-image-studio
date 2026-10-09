@@ -1,17 +1,13 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import {
-  ChevronDown,
-  Grid3X3,
-  ImageIcon,
-  Layers,
-  Save,
-  Shapes,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { STUDIO_ADVANCED_ROWS } from "../constants/editor-constants";
-import { FrameItem } from "./editor-icons";
+import {
+  STUDIO_ADVANCED_ROWS,
+  getStudioTool,
+  type StudioAdvancedRowId,
+} from "../constants/studio-tools";
 import { StudioAdvancedPanelBody } from "./studio-ui";
 
 export interface AdvancedOptionsPanelProps {
@@ -23,16 +19,7 @@ export interface AdvancedOptionsPanelProps {
   sessionsListPanel: ReactNode | null;
 }
 
-type AdvancedRowId = (typeof STUDIO_ADVANCED_ROWS)[number]["id"];
-
-const ROW_ICONS: Record<AdvancedRowId, ReactNode> = {
-  layers: <Layers strokeWidth={2} className="size-5" />,
-  background: <ImageIcon strokeWidth={2} className="size-5" />,
-  shapes: <Shapes strokeWidth={2} className="size-5" />,
-  frames: <FrameItem />,
-  guides: <Grid3X3 strokeWidth={2} className="size-5" />,
-  sessions: <Save strokeWidth={2} className="size-5" />,
-};
+type AdvancedRowId = StudioAdvancedRowId;
 
 function AdvancedRow({
   id,
@@ -58,7 +45,10 @@ function AdvancedRow({
         aria-expanded={open}
       >
         <span className="inline-flex size-10 shrink-0 items-center justify-center text-[#F5F4FB] [&_svg]:size-5">
-          {ROW_ICONS[id]}
+          {(() => {
+            const Icon = getStudioTool(id).icon;
+            return <Icon strokeWidth={2} className="size-5" />;
+          })()}
         </span>
         <span className="min-w-0 flex-1 text-[15px] font-bold text-[#F5F4FB]">{label}</span>
         <ChevronDown

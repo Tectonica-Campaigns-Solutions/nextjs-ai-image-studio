@@ -1,69 +1,25 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { UI_COLORS } from "../constants/editor-constants";
 import {
-  QrCode,
-  SlidersHorizontal,
-  Stamp,
-  Type,
-  WandSparkles,
-} from "lucide-react";
-import { STUDIO_DESKTOP_TOOLS, UI_COLORS, type StudioDesktopToolId } from "../constants/editor-constants";
-
-const DOCK_ICONS: Record<string, ReactNode> = {
-  "text-tools": <Type className="size-[17px]" strokeWidth={2} />,
-  "logo-overlay": <Stamp className="size-[17px]" strokeWidth={2} />,
-  "qr-code": <QrCode className="size-[17px]" strokeWidth={2} />,
-  "ai-edit": <WandSparkles className="size-[17px]" strokeWidth={2} />,
-  "advanced-options": <SlidersHorizontal className="size-[17px]" strokeWidth={2} />,
-};
+  STUDIO_DOCK_TOOLS,
+  isDockToolAvailable,
+  type StudioDesktopToolId,
+  type StudioToolPanels,
+} from "../constants/studio-tools";
 
 export interface EditorSidebarProps {
-  textToolsPanel: ReactNode | null;
-  aiEditPanel: ReactNode | null;
-  logoToolsPanel: ReactNode | null;
-  qrToolsPanel: ReactNode | null;
-  layersToolsPanel: ReactNode | null;
-  backgroundImagePanel: ReactNode | null;
-  shapeToolsPanel: ReactNode | null;
-  frameToolsPanel: ReactNode | null;
-  guidesAndGridPanel: ReactNode | null;
-  sessionsListPanel: ReactNode | null;
+  panels: StudioToolPanels;
   desktopTool?: StudioDesktopToolId | null;
   onDesktopToolChange?: (tool: StudioDesktopToolId | null) => void;
 }
 
 export function EditorSidebar({
-  textToolsPanel,
-  aiEditPanel,
-  logoToolsPanel,
-  qrToolsPanel,
-  layersToolsPanel,
-  backgroundImagePanel,
-  shapeToolsPanel,
-  frameToolsPanel,
-  guidesAndGridPanel,
-  sessionsListPanel,
+  panels,
   desktopTool = null,
   onDesktopToolChange,
 }: EditorSidebarProps) {
-  const dockTools = STUDIO_DESKTOP_TOOLS.filter((t) => {
-    if (t.id === "text-tools") return textToolsPanel != null;
-    if (t.id === "logo-overlay") return logoToolsPanel != null;
-    if (t.id === "qr-code") return qrToolsPanel != null;
-    if (t.id === "ai-edit") return aiEditPanel != null;
-    if (t.id === "advanced-options") {
-      return (
-        layersToolsPanel != null ||
-        backgroundImagePanel != null ||
-        shapeToolsPanel != null ||
-        frameToolsPanel != null ||
-        guidesAndGridPanel != null ||
-        sessionsListPanel != null
-      );
-    }
-    return true;
-  });
+  const dockTools = STUDIO_DOCK_TOOLS.filter((t) => isDockToolAvailable(t.id, panels));
 
   return (
     <aside
@@ -95,7 +51,7 @@ export function EditorSidebar({
                 color: active ? UI_COLORS.ACCENT : UI_COLORS.TEXT_PRIMARY,
               }}
             >
-              {DOCK_ICONS[t.id]}
+              <t.icon className="size-[17px]" strokeWidth={2} />
               <span className="flex-1 text-left">{t.label}</span>
             </button>
           );

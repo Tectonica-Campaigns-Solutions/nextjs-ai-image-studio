@@ -15,7 +15,12 @@ export interface SaveSessionPayload {
   ca_user_id: string;
   session_id?: string;
   name?: string;
-  background_url: string;
+  /** Null for template designs (they have no background image). */
+  background_url: string | null;
+  /** "template": a Branding template design (see add_canvas_sessions_template_kind.sql). */
+  kind?: "image" | "template";
+  template_id?: string;
+  template_state?: Record<string, unknown>;
   /** Lineage key: the image URL Studio was first opened with. Set on insert only. */
   root_image_url?: string;
   chat_id?: string;
@@ -28,7 +33,10 @@ export interface SessionRow {
   client_id: string | null;
   ca_user_id: string;
   name: string | null;
-  background_url: string;
+  background_url: string | null;
+  kind?: "image" | "template";
+  template_id?: string | null;
+  template_state?: Record<string, unknown> | null;
   root_image_url: string | null;
   chat_id: string | null;
   overlay_json: Record<string, unknown>;
@@ -167,6 +175,48 @@ export async function uploadConversationImageToStorage(
   }
 }
 
+const TEMPLATE_PHOTO_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const MAX_TEMPLATE_PHOTO_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Stores an image used inside a template design (user photo, custom logo) so
+ * saved versions reference a URL instead of embedding base64. Public bucket,
+ * same folder scheme as thumbnails; not recorded as a generated image.
+ */
+export async function uploadTemplatePhotoToStorage(
+  dataUrl: string,
+  caUserId: string
+): Promise<string | { error: string }> {
+  const match = /^data:(image\/[a-z+]+);base64,(.+)$/i.exec(dataUrl);
+  const ext = match ? TEMPLATE_PHOTO_TYPES[match[1].toLowerCase()] : undefined;
+  if (!match || !ext) return { error: "Unsupported image" };
+  const buffer = Buffer.from(match[2], "base64");
+  if (buffer.byteLength > MAX_TEMPLATE_PHOTO_BYTES) return { error: "Image too large" };
+
+  try {
+    const supabase = createServiceClient();
+    const folder = await resolveStorageFolder(supabase, caUserId);
+    const filePath = `${folder}/template-photos/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}.${ext}`;
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, buffer, { contentType: match[1], upsert: false });
+    if (error) {
+      console.error("[canvas-session-service] template photo upload failed:", error);
+      return { error: "Upload failed" };
+    }
+    return supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath).data.publicUrl;
+  } catch (err) {
+    console.error("[canvas-session-service] template photo upload error:", err);
+    return { error: "Upload failed" };
+  }
+}
+
 export async function sessionBelongsToUser(
   sessionId: string,
   caUserId: string
@@ -225,6 +275,7 @@ export async function saveSession(
     const updateData: Record<string, unknown> = {
       background_url: payload.background_url,
       overlay_json: payload.overlay_json,
+      ...(payload.template_state ? { template_state: payload.template_state } : {}),
       metadata: payload.metadata,
       updated_at: new Date().toISOString(),
     };
@@ -249,6 +300,9 @@ export async function saveSession(
     ca_user_id: payload.ca_user_id,
     client_id: clientId,
     background_url: payload.background_url,
+    kind: payload.kind ?? "image",
+    template_id: payload.template_id ?? null,
+    template_state: payload.template_state ?? null,
     root_image_url: payload.root_image_url ?? null,
     chat_id: payload.chat_id ?? null,
     overlay_json: payload.overlay_json,
@@ -274,7 +328,25 @@ export async function saveSession(
 }
 
 const SESSION_COLUMNS =
-  "id, client_id, ca_user_id, name, thumbnail_url, background_url, root_image_url, chat_id, overlay_json, metadata, created_at, updated_at";
+  "id, client_id, ca_user_id, name, thumbnail_url, background_url, kind, template_id, template_state, root_image_url, chat_id, overlay_json, metadata, created_at, updated_at";
+
+/** Saved versions of designs a user made from one Branding template. */
+export async function listTemplateSessions(
+  caUserId: string,
+  templateId: string
+): Promise<SessionRow[] | { error: string }> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("client_canvas_sessions")
+    .select(SESSION_COLUMNS)
+    .eq("ca_user_id", caUserId)
+    .eq("kind", "template")
+    .eq("template_id", templateId)
+    .is("deleted_at", null)
+    .order("updated_at", { ascending: false });
+  if (error) return { error: "Failed to fetch sessions" };
+  return (data ?? []) as SessionRow[];
+}
 
 /**
  * Saved versions of one image lineage for a user. Rows saved before lineages
@@ -290,6 +362,7 @@ export async function listSessions(
       .from("client_canvas_sessions")
       .select(SESSION_COLUMNS)
       .eq("ca_user_id", caUserId)
+      .eq("kind", "image")
       .is("deleted_at", null);
 
   const [lineage, legacy] = await Promise.all([
@@ -311,7 +384,7 @@ export async function getSessionById(
   const { data, error } = await supabase
     .from("client_canvas_sessions")
     .select(
-      "id, client_id, ca_user_id, name, thumbnail_url, background_url, overlay_json, metadata, created_at, updated_at"
+      "id, client_id, ca_user_id, name, thumbnail_url, background_url, kind, template_id, template_state, overlay_json, metadata, created_at, updated_at"
     )
     .eq("id", sessionId)
     .eq("ca_user_id", caUserId)

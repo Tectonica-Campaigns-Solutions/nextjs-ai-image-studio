@@ -248,61 +248,6 @@ export const STUDIO_LAYOUT = {
   MOBILE_BOTTOM_CHROME_H: 142,
 } as const;
 
-export const STUDIO_DESKTOP_TOOLS = [
-  {
-    id: "text-tools",
-    label: "Text Tools",
-    hint: "Add headlines, captions & labels",
-  },
-  {
-    id: "logo-overlay",
-    label: "Logo Overlay",
-    hint: "Place your group or partner logo",
-  },
-  {
-    id: "qr-code",
-    label: "QR Code",
-    hint: "Link to a sign-up, RSVP or donate page",
-  },
-  {
-    id: "ai-edit",
-    label: "Edit with AI",
-    hint: "Describe a change in plain words",
-  },
-  {
-    id: "advanced-options",
-    label: "Advanced",
-    hint: "Crop, filters, export size",
-  },
-] as const;
-
-/** Advanced accordion rows — order and labels from design file */
-export const STUDIO_ADVANCED_ROWS = [
-  { id: "layers", label: "Layers" },
-  { id: "background", label: "Background image" },
-  { id: "shapes", label: "Shape Tools" },
-  { id: "frames", label: "Frames" },
-  { id: "guides", label: "Guides & grid" },
-  { id: "sessions", label: "Saved versions" },
-] as const;
-
-export type StudioDesktopToolId =
-  | (typeof STUDIO_DESKTOP_TOOLS)[number]["id"]
-  | "saved-versions";
-
-/** Mobile tab bar — icon-over-label chips (visual-studio-mobile.jsx) */
-export const STUDIO_MOBILE_TOOLS = [
-  { id: "text-tools", label: "Text Tools", short: "Text" },
-  { id: "logo-overlay", label: "Logo Overlay", short: "Logo" },
-  { id: "qr-code", label: "QR Code", short: "QR Code" },
-  { id: "ai-edit", label: "Edit with AI", short: "AI Edit" },
-  { id: "advanced-options", label: "Advanced", short: "More" },
-] as const;
-
-export type StudioMobileToolId =
-  | (typeof STUDIO_MOBILE_TOOLS)[number]["id"]
-  | "saved-versions";
-
 // Mobile Panel
 export const MOBILE_PANEL = {
   DISMISS_THRESHOLD: 100, // pixels to drag down to dismiss

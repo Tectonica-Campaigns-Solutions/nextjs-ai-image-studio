@@ -37,6 +37,7 @@ const NAV_COMMANDS: NavCommand[] = [
   { label: "Assets", icon: "folder_open", href: "/dashboard/assets", shortcut: "G S" },
   { label: "Frames", icon: "frame_person", href: "/dashboard/frames-fonts?tab=frames", shortcut: "G F" },
   { label: "Fonts", icon: "font_download", href: "/dashboard/frames-fonts?tab=fonts", shortcut: "G N" },
+  { label: "Brand Templates", icon: "dashboard_customize", href: "/dashboard/brand-templates", shortcut: "G T" },
   { label: "Canvas Sessions", icon: "draw", href: "/dashboard/canvas-sessions", shortcut: "G V" },
   { label: "Audit Log", icon: "history", href: "/dashboard/audit", shortcut: "G L" },
 ];

@@ -1,50 +1,24 @@
 "use client";
 
-import type { ReactNode } from "react";
-import {
-  History,
-  QrCode,
-  SlidersHorizontal,
-  Stamp,
-  Type,
-  WandSparkles,
-} from "lucide-react";
 import { StudioPanelHeader } from "./studio-ui";
 import { UI_COLORS } from "../constants/editor-constants";
-import type { StudioDesktopToolId } from "../constants/editor-constants";
-
-const META: Record<
-  StudioDesktopToolId,
-  { label: string; icon: ReactNode }
-> = {
-  "text-tools": { label: "Text Tools", icon: <Type className="size-[18px]" /> },
-  "logo-overlay": { label: "Logo Overlay", icon: <Stamp className="size-[18px]" /> },
-  "qr-code": { label: "QR Code", icon: <QrCode className="size-[18px]" /> },
-  "ai-edit": { label: "Edit with AI", icon: <WandSparkles className="size-[18px]" /> },
-  "advanced-options": { label: "Advanced", icon: <SlidersHorizontal className="size-[18px]" /> },
-  "saved-versions": { label: "Saved versions", icon: <History className="size-[18px]" /> },
-};
+import {
+  getStudioTool,
+  type StudioDesktopToolId,
+  type StudioToolPanels,
+} from "../constants/studio-tools";
 
 export function StudioDesktopToolPanel({
   tool,
   onClose,
-  textToolsPanel,
-  logoToolsPanel,
-  qrToolsPanel,
-  aiEditPanel,
-  advancedContent,
-  sessionsListPanel,
+  panels,
 }: {
   tool: StudioDesktopToolId;
   onClose: () => void;
-  textToolsPanel: ReactNode | null;
-  logoToolsPanel: ReactNode | null;
-  qrToolsPanel: ReactNode | null;
-  aiEditPanel: ReactNode | null;
-  advancedContent: ReactNode | null;
-  sessionsListPanel: ReactNode | null;
+  /** Content per tool id; "advanced-options" holds the whole accordion. */
+  panels: StudioToolPanels;
 }) {
-  const meta = META[tool];
+  const meta = getStudioTool(tool);
   if (!meta) return null;
 
   return (
@@ -56,13 +30,12 @@ export function StudioDesktopToolPanel({
         boxShadow: "18px 0 40px -20px rgba(0,0,0,0.6)",
       }}
     >
-      <StudioPanelHeader icon={meta.icon} title={meta.label} onClose={onClose} />
-      {tool === "text-tools" && textToolsPanel}
-      {tool === "logo-overlay" && logoToolsPanel}
-      {tool === "qr-code" && qrToolsPanel}
-      {tool === "ai-edit" && aiEditPanel}
-      {tool === "advanced-options" && advancedContent}
-      {tool === "saved-versions" && sessionsListPanel}
+      <StudioPanelHeader
+        icon={<meta.icon className="size-[18px]" />}
+        title={meta.label}
+        onClose={onClose}
+      />
+      {panels[tool]}
     </div>
   );
 }

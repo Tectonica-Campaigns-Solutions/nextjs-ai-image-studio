@@ -1,6 +1,7 @@
 import { FabricImage, Textbox, cache } from "fabric";
 import type { Canvas } from "fabric";
 import type { ObjectMetadata } from "../types/image-editor-types";
+import { BRAND_SLOT_PROPS } from "@/lib/brand-templates/formats";
 
 export function fileToBase64(file: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -157,6 +158,17 @@ export function getFullCanvasImageForEdit(canvas: {
 }
 
 /**
+ * Custom object props that must survive snapshots (history, saved versions,
+ * template layouts). Fabric v6 `toJSON()` ignores arguments, so serialize
+ * through `toObject(props)`.
+ */
+export const CANVAS_SERIALIZED_PROPS: string[] = ["src", ...BRAND_SLOT_PROPS];
+
+export function serializeCanvas(canvas: Canvas): { version?: string; objects?: any[] } {
+  return canvas.toObject(CANVAS_SERIALIZED_PROPS);
+}
+
+/**
  * Serialize overlay objects (everything except the background) from the live canvas.
  * Used by Save so we persist what is on screen, not a possibly stale history snapshot.
  */
@@ -165,9 +177,7 @@ export function getCanvasOverlaySnapshot(canvas: Canvas): {
   metadata: Record<number, ObjectMetadata>;
 } {
   const objects = canvas.getObjects();
-  const fullJSON = (canvas as Canvas & { toJSON: (props?: string[]) => { version?: string; objects?: unknown[] } }).toJSON([
-    "src",
-  ]);
+  const fullJSON = serializeCanvas(canvas);
   const overlayJson = {
     version: fullJSON.version ?? "5.3.0",
     objects: (fullJSON.objects ?? []).slice(1),

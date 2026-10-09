@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "assets", label: "Assets", icon: "folder_open", href: "/dashboard/assets" },
   { key: "frames", label: "Frames", icon: "frame_person", href: "/dashboard/frames-fonts?tab=frames" },
   { key: "fonts", label: "Fonts", icon: "font_download", href: "/dashboard/frames-fonts?tab=fonts" },
+  { key: "brand-templates", label: "Brand Templates", icon: "dashboard_customize", href: "/dashboard/brand-templates" },
   { key: "canvas-sessions", label: "Canvas Sessions", icon: "draw", href: "/dashboard/canvas-sessions" },
   { key: "audit", label: "Audit Log", icon: "history", href: "/dashboard/audit" },
   {
@@ -75,6 +76,8 @@ function NavLinks() {
         return pathname === "/dashboard/frames-fonts" && searchParams.get("tab") !== "fonts";
       case "fonts":
         return pathname === "/dashboard/frames-fonts" && searchParams.get("tab") === "fonts";
+      case "brand-templates":
+        return pathname.startsWith("/dashboard/brand-templates");
       case "canvas-sessions":
         return pathname.startsWith("/dashboard/canvas-sessions");
       case "audit":
